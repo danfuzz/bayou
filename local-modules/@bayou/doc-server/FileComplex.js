@@ -131,30 +131,39 @@ export default class FileComplex extends BaseComplexMember {
    * Makes a new author-associated session for this instance.
    *
    * @param {string} authorId ID for the author.
-   * @param {string} sessionId ID for the session.
+   * @param {string|null} [sessionId = null] ID for the session, or `null` to
+   *   let the system pick a random available ID. **TODO:** This argument should
+   *   be removed; all callers should let the snapshot pick an unused ID.
    * @returns {DocSession} A newly-constructed session.
    */
-  async makeNewSession(authorId, sessionId) {
+  async makeNewSession(authorId, sessionId = null) {
     const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
+    const pickId      = (sessionId === null);
 
     // This validates the ID with the back end.
     await Storage.dataStore.checkExistingAuthorId(authorId);
 
-    TString.nonEmpty(sessionId);
+    if (!pickId) {
+      TString.nonEmpty(sessionId);
+    }
 
     for (;;) {
       if (Date.now() >= timeoutTime) {
         throw Errors.timedOut(timeoutTime);
       }
 
-      // Ensure that the session ID doesn't correspond to a pre-existing
-      // session.
-
       const caretSnapshot = await this.caretControl.getSnapshot();
-      const already       = caretSnapshot.getOrNull(sessionId);
 
-      if (already !== null) {
-        throw Errors.badUse(`Attempt to create session with already-used ID: \`${sessionId}\``);
+      if (pickId) {
+        sessionId = caretSnapshot.randomUnusedId();
+      } else {
+        // The caller specified an ID, so ensure that it doesn't correspond to a
+        // pre-existing session.
+        const already = caretSnapshot.getOrNull(sessionId);
+
+        if (already !== null) {
+          throw Errors.badUse(`Attempt to create session with already-used ID: \`${sessionId}\``);
+        }
       }
 
       // Establish the new session, as a change from the instantaneously-latest
