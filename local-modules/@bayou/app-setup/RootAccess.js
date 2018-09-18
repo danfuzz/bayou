@@ -55,15 +55,16 @@ export default class RootAccess extends CommonBase {
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
     const url       = `${Network.baseUrl}/api`;
-    const sessionId = this._context.randomSplitKeyId();
-    const session   = await fileComplex.makeNewSession(authorId, sessionId);
-    const key       = new SplitKey(url, sessionId);
+    const targetId = this._context.randomSplitKeyId();
+    const session   = await fileComplex.makeNewSession(authorId);
+    const key       = new SplitKey(url, targetId);
     this._context.addTarget(new Target(key, session));
 
     log.info(
       'Newly-authorized access.\n',
       `  author:  ${authorId}\n`,
       `  doc:     ${docId}\n`,
+      `  session: ${session.getSessionId()}\n`,
       `  key id:  ${key.printableId}\n`, // This is safe to log (not security-sensitive).
       `  key url: ${key.url}`);
 
