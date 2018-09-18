@@ -22,8 +22,8 @@ export default class DocSession extends CommonBase {
    * Constructs an instance.
    *
    * @param {BaseKey} key Key that identifies the session and grants access to
-   *   it. **Note:** A session is specifically tied to a single author and a
-   *   single document.
+   *   it. **Note:** A session is specifically tied to a specific caret, which
+   *   is associated with a single document and a specific author.
    */
   constructor(key) {
     super();
