@@ -35,6 +35,57 @@ describe('@bayou/util-common/Random', () => {
     });
   });
 
+  describe('idString()', () => {
+    it('should reject a non-string prefix', () => {
+      assert.throws(() => Random.idString(true, 10));
+    });
+
+    it('should reject an empty prefix', () => {
+      assert.throws(() => Random.idString('', 10));
+    });
+
+    it('should reject a non-number length', () => {
+      assert.throws(() => Random.idString('x', 'foo'));
+    });
+
+    it('should reject a non-integer length', () => {
+      assert.throws(() => Random.idString('x', 12.34));
+    });
+
+    it('should reject a non-positive length', () => {
+      assert.throws(() => Random.idString('x', 0));
+      assert.throws(() => Random.idString('x', -1));
+    });
+
+    it('should return a string that starts with the indicated prefix', () => {
+      function test(p) {
+        const result = Random.idString(p, 4);
+        assert.isTrue(result.startsWith(`${p}-`));
+      }
+
+      test('a');
+      test('foo');
+      test('123456');
+    });
+
+    it('should return a string with the expected number and kind of characters after the prefix', () => {
+      function test(l) {
+        const result = Random.idString('x', l);
+        assert.lengthOf(result, l + 2);
+
+        const suffix = result.match(/-(.*)$/)[1];
+        assert.lengthOf(suffix, l);
+
+        assert.isTrue(/^[0-9a-z]+$/.test(suffix));
+      }
+
+      test(1);
+      test(2);
+      test(3);
+      test(50);
+    });
+  });
+
   describe('shortLabel()', () => {
     it('should return a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
       const label1A = Random.shortLabel('A');
