@@ -186,8 +186,28 @@ export default class DocSession extends CommonBase {
    *   change has been applied to the caret state.
    */
   async caret_update(docRevNum, index, length = 0) {
+    const snapshot = await this._caretControl.getSnapshot();
+
+    if (snapshot.getOrNull(this._sessionId) === null) {
+      // The session isn't actually represented in the caret snapshot. This is
+      // unexpected -- the code which sets up a session is supposed to ensure
+      // that the session is represented before the client ever has a chance to
+      // send an update -- but we can recover. Note the issue, and store a new
+      // caret first before issuing the update.
+      const newSessionChange =
+        await this._caretControl.changeForNewSession(this._sessionId, this._authorId);
+
+      this._caretControl.log.warn(`Got update for session \`${this._sessionId}\` before caret was set up.`);
+
+      // **TODO:** This should possibly have the same kind of race-loss-retry
+      // logic as seen elsewhere in the codebase. However, for now -- and
+      // perhaps forever -- this is probably fine, because this whole situation
+      // isn't ever supposed to happen anyway.
+      await this._caretControl.update(newSessionChange);
+    }
+
     const change =
-      await this._caretControl.changeFor(this._sessionId, docRevNum, index, length);
+      await this._caretControl.changeForUpdate(this._sessionId, docRevNum, index, length);
     return this._caretControl.update(change);
   }
 

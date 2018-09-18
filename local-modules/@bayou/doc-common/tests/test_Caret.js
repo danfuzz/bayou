@@ -14,15 +14,16 @@ import { Caret, CaretDelta, CaretOp } from '@bayou/doc-common';
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
+ * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaret(sessionId, index, length, color) {
-  return new Caret(sessionId, { index, length, color });
+function newCaret(sessionId, index, length, color, authorId) {
+  return new Caret(sessionId, { index, length, color, authorId });
 }
 
-const caret1 = newCaret('session-1', 1, 0,  '#111111');
-const caret2 = newCaret('session-2', 2, 6,  '#222222');
-const caret3 = newCaret('session-3', 3, 99, '#333333');
+const caret1 = newCaret('session-1', 1, 0,  '#111111', 'author-1');
+const caret2 = newCaret('session-2', 2, 6,  '#222222', 'author-2');
+const caret3 = newCaret('session-3', 3, 99, '#333333', 'third-author');
 
 describe('@bayou/doc-common/Caret', () => {
   describe('compose()', () => {
@@ -37,6 +38,13 @@ describe('@bayou/doc-common/Caret', () => {
       test(caret1);
       test(caret2);
       test(caret3);
+    });
+
+    it('should update `authorId` given the appropriate op', () => {
+      const op     = CaretOp.op_setField(caret1.sessionId, 'authorId', 'boop');
+      const result = caret1.compose(new CaretDelta([op]));
+
+      assert.strictEqual(result.authorId, 'boop');
     });
 
     it('should update `index` given the appropriate op', () => {
@@ -154,8 +162,8 @@ describe('@bayou/doc-common/Caret', () => {
     });
 
     it('should return `false` when session IDs differ', () => {
-      const c1 = newCaret('x', 1, 2, '#000011');
-      const c2 = newCaret('y', 1, 2, '#000011');
+      const c1 = newCaret('x', 1, 2, '#000011', 'some-author');
+      const c2 = newCaret('y', 1, 2, '#000011', 'some-author');
       assert.isFalse(c1.equals(c2));
     });
 
@@ -174,10 +182,14 @@ describe('@bayou/doc-common/Caret', () => {
       op = CaretOp.op_setField(c1.sessionId, 'color', '#999999');
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
+
+      op = CaretOp.op_setField(c1.sessionId, 'authorId', 'zagnut');
+      c2 = c1.compose(new CaretDelta([op]));
+      assert.isFalse(c1.equals(c2));
     });
 
     it('should return `false` when passed a non-caret', () => {
-      const caret = newCaret('x', 1, 2, '#000011');
+      const caret = newCaret('x', 1, 2, '#000011', 'blorp');
 
       assert.isFalse(caret.equals(undefined));
       assert.isFalse(caret.equals(null));

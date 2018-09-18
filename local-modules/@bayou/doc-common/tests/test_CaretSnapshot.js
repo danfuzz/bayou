@@ -14,10 +14,11 @@ import { Caret, CaretChange, CaretDelta, CaretOp, CaretSnapshot } from '@bayou/d
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
+ * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaret(sessionId, index, length, color) {
-  return new Caret(sessionId, { index, length, color });
+function newCaret(sessionId, index, length, color, authorId) {
+  return new Caret(sessionId, { index, length, color, authorId });
 }
 
 /**
@@ -28,15 +29,16 @@ function newCaret(sessionId, index, length, color) {
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
+ * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaretOp(sessionId, index, length, color) {
-  return CaretOp.op_beginSession(newCaret(sessionId, index, length, color));
+function newCaretOp(sessionId, index, length, color, authorId) {
+  return CaretOp.op_beginSession(newCaret(sessionId, index, length, color, authorId));
 }
 
-const caret1 = newCaret('session_1', 1, 0,  '#111111');
-const caret2 = newCaret('session_2', 2, 6,  '#222222');
-const caret3 = newCaret('session_3', 3, 99, '#333333');
+const caret1 = newCaret('session_1', 1, 0,  '#111111', 'aa');
+const caret2 = newCaret('session_2', 2, 6,  '#222222', 'bb');
+const caret3 = newCaret('session_3', 3, 99, '#333333', 'cc');
 
 const op1 = CaretOp.op_beginSession(caret1);
 const op2 = CaretOp.op_beginSession(caret2);
@@ -195,8 +197,8 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     });
 
     it('should update a pre-existing caret given an appropriate op', () => {
-      const c1       = newCaretOp('foo', 1, 2, '#333333');
-      const c2       = newCaretOp('foo', 3, 2, '#333333');
+      const c1       = newCaretOp('foo', 1, 2, '#333333', 'dd');
+      const c2       = newCaretOp('foo', 3, 2, '#333333', 'dd');
       const snap     = new CaretSnapshot(1, [op1, c1]);
       const expected = new CaretSnapshot(1, [op1, c2]);
       const op       = CaretOp.op_setField('foo', 'index', 3);
@@ -258,9 +260,9 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     });
 
     it('should result in a caret update if that in fact happens', () => {
-      const c1     = newCaretOp('florp', 1, 3, '#444444');
-      const c2     = newCaretOp('florp', 2, 4, '#555555');
-      const c3     = newCaretOp('florp', 3, 5, '#666666');
+      const c1     = newCaretOp('florp', 1, 3, '#444444', 'ff');
+      const c2     = newCaretOp('florp', 2, 4, '#555555', 'gg');
+      const c3     = newCaretOp('florp', 3, 5, '#666666', 'hh');
       const snap1  = new CaretSnapshot(1, [c1]);
       const snap2  = new CaretSnapshot(1, [c2]);
       const result = snap1.diff(snap2);
@@ -345,10 +347,10 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     });
 
     it('should return `true` when equal carets are not also `===`', () => {
-      const c1a = newCaretOp('florp', 2, 3, '#444444');
-      const c1b = newCaretOp('florp', 2, 3, '#444444');
-      const c2a = newCaretOp('like',  3, 0, '#dbdbdb');
-      const c2b = newCaretOp('like',  3, 0, '#dbdbdb');
+      const c1a = newCaretOp('florp', 2, 3, '#444444', 'ab');
+      const c1b = newCaretOp('florp', 2, 3, '#444444', 'ab');
+      const c2a = newCaretOp('like',  3, 0, '#dbdbdb', 'cd');
+      const c2b = newCaretOp('like',  3, 0, '#dbdbdb', 'cd');
 
       const snap1 = new CaretSnapshot(1, [c1a, c2a]);
       const snap2 = new CaretSnapshot(1, [c1b, c2b]);
