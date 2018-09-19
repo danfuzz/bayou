@@ -642,5 +642,21 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         assert.isTrue(snap.withoutCaret(caret1.id).equals(expected));
       });
     });
+
+    describe('invalid argument', () => {
+      it('should reject invalid ID strings', () => {
+        const snap = new CaretSnapshot(1, [op1]);
+        assert.throws(() => snap.withoutCaret(''));
+        assert.throws(() => snap.withoutCaret('ZORCH_SPLAT'));
+      });
+
+      it('should reject arguments that are neither strings nor `Caret`s', () => {
+        const snap = new CaretSnapshot(1, [op1]);
+        assert.throws(() => snap.withoutCaret(undefined));
+        assert.throws(() => snap.withoutCaret(null));
+        assert.throws(() => snap.withoutCaret(123));
+        assert.throws(() => snap.withoutCaret([]));
+      });
+    });
   });
 });
