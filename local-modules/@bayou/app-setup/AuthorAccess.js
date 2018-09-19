@@ -123,9 +123,9 @@ export default class AuthorAccess extends CommonBase {
 
     log.info(
       'Created new session.\n',
-      `  target:  ${targetId}\n`,
-      `  doc:     ${docId}\n`,
-      `  session: ${session.getSessionId()}`);
+      `  target: ${targetId}\n`,
+      `  doc:    ${docId}\n`,
+      `  caret:  ${session.getCaretId()}`);
 
     return targetId;
   }

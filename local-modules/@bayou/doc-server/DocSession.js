@@ -288,7 +288,7 @@ export default class DocSession extends CommonBase {
     const session = this._sessionId;
     const author  = this._authorId;
 
-    return `file ${file}; caret session ${session}; author ${author}`;
+    return `file ${file}; caret ${session}; author ${author}`;
   }
 
   /**
@@ -310,11 +310,11 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns the caret session ID of this instance.
+   * Returns the caret ID of this instance.
    *
-   * @returns {string} The session ID.
+   * @returns {string} The caret ID.
    */
-  getSessionId() {
+  getCaretId() {
     return this._sessionId;
   }
 }
