@@ -106,7 +106,7 @@ export default class AuthorAccess extends CommonBase {
    * @returns {string} Target ID within the API context which refers to the
    *   session. This is _not_ the same as the `sessionId`.
    */
-  async makeSession(docId) {
+  async makeNewSession(docId) {
     // We only check the document ID syntax here, because we can count on the
     // call to `getFileComplex()` to do a full validity check as part of its
     // work.
