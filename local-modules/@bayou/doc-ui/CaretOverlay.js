@@ -63,11 +63,11 @@ export default class CaretOverlay {
      *   <defs>
      *     [reusuable elements such as clip paths, avatars, gradients, etc]
      *   </defs>
-     *   [caret/selection drawing commands for session A]
+     *   [caret/selection drawing commands for caret A]
      *   <use href="#avatarA" />
-     *   [caret/selection drawing commands for session B]
+     *   [caret/selection drawing commands for caret B]
      *   <use href="#avatarB" />
-     *   [caret/selection drawing commands for session N]
+     *   [caret/selection drawing commands for caret N]
      *   <use href="#avatarN" />
      * </svg>
      * ```
@@ -76,7 +76,7 @@ export default class CaretOverlay {
 
     /**
      * {SVGDefsElement} The `<defs>` element within `_svgOverlay`. This holds
-     * reusable definitions such as clip paths, gradients, session avatars, etc.
+     * reusable definitions such as clip paths, gradients, caret avatars, etc.
      * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
      */
     this._svgDefs = this._addInitialSvgDefs();
@@ -97,10 +97,10 @@ export default class CaretOverlay {
     this._useReferences = new Map();
 
     /**
-     * {Int|null} While a drag session is in progress this property
+     * {Int|null} While a drag action is in progress this property
      * indicates where in the Quill document the cursor currently is.
      * This lets the drawing code know where to put the drop coach mark.
-     * When there is no drag session this property is `null`.
+     * When there is no drag action this property is `null`.
      */
     this._dragIndex = null;
 
@@ -297,7 +297,7 @@ export default class CaretOverlay {
   }
 
   /**
-   * Constructs an avatar image for the session and adds it to the `<defs>`
+   * Constructs an avatar image for the caret and adds it to the `<defs>`
    * section of the SVG.
    *
    * @param {Caret} caret The caret for which we're adding an avatar def.
@@ -307,7 +307,7 @@ export default class CaretOverlay {
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
     const id          = caret.id;
 
-    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(id));
+    avatarGroup.setAttribute('id', CaretOverlay._domIdFromCaretId(id));
 
     // Add the circle that will hold the background color.
     const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
@@ -382,12 +382,12 @@ export default class CaretOverlay {
   }
 
   /**
-   * Removes a session avatar from the `<defs>` section of the SVG.
+   * Removes a caret avatar from the `<defs>` section of the SVG.
    *
    * @param {string} sessionId The session whose avatar is being removed.
    */
   _removeAvatarFromDefs(sessionId) {
-    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const avatarName = CaretOverlay._domIdFromCaretId(sessionId);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
@@ -406,7 +406,7 @@ export default class CaretOverlay {
    * @returns {SVGUseElement} A reference to the session's avatar definition.
    */
   _createUseElementForSessionAvatar(sessionId) {
-    const avatarName = CaretOverlay.avatarNameForSessionId(sessionId);
+    const avatarName = CaretOverlay._domIdFromCaretId(sessionId);
     const useElement = this._document.createElementNS(SVG_NAMESPACE, 'use');
 
     useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${avatarName}`);
@@ -417,25 +417,13 @@ export default class CaretOverlay {
   }
 
   /**
-   * Takes a session id as input and returns a DOM id to use to reference the
-   * avatar for that session in the `<defs>` section of the SVG.
-   *
-   * @param {string} sessionId The if for the session being referenced.
-   * @returns {string} The DOM id to use when referencing the avatar definition
-   *   for this session.
-   */
-  static avatarNameForSessionId(sessionId) {
-    return `avatar-${sessionId}`;
-  }
-
-  /**
-   * Finds the avatar for a given session in the `<defs>` section of the SVG and
+   * Finds the avatar for a given caret in the `<defs>` section of the SVG and
    * updates all of its thematic color values to the given new color.
    *
-   * @param {Caret} caret Caret for the session.
+   * @param {Caret} caret Caret in question.
    */
   _updateAvatarColor(caret) {
-    const avatarName = CaretOverlay.avatarNameForSessionId(caret.id);
+    const avatarName = CaretOverlay._domIdFromCaretId(caret.id);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
@@ -454,7 +442,7 @@ export default class CaretOverlay {
    */
   _updateAvatarChildColors(root, color) {
     // Predefined elements in the `<defs>` section of the SVG that adopt the
-    // thematic color for a given session are tagged with the class
+    // thematic color for a given caret are tagged with the class
     // `avatar-theme-color`. Items in that class will have their `fill` colors
     // changed to the provided value.
     if (root.classList.contains('avatar-theme-color')) {
@@ -537,5 +525,17 @@ export default class CaretOverlay {
 
     this._dragIndex = dragIndex;
     this._updateDisplay();
+  }
+
+  /**
+   * Takes a caret ID as input and returns a DOM ID to use to reference the
+   * avatar for that caret in the `<defs>` section of the SVG.
+   *
+   * @param {string} caretId The ID for the caret being referenced.
+   * @returns {string} The DOM ID to use when referencing the avatar definition
+   *   for this caret.
+   */
+  static _domIdFromCaretId(caretId) {
+    return `avatar-${caretId}`;
   }
 }
