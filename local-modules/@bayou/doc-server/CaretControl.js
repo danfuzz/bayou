@@ -228,36 +228,6 @@ export default class CaretControl extends EphemeralControl {
     }
   }
 
-  /**
-   * Indicates that a particular session was reaped (GC'ed). This is a "friend"
-   * method which gets called by `FileComplex`.
-   *
-   * @param {string} sessionId ID of the session that got reaped.
-   */
-  async _sessionReaped(sessionId) {
-    const snapshot = await this.getSnapshot();
-
-    if (snapshot.has(sessionId)) {
-      const newSnapshot =
-        snapshot.withoutSession(sessionId).withRevNum(snapshot.revNum + 1);
-      const change =
-        snapshot.diff(newSnapshot).withTimestamp(Timestamp.now());
-      this.log.withAddedContext(sessionId).info('Local session has ended.');
-
-      try {
-        await this.update(change);
-      } catch (e) {
-        // Probably a timeout after losing too many races. Though it's
-        // log-worthy, it's not a showstopper. The session will ultimately get
-        // cleaned up by the idle timeout.
-        this.log.withAddedContext(sessionId).warn('Error while reaping.', e);
-      }
-    } else {
-      // Some other server probably got to it first.
-      this.log.withAddedContext(sessionId).info('Asked to reap session that was already gone.');
-    }
-  }
-
   // TODO: Implement validateChange for Caret Control
   _impl_validateChange() {
     return true;
