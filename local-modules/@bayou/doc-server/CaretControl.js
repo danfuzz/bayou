@@ -75,8 +75,7 @@ export default class CaretControl extends EphemeralControl {
    * caret, as indicated by the given individual arguments, along with
    * additional information as needed.
    *
-   * @param {string} sessionId ID of the session from which this information
-   *   comes.
+   * @param {string} caretId ID of the caret to update.
    * @param {Int} docRevNum The _document_ revision number that this information
    *   is with respect to.
    * @param {Int} index Caret position (if no selection per se) or starting
@@ -85,8 +84,8 @@ export default class CaretControl extends EphemeralControl {
    * @returns {CaretChange} A change instance which represents the above
    *   information, along with anything else needed to be properly applied.
    */
-  async changeForUpdate(sessionId, docRevNum, index, length = 0) {
-    TString.check(sessionId);
+  async changeForUpdate(caretId, docRevNum, index, length = 0) {
+    CaretId.check(caretId);
     RevisionNumber.check(docRevNum);
     TInt.nonNegative(index);
     TInt.nonNegative(length);
@@ -94,7 +93,7 @@ export default class CaretControl extends EphemeralControl {
     // Construct the updated caret.
 
     const snapshot   = await this.getSnapshot();
-    const oldCaret   = snapshot.get(sessionId);
+    const oldCaret   = snapshot.get(caretId);
     const lastActive = Timestamp.now();
     const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
