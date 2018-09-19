@@ -10,12 +10,12 @@ import { CommonBase } from '@bayou/util-common';
 import FileComplex from './FileComplex';
 
 /**
- * Server side representative for a session for a specific author and document.
- * Instances of this class are exposed across the API boundary, and as such
- * all public methods are available for client use.
+ * Server side representative for an editing session for a specific document,
+ * author, and caret. Instances of this class are exposed across the API
+ * boundary, and as such all public methods are available for client use.
  *
  * For document access methods, this passes non-mutating methods through to the
- * underlying `BodyControl` while implicitly adding an author argument to
+ * underlying {@link BodyControl} while implicitly adding an author argument to
  * methods that modify the document.
  */
 export default class DocSession extends CommonBase {
