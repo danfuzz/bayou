@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { DragState } from '@bayou/data-model-client';
-import { CaretOp, CaretSnapshot } from '@bayou/doc-common';
+import { CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillGeometry, QuillUtil } from '@bayou/quill-util';
 import { TObject } from '@bayou/typecheck';
@@ -536,6 +536,7 @@ export default class CaretOverlay {
    *   for this caret.
    */
   static _domIdFromCaretId(caretId) {
-    return `avatar-${caretId}`;
+    const rawId = CaretId.payloadFromId(caretId);
+    return `avatar-${rawId}`;
   }
 }
