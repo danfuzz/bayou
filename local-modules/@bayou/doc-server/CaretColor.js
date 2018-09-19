@@ -43,7 +43,7 @@ export default class CaretColor extends UtilityClass {
    * @param {string} caretId ID of the nascent caret.
    * @param {array<string>} usedColors List of currently-used colors, in CSS
    *   hex form.
-   * @returns {string} Color to use for the session, in CSS hex form.
+   * @returns {string} Color to use for the caret, in CSS hex form.
    */
   static colorForCaret(caretId, usedColors) {
     TString.check(caretId); // We don't really need to care about caret ID syntax here.

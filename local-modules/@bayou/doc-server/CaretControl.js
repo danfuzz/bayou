@@ -12,7 +12,7 @@ import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
 
 /**
- * {Int} How long (in msec) that a session must be inactive before it gets
+ * {Int} How long (in msec) that a caret must be inactive before it gets
  * culled from the current caret snapshot.
  */
 const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
@@ -97,8 +97,8 @@ export default class CaretControl extends EphemeralControl {
     const lastActive = Timestamp.now();
     const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
-    // We always make a delta with a "begin session" op. Even though this change
-    // isn't always actually beginning a session, when ultimately applied via
+    // We always make a delta with a `beginSession` op. Even though this change
+    // isn't always actually adding a caret, when ultimately applied via
     // `update()` it will always turn into an appropriate new snapshot.
     return new CaretChange(
       snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
