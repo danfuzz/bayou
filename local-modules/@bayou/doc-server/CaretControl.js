@@ -185,10 +185,10 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Removes sessions out of the snapshot that haven't been active recently.
+   * Removes carets out of the snapshot that haven't been active recently.
    */
   async _removeIdleSessions() {
-    this.log.info('Checking for inactive sessions.');
+    this.log.info('Checking for inactive carets.');
 
     const snapshot = await this.getSnapshot();
 
@@ -209,7 +209,7 @@ export default class CaretControl extends EphemeralControl {
     }
 
     if (snapshot === newSnapshot) {
-      this.log.info('No inactive sessions.');
+      this.log.info('No inactive carets.');
       return;
     }
 
@@ -221,10 +221,10 @@ export default class CaretControl extends EphemeralControl {
       await this.update(change);
     } catch (e) {
       // Probably a timeout after losing too many races. Though it's
-      // log-worthy, it's not a showstopper. The sessions will ultimately get
+      // log-worthy, it's not a showstopper. The carets will ultimately get
       // cleaned up by another run of the idle timeout (either on this machine
       // or some other one).
-      this.log.warn('Error while removing idle sessions.', e);
+      this.log.warn('Error while removing idle carets.', e);
     }
   }
 
