@@ -125,13 +125,13 @@ export default class CaretDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case CaretOp.CODE_beginSession: {
-          const sessionId = opProps.caret.id;
+          const caretId = opProps.caret.id;
 
-          if (ids.has(sessionId)) {
+          if (ids.has(caretId)) {
             return false;
           }
 
-          ids.add(sessionId);
+          ids.add(caretId);
           break;
         }
 

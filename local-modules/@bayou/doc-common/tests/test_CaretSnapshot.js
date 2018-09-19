@@ -10,30 +10,30 @@ import { Caret, CaretChange, CaretDelta, CaretId, CaretOp, CaretSnapshot } from 
 /**
  * Convenient caret constructor, which takes positional parameters.
  *
- * @param {string} sessionId Session ID.
+ * @param {string} id Caret ID.
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
  * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaret(sessionId, index, length, color, authorId) {
-  return new Caret(sessionId, { index, length, color, authorId });
+function newCaret(id, index, length, color, authorId) {
+  return new Caret(id, { index, length, color, authorId });
 }
 
 /**
  * Convenient `op_beginSession` constructor, which takes positional parameters
  * for the caret fields.
  *
- * @param {string} sessionId Session ID.
+ * @param {string} id Caret ID.
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
  * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaretOp(sessionId, index, length, color, authorId) {
-  return CaretOp.op_beginSession(newCaret(sessionId, index, length, color, authorId));
+function newCaretOp(id, index, length, color, authorId) {
+  return CaretOp.op_beginSession(newCaret(id, index, length, color, authorId));
 }
 
 const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'aa');
@@ -295,9 +295,9 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         }
 
         const snap = new CaretSnapshot(1, ops);
-        for (const [sessionId, caret] of snap.entries()) {
-          assert.strictEqual(caret, expectMap.get(sessionId));
-          expectMap.delete(sessionId);
+        for (const [caretId, caret] of snap.entries()) {
+          assert.strictEqual(caret, expectMap.get(caretId));
+          expectMap.delete(caretId);
         }
 
         assert.strictEqual(expectMap.size, 0, 'All carets accounted for.');

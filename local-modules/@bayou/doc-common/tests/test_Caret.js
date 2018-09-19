@@ -10,15 +10,15 @@ import { Caret, CaretDelta, CaretOp } from '@bayou/doc-common';
 /**
  * Convenient caret constructor, which takes positional parameters.
  *
- * @param {string} sessionId Session ID.
+ * @param {string} id Caret ID.
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
  * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaret(sessionId, index, length, color, authorId) {
-  return new Caret(sessionId, { index, length, color, authorId });
+function newCaret(id, index, length, color, authorId) {
+  return new Caret(id, { index, length, color, authorId });
 }
 
 const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'author-1');
