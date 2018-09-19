@@ -12,10 +12,10 @@ import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
 
 /**
- * {Int} How long (in msec) that a caret must be inactive before it gets
- * culled from the current caret snapshot.
+ * {Int} How long (in msec) that a caret must be inactive before it gets culled
+ * from the current caret snapshot.
  */
-const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
+const MAX_CARET_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * Controller for the caret metadata of a particular document.
@@ -178,7 +178,7 @@ export default class CaretControl extends EphemeralControl {
       // "sneak past the gate" as it were, between the time that we decide to
       // run the idle check and the would-be later time that the `async`
       // {@link #_removeIdleCarets} method actually starts running.
-      this._nextIdleCheck = now + (MAX_SESSION_IDLE_MSEC / 4);
+      this._nextIdleCheck = now + (MAX_CARET_IDLE_MSEC / 4);
       this._removeIdleCarets();
     }
   }
@@ -196,7 +196,7 @@ export default class CaretControl extends EphemeralControl {
     // previous line.) Otherwise, we might produce a change with an out-of-order
     // timestamp.
     const now         = Timestamp.now();
-    const minTime     = now.addMsec(-MAX_SESSION_IDLE_MSEC);
+    const minTime     = now.addMsec(-MAX_CARET_IDLE_MSEC);
     let   newSnapshot = snapshot;
 
     for (const [caretId, caret] of snapshot.entries()) {
