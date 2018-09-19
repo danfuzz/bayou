@@ -18,7 +18,7 @@ class Avatars extends React.Component {
     return (
       <div className={ styles['document-header__avatars'] }>
         {
-          [...this.props.sessions.entries()].map(([caretId, caret]) => {
+          [...this.props.carets.entries()].map(([caretId, caret]) => {
             return (
               <div key={ caretId } className={ styles['document-header__avatar'] }>
                 <img src={ AVATAR_PLACEHOLDER_URL } />
@@ -39,7 +39,7 @@ class Avatars extends React.Component {
  * maps the redux store state to this component's properties.
  */
 Avatars.propTypes = {
-  sessions: PropTypes.object.isRequired,
+  carets: PropTypes.object.isRequired,
 };
 
 /**
@@ -51,7 +51,7 @@ Avatars.propTypes = {
  */
 const mapStateToProps = (state) => {
   return {
-    sessions: CaretState.caretSnapshot(state)
+    carets: CaretState.caretSnapshot(state)
   };
 };
 
