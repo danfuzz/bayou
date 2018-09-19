@@ -504,14 +504,14 @@ export default class CaretOverlay {
         }
 
         case CaretOp.CODE_setField: {
-          const sessionId = props.caretId;
+          const caretId = props.caretId;
 
-          if (sessionId === this._editorComplex.sessionId) {
+          if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
             continue;
           }
 
           if (props.key === 'color') {
-            const caret = newSnapshot.get(sessionId);
+            const caret = newSnapshot.get(caretId);
 
             this._updateAvatarColor(caret);
           }
