@@ -165,6 +165,14 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * {string} ID of the caret. This uniquely identifies this caret within the
+   * context of a specific document.
+   */
+  get id() {
+    return this._id;
+  }
+
+  /**
    * {Int} The zero-based leading position of this caret / selection.
    */
   get index() {
@@ -192,14 +200,6 @@ export default class Caret extends CommonBase {
    */
   get revNum() {
     return this._fields.get('revNum');
-  }
-
-  /**
-   * {string} ID of the caret. This uniquely identifies this caret within the
-   * context of a specific document.
-   */
-  get id() {
-    return this._id;
   }
 
   /**
