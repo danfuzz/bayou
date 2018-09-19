@@ -88,9 +88,9 @@ export default class CaretOverlay {
     this._lastCaretSnapshot = CaretSnapshot.EMPTY;
 
     /**
-     * {Map<string, SVGUseElement>} Map of session id to the `<use>` elements
+     * {Map<string, SVGUseElement>} Map from caret ID to the `<use>` elements
      * for each avatar. By pre-allocating them and storing one for each
-     * session we can avoid te cost of redrawing the user avatar each update
+     * caret we can avoid the cost of redrawing the user avatar each update
      * and can instead just translate the x/y position of this `<use>`
      * reference.
      */
@@ -384,29 +384,29 @@ export default class CaretOverlay {
   /**
    * Removes a caret avatar from the `<defs>` section of the SVG.
    *
-   * @param {string} sessionId The session whose avatar is being removed.
+   * @param {string} caretId ID of the caret whose avatar is being removed.
    */
-  _removeAvatarFromDefs(sessionId) {
-    const avatarName = CaretOverlay._domIdFromCaretId(sessionId);
+  _removeAvatarFromDefs(caretId) {
+    const avatarName = CaretOverlay._domIdFromCaretId(caretId);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
       this._svgDefs.removeChild(avatar);
     }
 
-    this._useReferences.delete(sessionId);
+    this._useReferences.delete(caretId);
   }
 
   /**
-   * Prepares an SVG `<use>` element to use-by-reference a session avatar stored
+   * Prepares an SVG `<use>` element to use-by-reference a caret avatar stored
    * in the `<defs>` section of the layer.
    * @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
    *
-   * @param {string} sessionId The id for the session being referenced.
-   * @returns {SVGUseElement} A reference to the session's avatar definition.
+   * @param {string} caretId The ID of the caret.
+   * @returns {SVGUseElement} A reference to the caret's avatar definition.
    */
-  _createUseElementForSessionAvatar(sessionId) {
-    const avatarName = CaretOverlay._domIdFromCaretId(sessionId);
+  _createUseElementForSessionAvatar(caretId) {
+    const avatarName = CaretOverlay._domIdFromCaretId(caretId);
     const useElement = this._document.createElementNS(SVG_NAMESPACE, 'use');
 
     useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${avatarName}`);
