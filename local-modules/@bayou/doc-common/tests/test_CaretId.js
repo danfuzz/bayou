@@ -96,6 +96,25 @@ describe('@bayou/doc-common/CaretId', () => {
     });
   });
 
+  describe('payloadFromId()', () => {
+    it('should return the payload from a valid id', () => {
+      assert.strictEqual('fooba', CaretId.payloadFromId('cr-fooba'));
+      assert.strictEqual('0zor0', CaretId.payloadFromId('cr-0zor0'));
+    });
+
+    it('should reject invalid ID strings', () => {
+      for (const s of INVALID_STRINGS) {
+        assert.throws(() => CaretId.payloadFromId(s), /badValue/, s);
+      }
+    });
+
+    it('should reject non-strings', () => {
+      for (const v of NON_STRINGS) {
+        assert.throws(() => CaretId.payloadFromId(v), /badValue/, v);
+      }
+    });
+  });
+
   describe('randomInstance()', () => {
     it('should return values for which `isInstance()` is `true`', () => {
       for (let i = 0; i < 10; i++) {
