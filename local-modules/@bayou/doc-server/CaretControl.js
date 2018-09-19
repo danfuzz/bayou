@@ -37,7 +37,7 @@ export default class CaretControl extends EphemeralControl {
     this._snapshots = new SnapshotManager(this);
 
     /**
-     * {Int} When to next run {@link #_removeIdleSessions}. Initialized to `0`
+     * {Int} When to next run {@link #_removeIdleCarets}. Initialized to `0`
      * so that the first check will happen soon after the document is loaded.
      */
     this._nextIdleCheck = 0;
@@ -61,7 +61,7 @@ export default class CaretControl extends EphemeralControl {
 
     const snapshot   = await this.getSnapshot();
     const lastActive = Timestamp.now();
-    const color      = CaretControl._pickSessionColor(caretId, snapshot);
+    const color      = CaretControl._pickCaretColor(caretId, snapshot);
     const caret      = new Caret(caretId, { authorId, color, lastActive });
 
     return new CaretChange(
@@ -123,7 +123,7 @@ export default class CaretControl extends EphemeralControl {
    *   `null` to indicate that the revision is not available.
    */
   async _impl_getSnapshot(revNum) {
-    this._maybeRemoveIdleSessions();
+    this._maybeRemoveIdleCarets();
 
     return this._snapshots.getSnapshot(revNum);
   }
@@ -166,11 +166,11 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Perform idle session cleanup, but only if it's been long enough since the
+   * Perform idle caret cleanup, but only if it's been long enough since the
    * last time that was done. If in fact cleanup is performed, it happens
    * _asynchronously_ with respect to the call to this method.
    */
-  _maybeRemoveIdleSessions() {
+  _maybeRemoveIdleCarets() {
     const now = Date.now();
 
     if (now >= this._nextIdleCheck) {
@@ -178,16 +178,16 @@ export default class CaretControl extends EphemeralControl {
       // here (and not in the subsequent call), so that multiple checks can't
       // "sneak past the gate" as it were, between the time that we decide to
       // run the idle check and the would-be later time that the `async`
-      // {@link _removeIdleSessions} method actually starts running.
+      // {@link #_removeIdleCarets} method actually starts running.
       this._nextIdleCheck = now + (MAX_SESSION_IDLE_MSEC / 4);
-      this._removeIdleSessions();
+      this._removeIdleCarets();
     }
   }
 
   /**
    * Removes carets out of the snapshot that haven't been active recently.
    */
-  async _removeIdleSessions() {
+  async _removeIdleCarets() {
     this.log.info('Checking for inactive carets.');
 
     const snapshot = await this.getSnapshot();
@@ -200,11 +200,11 @@ export default class CaretControl extends EphemeralControl {
     const minTime     = now.addMsec(-MAX_SESSION_IDLE_MSEC);
     let   newSnapshot = snapshot;
 
-    for (const [sessionId, caret] of snapshot.entries()) {
+    for (const [caretId, caret] of snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this.log.withAddedContext(sessionId).info('Became inactive.');
-        newSnapshot = newSnapshot.withoutSession(sessionId);
+        this.log.withAddedContext(caretId).info('Became inactive.');
+        newSnapshot = newSnapshot.withoutSession(caretId);
       }
     }
 
@@ -250,20 +250,20 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Picks a color to use for a new session.
+   * Picks a color to use for a new caret.
    *
-   * @param {string} sessionId The ID for the new session (used as a
-   *   pseudo-random seed).
+   * @param {string} caretId The ID for the new caret (used as a pseudo-random
+   *   seed).
    * @param {CaretSnapshot} snapshot Snapshot upon which to base the decision.
    * @returns {string} The color to use, in CSS hex form.
    */
-  static _pickSessionColor(sessionId, snapshot) {
+  static _pickCaretColor(caretId, snapshot) {
     // Extract all the currently-used caret colors.
     const usedColors = [];
-    for (const [sessionId_unused, caret] of snapshot.entries()) {
+    for (const [caretId_unused, caret] of snapshot.entries()) {
       usedColors.push(caret.color);
     }
 
-    return CaretColor.colorForSession(sessionId, usedColors);
+    return CaretColor.colorForSession(caretId, usedColors);
   }
 }
