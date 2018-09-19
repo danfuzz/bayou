@@ -43,29 +43,29 @@ export default class CaretOp extends BaseOp {
   /**
    * Constructs a new "end session" operation.
    *
-   * @param {string} sessionId ID of the session.
+   * @param {string} caretId ID of the caret which is to be removed.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_endSession(sessionId) {
-    CaretId.check(sessionId);
+  static op_endSession(caretId) {
+    CaretId.check(caretId);
 
-    return new CaretOp(CaretOp.CODE_endSession, sessionId);
+    return new CaretOp(CaretOp.CODE_endSession, caretId);
   }
 
   /**
    * Constructs a new "set caret field" operation.
    *
-   * @param {string} sessionId Session for the caret to update.
+   * @param {string} caretId ID of the caret to update.
    * @param {string} key Name of the field to update.
    * @param {*} value New value for the so-named field. Type restriction on this
    *   varies by name.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_setField(sessionId, key, value) {
-    CaretId.check(sessionId);
+  static op_setField(caretId, key, value) {
+    CaretId.check(caretId);
     Caret.checkField(key, value);
 
-    return new CaretOp(CaretOp.CODE_setField, sessionId, key, value);
+    return new CaretOp(CaretOp.CODE_setField, caretId, key, value);
   }
 
   /**
@@ -85,13 +85,13 @@ export default class CaretOp extends BaseOp {
       }
 
       case CaretOp.CODE_endSession: {
-        const [sessionId] = payload.args;
-        return Object.freeze({ opName, sessionId });
+        const [caretId] = payload.args;
+        return Object.freeze({ opName, caretId });
       }
 
       case CaretOp.CODE_setField: {
-        const [sessionId, key, value] = payload.args;
-        return Object.freeze({ opName, sessionId, key, value });
+        const [caretId, key, value] = payload.args;
+        return Object.freeze({ opName, caretId, key, value });
       }
 
       default: {

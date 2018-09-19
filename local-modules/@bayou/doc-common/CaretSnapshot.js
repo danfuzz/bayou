@@ -14,7 +14,7 @@ import CaretOp from './CaretOp';
 
 
 /**
- * Snapshot of information about all active sessions on a particular document.
+ * Snapshot of information about all active carets on a particular document.
  * Instances of this class are always frozen (immutable).
  *
  * When thought of in terms of a map, instances of this class can be taken to
@@ -44,7 +44,7 @@ export default class CaretSnapshot extends BaseSnapshot {
 
       switch (opProps.opName) {
         case CaretOp.CODE_beginSession: {
-          this._carets.set(opProps.caret.sessionId, op);
+          this._carets.set(opProps.caret.id, op);
           break;
         }
 
@@ -82,7 +82,7 @@ export default class CaretSnapshot extends BaseSnapshot {
   * entries() {
     for (const op of this.contents.ops) {
       const caret = op.props.caret;
-      yield [caret.sessionId, caret];
+      yield [caret.id, caret];
     }
   }
 
@@ -193,10 +193,10 @@ export default class CaretSnapshot extends BaseSnapshot {
   withCaret(caret) {
     Caret.check(caret);
 
-    const sessionId = caret.sessionId;
-    const op        = CaretOp.op_beginSession(caret);
+    const id = caret.id;
+    const op = CaretOp.op_beginSession(caret);
 
-    return op.equals(this._carets.get(sessionId))
+    return op.equals(this._carets.get(id))
       ? this
       : this.compose(new CaretChange(this.revNum, [op]));
   }
@@ -213,7 +213,7 @@ export default class CaretSnapshot extends BaseSnapshot {
    */
   withoutCaret(caret) {
     Caret.check(caret);
-    return this.withoutSession(caret.sessionId);
+    return this.withoutSession(caret.id);
   }
 
   /**

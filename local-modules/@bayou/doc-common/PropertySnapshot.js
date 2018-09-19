@@ -11,7 +11,7 @@ import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 
 /**
- * Snapshot of information about all active sessions on a particular document.
+ * Snapshot of information about all the properties of a particular document.
  * Instances of this class are always frozen (immutable).
  *
  * When thought of in terms of a map, instances of this class can be taken to

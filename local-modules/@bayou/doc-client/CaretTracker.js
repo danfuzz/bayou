@@ -2,9 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CaretId } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
-import { TInt, TObject, TString } from '@bayou/typecheck';
+import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import DocSession from './DocSession';
@@ -41,10 +42,10 @@ export default class CaretTracker extends CommonBase {
     this._sessionProxy = null;
 
     /**
-     * {string|null} The caret session ID that this instance controls, if known.
+     * {string|null} The ID of the caret that this instance controls, if known.
      * Becomes non-`null` during resolution of {@link #_sessionProxy}.
      */
-    this._sessionId = null;
+    this._caretId = null;
 
     /**
      * {boolean} Whether there is a caret update in progress. Starts out `true`
@@ -65,10 +66,10 @@ export default class CaretTracker extends CommonBase {
     // Arrange for `_sessionProxy` to get set.
     (async () => {
       this._sessionProxy = await docSession.getSessionProxy();
-      this._sessionId    = await this._sessionProxy.getSessionId();
+      this._caretId      = await this._sessionProxy.getCaretId();
       this._updating     = false;
 
-      this._log.info(`Caret tracker ready; session ID \`${this._sessionId}\`.`);
+      this._log.info(`Caret tracker ready; caret ID \`${this._caretId}\`.`);
 
       // Give the update loop a chance to send caret updates that happened
       // during initialization (if any).
@@ -77,21 +78,21 @@ export default class CaretTracker extends CommonBase {
   }
 
   /**
-   * Indicates whether the given caret session ID is the one controlled by this
-   * instance.
+   * Indicates whether the given caret ID identifies the caret controlled by
+   * this instance.
    *
    * **Note:** It is possible for this to return a false negative when the
    * session is in the process of being established (because we don't yet know
    * the ID we control).
    *
-   * @param {string} sessionId The caret session ID in question.
-   * @returns {boolean} `true` if `sessionId` is the ID that this instance
+   * @param {string} caretId The caret ID in question.
+   * @returns {boolean} `true` if `caretId` is the ID that this instance
    *   controls, or `false` if not.
    */
-  isControlledHere(sessionId) {
-    TString.check(sessionId);
+  isControlledHere(caretId) {
+    CaretId.check(caretId);
 
-    return (sessionId === this._sessionId);
+    return (caretId === this._caretId);
   }
 
   /**

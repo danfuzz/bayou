@@ -205,17 +205,17 @@ export default class CaretOverlay {
     } else {
       // We're not dragging so draw the remote author cursors and highlights.
 
-      // For each session…
-      for (const [sessionId, caret] of this._lastCaretSnapshot.entries()) {
+      // For each caret...
+      for (const [caretId, caret] of this._lastCaretSnapshot.entries()) {
         // Is this caret us? If so, don't draw anything. **TODO:** The caret
         // snapshot ideally wouldn't actually represent the caret controlled by
         // this editor. The code that pushes the snapshot into the store should
         // be updated accordingly.
-        if (this._editorComplex.docSession.caretTracker.isControlledHere(sessionId)) {
+        if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
           continue;
         }
 
-        const avatarReference = this._useReferences.get(sessionId);
+        const avatarReference = this._useReferences.get(caretId);
 
         if (caret.length === 0) {
           // Length of zero means an insertion point instead of a selection
@@ -305,9 +305,9 @@ export default class CaretOverlay {
   _addAvatarToDefs(caret) {
     // The whole avatar is set in a group with a known id.
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
-    const sessionId = caret.sessionId;
+    const id          = caret.id;
 
-    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(sessionId));
+    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(id));
 
     // Add the circle that will hold the background color.
     const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
@@ -366,9 +366,9 @@ export default class CaretOverlay {
 
     this._svgDefs.appendChild(avatarGroup);
 
-    const useReferenceForAvatar = this._createUseElementForSessionAvatar(caret.sessionId);
+    const useReferenceForAvatar = this._createUseElementForSessionAvatar(caret.id);
 
-    this._useReferences.set(caret.sessionId, useReferenceForAvatar);
+    this._useReferences.set(caret.id, useReferenceForAvatar);
   }
 
   _avatarDefWithName(name) {
@@ -435,7 +435,7 @@ export default class CaretOverlay {
    * @param {Caret} caret Caret for the session.
    */
   _updateAvatarColor(caret) {
-    const avatarName = CaretOverlay.avatarNameForSessionId(caret.sessionId);
+    const avatarName = CaretOverlay.avatarNameForSessionId(caret.id);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {
@@ -498,20 +498,20 @@ export default class CaretOverlay {
         }
 
         case CaretOp.CODE_endSession: {
-          this._removeAvatarFromDefs(props.sessionId);
+          this._removeAvatarFromDefs(props.caretId);
           updateDisplay = true;
           break;
         }
 
         case CaretOp.CODE_setField: {
-          const sessionId = props.sessionId;
+          const caretId = props.caretId;
 
-          if (sessionId === this._editorComplex.sessionId) {
+          if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
             continue;
           }
 
           if (props.key === 'color') {
-            const caret = newSnapshot.get(sessionId);
+            const caret = newSnapshot.get(caretId);
 
             this._updateAvatarColor(caret);
           }

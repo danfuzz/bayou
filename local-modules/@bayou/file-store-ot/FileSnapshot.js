@@ -14,8 +14,8 @@ import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 
 /**
- * Snapshot of information about all active sessions on a particular document.
- * Instances of this class are always frozen (immutable).
+ * Snapshot of file contents. Instances of this class are always frozen
+ * (immutable).
  *
  * When thought of in terms of a map, instances of this class can be taken to
  * be maps from string keys to arbitrary data values.

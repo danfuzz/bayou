@@ -10,15 +10,15 @@ import { Caret, CaretDelta, CaretOp } from '@bayou/doc-common';
 /**
  * Convenient caret constructor, which takes positional parameters.
  *
- * @param {string} sessionId Session ID.
+ * @param {string} id Caret ID.
  * @param {Int} index Start caret position.
  * @param {Int} length Selection length.
  * @param {string} color Highlight color.
  * @param {string} authorId Author ID.
  * @returns {Caret} Appropriately-constructed caret.
  */
-function newCaret(sessionId, index, length, color, authorId) {
-  return new Caret(sessionId, { index, length, color, authorId });
+function newCaret(id, index, length, color, authorId) {
+  return new Caret(id, { index, length, color, authorId });
 }
 
 const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'author-1');
@@ -41,42 +41,42 @@ describe('@bayou/doc-common/Caret', () => {
     });
 
     it('should update `authorId` given the appropriate op', () => {
-      const op     = CaretOp.op_setField(caret1.sessionId, 'authorId', 'boop');
+      const op     = CaretOp.op_setField(caret1.id, 'authorId', 'boop');
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.authorId, 'boop');
     });
 
     it('should update `index` given the appropriate op', () => {
-      const op     = CaretOp.op_setField(caret1.sessionId, 'index', 99999);
+      const op     = CaretOp.op_setField(caret1.id, 'index', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.index, 99999);
     });
 
     it('should update `length` given the appropriate op', () => {
-      const op     = CaretOp.op_setField(caret1.sessionId, 'length', 99999);
+      const op     = CaretOp.op_setField(caret1.id, 'length', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.length, 99999);
     });
 
     it('should update `color` given the appropriate op', () => {
-      const op     = CaretOp.op_setField(caret1.sessionId, 'color', '#aabbcc');
+      const op     = CaretOp.op_setField(caret1.id, 'color', '#aabbcc');
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.color, '#aabbcc');
     });
 
     it('should update `revNum` given the appropriate op', () => {
-      const op     = CaretOp.op_setField(caret1.sessionId, 'revNum', 12345);
+      const op     = CaretOp.op_setField(caret1.id, 'revNum', 12345);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.revNum, 12345);
     });
 
     it('should refuse to compose if given a non-matching session ID', () => {
-      const op = CaretOp.op_setField(caret2.sessionId, 'index', 55);
+      const op = CaretOp.op_setField(caret2.id, 'index', 55);
 
       assert.throws(() => { caret1.compose(new CaretDelta([op])); });
     });
@@ -96,7 +96,7 @@ describe('@bayou/doc-common/Caret', () => {
 
     it('should result in an `index` diff if that in fact changes', () => {
       const older   = caret1;
-      const op      = CaretOp.op_setField(older.sessionId, 'index', 99999);
+      const op      = CaretOp.op_setField(older.id, 'index', 99999);
       const newer   = older.compose(new CaretDelta([op]));
       const diffOps = older.diff(newer).ops;
 
@@ -119,9 +119,9 @@ describe('@bayou/doc-common/Caret', () => {
 
     it('should result in an `index` diff if that in fact changes', () => {
       const older   = caret1;
-      const op      = CaretOp.op_setField(older.sessionId, 'index', 99999);
+      const op      = CaretOp.op_setField(older.id, 'index', 99999);
       const newer   = older.compose(new CaretDelta([op]));
-      const diffOps = older.diffFields(newer, older.sessionId).ops;
+      const diffOps = older.diffFields(newer, older.id).ops;
 
       assert.strictEqual(diffOps.length, 1);
       assert.deepEqual(diffOps[0], op);
@@ -129,9 +129,9 @@ describe('@bayou/doc-common/Caret', () => {
 
     it('should result in a `length` diff if that in fact changes', () => {
       const older   = caret1;
-      const op      = CaretOp.op_setField(older.sessionId, 'length', 99999);
+      const op      = CaretOp.op_setField(older.id, 'length', 99999);
       const newer   = older.compose(new CaretDelta([op]));
-      const diffOps = older.diffFields(newer, older.sessionId).ops;
+      const diffOps = older.diffFields(newer, older.id).ops;
 
       assert.strictEqual(diffOps.length, 1);
       assert.deepEqual(diffOps[0], op);
@@ -139,9 +139,9 @@ describe('@bayou/doc-common/Caret', () => {
 
     it('should result in a `color` diff if that in fact changes', () => {
       const older   = caret1;
-      const op      = CaretOp.op_setField(older.sessionId, 'color', '#abcdef');
+      const op      = CaretOp.op_setField(older.id, 'color', '#abcdef');
       const newer   = older.compose(new CaretDelta([op]));
-      const diffOps = older.diffFields(newer, older.sessionId).ops;
+      const diffOps = older.diffFields(newer, older.id).ops;
 
       assert.strictEqual(diffOps.length, 1);
       assert.deepEqual(diffOps[0], op);
@@ -171,19 +171,19 @@ describe('@bayou/doc-common/Caret', () => {
       const c1 = caret1;
       let   c2, op;
 
-      op = CaretOp.op_setField(c1.sessionId, 'index', 99999);
+      op = CaretOp.op_setField(c1.id, 'index', 99999);
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
 
-      op = CaretOp.op_setField(c1.sessionId, 'length', 99999);
+      op = CaretOp.op_setField(c1.id, 'length', 99999);
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
 
-      op = CaretOp.op_setField(c1.sessionId, 'color', '#999999');
+      op = CaretOp.op_setField(c1.id, 'color', '#999999');
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
 
-      op = CaretOp.op_setField(c1.sessionId, 'authorId', 'zagnut');
+      op = CaretOp.op_setField(c1.id, 'authorId', 'zagnut');
       c2 = c1.compose(new CaretDelta([op]));
       assert.isFalse(c1.equals(c2));
     });

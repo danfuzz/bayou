@@ -14,7 +14,7 @@ import CaretOp from './CaretOp';
  * {Map<string, function>} Map from each allowed caret field name to a type
  * checker predicate for same.
  *
- * **Note:** `sessionId` is not included, because that's separate from the
+ * **Note:** The caret's ID is not included, because that's separate from the
  * caret's "fields" per se.
  *
  * **Note:** We use the `bind(...)` form for method binding instead of an
@@ -48,8 +48,8 @@ let DEFAULT = null;
  *
  * **Note:** The use of the term "caret" in this and other classes, method
  * names, and the like, is meant to be a synecdochal metaphor for all
- * information about a session, including the human driving it. The caret per
- * se is merely the most blatant aspect of it.
+ * information about a session from the user's perspective, including the human
+ * driving it. The caret per se is merely the most blatant aspect of it.
  */
 export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
@@ -98,43 +98,42 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * Constructs an instance. Only the first argument (`sessionIdOrBase`) is
-   * required, and it is not necessary to specify all the fields in `fields`.
-   * Fields not listed are derived from the base caret (first argument) if
-   * specified as such, or from the default value {@link #DEFAULT} if the first
-   * argument is a session ID.
+   * Constructs an instance. Only the first argument (`idOrBase`) is required,
+   * and it is not necessary to specify all the fields in `fields`. Fields not
+   * listed are derived from the base caret (first argument) if specified as
+   * such, or from the default value {@link #DEFAULT} if the first argument is
+   * an ID.
    *
    * **Note:** {@link #DEFAULT} does not bind an `authorId`, which means that
    * that field must be specified when creating an instance "from scratch."
    *
-   * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
-   *   or a base caret instance which provides the session and default values
-   *   for fields.
+   * @param {string|Caret} idOrBase Session ID that identifies the caret, or a
+   *   base caret instance which provides the ID and default values for fields.
    * @param {object} [fields = {}] Fields of the caret, as plain object mapping
    *   field names to values.
    */
-  constructor(sessionIdOrBase, fields = {}) {
-    let sessionId;
+  constructor(idOrBase, fields = {}) {
+    let id;
     let newFields;
 
-    if (sessionIdOrBase instanceof Caret) {
-      newFields = new Map(sessionIdOrBase._fields);
-      sessionId = sessionIdOrBase.sessionId;
+    if (idOrBase instanceof Caret) {
+      newFields = new Map(idOrBase._fields);
+      id = idOrBase.id;
     } else if (DEFAULT !== null) {
       newFields = new Map(DEFAULT._fields);
-      sessionId = CaretId.check(sessionIdOrBase);
+      id = CaretId.check(idOrBase);
     } else {
       // If we're here, it means that `DEFAULT` is currently being initialized.
       newFields = new Map();
-      sessionId = TString.check(sessionIdOrBase);
+      id = TString.check(idOrBase);
     }
 
     TObject.plain(fields);
 
     super();
 
-    /** {string} The session ID. */
-    this._sessionId = sessionId;
+    /** {string} The caret ID. */
+    this._id = id;
 
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
     this._fields = newFields;
@@ -151,7 +150,7 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string|null} ID of the author responsible for this caret.
+   * {string} ID of the author responsible for this caret.
    */
   get authorId() {
     return this._fields.get('authorId');
@@ -166,6 +165,14 @@ export default class Caret extends CommonBase {
   }
 
   /**
+   * {string} ID of the caret. This uniquely identifies this caret within the
+   * context of a specific document.
+   */
+  get id() {
+    return this._id;
+  }
+
+  /**
    * {Int} The zero-based leading position of this caret / selection.
    */
   get index() {
@@ -173,7 +180,7 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {Timestamp} The moment in time when this session was last active.
+   * {Timestamp} The moment in time when this caret was last active.
    */
   get lastActive() {
     return this._fields.get('lastActive');
@@ -196,17 +203,9 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string} Opaque reference to be used with other APIs to get information
-   * about the author whose caret this is.
-   */
-  get sessionId() {
-    return this._sessionId;
-  }
-
-  /**
    * Composes the given `delta` on top of this instance, producing a new
    * instance. The operations in `delta` must all be `setField` ops for the same
-   * `sessionId` as this instance.
+   * `id` as this instance.
    *
    * @param {CaretDelta} delta Delta to apply.
    * @returns {Caret} Caret consisting of this instance's data as the base, with
@@ -221,8 +220,8 @@ export default class Caret extends CommonBase {
       const props = op.props;
       if (props.opName !== CaretOp.CODE_setField) {
         throw Errors.badUse(`Invalid operation name: ${props.opName}`);
-      } else if (props.sessionId !== this.sessionId) {
-        throw Errors.badUse('Mismatched session ID.');
+      } else if (props.caretId !== this.id) {
+        throw Errors.badUse('Mismatched ID.');
       }
 
       fields[props.key] = props.value;
@@ -243,7 +242,7 @@ export default class Caret extends CommonBase {
       fields[k] = v;
     }
 
-    return [this._sessionId, fields];
+    return [this._id, fields];
   }
 
   /**
@@ -258,42 +257,42 @@ export default class Caret extends CommonBase {
    * method is called on.
    *
    * @param {Caret} newerCaret Caret to take the difference from. It must have
-   *   the same `sessionId` as this instance.
+   *   the same `id` as this instance.
    * @returns {CaretDelta} Delta which represents the difference between
    *   `newerCaret` and this instance.
    */
   diff(newerCaret) {
     Caret.check(newerCaret);
 
-    const sessionId = this.sessionId;
+    const id = this.id;
 
-    if (sessionId !== newerCaret.sessionId) {
-      throw Errors.badUse('Cannot `diff` carets with mismatched `sessionId`.');
+    if (id !== newerCaret.id) {
+      throw Errors.badUse('Cannot `diff` carets with mismatched `id`.');
     }
 
-    return this.diffFields(newerCaret, sessionId);
+    return this.diffFields(newerCaret, id);
   }
 
   /**
-   * Like `diff()`, except does _not_ check to see if the two instances'
-   * `sessionId`s match. That is, it only looks at the fields.
+   * Like `diff()`, except does _not_ check to see if the two instances' `id`s
+   * match. That is, it only looks at the fields.
    *
    * @param {Caret} newerCaret Caret to take the difference from.
-   * @param {string} sessionId Session ID to use for the ops in the result.
+   * @param {string} id ID to use for the ops in the result.
    * @returns {CaretDelta} Delta which represents the difference between
    *   `newerCaret` and this instance, _not_ including any difference in
-   *   `sessionId`, if any.
+   *   `id`, if any.
    */
-  diffFields(newerCaret, sessionId) {
+  diffFields(newerCaret, id) {
     Caret.check(newerCaret);
-    CaretId.check(sessionId);
+    CaretId.check(id);
 
     const fields = this._fields;
     const ops    = [];
 
     for (const [k, v] of newerCaret._fields) {
       if (!Caret._equalFields(v, fields.get(k))) {
-        ops.push(CaretOp.op_setField(sessionId, k, v));
+        ops.push(CaretOp.op_setField(id, k, v));
       }
     }
 
@@ -314,7 +313,7 @@ export default class Caret extends CommonBase {
       return false;
     }
 
-    if (this._sessionId !== other._sessionId) {
+    if (this._id !== other._id) {
       return false;
     }
 

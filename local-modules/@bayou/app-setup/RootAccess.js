@@ -64,7 +64,7 @@ export default class RootAccess extends CommonBase {
       'Newly-authorized access.\n',
       `  author:  ${authorId}\n`,
       `  doc:     ${docId}\n`,
-      `  session: ${session.getSessionId()}\n`,
+      `  caret:   ${session.getCaretId()}\n`,
       `  key id:  ${key.printableId}\n`, // This is safe to log (not security-sensitive).
       `  key url: ${key.url}`);
 
