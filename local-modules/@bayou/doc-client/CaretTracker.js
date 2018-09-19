@@ -42,10 +42,10 @@ export default class CaretTracker extends CommonBase {
     this._sessionProxy = null;
 
     /**
-     * {string|null} The caret session ID that this instance controls, if known.
+     * {string|null} The ID of the caret that this instance controls, if known.
      * Becomes non-`null` during resolution of {@link #_sessionProxy}.
      */
-    this._sessionId = null;
+    this._caretId = null;
 
     /**
      * {boolean} Whether there is a caret update in progress. Starts out `true`
@@ -66,10 +66,10 @@ export default class CaretTracker extends CommonBase {
     // Arrange for `_sessionProxy` to get set.
     (async () => {
       this._sessionProxy = await docSession.getSessionProxy();
-      this._sessionId    = await this._sessionProxy.getSessionId();
+      this._caretId      = await this._sessionProxy.getSessionId();
       this._updating     = false;
 
-      this._log.info(`Caret tracker ready; caret ID \`${this._sessionId}\`.`);
+      this._log.info(`Caret tracker ready; caret ID \`${this._caretId}\`.`);
 
       // Give the update loop a chance to send caret updates that happened
       // during initialization (if any).
@@ -92,7 +92,7 @@ export default class CaretTracker extends CommonBase {
   isControlledHere(caretId) {
     CaretId.check(caretId);
 
-    return (caretId === this._sessionId);
+    return (caretId === this._caretId);
   }
 
   /**
