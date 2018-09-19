@@ -24,7 +24,7 @@ const INITIAL_CANDIDATES = 36; // That is, 10 degrees difference per candidate.
 const TOP_CANDIDATES = 8;
 
 /**
- * Selector of likely-distinctive caret highlight colors for sessions, based on
+ * Selector of likely-distinctive caret highlight colors for carets, based on
  * currently-used colors.
  *
  * The twist about this class is that it has to operate &mdash; and avoid
