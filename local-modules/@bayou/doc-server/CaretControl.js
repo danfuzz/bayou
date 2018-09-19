@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretChange, CaretOp, CaretSnapshot } from '@bayou/doc-common';
+import { Caret, CaretChange, CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TString } from '@bayou/typecheck';
 
@@ -46,23 +46,23 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Constructs a {@link CaretChange} instance which introduces a new session.
+   * Constructs a {@link CaretChange} instance which introduces a new caret.
    *
-   * @param {string} sessionId ID of the session being introduced.
-   * @param {string} authorId ID of the author which controls the session.
+   * @param {string} caretId ID of the caret being introduced.
+   * @param {string} authorId ID of the author which controls the caret.
    * @returns {CaretChange} A change instance which represents the above
    *   information, along with anything else needed to be properly applied.
    */
-  async changeForNewSession(sessionId, authorId) {
-    TString.check(sessionId);
+  async changeForNewCaret(caretId, authorId) {
+    CaretId.check(caretId);
     TString.check(authorId);
 
     // Construct the new/updated caret.
 
     const snapshot   = await this.getSnapshot();
     const lastActive = Timestamp.now();
-    const color      = CaretControl._pickSessionColor(sessionId, snapshot);
-    const caret      = new Caret(sessionId, { authorId, color, lastActive });
+    const color      = CaretControl._pickSessionColor(caretId, snapshot);
+    const caret      = new Caret(caretId, { authorId, color, lastActive });
 
     return new CaretChange(
       snapshot.revNum + 1,

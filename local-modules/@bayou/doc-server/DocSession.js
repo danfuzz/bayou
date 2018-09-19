@@ -187,13 +187,14 @@ export default class DocSession extends CommonBase {
     const snapshot = await this._caretControl.getSnapshot();
 
     if (snapshot.getOrNull(this._caretId) === null) {
-      // The session isn't actually represented in the caret snapshot. This is
+      // The caret isn't actually represented in the caret snapshot. This is
       // unexpected -- the code which sets up a session is supposed to ensure
-      // that the session is represented before the client ever has a chance to
-      // send an update -- but we can recover. Note the issue, and store a new
-      // caret first before issuing the update.
+      // that the associated caret is represented in the file before the client
+      // ever has a chance to send an update -- but we can recover: We note the
+      // issue as a warning, and store a new caret first, before applying the
+      // update.
       const newSessionChange =
-        await this._caretControl.changeForNewSession(this._caretId, this._authorId);
+        await this._caretControl.changeForNewCaret(this._caretId, this._authorId);
 
       this._caretControl.log.warn(`Got update for caret \`${this._caretId}\` before it was set up.`);
 

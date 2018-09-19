@@ -146,15 +146,13 @@ export default class FileComplex extends BaseComplexMember {
         throw Errors.timedOut(timeoutTime);
       }
 
-      const caretSnapshot = await this.caretControl.getSnapshot();
-      const caretId       = caretSnapshot.randomUnusedId();
+      // Establish a new caret in the document, by creating and appending a
+      // change from the instantaneously-latest carets.
 
-      // Establish the new session, as a change from the instantaneously-latest
-      // carets.
-
-      const newSessionChange =
-        await this.caretControl.changeForNewSession(caretId, authorId);
-      const appendResult = await this.caretControl.appendChange(newSessionChange);
+      const caretSnapshot  = await this.caretControl.getSnapshot();
+      const caretId        = caretSnapshot.randomUnusedId();
+      const newCaretChange = await this.caretControl.changeForNewCaret(caretId, authorId);
+      const appendResult   = await this.caretControl.appendChange(newCaretChange);
 
       if (appendResult) {
         // There was no append race, or we won it.
