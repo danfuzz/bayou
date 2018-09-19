@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TString } from '@bayou/typecheck';
 import { ColorUtil, StringUtil, UtilityClass } from '@bayou/util-common';
 
 /**
@@ -32,20 +33,22 @@ const TOP_CANDIDATES = 8;
  * synchronously coordinate with instances of this class running on different
  * servers. The tactic that we implement to achive this is to start with the
  * top N choices for "most distinctly different color" and pick one of them
- * pseudo-randomly based on the (guaranteed unique) session ID as the seed.
+ * pseudo-randomly based on the (guaranteed unique) caret ID as the seed.
  */
 export default class CaretColor extends UtilityClass {
   /**
-   * Given a session ID and a set of existing colors, returns the color to use
-   * for a new session with that ID.
+   * Given a caret ID and a set of existing colors, returns the color to use
+   * for a new caret with that ID.
    *
-   * @param {string} sessionId ID of the nascent session.
+   * @param {string} caretId ID of the nascent caret.
    * @param {array<string>} usedColors List of currently-used colors, in CSS
    *   hex form.
    * @returns {string} Color to use for the session, in CSS hex form.
    */
-  static colorForSession(sessionId, usedColors) {
-    const seed = StringUtil.hash32(sessionId);
+  static colorForCaret(caretId, usedColors) {
+    TString.check(caretId); // We don't really need to care about caret ID syntax here.
+
+    const seed = StringUtil.hash32(caretId);
 
     if (usedColors.length === 0) {
       // No other colors to avoid. Just reduce the seed to a hue directly.

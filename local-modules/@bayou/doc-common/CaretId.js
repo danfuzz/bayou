@@ -43,6 +43,20 @@ export default class CaretId extends UtilityClass {
   }
 
   /**
+   * Gets the non-boilerplate "payload" of the given ID. That is, the result is
+   * the ID without its distincitve prefix.
+   *
+   * @param {string} id Caret ID string.
+   * @returns {string} The "payload" portion of `id`.
+   */
+  static payloadFromId(id) {
+    CaretId.check(id);
+
+    // Strip everything up to and including the first dash (`-`).
+    return id.replace(/^[^-]+-/, '');
+  }
+
+  /**
    * Constructs and returns a random caret ID string.
    *
    * @returns {string} A randomly-generated caret ID string.

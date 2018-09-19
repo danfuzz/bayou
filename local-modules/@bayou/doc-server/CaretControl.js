@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Caret, CaretChange, CaretOp, CaretSnapshot } from '@bayou/doc-common';
+import { Caret, CaretChange, CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TString } from '@bayou/typecheck';
 
@@ -37,7 +37,7 @@ export default class CaretControl extends EphemeralControl {
     this._snapshots = new SnapshotManager(this);
 
     /**
-     * {Int} When to next run {@link #_removeIdleSessions}. Initialized to `0`
+     * {Int} When to next run {@link #_removeIdleCarets}. Initialized to `0`
      * so that the first check will happen soon after the document is loaded.
      */
     this._nextIdleCheck = 0;
@@ -46,23 +46,23 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Constructs a {@link CaretChange} instance which introduces a new session.
+   * Constructs a {@link CaretChange} instance which introduces a new caret.
    *
-   * @param {string} sessionId ID of the session being introduced.
-   * @param {string} authorId ID of the author which controls the session.
+   * @param {string} caretId ID of the caret being introduced.
+   * @param {string} authorId ID of the author which controls the caret.
    * @returns {CaretChange} A change instance which represents the above
    *   information, along with anything else needed to be properly applied.
    */
-  async changeForNewSession(sessionId, authorId) {
-    TString.check(sessionId);
+  async changeForNewCaret(caretId, authorId) {
+    CaretId.check(caretId);
     TString.check(authorId);
 
     // Construct the new/updated caret.
 
     const snapshot   = await this.getSnapshot();
     const lastActive = Timestamp.now();
-    const color      = CaretControl._pickSessionColor(sessionId, snapshot);
-    const caret      = new Caret(sessionId, { authorId, color, lastActive });
+    const color      = CaretControl._pickCaretColor(caretId, snapshot);
+    const caret      = new Caret(caretId, { authorId, color, lastActive });
 
     return new CaretChange(
       snapshot.revNum + 1,
@@ -75,8 +75,7 @@ export default class CaretControl extends EphemeralControl {
    * caret, as indicated by the given individual arguments, along with
    * additional information as needed.
    *
-   * @param {string} sessionId ID of the session from which this information
-   *   comes.
+   * @param {string} caretId ID of the caret to update.
    * @param {Int} docRevNum The _document_ revision number that this information
    *   is with respect to.
    * @param {Int} index Caret position (if no selection per se) or starting
@@ -85,8 +84,8 @@ export default class CaretControl extends EphemeralControl {
    * @returns {CaretChange} A change instance which represents the above
    *   information, along with anything else needed to be properly applied.
    */
-  async changeForUpdate(sessionId, docRevNum, index, length = 0) {
-    TString.check(sessionId);
+  async changeForUpdate(caretId, docRevNum, index, length = 0) {
+    CaretId.check(caretId);
     RevisionNumber.check(docRevNum);
     TInt.nonNegative(index);
     TInt.nonNegative(length);
@@ -94,7 +93,7 @@ export default class CaretControl extends EphemeralControl {
     // Construct the updated caret.
 
     const snapshot   = await this.getSnapshot();
-    const oldCaret   = snapshot.get(sessionId);
+    const oldCaret   = snapshot.get(caretId);
     const lastActive = Timestamp.now();
     const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
@@ -123,7 +122,7 @@ export default class CaretControl extends EphemeralControl {
    *   `null` to indicate that the revision is not available.
    */
   async _impl_getSnapshot(revNum) {
-    this._maybeRemoveIdleSessions();
+    this._maybeRemoveIdleCarets();
 
     return this._snapshots.getSnapshot(revNum);
   }
@@ -166,11 +165,11 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Perform idle session cleanup, but only if it's been long enough since the
+   * Perform idle caret cleanup, but only if it's been long enough since the
    * last time that was done. If in fact cleanup is performed, it happens
    * _asynchronously_ with respect to the call to this method.
    */
-  _maybeRemoveIdleSessions() {
+  _maybeRemoveIdleCarets() {
     const now = Date.now();
 
     if (now >= this._nextIdleCheck) {
@@ -178,16 +177,16 @@ export default class CaretControl extends EphemeralControl {
       // here (and not in the subsequent call), so that multiple checks can't
       // "sneak past the gate" as it were, between the time that we decide to
       // run the idle check and the would-be later time that the `async`
-      // {@link _removeIdleSessions} method actually starts running.
+      // {@link #_removeIdleCarets} method actually starts running.
       this._nextIdleCheck = now + (MAX_SESSION_IDLE_MSEC / 4);
-      this._removeIdleSessions();
+      this._removeIdleCarets();
     }
   }
 
   /**
    * Removes carets out of the snapshot that haven't been active recently.
    */
-  async _removeIdleSessions() {
+  async _removeIdleCarets() {
     this.log.info('Checking for inactive carets.');
 
     const snapshot = await this.getSnapshot();
@@ -200,11 +199,11 @@ export default class CaretControl extends EphemeralControl {
     const minTime     = now.addMsec(-MAX_SESSION_IDLE_MSEC);
     let   newSnapshot = snapshot;
 
-    for (const [sessionId, caret] of snapshot.entries()) {
+    for (const [caretId, caret] of snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this.log.withAddedContext(sessionId).info('Became inactive.');
-        newSnapshot = newSnapshot.withoutSession(sessionId);
+        this.log.withAddedContext(caretId).info('Became inactive.');
+        newSnapshot = newSnapshot.withoutSession(caretId);
       }
     }
 
@@ -250,20 +249,20 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
-   * Picks a color to use for a new session.
+   * Picks a color to use for a new caret.
    *
-   * @param {string} sessionId The ID for the new session (used as a
-   *   pseudo-random seed).
+   * @param {string} caretId The ID for the new caret (used as a pseudo-random
+   *   seed).
    * @param {CaretSnapshot} snapshot Snapshot upon which to base the decision.
    * @returns {string} The color to use, in CSS hex form.
    */
-  static _pickSessionColor(sessionId, snapshot) {
+  static _pickCaretColor(caretId, snapshot) {
     // Extract all the currently-used caret colors.
     const usedColors = [];
-    for (const [sessionId_unused, caret] of snapshot.entries()) {
+    for (const [caretId_unused, caret] of snapshot.entries()) {
       usedColors.push(caret.color);
     }
 
-    return CaretColor.colorForSession(sessionId, usedColors);
+    return CaretColor.colorForCaret(caretId, usedColors);
   }
 }

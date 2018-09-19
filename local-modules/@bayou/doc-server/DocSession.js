@@ -10,12 +10,12 @@ import { CommonBase } from '@bayou/util-common';
 import FileComplex from './FileComplex';
 
 /**
- * Server side representative for a session for a specific author and document.
- * Instances of this class are exposed across the API boundary, and as such
- * all public methods are available for client use.
+ * Server side representative for an editing session for a specific document,
+ * author, and caret. Instances of this class are exposed across the API
+ * boundary, and as such all public methods are available for client use.
  *
  * For document access methods, this passes non-mutating methods through to the
- * underlying `BodyControl` while implicitly adding an author argument to
+ * underlying {@link BodyControl} while implicitly adding an author argument to
  * methods that modify the document.
  */
 export default class DocSession extends CommonBase {
@@ -187,13 +187,14 @@ export default class DocSession extends CommonBase {
     const snapshot = await this._caretControl.getSnapshot();
 
     if (snapshot.getOrNull(this._caretId) === null) {
-      // The session isn't actually represented in the caret snapshot. This is
+      // The caret isn't actually represented in the caret snapshot. This is
       // unexpected -- the code which sets up a session is supposed to ensure
-      // that the session is represented before the client ever has a chance to
-      // send an update -- but we can recover. Note the issue, and store a new
-      // caret first before issuing the update.
+      // that the associated caret is represented in the file before the client
+      // ever has a chance to send an update -- but we can recover: We note the
+      // issue as a warning, and store a new caret first, before applying the
+      // update.
       const newSessionChange =
-        await this._caretControl.changeForNewSession(this._caretId, this._authorId);
+        await this._caretControl.changeForNewCaret(this._caretId, this._authorId);
 
       this._caretControl.log.warn(`Got update for caret \`${this._caretId}\` before it was set up.`);
 

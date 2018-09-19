@@ -5,7 +5,7 @@
 import weak from 'weak';
 
 import { Storage } from '@bayou/config-server';
-import { TString } from '@bayou/typecheck';
+import { CaretId } from '@bayou/doc-common';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
@@ -45,7 +45,7 @@ export default class FileComplex extends BaseComplexMember {
     this._bootstrap = new FileBootstrap(this._fileAccess);
 
     /**
-     * {Map<string, Weak<DocSession>>} Map from session IDs to corresponding
+     * {Map<string, Weak<DocSession>>} Map from caret IDs to corresponding
      * weak-reference-wrapped {@link DocSession} instances. The weak reference
      * is made because we don't want a session's presence in the map to keep it
      * from getting GC'ed. And we _need_ the map here, so that we can find
@@ -81,25 +81,25 @@ export default class FileComplex extends BaseComplexMember {
   }
 
   /**
-   * Finds and returns a pre-existing session for this instance. More
-   * specifically, the session has to exist in the caret part of the file, but
-   * there doesn't have to already be a {@link DocSession} object in this
-   * process which represents it.
+   * Finds and returns a session to control a pre-existing caret on the document
+   * managed by this instance. More specifically, the caret has to exist in the
+   * caret part of the file, but there doesn't have to already be a
+   * {@link DocSession} object in this process which represents it.
    *
-   * @param {string} authorId ID for the author.
-   * @param {string} sessionId ID for the session.
-   * @returns {DocSession} A session object representing the so-identified
-   *   session.
+   * @param {string} authorId ID of the author.
+   * @param {string} caretId ID of the caret.
+   * @returns {DocSession} A session object to control the indicated
+   *   pre-existing caret.
    */
-  async findExistingSession(authorId, sessionId) {
+  async findExistingSession(authorId, caretId) {
     // **Note:** We only need to validate syntax, because if we actually find
     // the session, we can match the author ID and (if it does match) know that
     // the author really exists and is valid.
     Storage.dataStore.checkAuthorIdSyntax(authorId);
 
-    TString.nonEmpty(sessionId);
+    CaretId.check(caretId);
 
-    const foundWeak = this._sessions.get(sessionId);
+    const foundWeak = this._sessions.get(caretId);
     if ((foundWeak !== undefined) && !weak.isDead(foundWeak)) {
       const foundSession = weak.get(foundWeak);
       if (foundSession instanceof DocSession) {
@@ -108,7 +108,7 @@ export default class FileComplex extends BaseComplexMember {
           // ...and the author ID matches. Bingo!
           return foundSession;
         } else {
-          throw Errors.badUse(`Wrong author ID for session: author ID \`${authorId}\`; session ID \`${sessionId}\``);
+          throw Errors.badUse(`Wrong author ID for caret: author \`${authorId}\`; caret \`${caretId}\``);
         }
       }
     }
@@ -118,19 +118,19 @@ export default class FileComplex extends BaseComplexMember {
     // author matches, we create and return the corresponding object.
 
     const caretSnapshot = await this.caretControl.getSnapshot();
-    const foundCaret    = caretSnapshot.get(sessionId); // This throws if the session isn't found.
+    const foundCaret    = caretSnapshot.get(caretId); // This throws if the caret isn't found.
 
     if (foundCaret.authorId !== authorId) {
-      throw Errors.badUse(`Wrong author ID for session: author ID \`${authorId}\`; session ID \`${sessionId}\``);
+      throw Errors.badUse(`Wrong author ID for session: author \`${authorId}\`; caret \`${caretId}\``);
     }
 
-    return this._activateSession(authorId, sessionId);
+    return this._activateSession(authorId, caretId);
   }
 
   /**
-   * Makes a new author-associated session for this instance. The resulting
-   * session's ID is guaranteed to be unique for the document represented by
-   * this instance.
+   * Makes and returns a new session for the document controlled by this
+   * instance, which allows the indicated author to control a newly-instantiated
+   * caret.
    *
    * @param {string} authorId ID for the author.
    * @returns {DocSession} A newly-constructed session.
@@ -146,19 +146,17 @@ export default class FileComplex extends BaseComplexMember {
         throw Errors.timedOut(timeoutTime);
       }
 
-      const caretSnapshot = await this.caretControl.getSnapshot();
-      const sessionId     = caretSnapshot.randomUnusedId();
+      // Establish a new caret in the document, by creating and appending a
+      // change from the instantaneously-latest carets.
 
-      // Establish the new session, as a change from the instantaneously-latest
-      // carets.
-
-      const newSessionChange =
-        await this.caretControl.changeForNewSession(sessionId, authorId);
-      const appendResult = await this.caretControl.appendChange(newSessionChange);
+      const caretSnapshot  = await this.caretControl.getSnapshot();
+      const caretId        = caretSnapshot.randomUnusedId();
+      const newCaretChange = await this.caretControl.changeForNewCaret(caretId, authorId);
+      const appendResult   = await this.caretControl.appendChange(newCaretChange);
 
       if (appendResult) {
         // There was no append race, or we won it.
-        return this._activateSession(authorId, sessionId);
+        return this._activateSession(authorId, caretId);
       }
 
       // We lost an append race, but the session introduction might still be
@@ -170,42 +168,44 @@ export default class FileComplex extends BaseComplexMember {
    * Helper for {@link #makeNewSession} and {@link #findExistingSession}, which
    * does the final setup of a new {@link DocSession} instance.
    *
-   * @param {string} authorId ID for the author.
-   * @param {string} sessionId ID for the session.
+   * @param {string} authorId ID of the author.
+   * @param {string} caretId ID of the caret.
    * @returns {DocSession} A newly-constructed session.
    */
-  _activateSession(authorId, sessionId) {
-    const result = new DocSession(this, authorId, sessionId);
-    const reaper = this._sessionReaper(sessionId);
+  _activateSession(authorId, caretId) {
+    const result = new DocSession(this, authorId, caretId);
+    const reaper = this._sessionReaper(caretId);
 
-    this._sessions.set(sessionId, weak(result, reaper));
+    this._sessions.set(caretId, weak(result, reaper));
 
     this.log.info(
-      `Session ${sessionId} now active.\n`,
+      `Session now active.\n`,
       `  file:    ${this.file.id}\n`,
-      `  author:  ${authorId}\n`);
+      `  author:  ${authorId}\n`,
+      `  caret:   ${caretId}`);
 
     return result;
   }
 
   /**
-   * Returns a weak reference callback function for the indicated complex /
-   * session pair, that removes a collected session object from the session map.
+   * Returns a weak reference callback function which reaps the
+   * {@link DocSession} associated with the indicate caret.
    *
-   * **Note:** This does _not_ remove the session info from the carets part of
+   * **Note:** This does _not_ remove the caret info from the carets part of
    * the document: Even though the session has become idle from the perspective
-   * of this server, the session isn't necessarily totally idle / dead. For
+   * of this server, the caret isn't necessarily totally idle / dead. For
    * example, it might be the case that the client for the session happened to
    * end up connecting to a different machine and is continuing to putter away
    * at it.
    *
-   * @param {string} sessionId ID of the session to remove.
+   * @param {string} caretId ID of the caret whose associated session is to be
+   *   removed.
    * @returns {function} An appropriately-constructed function.
    */
-  _sessionReaper(sessionId) {
+  _sessionReaper(caretId) {
     return () => {
-      this._sessions.delete(sessionId);
-      this.log.info('Reaped idle session:', sessionId);
+      this._sessions.delete(caretId);
+      this.log.info(`Reaped idle session; caret ${caretId}.`);
     };
   }
 }

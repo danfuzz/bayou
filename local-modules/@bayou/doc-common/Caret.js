@@ -107,8 +107,8 @@ export default class Caret extends CommonBase {
    * **Note:** {@link #DEFAULT} does not bind an `authorId`, which means that
    * that field must be specified when creating an instance "from scratch."
    *
-   * @param {string|Caret} idOrBase Session ID that identifies the caret, or a
-   *   base caret instance which provides the ID and default values for fields.
+   * @param {string|Caret} idOrBase Caret ID, or a base caret instance which
+   *   provides the ID and default values for fields.
    * @param {object} [fields = {}] Fields of the caret, as plain object mapping
    *   field names to values.
    */
