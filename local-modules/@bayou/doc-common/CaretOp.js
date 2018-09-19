@@ -30,8 +30,7 @@ export default class CaretOp extends BaseOp {
   /**
    * Constructs a new "begin session" operation.
    *
-   * @param {Caret} caret The initial caret for the new session (which includes
-   *   a session ID).
+   * @param {Caret} caret The initial caret for the new session.
    * @returns {CaretOp} The corresponding operation.
    */
   static op_beginSession(caret) {

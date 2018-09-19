@@ -57,7 +57,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
       assert.throws(() => delta.compose(new MockDelta([]), true));
     });
 
-    it('should not include session ends when `wantDocument` is `true`', () => {
+    it('should not include `endSession` ops when `wantDocument` is `true`', () => {
       const op1    = CaretOp.op_beginSession(new Caret('cr-aaaaa', { authorId: 'xyz' }));
       const op2    = CaretOp.op_beginSession(new Caret('cr-bbbbb', { authorId: 'xyz' }));
       const op3    = CaretOp.op_beginSession(new Caret('cr-ccccc', { authorId: 'xyz' }));
@@ -70,7 +70,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
       assert.sameMembers(result.ops, [op1, op3]);
     });
 
-    describe('`endSession` preceded by anything for that session', () => {
+    describe('`endSession` preceded by anything for that caret', () => {
       it('should result in just the `endSession`', () => {
         const endOp = CaretOp.op_endSession('cr-sessi');
 
