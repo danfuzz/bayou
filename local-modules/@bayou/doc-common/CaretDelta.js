@@ -13,7 +13,7 @@ import CaretOp from './CaretOp';
  * and `CaretSnapshot` to produce updated instances of those classes.
  *
  * **Note:** To be valid as a document delta, the set of operations must (a)
- * only consist of `beginSession` ops, and (b) not mention any given session ID
+ * only consist of `beginSession` ops, and (b) not mention any given caret ID
  * more than once.
  *
  * Instances of this class are immutable.
@@ -32,7 +32,7 @@ export default class CaretDelta extends BaseDelta {
     const carets = new Map();
 
     // Add / replace the ops, first from `this` and then from `other`, as a
-    // mapping from the session ID.
+    // mapping from the caret ID.
     for (const op of [...this.ops, ...other.ops]) {
       const opProps = op.props;
 
@@ -68,7 +68,7 @@ export default class CaretDelta extends BaseDelta {
             carets.set(caretId, [op]);
             handled = true;
           } else if (ops.length === 1) {
-            // We have a single-element array this session. It might be a
+            // We have a single-element array for this caret. It might be a
             // `beginSession` or an `endSession`, in which case we can do
             // something special.
             const op0Props = ops[0].props;
