@@ -14,7 +14,7 @@ import CaretOp from './CaretOp';
  * {Map<string, function>} Map from each allowed caret field name to a type
  * checker predicate for same.
  *
- * **Note:** `sessionId` is not included, because that's separate from the
+ * **Note:** The caret's ID is not included, because that's separate from the
  * caret's "fields" per se.
  *
  * **Note:** We use the `bind(...)` form for method binding instead of an
@@ -48,8 +48,8 @@ let DEFAULT = null;
  *
  * **Note:** The use of the term "caret" in this and other classes, method
  * names, and the like, is meant to be a synecdochal metaphor for all
- * information about a session, including the human driving it. The caret per
- * se is merely the most blatant aspect of it.
+ * information about a session from the user's perspective, including the human
+ * driving it. The caret per se is merely the most blatant aspect of it.
  */
 export default class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
@@ -108,33 +108,32 @@ export default class Caret extends CommonBase {
    * that field must be specified when creating an instance "from scratch."
    *
    * @param {string|Caret} idOrBase Session ID that identifies the caret, or a
-   *   base caret instance which provides the session and default values for
-   *   fields.
+   *   base caret instance which provides the ID and default values for fields.
    * @param {object} [fields = {}] Fields of the caret, as plain object mapping
    *   field names to values.
    */
   constructor(idOrBase, fields = {}) {
-    let sessionId;
+    let id;
     let newFields;
 
     if (idOrBase instanceof Caret) {
       newFields = new Map(idOrBase._fields);
-      sessionId = idOrBase.sessionId;
+      id = idOrBase.sessionId;
     } else if (DEFAULT !== null) {
       newFields = new Map(DEFAULT._fields);
-      sessionId = CaretId.check(idOrBase);
+      id = CaretId.check(idOrBase);
     } else {
       // If we're here, it means that `DEFAULT` is currently being initialized.
       newFields = new Map();
-      sessionId = TString.check(idOrBase);
+      id = TString.check(idOrBase);
     }
 
     TObject.plain(fields);
 
     super();
 
-    /** {string} The session ID. */
-    this._sessionId = sessionId;
+    /** {string} The caret ID. */
+    this._id = id;
 
     /** {Map<string,*>} Map of all of the caret fields, from name to value. */
     this._fields = newFields;
@@ -173,7 +172,7 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {Timestamp} The moment in time when this session was last active.
+   * {Timestamp} The moment in time when this caret was last active.
    */
   get lastActive() {
     return this._fields.get('lastActive');
@@ -200,7 +199,7 @@ export default class Caret extends CommonBase {
    * about the author whose caret this is.
    */
   get sessionId() {
-    return this._sessionId;
+    return this._id;
   }
 
   /**
@@ -243,7 +242,7 @@ export default class Caret extends CommonBase {
       fields[k] = v;
     }
 
-    return [this._sessionId, fields];
+    return [this._id, fields];
   }
 
   /**
@@ -314,7 +313,7 @@ export default class Caret extends CommonBase {
       return false;
     }
 
-    if (this._sessionId !== other._sessionId) {
+    if (this._id !== other._id) {
       return false;
     }
 
