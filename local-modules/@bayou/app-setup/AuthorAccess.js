@@ -56,7 +56,7 @@ export default class AuthorAccess extends CommonBase {
    * instance's author.
    *
    * **TODO:** Context binding ought to happen at a different layer of the
-   * system. See comment about this in {@link #makeSession} for more details.
+   * system. See comment about this in {@link #makeNewSession} for more details.
    *
    * @param {string} docId ID of the document which the session is for.
    * @param {string} caretId ID of the caret.
