@@ -205,17 +205,17 @@ export default class CaretOverlay {
     } else {
       // We're not dragging so draw the remote author cursors and highlights.
 
-      // For each session…
-      for (const [sessionId, caret] of this._lastCaretSnapshot.entries()) {
+      // For each caret...
+      for (const [caretId, caret] of this._lastCaretSnapshot.entries()) {
         // Is this caret us? If so, don't draw anything. **TODO:** The caret
         // snapshot ideally wouldn't actually represent the caret controlled by
         // this editor. The code that pushes the snapshot into the store should
         // be updated accordingly.
-        if (this._editorComplex.docSession.caretTracker.isControlledHere(sessionId)) {
+        if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
           continue;
         }
 
-        const avatarReference = this._useReferences.get(sessionId);
+        const avatarReference = this._useReferences.get(caretId);
 
         if (caret.length === 0) {
           // Length of zero means an insertion point instead of a selection
