@@ -26,9 +26,9 @@ export default class DocSession extends CommonBase {
    * @param {fileComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
-   * @param {string} sessionId Caret session ID for this instance.
+   * @param {string} caretId Caret ID for this instance.
    */
-  constructor(fileComplex, authorId, sessionId) {
+  constructor(fileComplex, authorId, caretId) {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
@@ -37,8 +37,8 @@ export default class DocSession extends CommonBase {
     /** {string} Author ID. */
     this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
 
-    /** {string} Session ID. */
-    this._sessionId = TString.nonEmpty(sessionId);
+    /** {string} Caret ID. */
+    this._caretId = TString.nonEmpty(caretId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
@@ -187,16 +187,16 @@ export default class DocSession extends CommonBase {
   async caret_update(docRevNum, index, length = 0) {
     const snapshot = await this._caretControl.getSnapshot();
 
-    if (snapshot.getOrNull(this._sessionId) === null) {
+    if (snapshot.getOrNull(this._caretId) === null) {
       // The session isn't actually represented in the caret snapshot. This is
       // unexpected -- the code which sets up a session is supposed to ensure
       // that the session is represented before the client ever has a chance to
       // send an update -- but we can recover. Note the issue, and store a new
       // caret first before issuing the update.
       const newSessionChange =
-        await this._caretControl.changeForNewSession(this._sessionId, this._authorId);
+        await this._caretControl.changeForNewSession(this._caretId, this._authorId);
 
-      this._caretControl.log.warn(`Got update for session \`${this._sessionId}\` before caret was set up.`);
+      this._caretControl.log.warn(`Got update for caret \`${this._caretId}\` before it was set up.`);
 
       // **TODO:** This should possibly have the same kind of race-loss-retry
       // logic as seen elsewhere in the codebase. However, for now -- and
@@ -206,7 +206,7 @@ export default class DocSession extends CommonBase {
     }
 
     const change =
-      await this._caretControl.changeForUpdate(this._sessionId, docRevNum, index, length);
+      await this._caretControl.changeForUpdate(this._caretId, docRevNum, index, length);
     return this._caretControl.update(change);
   }
 
@@ -284,11 +284,11 @@ export default class DocSession extends CommonBase {
    * @returns {string} A succinct identification string.
    */
   getLogInfo() {
-    const file    = this._fileComplex.file.id;
-    const session = this._sessionId;
-    const author  = this._authorId;
+    const fileId   = this._fileComplex.file.id;
+    const caretId  = this._caretId;
+    const authorId = this._authorId;
 
-    return `file ${file}; caret ${session}; author ${author}`;
+    return `file ${fileId}; caret ${caretId}; author ${authorId}`;
   }
 
   /**
@@ -315,6 +315,6 @@ export default class DocSession extends CommonBase {
    * @returns {string} The caret ID.
    */
   getCaretId() {
-    return this._sessionId;
+    return this._caretId;
   }
 }
