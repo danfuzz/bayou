@@ -118,7 +118,7 @@ export default class Caret extends CommonBase {
 
     if (idOrBase instanceof Caret) {
       newFields = new Map(idOrBase._fields);
-      id = idOrBase.sessionId;
+      id = idOrBase.id;
     } else if (DEFAULT !== null) {
       newFields = new Map(DEFAULT._fields);
       id = CaretId.check(idOrBase);
@@ -150,7 +150,7 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string|null} ID of the author responsible for this caret.
+   * {string} ID of the author responsible for this caret.
    */
   get authorId() {
     return this._fields.get('authorId');
@@ -195,17 +195,17 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * {string} Opaque reference to be used with other APIs to get information
-   * about the author whose caret this is.
+   * {string} ID of the caret. This uniquely identifies this caret within the
+   * context of a specific document.
    */
-  get sessionId() {
+  get id() {
     return this._id;
   }
 
   /**
    * Composes the given `delta` on top of this instance, producing a new
    * instance. The operations in `delta` must all be `setField` ops for the same
-   * `sessionId` as this instance.
+   * `id` as this instance.
    *
    * @param {CaretDelta} delta Delta to apply.
    * @returns {Caret} Caret consisting of this instance's data as the base, with
@@ -220,8 +220,8 @@ export default class Caret extends CommonBase {
       const props = op.props;
       if (props.opName !== CaretOp.CODE_setField) {
         throw Errors.badUse(`Invalid operation name: ${props.opName}`);
-      } else if (props.sessionId !== this.sessionId) {
-        throw Errors.badUse('Mismatched session ID.');
+      } else if (props.sessionId !== this.id) {
+        throw Errors.badUse('Mismatched ID.');
       }
 
       fields[props.key] = props.value;
@@ -257,42 +257,42 @@ export default class Caret extends CommonBase {
    * method is called on.
    *
    * @param {Caret} newerCaret Caret to take the difference from. It must have
-   *   the same `sessionId` as this instance.
+   *   the same `id` as this instance.
    * @returns {CaretDelta} Delta which represents the difference between
    *   `newerCaret` and this instance.
    */
   diff(newerCaret) {
     Caret.check(newerCaret);
 
-    const sessionId = this.sessionId;
+    const id = this.id;
 
-    if (sessionId !== newerCaret.sessionId) {
-      throw Errors.badUse('Cannot `diff` carets with mismatched `sessionId`.');
+    if (id !== newerCaret.id) {
+      throw Errors.badUse('Cannot `diff` carets with mismatched `id`.');
     }
 
-    return this.diffFields(newerCaret, sessionId);
+    return this.diffFields(newerCaret, id);
   }
 
   /**
-   * Like `diff()`, except does _not_ check to see if the two instances'
-   * `sessionId`s match. That is, it only looks at the fields.
+   * Like `diff()`, except does _not_ check to see if the two instances' `id`s
+   * match. That is, it only looks at the fields.
    *
    * @param {Caret} newerCaret Caret to take the difference from.
-   * @param {string} sessionId Session ID to use for the ops in the result.
+   * @param {string} id ID to use for the ops in the result.
    * @returns {CaretDelta} Delta which represents the difference between
    *   `newerCaret` and this instance, _not_ including any difference in
-   *   `sessionId`, if any.
+   *   `id`, if any.
    */
-  diffFields(newerCaret, sessionId) {
+  diffFields(newerCaret, id) {
     Caret.check(newerCaret);
-    CaretId.check(sessionId);
+    CaretId.check(id);
 
     const fields = this._fields;
     const ops    = [];
 
     for (const [k, v] of newerCaret._fields) {
       if (!Caret._equalFields(v, fields.get(k))) {
-        ops.push(CaretOp.op_setField(sessionId, k, v));
+        ops.push(CaretOp.op_setField(id, k, v));
       }
     }
 

@@ -305,9 +305,9 @@ export default class CaretOverlay {
   _addAvatarToDefs(caret) {
     // The whole avatar is set in a group with a known id.
     const avatarGroup = this._document.createElementNS(SVG_NAMESPACE, 'g');
-    const sessionId = caret.sessionId;
+    const id          = caret.id;
 
-    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(sessionId));
+    avatarGroup.setAttribute('id', CaretOverlay.avatarNameForSessionId(id));
 
     // Add the circle that will hold the background color.
     const backgroundCircle = this._document.createElementNS(SVG_NAMESPACE, 'circle');
@@ -366,9 +366,9 @@ export default class CaretOverlay {
 
     this._svgDefs.appendChild(avatarGroup);
 
-    const useReferenceForAvatar = this._createUseElementForSessionAvatar(caret.sessionId);
+    const useReferenceForAvatar = this._createUseElementForSessionAvatar(caret.id);
 
-    this._useReferences.set(caret.sessionId, useReferenceForAvatar);
+    this._useReferences.set(caret.id, useReferenceForAvatar);
   }
 
   _avatarDefWithName(name) {
@@ -435,7 +435,7 @@ export default class CaretOverlay {
    * @param {Caret} caret Caret for the session.
    */
   _updateAvatarColor(caret) {
-    const avatarName = CaretOverlay.avatarNameForSessionId(caret.sessionId);
+    const avatarName = CaretOverlay.avatarNameForSessionId(caret.id);
     const avatar = this._avatarDefWithName(avatarName);
 
     if (avatar) {

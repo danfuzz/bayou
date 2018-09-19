@@ -40,7 +40,7 @@ export default class CaretDelta extends BaseDelta {
         case CaretOp.CODE_beginSession: {
           // Clear out the session except for this op, because no earlier op
           // could possibly affect the result.
-          sessions.set(opProps.caret.sessionId, [op]);
+          sessions.set(opProps.caret.id, [op]);
           break;
         }
 
@@ -125,7 +125,7 @@ export default class CaretDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case CaretOp.CODE_beginSession: {
-          const sessionId = opProps.caret.sessionId;
+          const sessionId = opProps.caret.id;
 
           if (ids.has(sessionId)) {
             return false;
