@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from '@bayou/ot-common';
-import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import Caret from './Caret';
@@ -18,7 +17,7 @@ import CaretOp from './CaretOp';
  * Instances of this class are always frozen (immutable).
  *
  * When thought of in terms of a map, instances of this class can be taken to
- * be maps from session ID strings to `Caret` values.
+ * be maps from caret ID strings to `Caret` values.
  */
 export default class CaretSnapshot extends BaseSnapshot {
   /**
@@ -33,8 +32,8 @@ export default class CaretSnapshot extends BaseSnapshot {
     super(revNum, contents);
 
     /**
-     * {Map<string, CaretOp>} Map of session ID to an `op_beginSession` which
-     * defines the caret for that session.
+     * {Map<string, CaretOp>} Map of caret ID to an `op_beginSession` which
+     * has a caret with that ID.
      */
     this._carets = new Map();
 
@@ -70,13 +69,13 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets an iterator over the `[sessionId, caret]` entries that make up the
+   * Gets an iterator over the `[caretId, caret]` entries that make up the
    * snapshot.
    *
    * **Note:** This has identical semantics to the `Map` method of the same
    * name.
    *
-   * @yields {[string, Caret]} Snapshot entries. The keys are the session IDs,
+   * @yields {[string, Caret]} Snapshot entries. The keys are the caret IDs,
    *   and the values are the corresponding caret values.
    */
   * entries() {
@@ -87,35 +86,36 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets the caret info for the given session. It is an error if this instance
-   * has no caret for the indicated session.
+   * Gets the {@link Caret} with the given ID. It is an error if this instance
+   * has no caret with that ID.
    *
    * **Note:** This differs from the semantics of the `Map` method of the same
    * name in that the not-found case is an error.
    *
-   * @param {string} sessionId Session in question.
+   * @param {string} caretId ID of the caret in question.
    * @returns {Caret} Corresponding caret.
    */
-  get(sessionId) {
-    const found = this.getOrNull(sessionId);
+  get(caretId) {
+    const found = this.getOrNull(caretId);
 
     if (found) {
       return found;
     }
 
-    throw Errors.badUse(`No such session: ${sessionId}`);
+    throw Errors.badUse(`No such caret: ${caretId}`);
   }
 
   /**
-   * Gets the caret info for the given session, if any.
+   * Gets the {@link Caret} with the given ID, if this instance in fact stores
+   * such a caret.
    *
-   * @param {string} sessionId Session in question.
+   * @param {string} caretId ID of the caret in question.
    * @returns {Caret|null} Corresponding caret, or `null` if there is none.
    */
-  getOrNull(sessionId) {
-    TString.nonEmpty(sessionId);
+  getOrNull(caretId) {
+    CaretId.check(caretId);
 
-    const found = this._carets.get(sessionId);
+    const found = this._carets.get(caretId);
 
     return found ? found.props.caret : null;
   }
@@ -142,8 +142,8 @@ export default class CaretSnapshot extends BaseSnapshot {
       return false;
     }
 
-    for (const [sessionId, thisCaret] of thisCarets) {
-      if (!thisCaret.equals(otherCarets.get(sessionId))) {
+    for (const [caretId, thisCaret] of thisCarets) {
+      if (!thisCaret.equals(otherCarets.get(caretId))) {
         return false;
       }
     }
@@ -152,24 +152,24 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Gets whether or not this instance has a caret for the given session.
+   * Gets whether or not this instance has a caret with the given ID.
    *
    * **Note:** This has identical semantics to the `Map` method of the same
    * name, except that it will reject `name`s of the wrong type.
    *
-   * @param {string} sessionId Session in question.
-   * @returns {boolean} `true` if this instance has a caret for the indicated
-   *   session, or `false` if not.
+   * @param {string} caretId ID of the caret in question.
+   * @returns {boolean} `true` if this instance has a caret with the indicated
+   *   ID, or `false` if not.
    */
-  has(sessionId) {
-    return this.getOrNull(sessionId) !== null;
+  has(caretId) {
+    return this.getOrNull(caretId) !== null;
   }
 
   /**
    * Returns a randomly-generated ID which is guaranteed not to be used by any
    * caret in this instance.
    *
-   * @returns {string} Available session ID.
+   * @returns {string} Available caret ID.
    */
   randomUnusedId() {
     // Loop in case we get _very_ unlucky.
@@ -203,12 +203,12 @@ export default class CaretSnapshot extends BaseSnapshot {
 
   /**
    * Constructs an instance just like this one, except without any reference to
-   * the session indicated by the given caret. If there is no session for the
-   * given caret, this method returns `this`.
+   * a caret with the indicated ID. If there is no such caret, this method
+   * returns `this`.
    *
-   * @param {Caret} caret The caret whose session should not be represented in
-   *   the result. Only the `sessionId` of the caret is consulted; it doesn't
-   *   matter if other caret fields match.
+   * @param {Caret} caret The caret whose ID should not be represented in the
+   *   result. Only the `id` of the caret is consulted; it doesn't matter if
+   *   other caret fields match.
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
   withoutCaret(caret) {
@@ -217,20 +217,20 @@ export default class CaretSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Constructs an instance just like this one, except without any reference to
-   * the indicated session. If the session is not represented in this instance,
-   * this method returns `this`.
+   * Constructs an instance just like this one, except without any caret which
+   * has the indicated ID. If there is no such caret in this instance, this
+   * method returns `this`.
    *
-   * @param {string} sessionId ID of the session which should not be represented
-   *   in the result.
+   * @param {string} caretId ID of the caret which should not be represented in
+   *   the result.
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
-  withoutSession(sessionId) {
-    // This type checks `sessionId`, which is why it's not just run when we need
+  withoutSession(caretId) {
+    // This type checks `caretId`, which is why it's not just run when we need
     // to call `compose()`.
-    const op = CaretOp.op_endSession(sessionId);
+    const op = CaretOp.op_endSession(caretId);
 
-    return this._carets.has(sessionId)
+    return this._carets.has(caretId)
       ? this.compose(new CaretChange(this.revNum, [op]))
       : this;
   }
@@ -251,10 +251,10 @@ export default class CaretSnapshot extends BaseSnapshot {
     // Find carets that are new or updated from `this` when going to
     // `newerSnapshot`.
 
-    for (const [sessionId, caretOp] of newerCarets) {
-      const already = this._carets.get(sessionId);
+    for (const [caretId, caretOp] of newerCarets) {
+      const already = this._carets.get(caretId);
       if (already) {
-        // The `sessionId` matches the older snapshot. Indicate an update if the
+        // The `caretId` matches the older snapshot. Indicate an update if the
         // values are different.
         if (!already.equals(caretOp)) {
           const diff = already.props.caret.diff(caretOp.props.caret);
@@ -263,16 +263,16 @@ export default class CaretSnapshot extends BaseSnapshot {
           }
         }
       } else {
-        // The `sessionId` isn't in the older snapshot, so this is an addition.
+        // The `caretId` isn't in the older snapshot, so this is an addition.
         resultOps.push(caretOp);
       }
     }
 
     // Find carets removed from `this` when going to `newerSnapshot`.
 
-    for (const sessionId of this._carets.keys()) {
-      if (!newerCarets.get(sessionId)) {
-        resultOps.push(CaretOp.op_endSession(sessionId));
+    for (const caretId of this._carets.keys()) {
+      if (!newerCarets.get(caretId)) {
+        resultOps.push(CaretOp.op_endSession(caretId));
       }
     }
 
