@@ -37,15 +37,15 @@ const TOP_CANDIDATES = 8;
  */
 export default class CaretColor extends UtilityClass {
   /**
-   * Given a session ID and a set of existing colors, returns the color to use
-   * for a new session with that ID.
+   * Given a caret ID and a set of existing colors, returns the color to use
+   * for a new caret with that ID.
    *
    * @param {string} caretId ID of the nascent caret.
    * @param {array<string>} usedColors List of currently-used colors, in CSS
    *   hex form.
    * @returns {string} Color to use for the session, in CSS hex form.
    */
-  static colorForSession(caretId, usedColors) {
+  static colorForCaret(caretId, usedColors) {
     TString.check(caretId); // We don't really need to care about caret ID syntax here.
 
     const seed = StringUtil.hash32(caretId);

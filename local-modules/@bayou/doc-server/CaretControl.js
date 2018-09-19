@@ -263,6 +263,6 @@ export default class CaretControl extends EphemeralControl {
       usedColors.push(caret.color);
     }
 
-    return CaretColor.colorForSession(caretId, usedColors);
+    return CaretColor.colorForCaret(caretId, usedColors);
   }
 }
