@@ -117,7 +117,7 @@ describe('@bayou/doc-common/CaretId', () => {
         all.add(CaretId.randomInstance());
       }
 
-      assert.atLeast(all.size, COUNT - 2);
+      assert.isAtLeast(all.size, COUNT - 2);
     });
   });
 });
