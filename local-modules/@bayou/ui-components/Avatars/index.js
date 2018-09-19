@@ -18,9 +18,9 @@ class Avatars extends React.Component {
     return (
       <div className={ styles['document-header__avatars'] }>
         {
-          [...this.props.sessions.entries()].map(([sessionId, caret]) => {
+          [...this.props.sessions.entries()].map(([caretId, caret]) => {
             return (
-              <div key={ sessionId } className={ styles['document-header__avatar'] }>
+              <div key={ caretId } className={ styles['document-header__avatar'] }>
                 <img src={ AVATAR_PLACEHOLDER_URL } />
                 <div
                   className={ styles['avatar-presence'] }
