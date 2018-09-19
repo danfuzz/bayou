@@ -175,15 +175,6 @@ export default class EditorComplex extends CommonBase {
   }
 
   /**
-   * {string|null} The session ID of the current server session, or `null` if
-   * no session is currently active.
-   */
-  get sessionId() {
-    const docSession = this.docSession;
-    return (docSession === null) ? null : docSession.key.id;
-  }
-
-  /**
    * Hook this instance up to a new session.
    *
    * @param {SplitKey} sessionKey New session key to use.
