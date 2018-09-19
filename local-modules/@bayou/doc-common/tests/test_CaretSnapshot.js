@@ -604,41 +604,43 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('withoutCaret()', () => {
-    it('should return `this` if there is no matching session', () => {
-      const snap = new CaretSnapshot(1, [op1]);
+    describe('valid `Caret` argument', () => {
+      it('should return `this` if there is no matching caret', () => {
+        const snap = new CaretSnapshot(1, [op1]);
 
-      assert.strictEqual(snap.withoutCaret(caret2), snap);
-      assert.strictEqual(snap.withoutCaret(caret3), snap);
+        assert.strictEqual(snap.withoutCaret(caret2), snap);
+        assert.strictEqual(snap.withoutCaret(caret3), snap);
+      });
+
+      it('should return an appropriately-constructed instance if there is a matching caret', () => {
+        const snap     = new CaretSnapshot(1, [op1, op2]);
+        const expected = new CaretSnapshot(1, [op2]);
+
+        assert.isTrue(snap.withoutCaret(caret1).equals(expected));
+      });
+
+      it('should only pay attention to the ID of the given caret', () => {
+        const snap     = new CaretSnapshot(1, [op1, op2]);
+        const expected = new CaretSnapshot(1, [op2]);
+        const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });
+
+        assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
+      });
     });
 
-    it('should return an appropriately-constructed instance if there is a matching session', () => {
-      const snap     = new CaretSnapshot(1, [op1, op2]);
-      const expected = new CaretSnapshot(1, [op2]);
+    describe('valid ID argument', () => {
+      it('should return `this` if there is no matching caret', () => {
+        const snap = new CaretSnapshot(1, [op1]);
 
-      assert.isTrue(snap.withoutCaret(caret1).equals(expected));
-    });
+        assert.strictEqual(snap.withoutCaret('cr-not00'), snap);
+      });
 
-    it('should only pay attention to the session ID of the given caret', () => {
-      const snap     = new CaretSnapshot(1, [op1, op2]);
-      const expected = new CaretSnapshot(1, [op2]);
-      const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });
+      it('should return an appropriately-constructed instance if there is a matching caret', () => {
+        const snap     = new CaretSnapshot(1, [op1, op2]);
+        const expected = new CaretSnapshot(1, [op2]);
 
-      assert.isTrue(snap.withoutCaret(modCaret).equals(expected));
-    });
-  });
-
-  describe('withoutSession()', () => {
-    it('should return `this` if there is no matching session', () => {
-      const snap = new CaretSnapshot(1, [op1]);
-
-      assert.strictEqual(snap.withoutSession('cr-not00'), snap);
-    });
-
-    it('should return an appropriately-constructed instance if there is a matching session', () => {
-      const snap     = new CaretSnapshot(1, [op1, op2]);
-      const expected = new CaretSnapshot(1, [op2]);
-
-      assert.isTrue(snap.withoutSession(caret1.id).equals(expected));
+        assert.isTrue(snap.withoutCaret(caret1.id).equals(expected));
+      });
     });
   });
 });

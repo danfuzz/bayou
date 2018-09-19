@@ -203,7 +203,7 @@ export default class CaretControl extends EphemeralControl {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
         this.log.withAddedContext(caretId).info('Became inactive.');
-        newSnapshot = newSnapshot.withoutSession(caretId);
+        newSnapshot = newSnapshot.withoutCaret(caretId);
       }
     }
 

@@ -206,33 +206,23 @@ export default class CaretSnapshot extends BaseSnapshot {
    * a caret with the indicated ID. If there is no such caret, this method
    * returns `this`.
    *
-   * @param {Caret} caret The caret whose ID should not be represented in the
-   *   result. Only the `id` of the caret is consulted; it doesn't matter if
-   *   other caret fields match.
+   * @param {string|Caret} idOrCaret The ID of the caret which should not be
+   *   represented in the result, or a {@link Caret} whose ID is used for the
+   *   check. (That is, if given a {@link Caret}, only the `id` is consulted; it
+   *   doesn't matter if other fields match.
    * @returns {CaretSnapshot} An appropriately-constructed instance.
    */
-  withoutCaret(caret) {
-    Caret.check(caret);
-    return this.withoutSession(caret.id);
-  }
+  withoutCaret(idOrCaret) {
+    const caretId = (typeof idOrCaret === 'string')
+      ? CaretId.check(idOrCaret)
+      : Caret.check(idOrCaret).id;
 
-  /**
-   * Constructs an instance just like this one, except without any caret which
-   * has the indicated ID. If there is no such caret in this instance, this
-   * method returns `this`.
-   *
-   * @param {string} caretId ID of the caret which should not be represented in
-   *   the result.
-   * @returns {CaretSnapshot} An appropriately-constructed instance.
-   */
-  withoutSession(caretId) {
-    // This type checks `caretId`, which is why it's not just run when we need
-    // to call `compose()`.
-    const op = CaretOp.op_endSession(caretId);
-
-    return this._carets.has(caretId)
-      ? this.compose(new CaretChange(this.revNum, [op]))
-      : this;
+    if (this._carets.has(caretId)) {
+      const op = CaretOp.op_endSession(caretId);
+      return this.compose(new CaretChange(this.revNum, [op]));
+    } else {
+      return this;
+    }
   }
 
   /**
