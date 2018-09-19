@@ -498,13 +498,13 @@ export default class CaretOverlay {
         }
 
         case CaretOp.CODE_endSession: {
-          this._removeAvatarFromDefs(props.sessionId);
+          this._removeAvatarFromDefs(props.caretId);
           updateDisplay = true;
           break;
         }
 
         case CaretOp.CODE_setField: {
-          const sessionId = props.sessionId;
+          const sessionId = props.caretId;
 
           if (sessionId === this._editorComplex.sessionId) {
             continue;

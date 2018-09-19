@@ -220,7 +220,7 @@ export default class Caret extends CommonBase {
       const props = op.props;
       if (props.opName !== CaretOp.CODE_setField) {
         throw Errors.badUse(`Invalid operation name: ${props.opName}`);
-      } else if (props.sessionId !== this.id) {
+      } else if (props.caretId !== this.id) {
         throw Errors.badUse('Mismatched ID.');
       }
 

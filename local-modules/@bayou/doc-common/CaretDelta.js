@@ -28,8 +28,8 @@ export default class CaretDelta extends BaseDelta {
    * @returns {CaretDelta} Composed result.
    */
   _impl_compose(other, wantDocument) {
-    // Map from each session to an array of ops which apply to it.
-    const sessions = new Map();
+    // Map from each caret to an array of ops which apply to it.
+    const carets = new Map();
 
     // Add / replace the ops, first from `this` and then from `other`, as a
     // mapping from the session ID.
@@ -38,38 +38,38 @@ export default class CaretDelta extends BaseDelta {
 
       switch (opProps.opName) {
         case CaretOp.CODE_beginSession: {
-          // Clear out the session except for this op, because no earlier op
-          // could possibly affect the result.
-          sessions.set(opProps.caret.id, [op]);
+          // Clear out the caret except for this op, because no earlier op could
+          // possibly affect the result.
+          carets.set(opProps.caret.id, [op]);
           break;
         }
 
         case CaretOp.CODE_endSession: {
           if (wantDocument) {
-            // Document deltas don't remember session deletions.
-            sessions.delete(opProps.sessionId);
+            // Document deltas don't remember caret deletions.
+            carets.delete(opProps.caretId);
           } else {
-            // Clear out the session; same reason as `BEGIN_SESSION` above. We
-            // _do_ keep the op, because the fact of a deletion needs to be part
-            // of the final composed result.
-            sessions.set(opProps.sessionId, [op]);
+            // Clear out the caret; same reason as `beginSession` above. We _do_
+            // keep the op, because the fact of a deletion needs to be part of
+            // the final composed result.
+            carets.set(opProps.caretId, [op]);
           }
           break;
         }
 
         case CaretOp.CODE_setField: {
-          const sessionId = opProps.sessionId;
-          const ops       = sessions.get(sessionId);
-          let   handled   = false;
+          const caretId = opProps.caretId;
+          const ops     = carets.get(caretId);
+          let   handled = false;
 
           if (!ops) {
-            // This is a "naked" set (no corresponding `BEGIN_SESSION` in the
-            // result. Just start off an array with it.
-            sessions.set(sessionId, [op]);
+            // This is a "naked" set (no corresponding `beginSession` in the
+            // result). Just start off an array with it.
+            carets.set(caretId, [op]);
             handled = true;
           } else if (ops.length === 1) {
             // We have a single-element array this session. It might be a
-            // `BEGIN_SESSION` or `END_SESSION`, in which case we can do
+            // `beginSession` or an `endSession`, in which case we can do
             // something special.
             const op0Props = ops[0].props;
             if (op0Props.opName === CaretOp.CODE_beginSession) {
@@ -107,7 +107,7 @@ export default class CaretDelta extends BaseDelta {
       }
     }
 
-    const allOps = [].concat(...sessions.values());
+    const allOps = [].concat(...carets.values());
     return new CaretDelta(allOps);
   }
 
