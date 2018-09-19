@@ -6,12 +6,12 @@
 // module, which is why this is possible to import regardless of environment.
 import crypto from 'crypto';
 
-import { TInt } from '@bayou/typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-core';
 
 /**
  * Character set used for ID strings. This is intended to be the set of 32 most
- * visually and audibly unambiguous alphanumerics.
+ * visually and audibly unambiguous lowercase alphanumerics.
  */
 const ID_CHARS = 'abcdefghjkmnpqrstuwxyz0123456789';
 
@@ -52,20 +52,37 @@ export default class Random extends UtilityClass {
   }
 
   /**
+   * Constructs an ID-ish string with the indicated tag prefix along with a dash
+   * (`-`), and the given number of characters after the prefix.
+   *
+   * @param {string} prefix The prefix.
+   * @param {Int} length The number of characters in the non-prefix portion of
+   *   the ID.
+   * @returns {string} The constructed random ID string.
+   */
+  static idString(prefix, length) {
+    TString.nonEmpty(prefix);
+    TInt.min(length, 1);
+
+    const result = [`${prefix}-`];
+
+    for (let i = 0; i < length; i++) {
+      result.push(ID_CHARS[Random.byte() % ID_CHARS.length]);
+    }
+
+    return result.join('');
+  }
+
+  /**
    * Constructs a short label string with the indicated tag prefix. These are
-   * _typically_ but not _guaranteed_ to be unique and are intended to aid in
-   * disambiguating logs (and not for anything deeper).
+   * _typically_ but not _guaranteed_ or _necessarily expected_ to be unique.
+   * Instead, these are are intended to aid in disambiguating logs (and not for
+   * anything deeper).
    *
    * @param {string} prefix The prefix.
    * @returns {string} The constructed random ID string.
    */
   static shortLabel(prefix) {
-    let result = `${prefix}-`;
-
-    for (let i = 0; i < 8; i++) {
-      result += ID_CHARS[Random.byte() % ID_CHARS.length];
-    }
-
-    return result;
+    return Random.idString(prefix, 8);
   }
 }

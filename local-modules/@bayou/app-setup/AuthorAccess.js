@@ -6,6 +6,7 @@ import { Context, Target } from '@bayou/api-server';
 import { Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
+import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /** Logger. */
@@ -47,6 +48,44 @@ export default class AuthorAccess extends CommonBase {
   }
 
   /**
+   * Adds a binding to this instance's associated context for the pre-existing
+   * editing session with the indicated ID, on the given document, which must be
+   * associated with the author that this instance represents. It is an error if
+   * the session (or document) doesn't exist, and it is also an error if the
+   * session exists but is not associated with this instance's author.
+   *
+   * **TODO:** Context binding ought to happen at a different layer of the
+   * system. See comment about this in {@link #makeSession} for more details.
+   *
+   * @param {string} docId ID of the document which the session is for.
+   * @param {string} sessionId ID of the session.
+   * @returns {string} Target ID within the API context which refers to the
+   *   session. This is _not_ the same as the `sessionId`.
+   */
+  async findExistingSession(docId, sessionId) {
+    // We only check the document ID syntax here, because we can count on the
+    // call to `getFileComplex()` to do a full validity check as part of its
+    // work.
+    Storage.dataStore.checkDocumentIdSyntax(docId);
+
+    TString.nonEmpty(sessionId);
+
+    const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const session     = await fileComplex.findExistingSession(this._authorId, sessionId);
+    const targetId    = this._context.randomId();
+
+    this._context.addTarget(new Target(targetId, session));
+
+    log.info(
+      'Bound pre-existing session.\n',
+      `  target:  ${targetId}\n`,
+      `  doc:     ${docId}\n`,
+      `  session: ${sessionId}`);
+
+    return targetId;
+  }
+
+  /**
    * Adds a binding to this instance's associated context for a new editing
    * session on the given document. If the document doesn't exist, this will
    * cause it to be created.
@@ -64,8 +103,8 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} docId ID of the document which the resulting bound object
    *   allows access to.
-   * @returns {string} ID within the API context which refers to the
-   *   newly-created session.
+   * @returns {string} Target ID within the API context which refers to the
+   *   session. This is _not_ the same as the `sessionId`.
    */
   async makeSession(docId) {
     // We only check the document ID syntax here, because we can count on the
@@ -73,20 +112,21 @@ export default class AuthorAccess extends CommonBase {
     // work.
     Storage.dataStore.checkDocumentIdSyntax(docId);
 
-    const sessionId   = this._context.randomId();
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const targetId    = this._context.randomId();
 
     // **Note:** This call includes data store back-end validation of the author
     // ID.
-    const session = await fileComplex.makeNewSession(this._authorId, sessionId);
+    const session = await fileComplex.makeNewSession(this._authorId);
 
-    this._context.addTarget(new Target(sessionId, session));
+    this._context.addTarget(new Target(targetId, session));
 
     log.info(
-      'New session.\n',
-      `  doc:        ${docId}\n`,
-      `  session id: ${sessionId}`);
+      'Created new session.\n',
+      `  target:  ${targetId}\n`,
+      `  doc:     ${docId}\n`,
+      `  session: ${session.getSessionId()}`);
 
-    return sessionId;
+    return targetId;
   }
 }

@@ -128,34 +128,26 @@ export default class FileComplex extends BaseComplexMember {
   }
 
   /**
-   * Makes a new author-associated session for this instance.
+   * Makes a new author-associated session for this instance. The resulting
+   * session's ID is guaranteed to be unique for the document represented by
+   * this instance.
    *
    * @param {string} authorId ID for the author.
-   * @param {string} sessionId ID for the session.
    * @returns {DocSession} A newly-constructed session.
    */
-  async makeNewSession(authorId, sessionId) {
+  async makeNewSession(authorId) {
     const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
 
     // This validates the ID with the back end.
     await Storage.dataStore.checkExistingAuthorId(authorId);
-
-    TString.nonEmpty(sessionId);
 
     for (;;) {
       if (Date.now() >= timeoutTime) {
         throw Errors.timedOut(timeoutTime);
       }
 
-      // Ensure that the session ID doesn't correspond to a pre-existing
-      // session.
-
       const caretSnapshot = await this.caretControl.getSnapshot();
-      const already       = caretSnapshot.getOrNull(sessionId);
-
-      if (already !== null) {
-        throw Errors.badUse(`Attempt to create session with already-used ID: \`${sessionId}\``);
-      }
+      const sessionId     = caretSnapshot.randomUnusedId();
 
       // Establish the new session, as a change from the instantaneously-latest
       // carets.
@@ -166,14 +158,12 @@ export default class FileComplex extends BaseComplexMember {
 
       if (appendResult) {
         // There was no append race, or we won it.
-        break;
+        return this._activateSession(authorId, sessionId);
       }
 
       // We lost an append race, but the session introduction might still be
       // valid, so loop and try again (until timeout).
     }
-
-    return this._activateSession(authorId, sessionId);
   }
 
   /**

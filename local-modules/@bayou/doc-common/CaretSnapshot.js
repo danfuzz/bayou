@@ -9,6 +9,7 @@ import { Errors } from '@bayou/util-common';
 import Caret from './Caret';
 import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
+import CaretId from './CaretId';
 import CaretOp from './CaretOp';
 
 
@@ -162,6 +163,22 @@ export default class CaretSnapshot extends BaseSnapshot {
    */
   has(sessionId) {
     return this.getOrNull(sessionId) !== null;
+  }
+
+  /**
+   * Returns a randomly-generated ID which is guaranteed not to be used by any
+   * caret in this instance.
+   *
+   * @returns {string} Available session ID.
+   */
+  randomUnusedId() {
+    // Loop in case we get _very_ unlucky.
+    for (;;) {
+      const result = CaretId.randomInstance();
+      if (!this.has(result)) {
+        return result;
+      }
+    }
   }
 
   /**

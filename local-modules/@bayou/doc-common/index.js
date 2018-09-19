@@ -10,6 +10,7 @@ import BodySnapshot from './BodySnapshot';
 import Caret from './Caret';
 import CaretChange from './CaretChange';
 import CaretDelta from './CaretDelta';
+import CaretId from './CaretId';
 import CaretOp from './CaretOp';
 import CaretSnapshot from './CaretSnapshot';
 import Property from './Property';
@@ -28,6 +29,7 @@ export {
   Caret,
   CaretChange,
   CaretDelta,
+  CaretId,
   CaretOp,
   CaretSnapshot,
   Property,
