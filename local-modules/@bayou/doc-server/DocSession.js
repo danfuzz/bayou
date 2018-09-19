@@ -3,9 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Storage } from '@bayou/config-server';
-import { BodyChange, PropertyChange } from '@bayou/doc-common';
+import { BodyChange, CaretId, PropertyChange } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
-import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
@@ -38,7 +37,7 @@ export default class DocSession extends CommonBase {
     this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
 
     /** {string} Caret ID. */
-    this._caretId = TString.nonEmpty(caretId);
+    this._caretId = CaretId.check(caretId);
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
