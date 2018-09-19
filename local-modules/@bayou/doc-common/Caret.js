@@ -98,35 +98,35 @@ export default class Caret extends CommonBase {
   }
 
   /**
-   * Constructs an instance. Only the first argument (`sessionIdOrBase`) is
-   * required, and it is not necessary to specify all the fields in `fields`.
-   * Fields not listed are derived from the base caret (first argument) if
-   * specified as such, or from the default value {@link #DEFAULT} if the first
-   * argument is a session ID.
+   * Constructs an instance. Only the first argument (`idOrBase`) is required,
+   * and it is not necessary to specify all the fields in `fields`. Fields not
+   * listed are derived from the base caret (first argument) if specified as
+   * such, or from the default value {@link #DEFAULT} if the first argument is
+   * an ID.
    *
    * **Note:** {@link #DEFAULT} does not bind an `authorId`, which means that
    * that field must be specified when creating an instance "from scratch."
    *
-   * @param {string|Caret} sessionIdOrBase Session ID that identifies the caret,
-   *   or a base caret instance which provides the session and default values
-   *   for fields.
+   * @param {string|Caret} idOrBase Session ID that identifies the caret, or a
+   *   base caret instance which provides the session and default values for
+   *   fields.
    * @param {object} [fields = {}] Fields of the caret, as plain object mapping
    *   field names to values.
    */
-  constructor(sessionIdOrBase, fields = {}) {
+  constructor(idOrBase, fields = {}) {
     let sessionId;
     let newFields;
 
-    if (sessionIdOrBase instanceof Caret) {
-      newFields = new Map(sessionIdOrBase._fields);
-      sessionId = sessionIdOrBase.sessionId;
+    if (idOrBase instanceof Caret) {
+      newFields = new Map(idOrBase._fields);
+      sessionId = idOrBase.sessionId;
     } else if (DEFAULT !== null) {
       newFields = new Map(DEFAULT._fields);
-      sessionId = CaretId.check(sessionIdOrBase);
+      sessionId = CaretId.check(idOrBase);
     } else {
       // If we're here, it means that `DEFAULT` is currently being initialized.
       newFields = new Map();
-      sessionId = TString.check(sessionIdOrBase);
+      sessionId = TString.check(idOrBase);
     }
 
     TObject.plain(fields);
