@@ -106,8 +106,9 @@ describe('@bayou/doc-common/CaretId', () => {
 
     it('should return a different value every time (practically speaking)', () => {
       // This is well under the count at which we can statistically expect a
-      // collision to occur. (At about 6800, the chance of a collision is about
-      // 50%.)
+      // collision to always occur -- at about 6800, the chance of a collision
+      // is about 50% -- but collisions might still crop up in this test (they
+      // have in practice), we accept up to two.
       const COUNT = 1000;
 
       const all = new Set();
@@ -116,7 +117,7 @@ describe('@bayou/doc-common/CaretId', () => {
         all.add(CaretId.randomInstance());
       }
 
-      assert.strictEqual(all.size, COUNT);
+      assert.atLeast(all.size, COUNT - 2);
     });
   });
 });
