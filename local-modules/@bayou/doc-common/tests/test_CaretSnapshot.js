@@ -102,7 +102,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([1]);
       test(['florp', op1]);
       test([op1, 'florp', op2]);
-      test([CaretOp.op_endSession('cr-xxxxx')]); // Session ends aren't allowed.
+      test([CaretOp.op_delete('cr-xxxxx')]); // `delete`s aren't allowed.
       test([CaretOp.op_setField('cr-xxxxx', 'revNum', 1)]); // Individual field sets aren't allowed.
       test([op1, op1]); // Duplicates aren't allowed.
     });
@@ -114,9 +114,9 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       }
 
       // Session ends aren't allowed.
-      test([CaretOp.op_endSession('cr-xxxxx')]);
-      test([op1, CaretOp.op_endSession('cr-xxxxx')]);
-      test([op1, CaretOp.op_endSession(caret1.id)]);
+      test([CaretOp.op_delete('cr-xxxxx')]);
+      test([op1, CaretOp.op_delete('cr-xxxxx')]);
+      test([op1, CaretOp.op_delete(caret1.id)]);
 
       // Individual field sets aren't allowed.
       test([CaretOp.op_setField('cr-xxxxx', 'revNum', 1)]);
@@ -210,7 +210,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     it('should remove a caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, [op1, op2]);
       const expected = new CaretSnapshot(1, [op2]);
-      const result   = snap.compose(new CaretChange(1, [CaretOp.op_endSession(caret1.id)]));
+      const result   = snap.compose(new CaretChange(1, [CaretOp.op_delete(caret1.id)]));
 
       assert.isTrue(result.equals(expected));
     });

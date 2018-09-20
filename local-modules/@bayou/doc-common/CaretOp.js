@@ -17,9 +17,9 @@ export default class CaretOp extends BaseOp {
     return 'add';
   }
 
-  /** {string} Opcode constant for "end session" operations. */
-  static get CODE_endSession() {
-    return 'endSession';
+  /** {string} Opcode constant for "delete" operations (delete a caret). */
+  static get CODE_delete() {
+    return 'delete';
   }
 
   /** {string} Opcode constant for "set field" operations. */
@@ -40,15 +40,15 @@ export default class CaretOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "end session" operation.
+   * Constructs a new "delete" operation.
    *
    * @param {string} caretId ID of the caret which is to be removed.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_endSession(caretId) {
+  static op_delete(caretId) {
     CaretId.check(caretId);
 
-    return new CaretOp(CaretOp.CODE_endSession, caretId);
+    return new CaretOp(CaretOp.CODE_delete, caretId);
   }
 
   /**
@@ -83,7 +83,7 @@ export default class CaretOp extends BaseOp {
         return Object.freeze({ opName, caret });
       }
 
-      case CaretOp.CODE_endSession: {
+      case CaretOp.CODE_delete: {
         const [caretId] = payload.args;
         return Object.freeze({ opName, caretId });
       }

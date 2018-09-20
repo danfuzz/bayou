@@ -44,7 +44,7 @@ export default class CaretDelta extends BaseDelta {
           break;
         }
 
-        case CaretOp.CODE_endSession: {
+        case CaretOp.CODE_delete: {
           if (wantDocument) {
             // Document deltas don't remember caret deletions.
             carets.delete(opProps.caretId);
@@ -69,15 +69,14 @@ export default class CaretDelta extends BaseDelta {
             handled = true;
           } else if (ops.length === 1) {
             // We have a single-element array for this caret. It might be a
-            // `add` or an `endSession`, in which case we can do something
-            // special.
+            // `add` or an `delete`, in which case we can do something special.
             const op0Props = ops[0].props;
             if (op0Props.opName === CaretOp.CODE_add) {
               // Integrate the new value into the caret.
               const caret = op0Props.caret.compose(new CaretDelta([op]));
               ops[0] = CaretOp.op_add(caret);
               handled = true;
-            } else if (op0Props.opName === CaretOp.CODE_endSession) {
+            } else if (op0Props.opName === CaretOp.CODE_delete) {
               // We ignore set-after-end. A bit philosophical, but what does
               // it even mean to set a value on a nonexistent thing?
               handled = true;

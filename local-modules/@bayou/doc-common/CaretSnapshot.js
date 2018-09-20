@@ -217,7 +217,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       : Caret.check(idOrCaret).id;
 
     if (this._carets.has(caretId)) {
-      const op = CaretOp.op_endSession(caretId);
+      const op = CaretOp.op_delete(caretId);
       return this.compose(new CaretChange(this.revNum, [op]));
     } else {
       return this;
@@ -261,7 +261,7 @@ export default class CaretSnapshot extends BaseSnapshot {
 
     for (const caretId of this._carets.keys()) {
       if (!newerCarets.get(caretId)) {
-        resultOps.push(CaretOp.op_endSession(caretId));
+        resultOps.push(CaretOp.op_delete(caretId));
       }
     }
 
