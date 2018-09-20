@@ -179,7 +179,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
       const expectedMockChangeRevNum = 99;
-      const change = new MockChange(expectedMockChangeRevNum, [['florp', 'f'], ['blort', 'b']]);
+      const change = new MockChange(expectedMockChangeRevNum, [['x', 'f'], ['y', 'b']]);
       const snapshotRevNum = 100;
       const expectedFileChangeRevNum = snapshotRevNum + 1;
 
@@ -187,7 +187,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
       // TODO: Replace with stub
       Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(snapshotRevNum, [[`snap_blort_${snapshotRevNum}`]])
+        get: () => new MockSnapshot(snapshotRevNum, [['yes']])
       });
 
       // TODO: Replace with stub
@@ -215,7 +215,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       let actualFileChange;
       let actualTimeout;
@@ -229,7 +229,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
       // TODO: Replace with stub
       Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+        get: () => new MockSnapshot(100, [['x', 1]])
       });
 
       async function test(timeout, expect, msg) {
@@ -262,10 +262,10 @@ describe('@bayou/doc-server/BaseControl', () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+        get: () => new MockSnapshot(100, [['yes']])
       });
 
       // TODO: Replace with spy
@@ -282,10 +282,10 @@ describe('@bayou/doc-server/BaseControl', () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+        get: () => new MockSnapshot(100, [['yes']])
       });
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
@@ -308,10 +308,10 @@ describe('@bayou/doc-server/BaseControl', () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [[`snap_blort_${100}`]])
+        get: () => new MockSnapshot(100, [['x']])
       });
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
@@ -351,7 +351,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, file);
       const control    = new MockControl(fileAccess, 'boop');
-      const change     = new MockChange(99, [['florp', 'f'], ['blort', 'b']]);
+      const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       async function test(v) {
         await assert.isRejected(control.appendChange(change, v), /badValue/);
@@ -876,7 +876,7 @@ describe('@bayou/doc-server/BaseControl', () => {
         throw new Error('This should not have been called.');
       };
 
-      const change = new MockChange(12, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      const change = new MockChange(12, [new MockOp('y')], Timestamp.MIN_VALUE);
       await assert.isRejected(control.update(change), /^badValue/);
     });
 
@@ -920,21 +920,21 @@ describe('@bayou/doc-server/BaseControl', () => {
         gotBase     = baseSnapshot;
         gotExpected = expectedSnapshot;
         gotTimeout  = timeoutMsec;
-        return new MockChange(14, [new MockOp('q')]);
+        return new MockChange(14, [new MockOp('yes')]);
       };
 
-      const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      const change = new MockChange(7, [new MockOp('y')], Timestamp.MIN_VALUE);
       const result = await control.update(change);
 
       assert.strictEqual(callCount, 1);
       assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
       assert.strictEqual(gotChange, change);
       assert.deepEqual(gotExpected,
-        new MockSnapshot(7, [new MockOp('composedDoc'), new MockOp('abc')]));
+        new MockSnapshot(7, [new MockOp('composedDoc'), new MockOp('y')]));
       assert.isNumber(gotTimeout);
 
       assert.instanceOf(result, MockChange);
-      assert.deepEqual(result, new MockChange(14, [new MockOp('q')]));
+      assert.deepEqual(result, new MockChange(14, [new MockOp('yes')]));
     });
 
     it('should retry the `_attemptUpdate()` call if it returns `null`', async () => {
@@ -953,14 +953,14 @@ describe('@bayou/doc-server/BaseControl', () => {
           if (callCount === 1) {
             return null;
           }
-          return new MockChange(14, [new MockOp('florp')]);
+          return new MockChange(14, [new MockOp('yes')]);
         };
 
-      const change = new MockChange(7, [new MockOp('abc')], Timestamp.MIN_VALUE);
+      const change = new MockChange(7, [new MockOp('x')], Timestamp.MIN_VALUE);
       const result = await control.update(change);
 
       assert.strictEqual(callCount, 2);
-      assert.deepEqual(result, new MockChange(14, [new MockOp('florp')]));
+      assert.deepEqual(result, new MockChange(14, [new MockOp('yes')]));
     });
   });
 
