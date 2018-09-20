@@ -165,14 +165,14 @@ describe('@bayou/ot-common/BaseDelta', () => {
 
   describe('deconstruct()', () => {
     it('should return a data value', () => {
-      const delta  = new MockDelta([['a', 1, 2, 3, [4, 5, 6]], ['b', { x: ['y'] }]]);
+      const delta  = new MockDelta([['x', 1, 2, 3, [4, 5, 6]], ['y', { x: ['y'] }]]);
       const result = delta.deconstruct();
 
       assert.isTrue(DataUtil.isData(result));
     });
 
     it('should return an array of length one, which contains an array-of-arrays', () => {
-      const delta  = new MockDelta([['a', 1], ['b', [1, 2]]]);
+      const delta  = new MockDelta([['x', 1], ['y', [1, 2]]]);
       const result = delta.deconstruct();
 
       assert.isArray(result);

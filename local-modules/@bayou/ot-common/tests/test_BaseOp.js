@@ -62,10 +62,17 @@ describe('@bayou/ot-common/BaseOp', () => {
       }
 
       test(new Map());
-      test(new Functor('x', 1, 2, [1, 2]));
+      test([1, 2, new Set()], 3);
+      test('foo', 3, [new Set()], 4);
       test(/blort/);
       test(() => 'woo');
       test(1, 2, 3, new Map(), 4, 5, 6);
+
+      // **TODO:** This should arguably fail, in that `Set` can't be
+      // deep-frozen. The issue is probably that the `BaseOp` constructor
+      // doesn't actually try to deep-freeze its arguments, just single-level
+      // freeze.
+      //test(new Functor('x', 1, 2, new Set()));
     });
 
     it('should reject non-string first arguments', () => {
