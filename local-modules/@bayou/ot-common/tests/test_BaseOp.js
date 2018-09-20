@@ -13,24 +13,24 @@ import { MockOp } from '@bayou/ot-common/mocks';
 describe('@bayou/ot-common/BaseOp', () => {
   describe('constructor()', () => {
     it('should accept a string `name argument', () => {
-      const result = new MockOp('blort');
-      assert.strictEqual(result.payload.name, 'blort');
+      const result = new MockOp('x');
+      assert.strictEqual(result.payload.name, 'x');
     });
 
     it('should accept at least ten arguments after the name', () => {
-      const result = new MockOp('blort', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+      const result = new MockOp('x', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
       assert.strictEqual(result.payload.args.length, 10);
     });
 
     it('should produce a frozen instance with a frozen payload', () => {
-      const op = new MockOp('blort');
+      const op = new MockOp('x');
       assert.isFrozen(op);
       assert.isFrozen(op.payload);
     });
 
     it('should have all frozen payload arguments even when given non-frozen ones', () => {
       function test(...args) {
-        const op      = new MockOp('blort', ...args);
+        const op      = new MockOp('x', ...args);
         const gotArgs = op.payload.args;
 
         for (const arg of gotArgs) {
@@ -58,11 +58,11 @@ describe('@bayou/ot-common/BaseOp', () => {
 
     it('should reject payloads with arguments that are neither frozen nor deep-freezable data', () => {
       function test(...args) {
-        assert.throws(() => new MockOp(...args));
+        assert.throws(() => new MockOp('x', ...args));
       }
 
       test(new Map());
-      test(new Functor('x', 1, 2));
+      test(new Functor('x', 1, 2, [1, 2]));
       test(/blort/);
       test(() => 'woo');
       test(1, 2, 3, new Map(), 4, 5, 6);
@@ -91,7 +91,7 @@ describe('@bayou/ot-common/BaseOp', () => {
 
   describe('deconstruct()', () => {
     it('should return an array data value', () => {
-      const op     = new MockOp('blort', ['florp', 'like'], { timeline: 'sideways' });
+      const op     = new MockOp('x', ['florp', 'like'], { timeline: 'sideways' });
       const result = op.deconstruct();
 
       assert.isArray(result);
@@ -108,11 +108,11 @@ describe('@bayou/ot-common/BaseOp', () => {
         assert.deepEqual(op1, op2);
       }
 
-      test('foo');
-      test('bar', 1, 2, 3);
-      test('baz', ['florp', 'like']);
-      test('goo', { timeline: 'sideways' });
-      test('boo', [[[[[[[[[['floomp']]]]]]]]]]);
+      test('x');
+      test('y', 1, 2, 3);
+      test('z', ['florp', 'like']);
+      test('x', { timeline: 'sideways' });
+      test('y', [[[[[[[[[['floomp']]]]]]]]]]);
     });
   });
 
@@ -130,9 +130,9 @@ describe('@bayou/ot-common/BaseOp', () => {
       }
 
       test('x');
-      test('foo', 1);
-      test('bar', ['x']);
-      test('baz', { a: 10, b: 20 });
+      test('y', 1);
+      test('z', ['x']);
+      test('z', { a: 10, b: 20 });
     });
 
     it('should return `false` when payloads differ', () => {

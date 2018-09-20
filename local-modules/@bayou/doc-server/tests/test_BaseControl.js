@@ -659,7 +659,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
         if (op0Name === `composed_blort_${base}`) {
           composedCount++;
-        } else if (op0Name === 'diff_delta') {
+        } else if (op0Name === 'diffDelta') {
           diffCount++;
           assert.lengthOf(ops, 2);
           assert.strictEqual(ops[1].name, `snap_blort_${newer}`);
