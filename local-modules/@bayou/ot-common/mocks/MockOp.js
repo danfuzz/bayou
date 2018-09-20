@@ -8,11 +8,23 @@ import { BaseOp } from '@bayou/ot-common';
  * Mock operation class for testing.
  */
 export default class MockOp extends BaseOp {
+  static get CODE_composedDoc()    { return 'composedDoc';    }
+  static get CODE_composedDoc_()   { return 'composedDoc_';   }
+  static get CODE_composedDoc__()  { return 'composedDoc__';  }
+  static get CODE_composedNotDoc() { return 'composedNotDoc'; }
+  static get CODE_diffDelta()      { return 'diffDelta';      }
+  static get CODE_notDocument()    { return 'notDocument';    }
+  static get CODE_snap()           { return 'snap';    }
+  static get CODE_x()              { return 'x';              }
+  static get CODE_y()              { return 'y';              }
+  static get CODE_yes()            { return 'yes';            }
+  static get CODE_z()              { return 'z';              }
+
   get name() {
     return this.payload.name;
   }
 
-  _impl_validate() {
+  static _impl_isValidPayload() {
     return true;
   }
 }

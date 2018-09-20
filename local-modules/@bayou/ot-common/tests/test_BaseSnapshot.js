@@ -109,8 +109,8 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
 
   describe('compose()', () => {
     it('should call through to the delta and wrap the result in a new instance', () => {
-      const snap   = new MockSnapshot(10, [new MockOp('some_op')]);
-      const change = new MockChange(20, [new MockOp('change_op')]);
+      const snap   = new MockSnapshot(10, [new MockOp('x')]);
+      const change = new MockChange(20, [new MockOp('y')]);
       const result = snap.compose(change);
 
       assert.instanceOf(result, MockSnapshot);
@@ -118,11 +118,11 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_doc'), new MockOp('change_op')]);
+        [new MockOp('composedDoc'), new MockOp('y')]);
     });
 
     it('should return `this` given a same-`revNum` empty-`delta` change', () => {
-      const snap   = new MockSnapshot(10, [new MockOp('some_op')]);
+      const snap   = new MockSnapshot(10, [new MockOp('x')]);
       const change = new MockChange(10, []);
       const result = snap.compose(change);
 
@@ -158,9 +158,9 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
 
   describe('composeAll()', () => {
     it('should call through to the delta and wrap the result in a new instance', () => {
-      const snap    = new MockSnapshot(10, [new MockOp('some_op')]);
-      const change1 = new MockChange(21, [new MockOp('change_op1')]);
-      const change2 = new MockChange(22, [new MockOp('change_op2')]);
+      const snap    = new MockSnapshot(10, [new MockOp('x')]);
+      const change1 = new MockChange(21, [new MockOp('y')]);
+      const change2 = new MockChange(22, [new MockOp('z')]);
       const result = snap.composeAll([change1, change2]);
 
       assert.instanceOf(result, MockSnapshot);
@@ -168,11 +168,11 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_doc_'), new MockOp('change_op2')]);
+        [new MockOp('composedDoc_'), new MockOp('z')]);
     });
 
     it('should return `this` given same-`revNum` empty-`delta` changes', () => {
-      const snap   = new MockSnapshot(10, [new MockOp('some_op')]);
+      const snap   = new MockSnapshot(10, [new MockOp('x')]);
       const change = new MockChange(10, []);
       const result = snap.composeAll([change, change, change, change]);
 
@@ -215,7 +215,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
   describe('diff()', () => {
     it('should call through to the impl and wrap the result in a timeless authorless change', () => {
       const oldSnap = new MockSnapshot(10, []);
-      const newSnap = new MockSnapshot(20, [new MockOp('new_snap')]);
+      const newSnap = new MockSnapshot(20, [new MockOp('x')]);
       const result  = oldSnap.diff(newSnap);
 
       assert.instanceOf(result, MockChange);
@@ -225,7 +225,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.isNull(result.authorId);
 
       assert.deepEqual(result.delta.ops,
-        [new MockOp('diff_delta'), new MockOp('new_snap')]);
+        [new MockOp('diffDelta'), new MockOp('x')]);
     });
 
     it('should return an empty change when given an argument with identical contents', () => {
@@ -236,8 +236,8 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
         assert.lengthOf(result.delta.ops, 0);
       }
 
-      const snap1 = new MockSnapshot(10, [new MockOp('some_op')]);
-      const snap2 = new MockSnapshot(20, [new MockOp('some_op')]);
+      const snap1 = new MockSnapshot(10, [new MockOp('x')]);
+      const snap2 = new MockSnapshot(20, [new MockOp('x')]);
       const snap3 = new MockSnapshot(30, snap2.contents);
 
       test(snap1, snap1);
@@ -349,8 +349,8 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
     });
 
     it('should return an appropriately-constructed instance given a different `contents`', () => {
-      const delta  = new MockDelta([new MockOp('yo')]);
-      const snap   = new MockSnapshot(123, [new MockOp('hello')]);
+      const delta  = new MockDelta([new MockOp('x')]);
+      const snap   = new MockSnapshot(123, [new MockOp('y')]);
       const result = snap.withContents(delta);
 
       assert.strictEqual(result.revNum,   123);

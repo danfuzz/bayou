@@ -16,7 +16,7 @@ export default class MockControl extends DurableControl {
   }
 
   _impl_getSnapshot(revNum) {
-    return new MockSnapshot(revNum, [[`snap_${revNum}`]]);
+    return new MockSnapshot(revNum, [['snap', revNum]]);
   }
 
   _impl_validateChange() {
