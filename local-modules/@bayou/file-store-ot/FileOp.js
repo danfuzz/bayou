@@ -209,8 +209,14 @@ export default class FileOp extends BaseOp {
     }
   }
 
-  // TODO: implement file op specific validation
-  _impl_validate() {
+  /**
+   * Subclass-specific implementation of {@link #isValidPayload}.
+   *
+   * @param {Functor} payload_unused The would-be payload for an instance.
+   * @returns {boolean} `true` if `payload` is valid, or `false` if not.
+   */
+  static _impl_isValidPayload(payload_unused) {
+    // **TODO:** Fill this in!
     return true;
   }
 }

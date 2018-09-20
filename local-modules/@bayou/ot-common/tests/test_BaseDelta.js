@@ -105,9 +105,9 @@ describe('@bayou/ot-common/BaseDelta', () => {
         }
       }
 
-      test(['blort']);
-      test(['blort', 1]);
-      test(['blort', 1, 2, 3, 4, 'florp']);
+      test(['z']);
+      test(['z', 1]);
+      test(['z', 1, 2, 3, 4, 'florp']);
       test(['x'], ['y'], ['z']);
       test(['x', ['a']], ['y', { b: 10 }], ['z', [[['pdq']]]]);
     });
@@ -126,8 +126,8 @@ describe('@bayou/ot-common/BaseDelta', () => {
         assert.deepEqual(result.ops, expectOps);
       }
 
-      test([], [['x']], false, [['composed_not_doc'], ['x']]);
-      test([], [['x']], true,  [['composed_doc'], ['x']]);
+      test([], [['x']], false, [['composedNotDoc'], ['x']]);
+      test([], [['x']], true,  [['composedDoc'], ['x']]);
     });
 
     it('should reject invalid `other` arguments', () => {
@@ -158,21 +158,21 @@ describe('@bayou/ot-common/BaseDelta', () => {
     });
 
     it('should reject a non-document `this` when `wantDocument` is `true`', () => {
-      const delta = new MockDelta([['not_document']]);
+      const delta = new MockDelta([['notDocument']]);
       assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /badUse/);
     });
   });
 
   describe('deconstruct()', () => {
     it('should return a data value', () => {
-      const delta  = new MockDelta([['a', 1, 2, 3, [4, 5, 6]], ['b', { x: ['y'] }]]);
+      const delta  = new MockDelta([['x', 1, 2, 3, [4, 5, 6]], ['y', { x: ['y'] }]]);
       const result = delta.deconstruct();
 
       assert.isTrue(DataUtil.isData(result));
     });
 
     it('should return an array of length one, which contains an array-of-arrays', () => {
-      const delta  = new MockDelta([['a', 1], ['b', [1, 2]]]);
+      const delta  = new MockDelta([['x', 1], ['y', [1, 2]]]);
       const result = delta.deconstruct();
 
       assert.isArray(result);
@@ -232,8 +232,8 @@ describe('@bayou/ot-common/BaseDelta', () => {
     });
 
     it('should return `true` when equal ops are not also `===`', () => {
-      const ops1 = [new MockOp('foo'), new MockOp('bar')];
-      const ops2 = [new MockOp('foo'), new MockOp('bar')];
+      const ops1 = [new MockOp('x'), new MockOp('y')];
+      const ops2 = [new MockOp('x'), new MockOp('y')];
       const d1 = new MockDelta(ops1);
       const d2 = new MockDelta(ops2);
 
@@ -242,8 +242,8 @@ describe('@bayou/ot-common/BaseDelta', () => {
     });
 
     it('should return `false` when array lengths differ', () => {
-      const op1 = new MockOp('foo');
-      const op2 = new MockOp('bar');
+      const op1 = new MockOp('x');
+      const op2 = new MockOp('y');
       const d1 = new MockDelta([op1]);
       const d2 = new MockDelta([op1, op2]);
 
@@ -260,11 +260,11 @@ describe('@bayou/ot-common/BaseDelta', () => {
         assert.isFalse(d2.equals(d1));
       }
 
-      const op1 = new MockOp('foo');
-      const op2 = new MockOp('bar');
-      const op3 = new MockOp('baz');
-      const op4 = new MockOp('biff');
-      const op5 = new MockOp('quux');
+      const op1 = new MockOp('x');
+      const op2 = new MockOp('y');
+      const op3 = new MockOp('z');
+      const op4 = new MockOp('x', 1);
+      const op5 = new MockOp('x', 2);
 
       test([op1],                     [op2]);
       test([op1, op2],                [op1, op3]);

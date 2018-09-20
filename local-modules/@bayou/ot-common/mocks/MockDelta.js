@@ -20,7 +20,7 @@ export default class MockDelta extends BaseDelta {
    * document.
    */
   static get NOT_DOCUMENT_OPS() {
-    return [new MockOp('not_document')];
+    return [new MockOp('notDocument')];
   }
 
   /** {array<object>} Ops array that will be considered valid. */
@@ -29,7 +29,7 @@ export default class MockDelta extends BaseDelta {
   }
 
   _impl_compose(other, wantDocument) {
-    let resultName = wantDocument ? 'composed_doc' : 'composed_not_doc';
+    let resultName = wantDocument ? 'composedDoc' : 'composedNotDoc';
     const op0 = this.ops[0];
 
     if (op0 && op0.name.startsWith(resultName)) {
@@ -44,7 +44,7 @@ export default class MockDelta extends BaseDelta {
   _impl_isDocument() {
     const op0 = this.ops[0];
 
-    return op0 ? (op0.name !== 'not_document') : true;
+    return op0 ? (op0.name !== 'notDocument') : true;
   }
 
   /**

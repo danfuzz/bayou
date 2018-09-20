@@ -32,7 +32,7 @@ export default class MockSnapshot extends BaseSnapshot {
   }
 
   _impl_diffAsDelta(newerSnapshot) {
-    return [new MockOp('diff_delta'), newerSnapshot.contents.ops[0]];
+    return [new MockOp('diffDelta'), newerSnapshot.contents.ops[0]];
   }
 
   _impl_validateChange() {
