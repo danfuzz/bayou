@@ -626,7 +626,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
       control.getSnapshot = async (revNum) => {
         assert((revNum === reqBase) || (revNum === reqNewer), `Unexpected revNum: ${revNum}`);
-        return new MockSnapshot(revNum, [[`snap_blort_${revNum}`]]);
+        return new MockSnapshot(revNum, [['snap', revNum]]);
       };
 
       control.getComposedChanges = async (baseDelta, startInc, endExc, wantDocument) => {
@@ -635,7 +635,7 @@ describe('@bayou/doc-server/BaseControl', () => {
         assert.strictEqual(startInc, reqBase + 1);
         assert.strictEqual(endExc, reqNewer + 1);
         assert.isFalse(wantDocument);
-        return new MockDelta([[`composed_blort_${reqBase}`]]);
+        return new MockDelta([['yes', reqBase]]);
       };
 
       // Counts for each tactic, to make sure both paths are exercised.
@@ -654,15 +654,14 @@ describe('@bayou/doc-server/BaseControl', () => {
         assert.isNull(result.timestamp);
         assert.isAbove(result.delta.ops.length, 0);
 
-        const ops     = result.delta.ops;
-        const op0Name = ops[0].name;
+        const ops = result.delta.ops;
 
-        if (op0Name === `composed_blort_${base}`) {
+        if (ops[0].equals(new MockOp('yes', base))) {
           composedCount++;
-        } else if (op0Name === 'diffDelta') {
+        } else if (ops[0].name === 'diffDelta') {
           diffCount++;
           assert.lengthOf(ops, 2);
-          assert.strictEqual(ops[1].name, `snap_blort_${newer}`);
+          assert.deepEqual(ops[1], new MockOp('snap', newer));
         } else {
           assert(false, 'Unexpected ops.');
         }
