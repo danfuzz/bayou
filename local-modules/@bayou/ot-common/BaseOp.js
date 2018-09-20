@@ -44,6 +44,10 @@ export default class BaseOp extends CommonBase {
 
         const value = TString.nonEmpty(desc.get ? desc.get() : desc.value);
         names.add(value);
+
+        if (names.size === 0) {
+          throw new Errors.wtf(`No \`CODE_*\` properties found on ${this.name}.`);
+        }
       }
 
       this._names = Object.freeze(names);
