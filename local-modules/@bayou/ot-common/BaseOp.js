@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TBoolean, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
@@ -86,7 +88,7 @@ export default class BaseOp extends CommonBase {
       return payload;
     }
 
-    throw Errors.badUse(`Invalid payload for ${this.name}.`);
+    throw Errors.badUse(`Invalid payload for ${this.name}: ${inspect(payload)}`);
   }
 
   /**
