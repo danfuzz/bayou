@@ -479,7 +479,7 @@ export default class CaretOverlay {
       const props = op.props;
 
       switch (props.opName) {
-        case CaretOp.CODE_beginSession: {
+        case CaretOp.CODE_add: {
           this._addAvatarToDefs(props.caret);
           updateDisplay = true;
           break;

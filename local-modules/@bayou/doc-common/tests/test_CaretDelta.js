@@ -58,9 +58,9 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     it('should not include `endSession` ops when `wantDocument` is `true`', () => {
-      const op1    = CaretOp.op_beginSession(new Caret('cr-aaaaa', { authorId: 'xyz' }));
-      const op2    = CaretOp.op_beginSession(new Caret('cr-bbbbb', { authorId: 'xyz' }));
-      const op3    = CaretOp.op_beginSession(new Caret('cr-ccccc', { authorId: 'xyz' }));
+      const op1    = CaretOp.op_add(new Caret('cr-aaaaa', { authorId: 'xyz' }));
+      const op2    = CaretOp.op_add(new Caret('cr-bbbbb', { authorId: 'xyz' }));
+      const op3    = CaretOp.op_add(new Caret('cr-ccccc', { authorId: 'xyz' }));
       const op4    = CaretOp.op_endSession('cr-bbbbb');
       const op5    = CaretOp.op_endSession('cr-ddddd');
       const d1     = new CaretDelta([op1, op2]);
@@ -93,7 +93,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('cr-sessi', { authorId: 'xyz' }))],
+          [CaretOp.op_add(new Caret('cr-sessi', { authorId: 'xyz' }))],
           [endOp],
           [endOp]
         );
@@ -130,18 +130,18 @@ describe('@bayou/doc-common/CaretDelta', () => {
         );
 
         test(
-          [CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz' })), endOp],
+          [CaretOp.op_add(new Caret('cr-sess1', { authorId: 'xyz' })), endOp],
           [setOp],
           [endOp]
         );
       });
     });
 
-    describe('`setField` after `beginSession`', () => {
-      it('should result in a modified `beginSession`', () => {
-        const beginOp  = CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz' }));
+    describe('`setField` after `add`', () => {
+      it('should result in a modified `add`', () => {
+        const beginOp  = CaretOp.op_add(new Caret('cr-sess1', { authorId: 'xyz' }));
         const setOp    = CaretOp.op_setField('cr-sess1', 'revNum', 123);
-        const resultOp = CaretOp.op_beginSession(new Caret('cr-sess1', { authorId: 'xyz', revNum: 123 }));
+        const resultOp = CaretOp.op_add(new Caret('cr-sess1', { authorId: 'xyz', revNum: 123 }));
 
         test(
           [beginOp, setOp],

@@ -22,7 +22,7 @@ function newCaret(id, index, length, color, authorId) {
 }
 
 /**
- * Convenient `op_beginSession` constructor, which takes positional parameters
+ * Convenient `op_add` constructor, which takes positional parameters
  * for the caret fields.
  *
  * @param {string} id Caret ID.
@@ -33,16 +33,16 @@ function newCaret(id, index, length, color, authorId) {
  * @returns {Caret} Appropriately-constructed caret.
  */
 function newCaretOp(id, index, length, color, authorId) {
-  return CaretOp.op_beginSession(newCaret(id, index, length, color, authorId));
+  return CaretOp.op_add(newCaret(id, index, length, color, authorId));
 }
 
 const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'aa');
 const caret2 = newCaret('cr-22222', 2, 6,  '#222222', 'bb');
 const caret3 = newCaret('cr-33333', 3, 99, '#333333', 'cc');
 
-const op1 = CaretOp.op_beginSession(caret1);
-const op2 = CaretOp.op_beginSession(caret2);
-const op3 = CaretOp.op_beginSession(caret3);
+const op1 = CaretOp.op_add(caret1);
+const op2 = CaretOp.op_add(caret2);
+const op3 = CaretOp.op_add(caret3);
 
 describe('@bayou/doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
@@ -183,7 +183,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     it('should add a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
       const expected = new CaretSnapshot(1, [op1]);
-      const change   = new CaretChange(1, [CaretOp.op_beginSession(caret1)]);
+      const change   = new CaretChange(1, [CaretOp.op_add(caret1)]);
       const result   = snap.compose(change);
 
       assert.isTrue(result.equals(expected));
@@ -549,7 +549,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
 
     it('should return an appropriately-constructed instance given an updated caret', () => {
       const modCaret = new Caret(caret1, { index: 321 });
-      const modOp    = CaretOp.op_beginSession(modCaret);
+      const modOp    = CaretOp.op_add(modCaret);
       const snap     = new CaretSnapshot(1, [op1,   op2]);
       const expected = new CaretSnapshot(1, [modOp, op2]);
 

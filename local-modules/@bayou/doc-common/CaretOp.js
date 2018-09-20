@@ -12,9 +12,9 @@ import CaretId from './CaretId';
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
  */
 export default class CaretOp extends BaseOp {
-  /** {string} Opcode constant for "begin session" operations. */
-  static get CODE_beginSession() {
-    return 'beginSession';
+  /** {string} Opcode constant for "add" operations (add a new caret). */
+  static get CODE_add() {
+    return 'add';
   }
 
   /** {string} Opcode constant for "end session" operations. */
@@ -28,15 +28,15 @@ export default class CaretOp extends BaseOp {
   }
 
   /**
-   * Constructs a new "begin session" operation.
+   * Constructs a new "add" operation.
    *
-   * @param {Caret} caret The initial caret for the new session.
+   * @param {Caret} caret The caret to add.
    * @returns {CaretOp} The corresponding operation.
    */
-  static op_beginSession(caret) {
+  static op_add(caret) {
     Caret.check(caret);
 
-    return new CaretOp(CaretOp.CODE_beginSession, caret);
+    return new CaretOp(CaretOp.CODE_add, caret);
   }
 
   /**
@@ -78,7 +78,7 @@ export default class CaretOp extends BaseOp {
     const opName  = payload.name;
 
     switch (opName) {
-      case CaretOp.CODE_beginSession: {
+      case CaretOp.CODE_add: {
         const [caret] = payload.args;
         return Object.freeze({ opName, caret });
       }

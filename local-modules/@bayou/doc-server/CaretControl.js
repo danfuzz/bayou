@@ -66,7 +66,7 @@ export default class CaretControl extends EphemeralControl {
 
     return new CaretChange(
       snapshot.revNum + 1,
-      [CaretOp.op_beginSession(caret)],
+      [CaretOp.op_add(caret)],
       lastActive);
   }
 
@@ -97,11 +97,11 @@ export default class CaretControl extends EphemeralControl {
     const lastActive = Timestamp.now();
     const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
-    // We always make a delta with a `beginSession` op. Even though this change
-    // isn't always actually adding a caret, when ultimately applied via
-    // `update()` it will always turn into an appropriate new snapshot.
+    // We always make a delta with an `add` op. Even though this change isn't
+    // always actually adding a caret, when ultimately applied via `update()` it
+    // will always turn into an appropriate new snapshot.
     return new CaretChange(
-      snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
+      snapshot.revNum + 1, [CaretOp.op_add(caret)], lastActive);
   }
 
   /**
