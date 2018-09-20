@@ -113,7 +113,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         assert.throws(() => { new CaretSnapshot(0, delta); });
       }
 
-      // Session ends aren't allowed.
+      // `delete` ops aren't allowed.
       test([CaretOp.op_delete('cr-xxxxx')]);
       test([op1, CaretOp.op_delete('cr-xxxxx')]);
       test([op1, CaretOp.op_delete(caret1.id)]);
