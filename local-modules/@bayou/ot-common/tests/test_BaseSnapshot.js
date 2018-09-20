@@ -118,7 +118,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composed_doc'), new MockOp('change_op')]);
+        [new MockOp('composedDoc'), new MockOp('change_op')]);
     });
 
     it('should return `this` given a same-`revNum` empty-`delta` change', () => {

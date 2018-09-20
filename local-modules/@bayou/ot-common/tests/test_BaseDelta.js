@@ -126,8 +126,8 @@ describe('@bayou/ot-common/BaseDelta', () => {
         assert.deepEqual(result.ops, expectOps);
       }
 
-      test([], [['x']], false, [['composed_not_doc'], ['x']]);
-      test([], [['x']], true,  [['composed_doc'], ['x']]);
+      test([], [['x']], false, [['composedNotDoc'], ['x']]);
+      test([], [['x']], true,  [['composedDoc'], ['x']]);
     });
 
     it('should reject invalid `other` arguments', () => {
@@ -158,7 +158,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
     });
 
     it('should reject a non-document `this` when `wantDocument` is `true`', () => {
-      const delta = new MockDelta([['not_document']]);
+      const delta = new MockDelta([['notDocument']]);
       assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /badUse/);
     });
   });
