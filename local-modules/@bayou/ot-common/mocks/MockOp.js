@@ -12,7 +12,7 @@ export default class MockOp extends BaseOp {
     return this.payload.name;
   }
 
-  _impl_validate() {
+  _impl_isValidPayload() {
     return true;
   }
 }
