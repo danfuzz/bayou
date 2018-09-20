@@ -14,7 +14,7 @@ export default class MockOp extends BaseOp {
   static get CODE_composedNotDoc() { return 'composedNotDoc'; }
   static get CODE_diffDelta()      { return 'diffDelta';      }
   static get CODE_notDocument()    { return 'notDocument';    }
-  static get CODE_snap()           { return 'snap';    }
+  static get CODE_snap()           { return 'snap';           }
   static get CODE_x()              { return 'x';              }
   static get CODE_y()              { return 'y';              }
   static get CODE_yes()            { return 'yes';            }
