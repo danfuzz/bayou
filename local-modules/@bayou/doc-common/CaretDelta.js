@@ -13,8 +13,8 @@ import CaretOp from './CaretOp';
  * and `CaretSnapshot` to produce updated instances of those classes.
  *
  * **Note:** To be valid as a document delta, the set of operations must (a)
- * only consist of `beginSession` ops, and (b) not mention any given caret ID
- * more than once.
+ * only consist of `add` ops, and (b) not mention any given caret ID more than
+ * once.
  *
  * Instances of this class are immutable.
  */
@@ -37,21 +37,21 @@ export default class CaretDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.CODE_beginSession: {
+        case CaretOp.CODE_add: {
           // Clear out the caret except for this op, because no earlier op could
           // possibly affect the result.
           carets.set(opProps.caret.id, [op]);
           break;
         }
 
-        case CaretOp.CODE_endSession: {
+        case CaretOp.CODE_delete: {
           if (wantDocument) {
             // Document deltas don't remember caret deletions.
             carets.delete(opProps.caretId);
           } else {
-            // Clear out the caret; same reason as `beginSession` above. We _do_
-            // keep the op, because the fact of a deletion needs to be part of
-            // the final composed result.
+            // Clear out the caret; same reason as `add` above. We _do_ keep the
+            // op, because the fact of a deletion needs to be part of the final
+            // composed result.
             carets.set(opProps.caretId, [op]);
           }
           break;
@@ -63,21 +63,20 @@ export default class CaretDelta extends BaseDelta {
           let   handled = false;
 
           if (!ops) {
-            // This is a "naked" set (no corresponding `beginSession` in the
-            // result). Just start off an array with it.
+            // This is a "naked" set (no corresponding `add` in the result).
+            // Just start off an array with it.
             carets.set(caretId, [op]);
             handled = true;
           } else if (ops.length === 1) {
             // We have a single-element array for this caret. It might be a
-            // `beginSession` or an `endSession`, in which case we can do
-            // something special.
+            // `add` or an `delete`, in which case we can do something special.
             const op0Props = ops[0].props;
-            if (op0Props.opName === CaretOp.CODE_beginSession) {
+            if (op0Props.opName === CaretOp.CODE_add) {
               // Integrate the new value into the caret.
               const caret = op0Props.caret.compose(new CaretDelta([op]));
-              ops[0] = CaretOp.op_beginSession(caret);
+              ops[0] = CaretOp.op_add(caret);
               handled = true;
-            } else if (op0Props.opName === CaretOp.CODE_endSession) {
+            } else if (op0Props.opName === CaretOp.CODE_delete) {
               // We ignore set-after-end. A bit philosophical, but what does
               // it even mean to set a value on a nonexistent thing?
               handled = true;
@@ -124,7 +123,7 @@ export default class CaretDelta extends BaseDelta {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.CODE_beginSession: {
+        case CaretOp.CODE_add: {
           const caretId = opProps.caret.id;
 
           if (ids.has(caretId)) {

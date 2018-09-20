@@ -149,8 +149,8 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Gets a snapshot of all active session caret information. This will throw an
-   * error if the indicated caret revision isn't available.
+   * Gets a snapshot of all active caret information. This will throw an error
+   * if the indicated caret revision isn't available.
    *
    * **Note:** Caret information is only maintained ephemerally, so it is
    * common for it not to be available for other than just a few recent

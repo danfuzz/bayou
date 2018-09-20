@@ -22,7 +22,7 @@ function newCaret(id, index, length, color, authorId) {
 }
 
 /**
- * Convenient `op_beginSession` constructor, which takes positional parameters
+ * Convenient `op_add` constructor, which takes positional parameters
  * for the caret fields.
  *
  * @param {string} id Caret ID.
@@ -33,16 +33,16 @@ function newCaret(id, index, length, color, authorId) {
  * @returns {Caret} Appropriately-constructed caret.
  */
 function newCaretOp(id, index, length, color, authorId) {
-  return CaretOp.op_beginSession(newCaret(id, index, length, color, authorId));
+  return CaretOp.op_add(newCaret(id, index, length, color, authorId));
 }
 
 const caret1 = newCaret('cr-11111', 1, 0,  '#111111', 'aa');
 const caret2 = newCaret('cr-22222', 2, 6,  '#222222', 'bb');
 const caret3 = newCaret('cr-33333', 3, 99, '#333333', 'cc');
 
-const op1 = CaretOp.op_beginSession(caret1);
-const op2 = CaretOp.op_beginSession(caret2);
-const op3 = CaretOp.op_beginSession(caret3);
+const op1 = CaretOp.op_add(caret1);
+const op2 = CaretOp.op_add(caret2);
+const op3 = CaretOp.op_add(caret3);
 
 describe('@bayou/doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
@@ -102,7 +102,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([1]);
       test(['florp', op1]);
       test([op1, 'florp', op2]);
-      test([CaretOp.op_endSession('cr-xxxxx')]); // Session ends aren't allowed.
+      test([CaretOp.op_delete('cr-xxxxx')]); // `delete`s aren't allowed.
       test([CaretOp.op_setField('cr-xxxxx', 'revNum', 1)]); // Individual field sets aren't allowed.
       test([op1, op1]); // Duplicates aren't allowed.
     });
@@ -113,10 +113,10 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         assert.throws(() => { new CaretSnapshot(0, delta); });
       }
 
-      // Session ends aren't allowed.
-      test([CaretOp.op_endSession('cr-xxxxx')]);
-      test([op1, CaretOp.op_endSession('cr-xxxxx')]);
-      test([op1, CaretOp.op_endSession(caret1.id)]);
+      // `delete` ops aren't allowed.
+      test([CaretOp.op_delete('cr-xxxxx')]);
+      test([op1, CaretOp.op_delete('cr-xxxxx')]);
+      test([op1, CaretOp.op_delete(caret1.id)]);
 
       // Individual field sets aren't allowed.
       test([CaretOp.op_setField('cr-xxxxx', 'revNum', 1)]);
@@ -183,7 +183,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     it('should add a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
       const expected = new CaretSnapshot(1, [op1]);
-      const change   = new CaretChange(1, [CaretOp.op_beginSession(caret1)]);
+      const change   = new CaretChange(1, [CaretOp.op_add(caret1)]);
       const result   = snap.compose(change);
 
       assert.isTrue(result.equals(expected));
@@ -210,7 +210,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     it('should remove a caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, [op1, op2]);
       const expected = new CaretSnapshot(1, [op2]);
-      const result   = snap.compose(new CaretChange(1, [CaretOp.op_endSession(caret1.id)]));
+      const result   = snap.compose(new CaretChange(1, [CaretOp.op_delete(caret1.id)]));
 
       assert.isTrue(result.equals(expected));
     });
@@ -549,7 +549,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
 
     it('should return an appropriately-constructed instance given an updated caret', () => {
       const modCaret = new Caret(caret1, { index: 321 });
-      const modOp    = CaretOp.op_beginSession(modCaret);
+      const modOp    = CaretOp.op_add(modCaret);
       const snap     = new CaretSnapshot(1, [op1,   op2]);
       const expected = new CaretSnapshot(1, [modOp, op2]);
 

@@ -32,8 +32,8 @@ export default class CaretSnapshot extends BaseSnapshot {
     super(revNum, contents);
 
     /**
-     * {Map<string, CaretOp>} Map of caret ID to an `op_beginSession` which
-     * has a caret with that ID.
+     * {Map<string, CaretOp>} Map of caret ID to an `op_add` which contains a
+     * caret with that ID.
      */
     this._carets = new Map();
 
@@ -42,7 +42,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       const opProps = op.props;
 
       switch (opProps.opName) {
-        case CaretOp.CODE_beginSession: {
+        case CaretOp.CODE_add: {
           this._carets.set(opProps.caret.id, op);
           break;
         }
@@ -193,10 +193,9 @@ export default class CaretSnapshot extends BaseSnapshot {
   withCaret(caret) {
     Caret.check(caret);
 
-    const id = caret.id;
-    const op = CaretOp.op_beginSession(caret);
+    const op = CaretOp.op_add(caret);
 
-    return op.equals(this._carets.get(id))
+    return op.equals(this._carets.get(caret.id))
       ? this
       : this.compose(new CaretChange(this.revNum, [op]));
   }
@@ -218,7 +217,7 @@ export default class CaretSnapshot extends BaseSnapshot {
       : Caret.check(idOrCaret).id;
 
     if (this._carets.has(caretId)) {
-      const op = CaretOp.op_endSession(caretId);
+      const op = CaretOp.op_delete(caretId);
       return this.compose(new CaretChange(this.revNum, [op]));
     } else {
       return this;
@@ -262,7 +261,7 @@ export default class CaretSnapshot extends BaseSnapshot {
 
     for (const caretId of this._carets.keys()) {
       if (!newerCarets.get(caretId)) {
-        resultOps.push(CaretOp.op_endSession(caretId));
+        resultOps.push(CaretOp.op_delete(caretId));
       }
     }
 

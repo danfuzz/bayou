@@ -36,7 +36,7 @@ export default class TheModule extends UtilityClass {
    * or two, so that it isn't mistaken for a month.)
    */
   static get SCHEMA_VERSION() {
-    return '2018-003';
+    return '2018-004';
   }
 
   /**
