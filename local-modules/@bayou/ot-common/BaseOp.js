@@ -19,6 +19,22 @@ import { CommonBase, Errors, Functor } from '@bayou/util-common';
  */
 export default class BaseOp extends CommonBase {
   /**
+   * Validates a {@link Functor} to be used as the payload for an instance of
+   * this class.
+   *
+   * @param {Functor} payload The would-be payload for an instance.
+   * @returns {Functor} `payload`, if it turns out to be valid.
+   * @throws {Error} Thrown if `payload` is invalid.
+   */
+  static checkPayload(payload) {
+    if (this.isValidPayload(payload)) {
+      return payload;
+    }
+
+    throw Errors.badUse(`Invalid payload for ${this.name}: ${inspect(payload)}`);
+  }
+
+  /**
    * Indicates whether the given name is acceptable for use as an opcode name
    * on an instance of this class.
    *
@@ -76,22 +92,6 @@ export default class BaseOp extends CommonBase {
   }
 
   /**
-   * Validates a {@link Functor} to be used as the payload for an instance of
-   * this class.
-   *
-   * @param {Functor} payload The would-be payload for an instance.
-   * @returns {Functor} `payload`, if it turns out to be valid.
-   * @throws {Error} Thrown if `payload` is invalid.
-   */
-  static validatePayload(payload) {
-    if (this.isValidPayload(payload)) {
-      return payload;
-    }
-
-    throw Errors.badUse(`Invalid payload for ${this.name}: ${inspect(payload)}`);
-  }
-
-  /**
    * Constructs an instance. This should not be used directly. Instead, use
    * the static constructor methods defined by concrete subclasses of this
    * class.
@@ -107,7 +107,7 @@ export default class BaseOp extends CommonBase {
 
     // Perform syntactic validation based on the concrete subclass.
     const payload = new Functor(name, ...args).withFrozenArgs();
-    this.constructor.validatePayload(payload);
+    this.constructor.checkPayload(payload);
 
     /** {Functor} The operation payload (name and arguments). */
     this._payload = payload;
