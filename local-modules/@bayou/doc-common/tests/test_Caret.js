@@ -75,7 +75,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.strictEqual(result.revNum, 12345);
     });
 
-    it('should refuse to compose if given a non-matching session ID', () => {
+    it('should refuse to compose if given a non-matching caret ID', () => {
       const op = CaretOp.op_setField(caret2.id, 'index', 55);
 
       assert.throws(() => { caret1.compose(new CaretDelta([op])); });
@@ -90,7 +90,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(result.ops, []);
     });
 
-    it('should refuse to diff if given a non-matching session ID', () => {
+    it('should refuse to diff if given a non-matching caret ID', () => {
       assert.throws(() => { caret1.diff(caret2); });
     });
 
@@ -113,7 +113,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(result.ops, []);
     });
 
-    it('should diff fields even if given a non-matching session ID', () => {
+    it('should diff fields even if given a non-matching caret ID', () => {
       assert.doesNotThrow(() => { caret1.diffFields(caret2, 'cr-florp'); });
     });
 
@@ -161,7 +161,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.isTrue(caret1.equals(same));
     });
 
-    it('should return `false` when session IDs differ', () => {
+    it('should return `false` when caret IDs differ', () => {
       const c1 = newCaret('cr-xxxxx', 1, 2, '#000011', 'some-author');
       const c2 = newCaret('cr-yyyyy', 1, 2, '#000011', 'some-author');
       assert.isFalse(c1.equals(c2));

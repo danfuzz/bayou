@@ -12,10 +12,10 @@ import Paths from './Paths';
 import SnapshotManager from './SnapshotManager';
 
 /**
- * {Int} How long (in msec) that a session must be inactive before it gets
- * culled from the current caret snapshot.
+ * {Int} How long (in msec) that a caret must be inactive before it gets culled
+ * from the current caret snapshot.
  */
-const MAX_SESSION_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
+const MAX_CARET_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /**
  * Controller for the caret metadata of a particular document.
@@ -97,8 +97,8 @@ export default class CaretControl extends EphemeralControl {
     const lastActive = Timestamp.now();
     const caret      = new Caret(oldCaret, { revNum: docRevNum, lastActive, index, length });
 
-    // We always make a delta with a "begin session" op. Even though this change
-    // isn't always actually beginning a session, when ultimately applied via
+    // We always make a delta with a `beginSession` op. Even though this change
+    // isn't always actually adding a caret, when ultimately applied via
     // `update()` it will always turn into an appropriate new snapshot.
     return new CaretChange(
       snapshot.revNum + 1, [CaretOp.op_beginSession(caret)], lastActive);
@@ -178,7 +178,7 @@ export default class CaretControl extends EphemeralControl {
       // "sneak past the gate" as it were, between the time that we decide to
       // run the idle check and the would-be later time that the `async`
       // {@link #_removeIdleCarets} method actually starts running.
-      this._nextIdleCheck = now + (MAX_SESSION_IDLE_MSEC / 4);
+      this._nextIdleCheck = now + (MAX_CARET_IDLE_MSEC / 4);
       this._removeIdleCarets();
     }
   }
@@ -196,14 +196,14 @@ export default class CaretControl extends EphemeralControl {
     // previous line.) Otherwise, we might produce a change with an out-of-order
     // timestamp.
     const now         = Timestamp.now();
-    const minTime     = now.addMsec(-MAX_SESSION_IDLE_MSEC);
+    const minTime     = now.addMsec(-MAX_CARET_IDLE_MSEC);
     let   newSnapshot = snapshot;
 
     for (const [caretId, caret] of snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
         this.log.withAddedContext(caretId).info('Became inactive.');
-        newSnapshot = newSnapshot.withoutSession(caretId);
+        newSnapshot = newSnapshot.withoutCaret(caretId);
       }
     }
 
