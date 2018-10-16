@@ -204,18 +204,30 @@ export default class BodyDelta extends BaseDelta {
       TObject.check(quillDelta, Text.Delta);
     } catch (e) {
       if ((typeof quillDelta === 'object') && (quillDelta.constructor.name === 'Delta')) {
-        // The version of `Delta` used by Quill is different than the one we
-        // specified in our `package.json`. Even though it will often happen
+        // The version of `Delta` used by Quill is different than the one which
+        // is specified in the configuration hook
+        // {@link @bayou/config-common/Text}. Even though it will often happen
         // to work if we just let it slide (e.g. by snarfing `ops` out of the
         // object and running with it), we don't want to end up shipping two
         // versions of `Delta` to the client; so, instead of just blithely
         // accepting this possibility, we reject it here and report an error
         // which makes it easy to figure out what happened. Should you find
         // yourself looking at this error, the likely right thing to do is
-        // look at `package.json` in the version of Quill you are using, and
-        // update what is returned from
-        // {@link @bayou/config-common/Text#Delta} to match what Quill has as
-        // its `quill-delta` dependency.
+        // look at the lines logged just before the error was thrown, and change
+        // either how `Text` is configured to match the incoming `Delta` version
+        // _or_ change where the incoming `Delta` version is used to match what
+        // got configured for `Text`. Of particular note, if you are using a
+        // version of `Quill` in distribution form, it bundles within itself a
+        // version of `Delta`, and you will want to make sure that `Text` uses
+        // `Quill.import('delta')` to get it hooked up.
+
+        // This is an attempt to get a stack trace each from both "our" `Delta`
+        // and the incoming `Delta`, as a possible breadcrumb for folks running
+        // into this problem.
+        log.error('Divergent versions of `quill-delta` package.');
+        BodyDelta._logWhichDelta('ours', Text.Delta);
+        BodyDelta._logWhichDelta('incoming', quillDelta.constructor);
+
         throw Errors.badUse('Divergent versions of `quill-delta` package.');
       }
 
@@ -223,5 +235,33 @@ export default class BodyDelta extends BaseDelta {
     }
 
     return quillDelta.ops;
+  }
+
+  /**
+   * Helper used when making the "divergent" complaint, which aims to log an
+   * error pointing at the source of one of the versions of `Delta`.
+   *
+   * @param {string} label Short label indicating which version this is.
+   * @param {class} Delta A version of the `Delta` class.
+   */
+  static _logWhichDelta(label, Delta) {
+    const delta = new Delta([{ insert: 'x' }]);
+
+    let trace;
+    try {
+      delta.forEach(() => { throw new Error('x'); });
+    } catch (e) {
+      trace = e.stack;
+    }
+
+    for (const line of trace.split('\n')) {
+      const match = line.match(/at Delta[^(]+\(([^:)]+)[:)]/);
+      if (match) {
+        log.info(`${label}: ${match[1]}`);
+        return;
+      }
+    }
+
+    log.error(`Could not determine \`Delta\` version "${label}" from stack trace!`, trace);
   }
 }
