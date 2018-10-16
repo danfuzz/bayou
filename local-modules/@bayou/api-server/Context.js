@@ -48,8 +48,14 @@ export default class Context extends CommonBase {
      */
     this._tokenAuth = (tokenAuth === null) ? null : TokenAuthorizer.check(tokenAuth);
 
-    /** {Map<string, Target>} The underlying map. */
+    /** {Map<string, Target>} The underlying map from IDs to targets. */
     this._map = new Map();
+
+    /**
+     * {Map<object, string>} Reverse map from target objects (the things wrapped
+     * by instances of {@link Target} to their corresponding IDs.
+     */
+    this._reverseMap = new Map();
 
     /**
      * {Int} Msec timestamp indicating the most recent time that idle cleanup
@@ -71,22 +77,32 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Adds a {@link Target} to this instance's map of same. The given `target`
-   * must not have an ID that is already represented in the map.
+   * Adds a {@link Target} to this instance's map of same, and also adds the
+   * reverse map from the target's wrapped object to the ID. The given `target`
+   * must not have an ID that is already represented in the map. In addition,
+   * the object wrapped by `target` must not already be bound to another ID.
+   * (That is, for any given instance of this class, there is a one-to-one
+   * mapping between IDs and target objects.)
    *
    * @param {Target} target Target to add.
-   * @throws {Error} Thrown if `target.id` is already represented in the target
-   *   map.
+   * @throws {Error} Thrown if either `target.id` or `target.target` is already
+   *   represented in the target map.
    */
   addTarget(target) {
     Target.check(target);
-    const id = target.id;
+    const id  = target.id;
+    const obj = target.target;
 
     if (this._getOrNull(id) !== null) {
-      throw this._targetError(id, 'Duplicate target');
+      throw this._targetError(id, 'Duplicate target ID');
+    }
+
+    if (this._reverseMap.has(obj)) {
+      throw this._targetError(id, 'Duplicate target object');
     }
 
     this._map.set(id, target);
+    this._reverseMap.set(obj, id);
   }
 
   /**
@@ -287,9 +303,10 @@ export default class Context extends CommonBase {
    * checks, erring on the side of _keeping_ a "stale" target.
    */
   _idleCleanupIfNecessary() {
-    const now       = Date.now();
-    const idleLimit = now - IDLE_TIME_MSEC;
-    const map       = this._map;
+    const now        = Date.now();
+    const idleLimit  = now - IDLE_TIME_MSEC;
+    const map        = this._map;
+    const reverseMap = this._reverseMap;
 
     if (now < (this._lastIdleCleanup + (IDLE_TIME_MSEC / 4))) {
       // Cleaning already happened recently.
@@ -303,10 +320,11 @@ export default class Context extends CommonBase {
     // Note: The ECMAScript spec guarantees that it is safe to delete keys from
     // a map while iterating over it. See
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
-    for (const [key, value] of map) {
-      if (value.wasIdleAsOf(idleLimit)) {
-        log.event.idleCleanupRemoved(key);
-        map.delete(key);
+    for (const [id, target] of map) {
+      if (target.wasIdleAsOf(idleLimit)) {
+        log.event.idleCleanupRemoved(id);
+        map.delete(id);
+        reverseMap.delete(target.target);
       }
     }
 
