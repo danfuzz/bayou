@@ -28,10 +28,10 @@ export default class Target extends CommonBase {
    *   uncontrolled) _or_ the key which controls access to the target. In the
    *   latter case, the target's `id` is considered to be the same as the key's
    *   `id`.
-   * @param {object} target Object to provide access to.
-   * @param {Schema|null} schema `target`'s schema, if already known.
+   * @param {object} directObject Object to be represented by this instance.
+   * @param {Schema|null} schema `directObject`'s schema, if already known.
    */
-  constructor(idOrKey, target, schema = null) {
+  constructor(idOrKey, directObject, schema = null) {
     super();
 
     /**
@@ -44,17 +44,21 @@ export default class Target extends CommonBase {
     this._id = TargetId.check(
       (this._key === null) ? TString.check(idOrKey) : this._key.id);
 
-    /** {object} The target object. */
-    this._target = TObject.check(target);
+    /**
+     * {object} The object which this instance represents, wraps, and generally
+     * provides access to.
+     */
+    this._directObject = TObject.check(directObject);
 
-    /** {Schema} Schema for the target. */
-    this._schema = schema || new Schema(target);
+    /** {Schema} Schema for {@link #_directObject}. */
+    this._schema = schema || new Schema(directObject);
 
     /**
-     * {Int|'evergreen'} Timestamp (msec) when the `target` was last accessed or
-     * called, or the string constant `evergreen` to indicate a target that
-     * should never be considered idle. This is used to drive automated cleanup
-     * of idle targets mapped by instances of {@link api-server.Context}.
+     * {Int|'evergreen'} Timestamp (msec) when the {@link #directObject} was
+     * last accessed or called, or the string constant `evergreen` to indicate
+     * that this instance should never be considered idle. This is used to drive
+     * automated cleanup of idle targets mapped by instances of
+     * {@link api-server.Context}.
      */
     this._lastAccess = Date.now();
 
@@ -74,24 +78,28 @@ export default class Target extends CommonBase {
     return this._key;
   }
 
-  /** {Schema} The target's schema. */
+  /** {Schema} The schema of {@link #target}. */
   get schema() {
     return this._schema;
   }
 
-  /** {object} The underlying target object. */
+  /**
+  * {object} The object which this instance represents, wraps, and generally
+  * provides access to. Accessing this property indicates that this instance is
+  * _not_ currently idle.
+  */
   get target() {
     this.refresh();
-    return this._target;
+    return this._directObject;
   }
 
   /**
-   * Synchronously performs a method call on the target object, returning the
+   * Synchronously performs a method call on the {@link #target}, returning the
    * result or (directly) throwing an error.
    *
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
-   * @returns {*} The result of calling.
+   * @returns {*} The result of performing the call.
    */
   call(payload) {
     Functor.check(payload);
@@ -109,16 +117,17 @@ export default class Target extends CommonBase {
 
     this.refresh();
 
-    const target = this._target;
-    const impl   = target[name];
+    const obj  = this._directObject;
+    const impl = obj[name];
 
-    return impl.apply(target, payload.args);
+    return impl.apply(obj, payload.args);
   }
 
   /**
    * "Refreshes" this instance in terms of access time. This is no different
-   * than just saying `this.target` and merely exists so as to provide a solid
-   * way to convey intent at the call sites for this method.
+   * than just saying `this.target` (and ignoring the result). It exists as an
+   * explicitly different method so as to provide a solid way to convey intent
+   * at call sites.
    */
   refresh() {
     if (this._lastAccess !== EVERGREEN) {
@@ -159,6 +168,6 @@ export default class Target extends CommonBase {
    * @returns {Target} An "uncontrolled" version of this instance.
    */
   withoutKey() {
-    return new Target(this._id, this._target, this._schema);
+    return new Target(this._id, this._directObject, this._schema);
   }
 }
