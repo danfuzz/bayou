@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SplitKey } from '@bayou/api-common';
+import { Remote, SplitKey } from '@bayou/api-common';
+import { ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -52,10 +53,11 @@ export default class Context extends CommonBase {
     this._map = new Map();
 
     /**
-     * {Map<object, string>} Reverse map from target objects (the things wrapped
-     * by instances of {@link Target} to their corresponding IDs.
+     * {Map<object, string>} Map from target objects (the things wrapped by
+     * instances of {@link Target}) to their corresponding {@link Remote}
+     * instances.
      */
-    this._reverseMap = new Map();
+    this._remoteMap = new Map();
 
     /**
      * {Int} Msec timestamp indicating the most recent time that idle cleanup
@@ -97,12 +99,12 @@ export default class Context extends CommonBase {
       throw this._targetError(id, 'Duplicate target ID');
     }
 
-    if (this._reverseMap.has(obj)) {
+    if (this._remoteMap.has(obj)) {
       throw this._targetError(id, 'Duplicate target object');
     }
 
     this._map.set(id, target);
-    this._reverseMap.set(obj, id);
+    this._remoteMap.set(obj, new Remote(id));
   }
 
   /**
@@ -205,6 +207,33 @@ export default class Context extends CommonBase {
   }
 
   /**
+   * Gets a {@link Remote} which can be used with this instance to refer to
+   * the given {@link ProxiedObject}. If `obj` has been encountered before, the
+   * result will be a pre-existing instance; otherwise, it will be a
+   * newly-constructed instance (and will get added to this instance's set of
+   * targets).
+   *
+   * @param {ProxiedObject} proxiedObject Object to proxy.
+   * @returns {Remote} Corresponding remote representation.
+   */
+  getRemoteFor(proxiedObject) {
+    ProxiedObject.check(proxiedObject);
+
+    const obj     = proxiedObject.target;
+    const already = this._remoteMap.get(obj);
+
+    if (already !== null) {
+      return already;
+    }
+
+    // This call adds a mapping to {@link #_remoteMap}...
+    this.addTarget(new Target(this.randomId(), obj));
+
+    // ...which we extract here.
+    return this._remoteMap.get(obj);
+  }
+
+  /**
    * Returns an indication of whether or not this instance has a binding for
    * the given ID. **Note:** This will find already-authorized bearer tokens,
    * but it will _not_ perform authorization given a never-before-encountered
@@ -303,10 +332,10 @@ export default class Context extends CommonBase {
    * checks, erring on the side of _keeping_ a "stale" target.
    */
   _idleCleanupIfNecessary() {
-    const now        = Date.now();
-    const idleLimit  = now - IDLE_TIME_MSEC;
-    const map        = this._map;
-    const reverseMap = this._reverseMap;
+    const now       = Date.now();
+    const idleLimit = now - IDLE_TIME_MSEC;
+    const map       = this._map;
+    const remoteMap = this._remoteMap;
 
     if (now < (this._lastIdleCleanup + (IDLE_TIME_MSEC / 4))) {
       // Cleaning already happened recently.
@@ -324,7 +353,7 @@ export default class Context extends CommonBase {
       if (target.wasIdleAsOf(idleLimit)) {
         log.event.idleCleanupRemoved(id);
         map.delete(id);
-        reverseMap.delete(target.directObject);
+        remoteMap.delete(target.directObject);
       }
     }
 
