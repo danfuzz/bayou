@@ -50,9 +50,6 @@ export default class Connection extends CommonBase {
      */
     this._connectionId = Random.shortLabel('conn');
 
-    /** {Int} Count of messages received. Used for liveness logging. */
-    this._messageCount = 0;
-
     /** {Codec} The codec to use. */
     this._codec = context.codec;
 
