@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseKey, TargetId } from '@bayou/api-common';
-import { TObject, TString } from '@bayou/typecheck';
+import { TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import Schema from './Schema';
