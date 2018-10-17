@@ -58,6 +58,19 @@ export default class TargetMap extends CommonBase {
   }
 
   /**
+   * Adds the target as if by {@link #add} if not already bound, or returns the
+   * pre-existing binding as if by {@link #get}.
+   *
+   * @param {string} id Target ID.
+   * @returns {Proxy} The corresponding proxy.
+   */
+  addOrGet(id) {
+    const already = this.getOrNull(id);
+
+    return (already === null) ? this.add(id) : already;
+  }
+
+  /**
    * Clears out the targets of this instance.
    */
   clear() {

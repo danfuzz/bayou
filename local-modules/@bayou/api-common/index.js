@@ -8,6 +8,7 @@ import BearerToken from './BearerToken';
 import CodableError from './CodableError';
 import ConnectionError from './ConnectionError';
 import Message from './Message';
+import Remote from './Remote';
 import Response from './Response';
 import SplitKey from './SplitKey';
 import TargetId from './TargetId';
@@ -19,6 +20,7 @@ export {
   CodableError,
   ConnectionError,
   Message,
+  Remote,
   Response,
   SplitKey,
   TargetId

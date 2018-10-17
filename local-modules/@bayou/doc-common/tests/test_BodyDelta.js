@@ -70,8 +70,15 @@ describe('@bayou/doc-common/BodyDelta', () => {
       // caught actual build problems.
 
       // The check doesn't really know that it got a bona fide implementation of
-      // `quill-delta`, just that it's an instance of a class named `Delta`.
-      class Delta { /* empty */ }
+      // `quill-delta`, just that it's an instance of a class named `Delta`. We
+      // define `forEach()` because that's the method that gets used to induce
+      // an error which helps produce an informative message.
+      class Delta {
+        forEach(func) {
+          func('x');
+        }
+      }
+
       const wrongDelta = new Delta();
 
       wrongDelta.ops = [];
