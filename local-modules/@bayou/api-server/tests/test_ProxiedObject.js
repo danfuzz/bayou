@@ -33,7 +33,7 @@ describe('@bayou/api-server/ProxiedObject', () => {
       }
     });
 
-    it('should accept reject non-objects', () => {
+    it('should reject non-objects', () => {
       for (const t of INVALID_TARGETS) {
         assert.throws(() => new ProxiedObject(t), /badValue/, inspect(t));
       }
@@ -56,6 +56,7 @@ describe('@bayou/api-server/ProxiedObject', () => {
         const str = inspect(t);
         const po  = new ProxiedObject(t);
         const dec = po.deconstruct();
+        assert.isArray(dec);
         assert.lengthOf(dec, 1);
         assert.strictEqual(dec[0], t, str);
       }

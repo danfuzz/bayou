@@ -8,6 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 import CodableError from './CodableError';
 import Message from './Message';
 import Response from './Response';
+import Remote from './Remote';
 import SplitKey from './SplitKey';
 
 /**
@@ -24,6 +25,7 @@ export default class TheModule extends UtilityClass {
 
     registry.registerClass(CodableError);
     registry.registerClass(Message);
+    registry.registerClass(Remote);
     registry.registerClass(Response);
     registry.registerClass(SplitKey);
   }
