@@ -80,20 +80,24 @@ export default class Context extends CommonBase {
 
   /**
    * Adds a {@link Target} to this instance's map of same, and also adds the
-   * reverse map from the target's wrapped object to the ID. The given `target`
-   * must not have an ID that is already represented in the map. In addition,
-   * the object wrapped by `target` must not already be bound to another ID.
-   * (That is, for any given instance of this class, there is a one-to-one
-   * mapping between IDs and target objects.)
+   * remote map from the target's wrapped object to its corresponding
+   * {@link Remote} representative. The given `target`must not have an ID that
+   * is already represented in the map. In addition, the object wrapped by
+   * `target` must not already be bound to another ID. (That is, for any given
+   * instance of this class, there is a one-to-one mapping between IDs and
+   * direct target objects.)
    *
    * @param {Target} target Target to add.
+   * @returns {Remote} Remote representative object that can be used to refer to
+   *   `target` over the API boundary.
    * @throws {Error} Thrown if either `target.id` or `target.directObject` is
    *   already represented in the target map.
    */
   addTarget(target) {
     Target.check(target);
-    const id  = target.id;
-    const obj = target.directObject;
+    const id     = target.id;
+    const obj    = target.directObject;
+    const remote = new Remote(id);
 
     if (this._getOrNull(id) !== null) {
       throw this._targetError(id, 'Duplicate target ID');
@@ -104,7 +108,9 @@ export default class Context extends CommonBase {
     }
 
     this._map.set(id, target);
-    this._remoteMap.set(obj, new Remote(id));
+    this._remoteMap.set(obj, remote);
+
+    return remote;
   }
 
   /**
@@ -222,15 +228,9 @@ export default class Context extends CommonBase {
     const obj     = proxiedObject.target;
     const already = this._remoteMap.get(obj);
 
-    if (already !== undefined) {
-      return already;
-    }
-
-    // This call adds a mapping to {@link #_remoteMap}...
-    this.addTarget(new Target(this.randomId(), obj));
-
-    // ...which we extract here.
-    return this._remoteMap.get(obj);
+    return (already === undefined)
+      ? this.addTarget(new Target(this.randomId(), obj))
+      : already;
   }
 
   /**
