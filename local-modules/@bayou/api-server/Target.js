@@ -65,6 +65,16 @@ export default class Target extends CommonBase {
     Object.seal(this);
   }
 
+  /**
+  * {object} The object which this instance represents, wraps, and generally
+  * provides access to. Accessing this property indicates that this instance is
+  * _not_ currently idle.
+  */
+  get directObject() {
+    this.refresh();
+    return this._directObject;
+  }
+
   /** {string} The target ID. */
   get id() {
     return this._id;
@@ -78,24 +88,14 @@ export default class Target extends CommonBase {
     return this._key;
   }
 
-  /** {Schema} The schema of {@link #target}. */
+  /** {Schema} The schema of {@link #directObject}. */
   get schema() {
     return this._schema;
   }
 
   /**
-  * {object} The object which this instance represents, wraps, and generally
-  * provides access to. Accessing this property indicates that this instance is
-  * _not_ currently idle.
-  */
-  get target() {
-    this.refresh();
-    return this._directObject;
-  }
-
-  /**
-   * Synchronously performs a method call on the {@link #target}, returning the
-   * result or (directly) throwing an error.
+   * Synchronously performs a method call on the {@link #directObject},
+   * returning the result or (directly) throwing an error.
    *
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
@@ -125,9 +125,9 @@ export default class Target extends CommonBase {
 
   /**
    * "Refreshes" this instance in terms of access time. This is no different
-   * than just saying `this.target` (and ignoring the result). It exists as an
-   * explicitly different method so as to provide a solid way to convey intent
-   * at call sites.
+   * than just saying `this.directObject` (and ignoring the result). It exists
+   * as an explicitly different method so as to provide a solid way to convey
+   * intent at call sites.
    */
   refresh() {
     if (this._lastAccess !== EVERGREEN) {

@@ -85,13 +85,13 @@ export default class Context extends CommonBase {
    * mapping between IDs and target objects.)
    *
    * @param {Target} target Target to add.
-   * @throws {Error} Thrown if either `target.id` or `target.target` is already
-   *   represented in the target map.
+   * @throws {Error} Thrown if either `target.id` or `target.directObject` is
+   *   already represented in the target map.
    */
   addTarget(target) {
     Target.check(target);
     const id  = target.id;
-    const obj = target.target;
+    const obj = target.directObject;
 
     if (this._getOrNull(id) !== null) {
       throw this._targetError(id, 'Duplicate target ID');
@@ -324,7 +324,7 @@ export default class Context extends CommonBase {
       if (target.wasIdleAsOf(idleLimit)) {
         log.event.idleCleanupRemoved(id);
         map.delete(id);
-        reverseMap.delete(target.target);
+        reverseMap.delete(target.directObject);
       }
     }
 
