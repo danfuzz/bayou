@@ -41,8 +41,7 @@ export default class Target extends CommonBase {
     this._key = (idOrKey instanceof BaseKey) ? idOrKey : null;
 
     /** {string} The target ID. */
-    this._id = TargetId.check(
-      (this._key === null) ? TString.check(idOrKey) : this._key.id);
+    this._id = TargetId.check((this._key === null) ? idOrKey : this._key.id);
 
     /**
      * {object} The object which this instance represents, wraps, and generally
