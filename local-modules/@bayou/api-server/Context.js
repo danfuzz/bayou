@@ -222,7 +222,7 @@ export default class Context extends CommonBase {
     const obj     = proxiedObject.target;
     const already = this._remoteMap.get(obj);
 
-    if (already !== null) {
+    if (already !== undefined) {
       return already;
     }
 
