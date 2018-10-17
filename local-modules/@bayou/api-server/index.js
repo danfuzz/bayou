@@ -6,6 +6,7 @@ import Connection from './Connection';
 import Context from './Context';
 import PostConnection from './PostConnection';
 import ProxiedObject from './ProxiedObject';
+import Schema from './Schema';
 import Target from './Target';
 import TokenAuthorizer from './TokenAuthorizer';
 import TokenMint from './TokenMint';
@@ -16,6 +17,7 @@ export {
   Context,
   PostConnection,
   ProxiedObject,
+  Schema,
   Target,
   TokenAuthorizer,
   TokenMint,
