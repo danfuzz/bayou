@@ -54,6 +54,8 @@ export default class TokenAuthorizer extends CommonBase {
   async targetFromToken(token) {
     if (typeof token === 'string') {
       token = this.tokenFromString(token);
+    } else {
+      BearerToken.check(token);
     }
 
     const result = await this._impl_targetFromToken(token);
