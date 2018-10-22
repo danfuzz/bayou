@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { Functor } from '@bayou/util-common';
 
@@ -23,6 +24,45 @@ class MessageCollector {
       this.messages.push({ targetId, payload, rest });
     };
   }
+}
+
+/**
+ * Checks that a given object is a target proxy hooked up to the expected
+ * message send function.
+ *
+ * **Note:** The proxies produced by this module (as with JavaScript proxies in
+ * general) should be almost completely transparent. This means that attempts to
+ * `inspect()` them, test them with `instanceof`, etc., will result in calls on
+ * proxies and not surface introspection. So, the best that we can do is just
+ * call through the proxies and see if we get the expected behavior coming out
+ * the other end.
+ *
+ * @param {*} proxy (Alleged) target proxy.
+ * @param {MessageCollector} mc Expected object to receive messages.
+ * @param {string} targetId Expected target ID.
+ */
+function checkProxy(proxy, mc, targetId) {
+  function test(payload) {
+    const inspectPayload = inspect(payload);
+
+    mc.messages = [];
+
+    proxy[payload.name](...payload.args);
+
+    const got = mc.messages;
+
+    assert.lengthOf(got, 1);
+
+    const msg = got[0];
+
+    assert.strictEqual(msg.targetId, targetId, inspectPayload);
+    assert.deepEqual(msg.payload, payload, inspectPayload);
+    assert.deepEqual(msg.rest, [], inspectPayload);
+  }
+
+  test(new Functor('blort'));
+  test(new Functor('florp', 10));
+  test(new Functor('zorch', 'a', ['b'], { c: ['d'] }));
 }
 
 describe('@bayou/api-client/TargetMap', () => {
@@ -57,23 +97,9 @@ describe('@bayou/api-client/TargetMap', () => {
 
       assert.isNull(tm.getOrNull('xyz')); // Base assumption.
 
-      // **Note:** The proxy that we should be getting here is almost completely
-      // transparent. This means that attempts to `inspect()` it, `instanceof`
-      // it, etc., will result in the proxy being called upon to do those
-      // things. So, the best that we can do is just call through it and see if
-      // we get the expected behavior coming out the other end.
       const proxy = tm.add('xyz');
-      proxy.florp(10);
 
-      const got = mc.messages;
-
-      assert.lengthOf(got, 1);
-
-      const msg = got[0];
-
-      assert.strictEqual(msg.targetId, 'xyz');
-      assert.deepEqual(msg.payload, new Functor('florp', 10));
-      assert.deepEqual(msg.rest, []);
+      checkProxy(proxy, mc, 'xyz');
     });
 
     it('should refuse to add the same ID twice', () => {
