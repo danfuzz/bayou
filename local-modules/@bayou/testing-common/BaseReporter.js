@@ -55,7 +55,12 @@ export default class BaseReporter extends CommonBase {
 
     runner.on('suite end', () => {
       this._suiteDepth--;
-      this._impl_suiteEnd();
+
+      // Don't make an `_impl_suiteEnd()` call for the anonymous top-level
+      // suite.
+      if (this._suiteDepth !== 0) {
+        this._impl_suiteEnd();
+      }
     });
 
     runner.on('pending', (test) => {
