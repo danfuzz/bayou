@@ -148,4 +148,56 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
       assert.isRejected(new Authie().targetFromToken(token), /badValue/);
     });
   });
+
+  describe('tokenFromString()', () => {
+    it('should validate via `isToken()` given a string, and call through to the `_impl`', () => {
+      class Authie extends TokenAuthorizer {
+        _impl_isToken(value) {
+          return value.startsWith('token-');
+        }
+
+        _impl_tokenFromString(value) {
+          return new BearerToken(value, value);
+        }
+      }
+
+      const au   = new Authie();
+      const tstr = 'token-yes-it-is';
+
+      assert.deepEqual(au.tokenFromString(tstr), new BearerToken(tstr, tstr));
+      assert.throws(() => au.tokenFromString('nope'), /badValue/);
+    });
+
+    it('should reject a non-string without calling through to any `_impl`', () => {
+      class Authie extends TokenAuthorizer {
+        _impl_isToken(value_unused) {
+          throw new Error('Should not have been called.');
+        }
+
+        _impl_tokenFromString(value_unused) {
+          throw new Error('Should not have been called.');
+        }
+      }
+
+      const au = new Authie();
+
+      assert.throws(() => au.tokenFromString(null), /badValue/);
+      assert.throws(() => au.tokenFromString(123), /badValue/);
+      assert.throws(() => au.tokenFromString(['x']), /badValue/);
+    });
+
+    it('should reject a bad subclass implementation', () => {
+      class Authie extends TokenAuthorizer {
+        _impl_isToken(value_unused) {
+          return true;
+        }
+
+        _impl_tokenFromString(value_unused) {
+          return 'not a BearerToken';
+        }
+      }
+
+      assert.throws(() => new Authie().tokenFromString('x'), /badValue/);
+    });
+  });
 });
