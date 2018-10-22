@@ -55,12 +55,7 @@ export default class BaseReporter extends CommonBase {
 
     runner.on('suite end', () => {
       this._suiteDepth--;
-
-      if (this._suiteDepth === 0) {
-        this._impl_allDone();
-      } else {
-        this._impl_suiteEnd();
-      }
+      this._impl_suiteEnd();
     });
 
     runner.on('pending', (test) => {
@@ -74,6 +69,24 @@ export default class BaseReporter extends CommonBase {
     runner.on('fail', (test, error) => {
       this._testResult(test, 'fail', error);
     });
+  }
+
+  /**
+   * Standard Mocha reporter method. This always gets called when testing is
+   * complete. By way of contrast, if there are no tests run (e.g. because the
+   * specified filter matches no tests), then the runner emits no events, and so
+   * nothing else on this class will get called.
+   *
+   * @param {int} failures The number of test failures.
+   * @param {function|undefined} fn Optional function to call with `failures` as
+   *   an argument.
+   */
+  done(failures, fn) {
+    this._impl_allDone();
+
+    if (fn) {
+      fn(failures);
+    }
   }
 
   /**
