@@ -55,7 +55,7 @@ describe('@bayou/api-client/TargetMap', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
-      assert.isNull(tm.getOrNull('xyz'));
+      assert.isNull(tm.getOrNull('xyz')); // Base assumption.
 
       // **Note:** The proxy that we should be getting here is almost completely
       // transparent. This means that attempts to `inspect()` it, `instanceof`
@@ -74,6 +74,18 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.strictEqual(msg.targetId, 'xyz');
       assert.deepEqual(msg.payload, new Functor('florp', 10));
       assert.deepEqual(msg.rest, []);
+    });
+
+    it('should refuse to add the same ID twice', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('xyz')); // Base assumption.
+
+      tm.add('xyz');
+
+      assert.isNotNull(tm.getOrNull('xyz')); // Base assumption.
+      assert.throws(() => tm.add('xyz'), /badUse/);
     });
   });
 });
