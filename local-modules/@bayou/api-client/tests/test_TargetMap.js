@@ -186,4 +186,70 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.isNull(tm.getOrNull('baz'));
     });
   });
+
+  describe('get()', () => {
+    it('should find a target added with `add()`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('zorch')); // Base assumption.
+      const added = tm.add('zorch');
+
+      const got = tm.get('zorch');
+      assert.isTrue(got === added);
+
+      checkProxy(got, mc, 'zorch');
+    });
+
+    it('should find a target added with `addOrGet()`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('zorch')); // Base assumption.
+      const added = tm.addOrGet('zorch');
+
+      const got = tm.get('zorch');
+      assert.isTrue(got === added);
+
+      checkProxy(got, mc, 'zorch');
+    });
+
+    it('should throw given an unbound ID', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.throws(() => tm.get('zorch'), /badUse/);
+    });
+  });
+
+  describe('getOrNull()', () => {
+    it('should find a target added with `add()`', () => {
+      const mc    = new MessageCollector();
+      const tm    = new TargetMap(mc.sendMessage);
+      const added = tm.add('splort');
+      const got   = tm.getOrNull('splort');
+
+      assert.isTrue(got === added);
+
+      checkProxy(got, mc, 'splort');
+    });
+
+    it('should find a target added with `addOrGet()`', () => {
+      const mc    = new MessageCollector();
+      const tm    = new TargetMap(mc.sendMessage);
+      const added = tm.addOrGet('splort');
+      const got   = tm.getOrNull('splort');
+
+      assert.isTrue(got === added);
+
+      checkProxy(got, mc, 'splort');
+    });
+
+    it('should return `null` given an unbound ID', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('splort'));
+    });
+  });
 });
