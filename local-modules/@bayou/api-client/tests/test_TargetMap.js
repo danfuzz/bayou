@@ -113,6 +113,18 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.isNotNull(tm.getOrNull('xyz')); // Base assumption.
       assert.throws(() => tm.add('xyz'), /badUse/);
     });
+
+    it('should refuse to add the same ID twice when originally added with `addOrGet()`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('xyz')); // Base assumption.
+
+      tm.addOrGet('xyz');
+
+      assert.isNotNull(tm.getOrNull('xyz')); // Base assumption.
+      assert.throws(() => tm.add('xyz'), /badUse/);
+    });
   });
 
   describe('addOrGet()', () => {
@@ -140,6 +152,38 @@ describe('@bayou/api-client/TargetMap', () => {
       const proxy2 = tm.addOrGet('pdq');
 
       assert.isTrue(proxy1 === proxy2);
+    });
+
+    it('should return the same proxy when given the same ID as a previous `add()`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('pdq')); // Base assumption.
+
+      const proxy1 = tm.add('pdq');
+
+      assert.isNotNull(tm.getOrNull('pdq')); // Base assumption.
+
+      const proxy2 = tm.addOrGet('pdq');
+
+      assert.isTrue(proxy1 === proxy2);
+    });
+  });
+
+  describe('clear()', () => {
+    it('should remove all targets', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      tm.add('foo');
+      tm.add('bar');
+      tm.add('baz');
+
+      tm.clear();
+
+      assert.isNull(tm.getOrNull('foo'));
+      assert.isNull(tm.getOrNull('bar'));
+      assert.isNull(tm.getOrNull('baz'));
     });
   });
 });
