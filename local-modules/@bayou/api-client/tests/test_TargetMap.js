@@ -114,4 +114,32 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.throws(() => tm.add('xyz'), /badUse/);
     });
   });
+
+  describe('addOrGet()', () => {
+    it('should add a previously-unbound ID', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('pdq')); // Base assumption.
+
+      const proxy = tm.addOrGet('pdq');
+
+      checkProxy(proxy, mc, 'pdq');
+    });
+
+    it('should return the same proxy when given the same ID twice', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+
+      assert.isNull(tm.getOrNull('pdq')); // Base assumption.
+
+      const proxy1 = tm.addOrGet('pdq');
+
+      assert.isNotNull(tm.getOrNull('pdq')); // Base assumption.
+
+      const proxy2 = tm.addOrGet('pdq');
+
+      assert.isTrue(proxy1 === proxy2);
+    });
+  });
 });
