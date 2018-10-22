@@ -88,15 +88,6 @@ describe('@bayou/api-server/Target', () => {
     });
   });
 
-  describe('.directObject', () => {
-    it('should be the same as the `schema` passed to the constructor', () => {
-      const schema = new Schema({});
-      const t      = new Target('x', {}, schema);
-
-      assert.strictEqual(t.schema, schema);
-    });
-  });
-
   describe('.key', () => {
     it('should be the same as a key `idOrKey` passed to the constructor', () => {
       const id  = 'some-key-id';
@@ -109,6 +100,15 @@ describe('@bayou/api-server/Target', () => {
       const id  = 'some-id';
       const t   = new Target(id, {});
       assert.isNull(t.key);
+    });
+  });
+
+  describe('.schema', () => {
+    it('should be the same as the `schema` passed to the constructor', () => {
+      const schema = new Schema({});
+      const t      = new Target('x', {}, schema);
+
+      assert.strictEqual(t.schema, schema);
     });
   });
 
