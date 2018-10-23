@@ -18,11 +18,18 @@ describe('@bayou/api-common/TargetId', () => {
       test('z');
       test('AZ');
       test('0123456789');
+      test('.');
+      test('-');
+      test('_');
       test('-x-y-');
       test('_X_Y_');
+      test('.x.Y.');
 
       for (let len = 10; len <= 64; len++) {
         test('x'.repeat(len));
+        test(`-${'x'.repeat(len - 2)}-`);
+        test(`_${'Y'.repeat(len - 2)}_`);
+        test(`.${'0'.repeat(len - 2)}.`);
       }
     });
 
