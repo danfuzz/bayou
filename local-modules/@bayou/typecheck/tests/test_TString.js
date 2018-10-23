@@ -385,27 +385,39 @@ describe('@bayou/typecheck/TString', () => {
     });
 
     it('should throw if value is not a URL string at all', () => {
-      assert.throws(() => TString.urlAbsolute('this better not work!'));
-      assert.throws(() => TString.urlAbsolute('/home/users/fnord'));
-      assert.throws(() => TString.urlAbsolute('http:example.com'));
-      assert.throws(() => TString.urlAbsolute('http:example.com/foo'));
-      assert.throws(() => TString.urlAbsolute('http:/example.com'));
-      assert.throws(() => TString.urlAbsolute('http://example.com')); // Needs final slash.
-      assert.throws(() => TString.urlAbsolute(5.1));
-      assert.throws(() => TString.urlAbsolute(undefined));
-      assert.throws(() => TString.urlAbsolute(null));
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('this better not work!');
+      test('/home/users/fnord');
+      test('http:example.com');
+      test('http:example.com/foo');
+      test('http:/example.com');
+      test('http://example.com'); // Needs final slash.
+      test(5.1);
+      test(undefined);
+      test(null);
     });
 
     it('should throw if value has auth info', () => {
-      assert.throws(() => TString.urlAbsolute('http://user@example.com/'));
-      assert.throws(() => TString.urlAbsolute('http://user:pass@example.com/'));
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('http://user@example.com/');
+      test('http://user:pass@example.com/');
     });
 
     it('should throw if value has a query', () => {
-      assert.throws(() => TString.urlAbsolute('https://milk.com/?a=10'));
-      assert.throws(() => TString.urlAbsolute('https://milk.com/?x=1&y=2'));
-      assert.throws(() => TString.urlAbsolute('http://milk.com/bcd?e=10'));
-      assert.throws(() => TString.urlAbsolute('http://milk.com/bcd/efgh?i=123&jkl=234'));
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('https://milk.com/?a=10');
+      test('https://milk.com/?x=1&y=2');
+      test('http://milk.com/bcd?e=10');
+      test('http://milk.com/bcd/efgh?i=123&jkl=234');
     });
   });
 
@@ -423,21 +435,29 @@ describe('@bayou/typecheck/TString', () => {
     });
 
     it('should throw if value is not an origin-only URL', () => {
-      assert.throws(() => TString.urlOrigin('http://foo.bar/'));
-      assert.throws(() => TString.urlOrigin('http://foo.bar/x'));
-      assert.throws(() => TString.urlOrigin('https://foo@bar.com'));
-      assert.throws(() => TString.urlOrigin('https://florp:like@example.com'));
+      function test(value) {
+        assert.throws(() => TString.urlOrigin(value), /badValue/, inspect(value));
+      }
+
+      test('http://foo.bar/');
+      test('http://foo.bar/x');
+      test('https://foo@bar.com');
+      test('https://florp:like@example.com');
     });
 
     it('should throw if value is not a URL string at all', () => {
-      assert.throws(() => TString.urlOrigin('this better not work!'));
-      assert.throws(() => TString.urlOrigin('/home/users/fnord'));
-      assert.throws(() => TString.urlOrigin('http:example.com'));
-      assert.throws(() => TString.urlOrigin('http:example.com/foo'));
-      assert.throws(() => TString.urlOrigin('http:/example.com'));
-      assert.throws(() => TString.urlOrigin(5.1));
-      assert.throws(() => TString.urlOrigin(undefined));
-      assert.throws(() => TString.urlOrigin(null));
+      function test(value) {
+        assert.throws(() => TString.urlOrigin(value), /badValue/, inspect(value));
+      }
+
+      test('this better not work!');
+      test('/home/users/fnord');
+      test('http:example.com');
+      test('http:example.com/foo');
+      test('http:/example.com');
+      test(5.1);
+      test(undefined);
+      test(null);
     });
   });
 });
