@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseKey } from '@bayou/api-common';
+import { TString } from '@bayou/typecheck';
 
 const VALID_ID = '12345678';
 
@@ -197,6 +198,8 @@ describe('@bayou/api-common/BaseKey', () => {
       assert.hasAllKeys(pair, ['challenge', 'response']);
       assert.isString(pair.challenge);
       assert.isString(pair.response);
+      assert.doesNotThrow(() => TString.hexBytes(pair.challenge, 8, 8));
+      assert.doesNotThrow(() => TString.hexBytes(pair.response, 32, 32));
     });
   });
 });
