@@ -16,12 +16,28 @@ describe('@bayou/api-common/BearerToken', () => {
     });
   });
 
+  describe('.id', () => {
+    it('is the `id` passed to the constructor', () => {
+      const token = new BearerToken('some-id', 'some-secret');
+
+      assert.strictEqual(token.id, 'some-id');
+    });
+  });
+
   describe('.secretToken', () => {
     it('is the `secretToken` passed to the constructor', () => {
       const secret = 'florp';
       const token = new BearerToken('x', secret);
 
       assert.strictEqual(token.secretToken, secret);
+    });
+  });
+
+  describe('.url', () => {
+    it('is always `*`', () => {
+      const token = new BearerToken('some-id', 'some-secret');
+
+      assert.strictEqual(token.url, '*');
     });
   });
 
