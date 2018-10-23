@@ -117,4 +117,13 @@ export default class SplitKey extends BaseKey {
   _impl_randomChallengeString() {
     return Random.hexByteString(8);
   }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {string} The safe string form of this instance.
+   */
+  _impl_safeString() {
+    return `${this.id}-...`;
+  }
 }

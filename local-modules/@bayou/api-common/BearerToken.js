@@ -91,4 +91,13 @@ export default class BearerToken extends BaseKey {
   _impl_printableId() {
     return `${this.id}-...`;
   }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {string} The safe string form of this instance.
+   */
+  _impl_safeString() {
+    return `${this.id}-...`;
+  }
 }

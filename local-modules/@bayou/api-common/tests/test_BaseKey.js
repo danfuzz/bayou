@@ -151,6 +151,31 @@ describe('@bayou/api-common/BaseKey', () => {
     });
   });
 
+  describe('.safeString', () => {
+    it('calls through to the `_impl`', () => {
+      class SomeKey extends BaseKey {
+        _impl_safeString() {
+          return 'hello!';
+        }
+      }
+
+      const result = new SomeKey('*', VALID_ID).safeString;
+      assert.strictEqual(result, 'hello!');
+    });
+
+    it('rejects an invalid subclass implementation', () => {
+      class SomeKey extends BaseKey {
+        _impl_safeString() {
+          return 123; // Supposed to be a string.
+        }
+      }
+
+      const key = new SomeKey('*', VALID_ID);
+
+      assert.throws(() => key.safeString, /badValue/);
+    });
+  });
+
   describe('toString()', () => {
     it('returns a string', () => {
       const key = new BaseKey('*', VALID_ID);

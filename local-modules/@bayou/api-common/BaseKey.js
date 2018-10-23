@@ -107,6 +107,15 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
+   * {string} Printable and security-safe (i.e. redacted if necessary) form of
+   * the token. This will include an "ASCII ellipsis" (`...`) if needed, to
+   * indicate redaction.
+   */
+  get safeString() {
+    return TString.check(this._impl_safeString());
+  }
+
+  /**
    * Gets a challenge response. This is used as a tactic for two sides of a
    * connection to authenticate each other without ever having to provide a
    * shared secret directly over a connection.
@@ -178,6 +187,7 @@ export default class BaseKey extends CommonBase {
    * error ("not implemented"). Subclasses wishing to support challenges must
    * override this to do something else.
    *
+   * @abstract
    * @returns {string} A random challenge string.
    */
   _impl_randomChallengeString() {
@@ -194,5 +204,16 @@ export default class BaseKey extends CommonBase {
    */
   _impl_printableId() {
     return this.id;
+  }
+
+  /**
+   * Main implementation of {@link #safeString}. Subclasses must provide an
+   * implementation of this.
+   *
+   * @abstract
+   * @returns {string} The redacted string form of this instance.
+   */
+  _impl_safeString() {
+    return this._mustOverride();
   }
 }
