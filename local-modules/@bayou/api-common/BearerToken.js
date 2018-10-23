@@ -83,16 +83,6 @@ export default class BearerToken extends BaseKey {
   }
 
   /**
-   * Gets the printable form of the ID. This class adds an "ASCII ellipsis" to
-   * the ID, to make it clear that the ID is a redaction of the full token.
-   *
-   * @returns {string} The printable form of the ID.
-   */
-  _impl_printableId() {
-    return `${this.id}-...`;
-  }
-
-  /**
    * Implementation as required by the superclass.
    *
    * @returns {string} The safe string form of this instance.

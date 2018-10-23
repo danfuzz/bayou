@@ -99,15 +99,6 @@ export default class BaseKey extends CommonBase {
 
   /**
    * {string} Printable and security-safe (i.e. redacted if necessary) form of
-   * the token. This includes an "ASCII ellipsis" (`...`) if to indicate
-   * redaction.
-   */
-  get printableId() {
-    return this._impl_printableId();
-  }
-
-  /**
-   * {string} Printable and security-safe (i.e. redacted if necessary) form of
    * the token. This will include an "ASCII ellipsis" (`...`) if needed, to
    * indicate redaction.
    */
@@ -192,18 +183,6 @@ export default class BaseKey extends CommonBase {
    */
   _impl_randomChallengeString() {
     return this._mustOverride();
-  }
-
-  /**
-   * Gets the printable form of the ID. This defaults to the same as `.id`,
-   * but subclasses can override this if they want to produce something
-   * different. If the form has any redaction, it should use `...` (an ASCII
-   * ellipsis) to indicate that fact.
-   *
-   * @returns {string} The printable form of the ID.
-   */
-  _impl_printableId() {
-    return this.id;
   }
 
   /**
