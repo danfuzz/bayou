@@ -24,6 +24,14 @@ describe('@bayou/api-common/BearerToken', () => {
     });
   });
 
+  describe('.safeString', () => {
+    it('is the `id` with the expected suffix', () => {
+      const token = new BearerToken('foo', 'bar');
+
+      assert.strictEqual(token.safeString, 'foo-...');
+    });
+  });
+
   describe('.secretToken', () => {
     it('is the `secretToken` passed to the constructor', () => {
       const secret = 'florp';
