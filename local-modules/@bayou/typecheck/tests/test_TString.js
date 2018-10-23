@@ -384,7 +384,7 @@ describe('@bayou/typecheck/TString', () => {
       test('https://bar.baz.co/biff/boo');
     });
 
-    it('should throw if value is not a URL string at all', () => {
+    it('should throw if the value is not a URL string at all', () => {
       function test(value) {
         assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
       }
@@ -400,7 +400,7 @@ describe('@bayou/typecheck/TString', () => {
       test(null);
     });
 
-    it('should throw if value has auth info', () => {
+    it('should throw if the value has auth info', () => {
       function test(value) {
         assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
       }
@@ -409,7 +409,7 @@ describe('@bayou/typecheck/TString', () => {
       test('http://user:pass@example.com/');
     });
 
-    it('should throw if value has a query', () => {
+    it('should throw if the value has a query', () => {
       function test(value) {
         assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
       }
@@ -418,6 +418,16 @@ describe('@bayou/typecheck/TString', () => {
       test('https://milk.com/?x=1&y=2');
       test('http://milk.com/bcd?e=10');
       test('http://milk.com/bcd/efgh?i=123&jkl=234');
+    });
+
+    it('should throw if the value has a hash', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('https://milk.com/#florp');
+      test('http://milk.com/bcd#florp');
+      test('http://milk.com/bcd/efgh#florp');
     });
   });
 
