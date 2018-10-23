@@ -2,10 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// module, which is why this is possible to import regardless of environment.
+import crypto from 'crypto';
+
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors, URL } from '@bayou/util-common';
+import { CommonBase, Errors, Random, URL } from '@bayou/util-common';
 
 import TargetId from './TargetId';
 
@@ -111,14 +115,20 @@ export default class BaseKey extends CommonBase {
    *
    * @param {string} challenge The challenge. This must be a string which was
    *   previously returned as the `challenge` binding from a call to
-   *   `makeChallenge()` (either in this process or any other).
+   *   {@link #makeChallenge} (either in this process or any other).
    * @returns {string} The challenge response. It is guaranteed to be at least
    *   16 characters long.
    */
   challengeResponseFor(challenge) {
-    TString.minLen(challenge, 16);
-    const response = this._impl_challengeResponseFor(challenge);
-    return TString.minLen(response, 16);
+    TString.hexBytes(challenge, 8, 8);
+
+    const secret = TString.nonEmpty(this._impl_challengeSecret());
+    const hash   = crypto.createHash('sha256');
+
+    hash.update(Buffer.from(challenge, 'hex'));
+    hash.update(Buffer.from(secret, 'hex'));
+
+    return hash.digest('hex');
   }
 
   /**
@@ -150,35 +160,22 @@ export default class BaseKey extends CommonBase {
    *   string and `response` to the expected response.
    */
   makeChallengePair() {
-    const challenge = this._impl_randomChallengeString();
+    const challenge = BaseKey._randomChallengeString();
     const response  = this.challengeResponseFor(challenge);
 
-    TString.minLen(challenge, 16);
     return { challenge, response };
   }
 
   /**
-   * Main implementation of `challengeResponseFor()`. Subclasses wishing to
-   * support challenges must override this.
+   * Value which should be used as the secret for this instance, when
+   * constructing a challenge-response pair. Subclasses wishing to support
+   * challenges must override this.
    *
    * @abstract
-   * @param {string} challenge The challenge. It is guaranteed to be a string of
-   *   at least 16 characters.
-   * @returns {string} The challenge response.
+   * @returns {string} The secret to use for challenges. Must be a non-empty
+   *   string of hexadecimal digits.
    */
-  _impl_challengeResponseFor(challenge) {
-    return this._mustOverride(challenge);
-  }
-
-  /**
-   * Creates and returns a random challenge string. The returned string must be
-   * at least 16 characters long but may be longer. Subclasses wishing to
-   * support challenges must override this.
-   *
-   * @abstract
-   * @returns {string} A random challenge string.
-   */
-  _impl_randomChallengeString() {
+  _impl_challengeSecret() {
     return this._mustOverride();
   }
 
@@ -191,5 +188,15 @@ export default class BaseKey extends CommonBase {
    */
   _impl_safeString() {
     return this._mustOverride();
+  }
+
+  /**
+   * Creates and returns a random challenge string, as a sequence of hexadecimal
+   * digits.
+   *
+   * @returns {string} A random challenge string.
+   */
+  static _randomChallengeString() {
+    return Random.hexByteString(8);
   }
 }

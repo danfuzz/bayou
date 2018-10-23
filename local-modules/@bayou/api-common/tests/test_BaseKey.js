@@ -6,25 +6,8 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseKey } from '@bayou/api-common';
-import { Random } from '@bayou/util-common';
 
 const VALID_ID = '12345678';
-
-class FakeKey extends BaseKey {
-  _impl_randomChallengeString() {
-    return Random.hexByteString(16);
-  }
-
-  _impl_challengeResponseFor(challenge) {
-    const bytes = Buffer.from(challenge, 'hex');
-
-    for (let i = 0; i < bytes.length; i++) {
-      bytes[i] ^= 0x0e;
-    }
-
-    return bytes.toString('hex');
-  }
-}
 
 describe('@bayou/api-common/BaseKey', () => {
   describe('redactString()', () => {
@@ -201,6 +184,12 @@ describe('@bayou/api-common/BaseKey', () => {
 
   describe('makeChallengePair()', () => {
     it('returns a challenge/response pair in an object', () => {
+      class FakeKey extends BaseKey {
+        _impl_challengeSecret() {
+          return '0123456789abcdef';
+        }
+      }
+
       const key  = new FakeKey('*', VALID_ID);
       const pair = key.makeChallengePair();
 
