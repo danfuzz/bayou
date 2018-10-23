@@ -87,11 +87,6 @@ export default class BaseKey extends CommonBase {
     return new URL(this._url).origin;
   }
 
-  /** {string} URL at which the resource may be accessed, or `*`. */
-  get url() {
-    return this._url;
-  }
-
   /** {string} Key / resource identifier. */
   get id() {
     return this._id;
@@ -104,6 +99,11 @@ export default class BaseKey extends CommonBase {
    */
   get safeString() {
     return TString.check(this._impl_safeString());
+  }
+
+  /** {string} URL at which the resource may be accessed, or `*`. */
+  get url() {
+    return this._url;
   }
 
   /**
@@ -121,19 +121,6 @@ export default class BaseKey extends CommonBase {
     TString.minLen(challenge, 16);
     const response = this._impl_challengeResponseFor(challenge);
     return TString.minLen(response, 16);
-  }
-
-  /**
-   * Main implementation of `challengeResponseFor()`. By default this throws
-   * an error ("not implemented"). Subclasses wishing to support challenges
-   * must override this to do something else.
-   *
-   * @param {string} challenge The challenge. It is guaranteed to be a string of
-   *   at least 16 characters.
-   * @returns {string} The challenge response.
-   */
-  _impl_challengeResponseFor(challenge) {
-    return this._mustOverride(challenge);
   }
 
   /**
@@ -170,6 +157,19 @@ export default class BaseKey extends CommonBase {
 
     TString.minLen(challenge, 16);
     return { challenge, response };
+  }
+
+  /**
+   * Main implementation of `challengeResponseFor()`. By default this throws
+   * an error ("not implemented"). Subclasses wishing to support challenges
+   * must override this to do something else.
+   *
+   * @param {string} challenge The challenge. It is guaranteed to be a string of
+   *   at least 16 characters.
+   * @returns {string} The challenge response.
+   */
+  _impl_challengeResponseFor(challenge) {
+    return this._mustOverride(challenge);
   }
 
   /**
