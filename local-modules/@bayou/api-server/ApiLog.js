@@ -127,7 +127,7 @@ export default class ApiLog extends CommonBase {
 
     if (this._tokenAuth.isToken(targetId)) {
       const token = this._tokenAuth.tokenFromString(targetId);
-      msg = msg.withTargetId(token.printableId);
+      msg = msg.withTargetId(token.safeString);
     }
 
     // **TODO:** This will ultimately need to do more redaction.

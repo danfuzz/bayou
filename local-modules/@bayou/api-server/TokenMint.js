@@ -161,7 +161,7 @@ export default class TokenMint extends CommonBase {
     const already = this._allTokens.get(token.id);
 
     if (already !== undefined) {
-      throw Errors.badUse(`Duplicate token: ${token.printableId}`);
+      throw Errors.badUse(`Duplicate token: ${token.safeString}`);
     }
 
     this._allTokens.set(token.id, { info, token });

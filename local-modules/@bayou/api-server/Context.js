@@ -371,7 +371,7 @@ export default class Context extends CommonBase {
   _targetError(idOrToken, msg = 'Unknown target') {
     const tokenAuth = this._tokenAuth;
     const idToReport = ((tokenAuth !== null) && tokenAuth.isToken(idOrToken))
-      ? tokenAuth.tokenFromString(idOrToken).printableId
+      ? tokenAuth.tokenFromString(idOrToken).safeString
       : idOrToken;
 
     return Errors.badUse(`${msg}: ${idToReport}`);
