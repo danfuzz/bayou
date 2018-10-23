@@ -157,6 +157,21 @@ describe('@bayou/api-common/BaseKey', () => {
 
       assert.isString(key.toString());
     });
+
+    it('returns a string that contains the URL and the ID', () => {
+      function test(url, id) {
+        const key    = new BaseKey(url, id);
+        const result = key.toString();
+
+        assert.isTrue(result.indexOf(url) >= 0, url);
+        assert.isTrue(result.indexOf(id) >= 0, id);
+      }
+
+      test('*', 'x');
+      test('*', '123-florp');
+      test('http://milk.com/', 'a');
+      test('https://milk.com/florp', 'like');
+    });
   });
 
   describe('makeChallengePair()', () => {
@@ -165,8 +180,9 @@ describe('@bayou/api-common/BaseKey', () => {
       const pair = key.makeChallengePair();
 
       assert.isObject(pair);
-      assert.property(pair, 'challenge');
-      assert.property(pair, 'response');
+      assert.hasAllKeys(pair, ['challenge', 'response']);
+      assert.isString(pair.challenge);
+      assert.isString(pair.response);
     });
   });
 });

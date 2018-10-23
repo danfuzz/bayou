@@ -137,9 +137,13 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
-   * Custom inspector function, as called by `util.inspect()`. This
-   * implementation redacts the contents so as to prevent inadvertent logging of
-   * the secret values.
+   * Custom inspector function, as called by `util.inspect()`, which returns a
+   * string that identifies the class and includes just the URL and ID
+   * properties. The main point of this implementation is to make it so that
+   * subclasses can define additional properties which are security-sensitive
+   * without worrying about those properties ending up in the `inspect()`
+   * output. (That is, subclasses don't have to override this method in order to
+   * ensure good security hygiene with respect to stringification.)
    *
    * @param {Int} depth_unused Current inspection depth.
    * @param {object} opts Inspection options.
