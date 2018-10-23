@@ -90,4 +90,28 @@ describe('@bayou/api-common/Message', () => {
       assert.strictEqual(msg.targetId, 'target-yep');
     });
   });
+
+  describe('withTargetId()', () => {
+    it('returns an instance with a replaced `targetId`', () => {
+      const msg    = new Message(123, 'target-first', VALID_FUNCTOR);
+      const result = msg.withTargetId('target-second');
+
+      assert.strictEqual(result.targetId, 'target-second');
+      assert.strictEqual(result.id, 123);
+      assert.strictEqual(result.payload, VALID_FUNCTOR);
+    });
+
+    it('rejects an invalid `targetId`', () => {
+      const msg = new Message(123, 'target-first', VALID_FUNCTOR);
+
+      function test(tid) {
+        assert.throws(() => msg.withTargetId(tid), /badValue/);
+      }
+
+      test(null);
+      test(123);
+      test('');
+      test('&');
+    });
+  });
 });
