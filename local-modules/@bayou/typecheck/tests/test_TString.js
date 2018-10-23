@@ -25,13 +25,13 @@ const NON_STRING_CASES = [
 
 describe('@bayou/typecheck/TString', () => {
   describe('check(value)', () => {
-    it('should return the provided value when passed a string', () => {
+    it('should return the given string value', () => {
       const value = 'this better work!';
 
       assert.strictEqual(TString.check(value), value);
     });
 
-    it('should throw an Error when passed anything other than a string', () => {
+    it('should throw when passed anything other than a string', () => {
       assert.throws(() => TString.check(54));
       assert.throws(() => TString.check(true));
       assert.throws(() => TString.check([]));
@@ -48,7 +48,7 @@ describe('@bayou/typecheck/TString', () => {
       assert.doesNotThrow(() => TString.check(value, /^([a-f0-9]{2})+$/));
     });
 
-    it('should throw an Error when a string fails to match the provided regex', () => {
+    it('should throw when a string fails to match the provided regex', () => {
       const value = 'this better not work!';
 
       assert.throws(() => TString.check(value, /^([a-f0-9]{2})+$/));
@@ -62,7 +62,7 @@ describe('@bayou/typecheck/TString', () => {
       assert.strictEqual(TString.hexBytes(value), value);
     });
 
-    it('should throw an Error when anything other than a string of hex bytes is provided', () => {
+    it('should throw when anything other than a string of hex bytes is provided', () => {
       const value = 'this better not work!';
 
       assert.throws(() => TString.hexBytes(value));
@@ -108,13 +108,13 @@ describe('@bayou/typecheck/TString', () => {
       assert.strictEqual(TString.hexBytes(value, 3, 11), value);
     });
 
-    it('should throw an Error if the number of bytes is less than the minimum', () => {
+    it('should throw if the number of bytes is less than the minimum', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 32, 64));
     });
 
-    it('should throw an Error if the number of bytes is greater than the minimum', () => {
+    it('should throw if the number of bytes is greater than the minimum', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 4, 8));
@@ -346,27 +346,23 @@ describe('@bayou/typecheck/TString', () => {
       assert.strictEqual(TString.nonEmpty(value), value);
     });
 
-    it('should throw an Error if value is a string of length 0', () => {
-      const value = '';
-
-      assert.throws(() => TString.nonEmpty(value));
+    it('should throw if value is a string of length 0', () => {
+      assert.throws(() => TString.nonEmpty(''));
     });
   });
 
   describe('orNull()', () => {
-    it('should return the provided value if it is a string', () => {
+    it('should return the given string value', () => {
       const value = 'This better work!';
 
       assert.strictEqual(TString.orNull(value), value);
     });
 
-    it('should return the provided value if it is null', () => {
-      const value = null;
-
-      assert.strictEqual(TString.orNull(value), value);
+    it('should return `null` given `null`', () => {
+      assert.strictEqual(TString.orNull(null), null);
     });
 
-    it('should throw an Error if value is not a string and is not null', () => {
+    it('should throw if value is neither a string nor `null`', () => {
       assert.throws(() => TString.orNull(undefined));
       assert.throws(() => TString.orNull(5.1));
       assert.throws(() => TString.orNull([]));
@@ -377,9 +373,15 @@ describe('@bayou/typecheck/TString', () => {
 
   describe('urlAbsolute()', () => {
     it('should return the given value if it is an absolute URL string', () => {
-      const value = 'https://www.example.com/';
+      function test(value) {
+        assert.strictEqual(TString.urlAbsolute(value), value, value);
+      }
 
-      assert.strictEqual(TString.urlAbsolute(value), value);
+      test('https://www.example.com/');
+      test('http://foo.com/');
+      test('https://bar.baz.co/florp');
+      test('https://bar.baz.co/florp/');
+      test('https://bar.baz.co/biff/boo');
     });
 
     it('should throw if value is not a URL string at all', () => {
