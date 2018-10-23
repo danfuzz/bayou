@@ -160,10 +160,10 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
-   * Main implementation of `challengeResponseFor()`. By default this throws
-   * an error ("not implemented"). Subclasses wishing to support challenges
-   * must override this to do something else.
+   * Main implementation of `challengeResponseFor()`. Subclasses wishing to
+   * support challenges must override this.
    *
+   * @abstract
    * @param {string} challenge The challenge. It is guaranteed to be a string of
    *   at least 16 characters.
    * @returns {string} The challenge response.
@@ -174,9 +174,8 @@ export default class BaseKey extends CommonBase {
 
   /**
    * Creates and returns a random challenge string. The returned string must be
-   * at least 16 characters long but may be longer. By default this throws an
-   * error ("not implemented"). Subclasses wishing to support challenges must
-   * override this to do something else.
+   * at least 16 characters long but may be longer. Subclasses wishing to
+   * support challenges must override this.
    *
    * @abstract
    * @returns {string} A random challenge string.
