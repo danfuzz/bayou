@@ -20,12 +20,13 @@ import TargetId from './TargetId';
  * Instances of this (base) class hold two pieces of information:
  *
  * * A URL at which the resource is available.
- * * The ID of the resource.
+ * * The ID of the resource. **Note:** The ID is _not_ meant to require secrecy
+ *   in order for the system to be secure. That is, IDs are not required to be
+ *   unguessable.
  *
  * In addition, subclasses can include additional information.
  *
- * **Note:** The resource ID is _not_ meant to require secrecy in order for
- * the system to be secure. That is, IDs are not required to be unguessable.
+ *
  */
 export default class BaseKey extends CommonBase {
   /**
@@ -149,7 +150,7 @@ export default class BaseKey extends CommonBase {
 
     return (opts.depth < 0)
       ? `${name} {...}`
-      : `${name} { ${this._url} ${this.printableId} }`;
+      : `${name} { ${this._url} ${this.id} }`;
   }
 
   /**
