@@ -158,8 +158,9 @@ export default class TString extends UtilityClass {
     try {
       url = new URL(TString.nonEmpty(value));
     } catch (e) {
-      // Throw a higher-fidelity error.
-      throw Errors.badValue(value, String, 'absolute URL syntax');
+      // Set up `url` so that the test below will cause us to throw the proper
+      // error.
+      url = {};
     }
 
     // **Note:** Though `new URL()` is lenient with respect to parsing, if it
