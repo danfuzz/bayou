@@ -25,8 +25,6 @@ import TargetId from './TargetId';
  *   unguessable.
  *
  * In addition, subclasses can include additional information.
- *
- *
  */
 export default class BaseKey extends CommonBase {
   /**
