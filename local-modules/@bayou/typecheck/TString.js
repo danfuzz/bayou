@@ -146,8 +146,8 @@ export default class TString extends UtilityClass {
 
   /**
    * Checks a value which must be a syntactically valid absolute URL with a path
-   * (which can just be `/`) and without auth info. (Auth info consists of a
-   * username and optional password before the host name.)
+   * (which can just be `/`) and without either auth info or a query. (Auth info
+   * consists of a username and optional password before the host name.)
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
@@ -162,14 +162,14 @@ export default class TString extends UtilityClass {
     }
 
     // Some versions of `URL` will parse a missing origin into the literal
-    // string `null`, hence the third check here. The last check ensures that
+    // string `null`, hence the extra check there. The last check ensures that
     // the original `value` is well-formed; while `new URL()` is somewhat
     // lenient, the `href` it produces is guaranteed to be well-formed, and so
     // the `===` comparison transitively ensures that the original `value` is
     // also well-formed.
     if (!(   url.host
-          && url.origin
-          && (url.origin !== 'null')
+          && (url.origin && (url.origin !== 'null'))
+          && (url.search === '')
           && (url.href === value))) {
       throw Errors.badValue(value, String, 'absolute URL syntax');
     }

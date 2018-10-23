@@ -376,13 +376,13 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('urlAbsolute()', () => {
-    it('should return the provided value if it is an absolute URL string', () => {
+    it('should return the given value if it is an absolute URL string', () => {
       const value = 'https://www.example.com/';
 
       assert.strictEqual(TString.urlAbsolute(value), value);
     });
 
-    it('should throw an Error if value is not a URL string at all', () => {
+    it('should throw if value is not a URL string at all', () => {
       assert.throws(() => TString.urlAbsolute('this better not work!'));
       assert.throws(() => TString.urlAbsolute('/home/users/fnord'));
       assert.throws(() => TString.urlAbsolute('http:example.com'));
@@ -394,14 +394,21 @@ describe('@bayou/typecheck/TString', () => {
       assert.throws(() => TString.urlAbsolute(null));
     });
 
-    it('should throw an Error if value has auth info', () => {
+    it('should throw if value has auth info', () => {
       assert.throws(() => TString.urlAbsolute('http://user@example.com/'));
       assert.throws(() => TString.urlAbsolute('http://user:pass@example.com/'));
+    });
+
+    it('should throw if value has a query', () => {
+      assert.throws(() => TString.urlAbsolute('https://milk.com/?a=10'));
+      assert.throws(() => TString.urlAbsolute('https://milk.com/?x=1&y=2'));
+      assert.throws(() => TString.urlAbsolute('http://milk.com/bcd?e=10'));
+      assert.throws(() => TString.urlAbsolute('http://milk.com/bcd/efgh?i=123&jkl=234'));
     });
   });
 
   describe('urlOrigin()', () => {
-    it('should return the provided value if it is an origin-only URL', () => {
+    it('should return the given value if it is an origin-only URL', () => {
       let which = 0;
       function test(value) {
         which++;
@@ -413,14 +420,14 @@ describe('@bayou/typecheck/TString', () => {
       test('http://florp.co.uk:123');
     });
 
-    it('should throw an Error if value is not an origin-only URL', () => {
+    it('should throw if value is not an origin-only URL', () => {
       assert.throws(() => TString.urlOrigin('http://foo.bar/'));
       assert.throws(() => TString.urlOrigin('http://foo.bar/x'));
       assert.throws(() => TString.urlOrigin('https://foo@bar.com'));
       assert.throws(() => TString.urlOrigin('https://florp:like@example.com'));
     });
 
-    it('should throw an Error if value is not a URL string at all', () => {
+    it('should throw if value is not a URL string at all', () => {
       assert.throws(() => TString.urlOrigin('this better not work!'));
       assert.throws(() => TString.urlOrigin('/home/users/fnord'));
       assert.throws(() => TString.urlOrigin('http:example.com'));
