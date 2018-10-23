@@ -439,10 +439,16 @@ describe('@bayou/typecheck/TString', () => {
         assert.throws(() => TString.urlOrigin(value), /badValue/, inspect(value));
       }
 
-      test('http://foo.bar/');
+      test('http://foo.bar/'); // Shouldn't end with a slash.
       test('http://foo.bar/x');
       test('https://foo@bar.com');
       test('https://florp:like@example.com');
+      test('http://foo.bar/?a=10');
+      test('http://foo.bar/x?a=10');
+      test('http://foo.bar/x/?a=10');
+      test('http://foo.bar/#123');
+      test('http://foo.bar/baz#123');
+      test('http://foo.bar/baz/#123');
     });
 
     it('should throw if value is not a URL string at all', () => {
