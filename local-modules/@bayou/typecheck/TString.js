@@ -162,22 +162,13 @@ export default class TString extends UtilityClass {
       throw Errors.badValue(value, String, 'absolute URL syntax');
     }
 
-    // Some versions of `URL` will parse a missing origin into the literal
-    // string `null`, hence the extra check there. The last check ensures that
-    // the original `value` is well-formed; while `new URL()` is somewhat
-    // lenient, the `href` it produces is guaranteed to be well-formed, and so
-    // the `===` comparison transitively ensures that the original `value` is
-    // also well-formed.
-    if (!(   url.host
-          && (url.origin && (url.origin !== 'null'))
-          && (url.search === '')
-          && (url.hash === '')
-          && (url.href === value))) {
+    // **Note:** Though `new URL()` is lenient with respect to parsing, if it
+    // _does_ parse successfully, `origin` and `pathname` will always be
+    // well-formed, and if they combine to form the originally given value, we
+    // know the original doesn't have any of the verboten parts (nor a missing
+    // path).
+    if (value !== `${url.origin}${url.pathname}`) {
       throw Errors.badValue(value, String, 'absolute URL syntax');
-    }
-
-    if (url.username || url.password) {
-      throw Errors.badValue(value, String, 'absolute URL syntax, without auth');
     }
 
     return value;
