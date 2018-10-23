@@ -18,11 +18,14 @@ export default class TargetMap extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {function} sendMessage Function to call to send a message. This is
-   *   bound to the private `_send()` method on an instance of
-   *   {@link ApiClient}. (This arrangement is done, instead of making a public
-   *   `send()` method on {@link ApiClient}, so as to make it clear that the
-   *   right way to send messages is via the exposed proxies.)
+   * @param {function} sendMessage Function to call to send a message. It is
+   *   called with two arguments, `targetId` (a string) and `payload` (a
+   *   functor). This is typically bound to the private `_send()` method on an
+   *   instance of {@link ApiClient}. (This arrangement is done, instead of
+   *   making a public `send()` method on {@link ApiClient}, so as to make it
+   *   clear that the right way to send messages is via the exposed proxies.
+   *   This arrangement also makes it possible to test this class in isolation
+   *   from the higher layer.)
    */
   constructor(sendMessage) {
     super();
