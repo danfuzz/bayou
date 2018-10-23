@@ -57,6 +57,18 @@ describe('@bayou/api-common/BaseKey', () => {
   });
 
   describe('constructor', () => {
+    it('should accept `*` as the URL', () => {
+      assert.doesNotThrow(() => new BaseKey('*', VALID_ID));
+    });
+
+    it('should accept an absoulute URL', () => {
+      assert.doesNotThrow(() => new BaseKey('http://foo.com/', VALID_ID));
+      assert.doesNotThrow(() => new BaseKey('https://foo.com/', VALID_ID));
+      assert.doesNotThrow(() => new BaseKey('https://bar.org/x', VALID_ID));
+      assert.doesNotThrow(() => new BaseKey('https://bar.org/x/', VALID_ID));
+      assert.doesNotThrow(() => new BaseKey('https://bar.org/x/a%20b', VALID_ID));
+    });
+
     it('should throw an error given a URL with auth', () => {
       assert.throws(() => new BaseKey('http://foo@example.com/', VALID_ID));
       assert.throws(() => new BaseKey('http://foo:blort@example.com/', VALID_ID));
@@ -65,6 +77,13 @@ describe('@bayou/api-common/BaseKey', () => {
     it('should throw an error given an invalid absolute URL', () => {
       assert.throws(() => new BaseKey('http:foo.com/', VALID_ID));
       assert.throws(() => new BaseKey('https://blort.com', VALID_ID)); // Needs a final slash.
+    });
+
+    it('should throw an error given an invalid ID', () => {
+      assert.throws(() => new BaseKey('http://foo.com/', ''), /badValue/);
+      assert.throws(() => new BaseKey('http://foo.com/', '!'), /badValue/);
+      assert.throws(() => new BaseKey('http://foo.com/', null), /badValue/);
+      assert.throws(() => new BaseKey('http://foo.com/', 123), /badValue/);
     });
   });
 
