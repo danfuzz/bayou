@@ -403,9 +403,6 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
-   * Gets a proxy
-
-  /**
    * Initializes or resets the state having to do with an active connection. See
    * the constructor for documentation about these fields.
    */
