@@ -377,7 +377,7 @@ export default class ApiClient extends CommonBase {
         return Promise.reject(ConnectionError.connection_closed(this._connectionId, 'Already closed.'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(this.connection_closing(this._connectionId));
+        return Promise.reject(ConnectionError.connection_closing(this._connectionId));
       }
     }
 
