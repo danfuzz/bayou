@@ -17,8 +17,8 @@ const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,64}$/;
  * programatically-generated IDs (e.g. for specific files).
  *
  * Syntactically, a target ID must be a string of consisting of ASCII-range
- * alphanumerics, underscore (`_`), or dash (`-`), which is no longer than 64
- * characters.
+ * alphanumerics, underscore (`_`), dash (`-`), or period (`.`), which is at
+ * least one and no longer than 64 characters.
  */
 export default class TargetId extends UtilityClass {
   /**

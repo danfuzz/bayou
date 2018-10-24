@@ -151,6 +151,10 @@ describe('@bayou/api-client/TargetMap', () => {
 
       const proxy2 = tm.addOrGet('pdq');
 
+      // `===` directly here and not `assert.strictEqual()` because in the
+      // failure case we might otherwise end up calling through to the
+      // (probable) proxy, which would probably _not_ provide any useful info
+      // and very well might throw, thus obscuring the actual problem.
       assert.isTrue(proxy1 === proxy2);
     });
 
@@ -166,6 +170,7 @@ describe('@bayou/api-client/TargetMap', () => {
 
       const proxy2 = tm.addOrGet('pdq');
 
+      // See above in re `===` vs. `assert.strictEqual()`.
       assert.isTrue(proxy1 === proxy2);
     });
   });

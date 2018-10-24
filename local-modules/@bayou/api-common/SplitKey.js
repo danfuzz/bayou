@@ -2,10 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
-// module, which is why this is possible to import regardless of environment.
-import crypto from 'crypto';
-
 import { TString } from '@bayou/typecheck';
 import { Random } from '@bayou/util-common';
 
@@ -90,31 +86,20 @@ export default class SplitKey extends BaseKey {
   }
 
   /**
-   * Main implementation of `challengeResponseFor()`, as defined by the
-   * superclass.
+   * Implementation as required by the superclass.
    *
-   * @param {string} challenge The challenge.
-   * @returns {string} The challenge response.
+   * @returns {string} The secret to use for challenges.
    */
-  _impl_challengeResponseFor(challenge) {
-    TString.hexBytes(challenge, 8, 8);
-
-    const hash = crypto.createHash('sha256');
-
-    hash.update(Buffer.from(challenge, 'hex'));
-    hash.update(Buffer.from(this._secret, 'hex'));
-
-    return hash.digest('hex');
+  _impl_challengeSecret() {
+    return this._secret;
   }
 
   /**
-   * Creates and returns a random challenge string, as defined by the
-   * superclass. In this case, the result is always an eight byte long hex
-   * string (lower case).
+   * Implementation as required by the superclass.
    *
-   * @returns {string} A random challenge string.
+   * @returns {string} The safe string form of this instance.
    */
-  _impl_randomChallengeString() {
-    return Random.hexByteString(8);
+  _impl_safeString() {
+    return `${this.id}-...`;
   }
 }

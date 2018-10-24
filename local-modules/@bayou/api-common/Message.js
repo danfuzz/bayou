@@ -49,19 +49,6 @@ export default class Message extends CommonBase {
     return [this._id, this._targetId, this._payload];
   }
 
-  /**
-   * Converts this instance to a form suitable for logging.
-   *
-   * @returns {object} Log-appropriate form.
-   */
-  toLog() {
-    return {
-      id:       this._id,
-      targetId: this._targetId,
-      payload:  this._payload
-    };
-  }
-
   /** {Int} Message ID. */
   get id() {
     return this._id;
