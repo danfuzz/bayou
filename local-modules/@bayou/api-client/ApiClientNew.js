@@ -11,9 +11,11 @@ import BaseServerConnection from './BaseServerConnection';
 import TargetMap from './TargetMap';
 
 /**
- * Connection with the server, via a websocket.
+ * API connection with a server. This is a layer on top of
+ * {@link BaseServerConnection} which provides API semantics, not just sending
+ * and receiving of (uninterpreted) data blobs.
  */
-export default class ApiClient extends CommonBase {
+export default class ApiClientNew extends CommonBase {
   /**
    * Constructs an instance, which uses the indicated connection handler to
    * communicate with a server.
@@ -31,33 +33,31 @@ export default class ApiClient extends CommonBase {
     super();
 
     /**
-     * {BaseServerConnection} connection Provider of the basic message
-     * sending and receiving facilities.
+     * {BaseServerConnection} Provider of the basic message sending and
+     * receiving facilities.
      */
     this._connection = BaseServerConnection.check(connection);
 
     /** {Codec} Codec instance to use. */
     this._codec = Codec.check(codec);
 
-    /**
-     * {Int} Next message ID to use when sending a message. Initialized and
-     * reset in {@link #_resetConnection()}.
-     */
+    /** {Int} Next message ID to use when sending a message. */
     this._nextId = 0;
 
     /**
-     * {object<Int,{resolve, reject}>} Map from message IDs to response
+     * {object<Int, {resolve, reject}>} Map from message IDs to response
      * callbacks. Each callback is an object that maps `resolve` and `reject` to
      * functions that obey the usual promise contract for functions of those
-     * names. Initialized and reset in {@link #_resetConnection()}.
+     * names.
      */
-    this._callbacks = null;
+    this._callbacks = {};
 
     /**
      * {TargetMap} Map of names to target proxies. See {@link
      * TargetMap#constructor} for details about the argument.
      */
     this._targets = new TargetMap(this._send.bind(this));
+    this._targets.add('meta'); // The one guaranteed target.
 
     /**
      * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their
@@ -65,9 +65,6 @@ export default class ApiClient extends CommonBase {
      * avoid re-issuing authorization requests.
      */
     this._pendingAuths = new Map();
-
-    // Initialize the active connection fields (described above).
-    this._resetConnection();
 
     Object.seal(this);
   }
@@ -301,20 +298,6 @@ export default class ApiClient extends CommonBase {
     }
   }
 
-  /**
-   * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending messages (that were enqueued while the socket was still in the
-   * process of opening).
-   *
-   * @param {object} event_unused Event that caused this callback.
-   */
-  _handleOpen(event_unused) {
-    for (const msgJson of this._pendingMessages) {
-      this.log.detail('Sent from queue:', msgJson);
-      this._ws.send(msgJson);
-    }
-    this._pendingMessages = [];
-  }
 
   /**
    * Common code to handle both `error` and `close` events.
@@ -335,19 +318,6 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
-   * Initializes or resets the state having to do with an active connection. See
-   * the constructor for documentation about these fields.
-   */
-  _resetConnection() {
-    this._nextId         = 0;
-    this._callbacks      = {};
-    this._targets.clear();
-    this._targets.add('meta'); // The one guaranteed target.
-
-    this.connectionId = null;
-  }
-
-  /**
    * Sends the given call to the server.
    *
    * **Note:** This method is called via a `TargetHandler` instance, which is
@@ -361,50 +331,18 @@ export default class ApiClient extends CommonBase {
    *   case of an error, the rejection reason will always be an instance of
    *   `ConnectionError` (see which for details).
    */
-  _send(target, payload) {
-    const wsState = (this._ws === null)
-      ? WebSocket.CLOSED
-      : this._ws.readyState;
-
-    // Handle the cases where socket shutdown is imminent or has already
-    // happened. We don't just `throw` directly here, so that clients can
-    // consistently handle errors via one of the promise chaining mechanisms.
-    switch (wsState) {
-      case WebSocket.CLOSED: {
-        // The detail string here differentiates this case from cases where the
-        // API message was already queued up or sent before the websocket became
-        // closed.
-        return Promise.reject(ConnectionError.connection_closed(this._connectionId, 'Already closed.'));
-      }
-      case WebSocket.CLOSING: {
-        return Promise.reject(ConnectionError.connection_closing(this._connectionId));
-      }
-    }
-
+  async _send(target, payload) {
     const id = this._nextId;
     this._nextId++;
 
     const msg     = new Message(id, target, payload);
     const msgJson = this._codec.encodeJson(msg);
 
-    switch (wsState) {
-      case WebSocket.CONNECTING: {
-        // Not yet open. Need to queue it up.
-        this.log.detail('Queued:', msg);
-        this._pendingMessages.push(msgJson);
-        break;
-      }
-      case WebSocket.OPEN: {
-        this.log.detail('Sent:', msg);
-        this._ws.send(msgJson);
-        break;
-      }
-      default: {
-        // Whatever this state is, it's not documented as part of the websocket
-        // spec!
-        this.log.wtf('Weird state:', wsState);
-      }
-    }
+    this.log.info('Sending:', msg);
+
+    await this._connection.send(msgJson);
+
+    this.log.info('Queued:', msg);
 
     return new Promise((resolve, reject) => {
       this._callbacks[id] = { resolve, reject };

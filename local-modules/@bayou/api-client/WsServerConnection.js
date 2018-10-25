@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
+import { ConnectionError, Message } from '@bayou/api-common';
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
@@ -17,7 +17,7 @@ export default class WsServerConnection extends BaseServerConnection {
    * same domain as the given `url`, at the path `/api`. Once this constructor
    * returns, it is safe to send messages on the instance; if the socket isn't
    * yet ready for traffic, the messages will get enqueued and then later
-   * replayed in order once the socket becomes ready.
+   * replayed in-order once the socket becomes ready.
    *
    * @param {string} url The server origin, as an `http` or `https` URL.
    */
@@ -30,14 +30,8 @@ export default class WsServerConnection extends BaseServerConnection {
     /** {string} URL to use when connecting a websocket. */
     this._wsUrl = WsServerConnection._getWsUrl(this._baseUrl);
 
-    /**
-     * {WebSocket} Actual websocket instance. Set by `open()`. Reset in
-     * `_resetConnection()`.
-     */
+    /** {WebSocket|null} Actual websocket instance. */
     this._ws = null;
-
-    // Initialize the active connection fields (described above).
-    this._resetConnection();
 
     Object.seal(this);
   }
@@ -135,45 +129,8 @@ export default class WsServerConnection extends BaseServerConnection {
    * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
-    this.log.detail('Received raw data:', event.data);
-
-    const response = this._codec.decodeJson(event.data);
-
-    if (!(response instanceof Response)) {
-      throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response.');
-    }
-
-    const { id, result, error } = response;
-
-    const callback = this._callbacks[id];
-    if (callback) {
-      delete this._callbacks[id];
-      if (error) {
-        // **Note:** `error` is always an instance of `CodableError`.
-        this.log.detail(`Reject ${id}:`, error);
-        // What's going on here is that we use the information from the original
-        // error as the outer error payload, and include a `cause` that
-        // unambiguously indicates that the origin is remote. This arrangement
-        // means that clients can handle well-defined errors fairly
-        // transparently and straightforwardly (e.g. and notably, they don't
-        // have to "unwrap" the errors in the usual case), while still being
-        // able to ascertain the foreign origin of the errors when warranted.
-        const remoteCause = new CodableError('remote_error', this.connectionId);
-        const rejectReason = new CodableError(remoteCause, error.info);
-        callback.reject(rejectReason);
-      } else {
-        this.log.detail(`Resolve ${id}:`, result);
-        if (result instanceof Remote) {
-          // The result is a proxied object, not a regular value.
-          callback.resolve(this._targets.addOrGet(result.targetId));
-        } else {
-          callback.resolve(result);
-        }
-      }
-    } else {
-      // See above about `server_bug`.
-      throw ConnectionError.connection_nonsense(this._connectionId, `Orphan call for ID ${id}.`);
-    }
+    this.log.info('Received raw data:', event.data);
+    this.received(event.data);
   }
 
   /**
@@ -206,23 +163,7 @@ export default class WsServerConnection extends BaseServerConnection {
 
     // Clear the state related to the websocket. It is safe to re-open the
     // connection after this.
-    this._resetConnection();
-  }
-
-  /**
-   * Initializes or resets the state having to do with an active connection. See
-   * the constructor for documentation about these fields.
-   */
-  _resetConnection() {
-    this._ws              = null;
-    this._connectionId    = UNKNOWN_CONNECTION_ID;
-    this._nextId          = 0;
-    this._callbacks       = {};
-    this._pendingMessages = [];
-    this._targets.clear();
-    this._targets.add('meta'); // The one guaranteed target.
-
-    this._updateLogger();
+    this._ws = null;
   }
 
   /**
