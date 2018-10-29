@@ -68,6 +68,12 @@ export default class BaseServerConnection extends CommonBase {
     this._events.emit(new Functor(BaseServerConnection.EVENT_start));
 
     /**
+     * {ChainedEvent} The "head" of the event chain after which any `receive`
+     * events have not yet been accepted by the user of this instance.
+     */
+    this._receiveHead = this._events.currentEventNow;
+
+    /**
      * {ChainedEvent} The "head" of the event chain after which any `send`
      * events have not yet been handed off to the subclass.
      */
@@ -136,6 +142,30 @@ export default class BaseServerConnection extends CommonBase {
     }
 
     this._state = state;
+  }
+
+  /**
+   * Accepts a message sent by the far side of the connection. This method only
+   * returns once a message is available.
+   *
+   * @returns {string} The message that was received from the far side of the
+   *   connection.
+   */
+  async acceptMessage() {
+    for (;;) {
+      const event = this._receiveHead.nextOfNow(BaseServerConnection.EVENT_receive);
+      if (event !== null) {
+        const [message] = event.payload.args;
+        this._receiveHead = event;
+        return message;
+      }
+
+      // There are no received messages that haven't yet been handled. Wait for
+      // one to show up on the event chain. But only then try to get to it
+      // synchronously via the code above, to avoid the possibility of returning
+      // the same message twice.
+      await this._receiveHead.nextOf(BaseServerConnection.EVENT_receive);
+    }
   }
 
   /**
