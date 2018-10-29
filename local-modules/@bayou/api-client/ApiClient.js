@@ -18,6 +18,12 @@ const UNKNOWN_CONNECTION_ID = 'id_unknown';
 
 /**
  * Connection with the server, via a websocket.
+ *
+ * **TODO:** This class is in the process of being replace by the combination of
+ * classes `ApiClientNew`, `BaseServerConnection`, and `WsServerConnection`.
+ * Once those are ready, call sites should be adjusted to use the new (but
+ * similar) API provided by `ApiClientNew`, this class should be removed, and
+ * then `ApiClientNew` can be renamed to be just `ApiClient`.
  */
 export default class ApiClient extends CommonBase {
   /**
