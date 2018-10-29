@@ -60,7 +60,7 @@ export default class BaseServerConnection extends CommonBase {
     /** {string} State of the connection. One of the `STATE_*` constants. */
     this._state = BaseServerConnection.STATE_closed;
 
-    /** {string} Connection ID conveyed to us by the server. */
+    /** {string} Connection ID conveyed to us by the user of this instance. */
     this._connectionId = UNKNOWN_CONNECTION_ID;
 
     /** {EventSource} Emitter used for the events of this instance. */
