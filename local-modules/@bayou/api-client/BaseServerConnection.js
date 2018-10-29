@@ -126,10 +126,12 @@ export default class BaseServerConnection extends CommonBase {
         return message;
       }
 
-      // There are no received messages that haven't yet been handled. Wait for
-      // one to show up on the event chain. But only then try to get to it
+      // There are no received messages that haven't yet been handled. Make sure
+      // the subclass is trying to receive, and then wait for one to show up on
+      // the event chain. Once an event shows up, loop back and try to get to it
       // synchronously via the code above, to avoid the possibility of returning
       // the same message twice.
+      await this._impl_beReceiving();
       await this._receiveHead.nextOf(BaseServerConnection.EVENT_receive);
     }
   }
@@ -166,6 +168,16 @@ export default class BaseServerConnection extends CommonBase {
     // Call `_sendAll()` if not already in progress, or if in progress merely
     // wait for the return of that in-progress call.
     return this._sendAllPiler.call();
+  }
+
+  /**
+   * Makes sure that the instance is in a position to receive messages from the
+   * far side of the connection.
+   *
+   * @abstract
+   */
+  async _impl_beReceiving() {
+    return this._mustOverride();
   }
 
   /**

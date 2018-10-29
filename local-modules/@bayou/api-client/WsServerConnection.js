@@ -50,6 +50,15 @@ export default class WsServerConnection extends BaseServerConnection {
   /**
    * Implementation as required by the superclass.
    *
+   * @abstract
+   */
+  async _impl_beReceiving() {
+    return this._ensureOpen();
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
    * @param {string} message The message to send.
    */
   async _impl_sendMessage(message) {
