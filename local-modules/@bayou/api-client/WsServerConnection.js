@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ConnectionError, Message } from '@bayou/api-common';
+import { Condition } from '@bayou/prom-util';
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
@@ -33,6 +33,12 @@ export default class WsServerConnection extends BaseServerConnection {
     /** {WebSocket|null} Actual websocket instance. */
     this._ws = null;
 
+    /**
+     * {Condition} Condition variable that becomes instantaneously `true` with
+     * every state change to {@link #_ws}.
+     */
+    this._wsStateChange = new Condition();
+
     Object.seal(this);
   }
 
@@ -42,45 +48,86 @@ export default class WsServerConnection extends BaseServerConnection {
   }
 
   /**
-   * Opens the websocket. Once open, any pending messages will get sent to the
-   * server side. If the socket is already open (or in the process of opening),
-   * this does not re-open (that is, the existing open is allowed to continue).
+   * Implementation as required by the superclass.
    *
-   * @returns {boolean} `true` once the connection is open.
-   * @throws {ConnectionError} Indication of why the connection attempt failed.
+   * @param {string} message The message to send.
    */
-  async open() {
-    // If `_ws` is `null` that means that the connection is not already open or
-    // in the process of opening.
-
-    if (this._connectionId !== UNKNOWN_CONNECTION_ID) {
-      // Already open.
-      return true;
-    } else if (this._ws !== null) {
-      // In the middle of getting opened. Arguably this should do something a
-      // bit more efficient (instead of issuing a separate API call), but also
-      // this shouldn't ever happen, so it's not that big a deal.
-      this.log.info('open() called while in the middle of opening.');
-      await this.meta.ping();
-      return true;
+  async _impl_sendMessage(message) {
+    // We do this as a loop (not just an `if`), because it's possible for the
+    // connection to close between the time that `_ensureOpen()` returns and
+    // when control returns to this code from the `await`. Should this instance
+    // decide to "give up" it will do so by throwing an error from
+    // `_ensureOpen()`, thus breaking out of the loop.
+    while ((this._ws === null) || (this._ws.readyState !== WebSocket.OPEN)) {
+      await this._ensureOpen();
     }
 
-    this._ws = new WebSocket(this._websocketUrl);
-    this._ws.onclose   = this._handleClose.bind(this);
-    this._ws.onerror   = this._handleError.bind(this);
-    this._ws.onmessage = this._handleMessage.bind(this);
-    this._ws.onopen    = this._handleOpen.bind(this);
+    // **TODO:** Consider the case where the underlying networking system hasn't
+    // had a chance to service `_ws` and so there is a large amount of buffered
+    // data. The spec allows `send()` to throw in this case, and if it does it
+    // will also close the socket. We would rather hold off and give the
+    // networking system time to drain the buffer. The `WebSocket` property
+    // `bufferedAmount` can be used to see how much has been buffered, but
+    // unfortunately there is no way to know how much is "too much," so that
+    // will have to be determined more heuristically.
+    this._ws.send(message);
+  }
 
-    this._updateLogger();
-    this.log.event.opening();
+  /**
+   * Ensure that the websocket is open and receptive to sending and receiving
+   * messages. This will be the case at the time that this method returns. Due
+   * to the `async` nature of the method (and the system), though, it could
+   * possbily become _not_ the case by the time the call site regains control.
+   * Therefore, callers must verify the state of the socket _synchronously_
+   * before attempting to send or receive messages.
+   */
+  async _ensureOpen() {
+    for (;;) {
+      if (this._ws === null) {
+        // No active socket. Create (and start to open) it.
+        this._ws           = new WebSocket(this._wsUrl);
+        this._ws.onclose   = this._handleClose.bind(this);
+        this._ws.onerror   = this._handleError.bind(this);
+        this._ws.onmessage = this._handleMessage.bind(this);
+        this._ws.onopen    = this._handleOpen.bind(this);
 
-    const id = await this.meta.connectionId();
+        this._updateLogger();
+        this.log.event.wsState('opening');
+      }
 
-    this._connectionId = id;
-    this._updateLogger();
-    this.log.event.open();
+      switch (this._ws.readyState) {
+        case WebSocket.CLOSED: {
+          // Clear out `_ws` and iterate to retry.
+          this.log.event.wsState('closed');
+          this._ws.onclose   = null;
+          this._ws.onerror   = null;
+          this._ws.onmessage = null;
+          this._ws.onopen    = null;
+          this._ws           = null;
+          break;
+        }
 
-    return true;
+        case WebSocket.CLOSING: {
+          // Wait for it to be closed.
+          this.log.event.wsState('closing');
+          await this._wsStateChange.whenTrue();
+          break;
+        }
+
+        case WebSocket.CONNECTING: {
+          // Wait for it to be open (or fail to connect).
+          this.log.event.wsState('connecting');
+          await this._wsStateChange.whenTrue();
+          break;
+        }
+
+        case WebSocket.OPEN: {
+          // What we've wanted all along!
+          this.log.event.wsState('open');
+          break;
+        }
+      }
+    }
   }
 
   /**
@@ -90,13 +137,11 @@ export default class WsServerConnection extends BaseServerConnection {
    * @param {object} event Event that caused this callback.
    */
   _handleClose(event) {
-    this.log.info('Closed:', event);
-
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
-    const error = ConnectionError.connection_closed(this._connectionId, desc);
 
-    this._handleTermination(event, error);
+    this.log.event.wsCloseEvent(event, desc);
+    this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
 
   /**
@@ -110,13 +155,12 @@ export default class WsServerConnection extends BaseServerConnection {
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
-    this.log.info('Error:', event);
-
     // **Note:** The error event does not have any particularly useful extra
-    // info, so -- alas -- there is nothing to get out of it for the
-    // `ConnectionError` description.
-    const error = ConnectionError.connection_error(this._connectionId);
-    this._handleTermination(event, error);
+    // info, so -- alas -- there is nothing to get out of it as a "description"
+    // (or similar).
+    this.log.event.wsErrorEvent(event);
+
+    this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
 
   /**
@@ -129,7 +173,7 @@ export default class WsServerConnection extends BaseServerConnection {
    * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
-    this.log.info('Received raw data:', event.data);
+    this.log.event.wsRawMessage(event.data);
     this.received(event.data);
   }
 
@@ -138,96 +182,14 @@ export default class WsServerConnection extends BaseServerConnection {
    * any pending messages (that were enqueued while the socket was still in the
    * process of opening).
    *
-   * @param {object} event_unused Event that caused this callback.
+   * @param {object} event Event that caused this callback.
    */
-  _handleOpen(event_unused) {
-    for (const msgJson of this._pendingMessages) {
-      this.log.detail('Sent from queue:', msgJson);
-      this._ws.send(msgJson);
-    }
-    this._pendingMessages = [];
-  }
-
-  /**
-   * Common code to handle both `error` and `close` events.
-   *
-   * @param {object} event_unused Event that caused this callback.
-   * @param {ConnectionError} error Reason for termination. "Error" is a bit of
-   *   a misnomer, as in many cases termination is a-okay.
-   */
-  _handleTermination(event_unused, error) {
-    // Reject the promises of any currently-pending messages.
-    for (const id in this._callbacks) {
-      this._callbacks[id].reject(error);
-    }
-
-    // Clear the state related to the websocket. It is safe to re-open the
-    // connection after this.
-    this._ws = null;
-  }
-
-  /**
-   * Sends the given call to the server.
-   *
-   * **Note:** This method is called via a `TargetHandler` instance, which is
-   * in turn called by a proxy object representing an object on the far side of
-   * the connection.
-   *
-   * @param {string} target Name of the target object.
-   * @param {Functor} payload The name of the method to call and the arguments
-   *   to call it with.
-   * @returns {Promise} Promise for the result (or error) of the call. In the
-   *   case of an error, the rejection reason will always be an instance of
-   *   `ConnectionError` (see which for details).
-   */
-  _send(target, payload) {
-    const wsState = (this._ws === null)
-      ? WebSocket.CLOSED
-      : this._ws.readyState;
-
-    // Handle the cases where socket shutdown is imminent or has already
-    // happened. We don't just `throw` directly here, so that clients can
-    // consistently handle errors via one of the promise chaining mechanisms.
-    switch (wsState) {
-      case WebSocket.CLOSED: {
-        // The detail string here differentiates this case from cases where the
-        // API message was already queued up or sent before the websocket became
-        // closed.
-        return Promise.reject(ConnectionError.connection_closed(this._connectionId, 'Already closed.'));
-      }
-      case WebSocket.CLOSING: {
-        return Promise.reject(ConnectionError.connection_closing(this._connectionId));
-      }
-    }
-
-    const id = this._nextId;
-    this._nextId++;
-
-    const msg     = new Message(id, target, payload);
-    const msgJson = this._codec.encodeJson(msg);
-
-    switch (wsState) {
-      case WebSocket.CONNECTING: {
-        // Not yet open. Need to queue it up.
-        this.log.detail('Queued:', msg);
-        this._pendingMessages.push(msgJson);
-        break;
-      }
-      case WebSocket.OPEN: {
-        this.log.detail('Sent:', msg);
-        this._ws.send(msgJson);
-        break;
-      }
-      default: {
-        // Whatever this state is, it's not documented as part of the websocket
-        // spec!
-        this.log.wtf('Weird state:', wsState);
-      }
-    }
-
-    return new Promise((resolve, reject) => {
-      this._callbacks[id] = { resolve, reject };
-    });
+  _handleOpen(event) {
+    // **Note:** The open event does not have any particularly useful extra
+    // info, so -- alas -- there is nothing to get out of it as a "description"
+    // (or similar).
+    this.log.event.wsOpenEvent(event);
+    this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
 
   /**

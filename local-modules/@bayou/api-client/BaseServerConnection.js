@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { EventSource } from '@bayou/prom-util';
+import { EventSource, CallPiler } from '@bayou/prom-util';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
@@ -65,8 +65,19 @@ export default class BaseServerConnection extends CommonBase {
 
     /** {EventSource} Emitter used for the events of this instance. */
     this._events = new EventSource();
-
     this._events.emit(new Functor(BaseServerConnection.EVENT_start));
+
+    /**
+     * {ChainedEvent} The "head" of the event chain after which any `send`
+     * events have not yet been handed off to the subclass.
+     */
+    this._sendHead = this._events.currentEventNow;
+
+    /**
+     * {CallPiler} Call piler that ensures that at most one call to
+     * {@link #sendAll} is active at any given time.
+     */
+    this._sendAllPiler = new CallPiler(() => this._sendAll());
   }
 
   /**
@@ -156,7 +167,54 @@ export default class BaseServerConnection extends CommonBase {
    * trouble, it will show up here as a thrown error.
    */
   async sendAll() {
-    // TODO
+    // Call `_sendAll()` if not already in progress, or if in progress merely
+    // wait for the return of that in-progress call.
+    return this._sendAllPiler.call();
+  }
+
+  /**
+   * Sends the given message, on a best-effort basis. Returns normally if this
+   * instance optimistically "believes" the message was successfully sent, or
+   * throws an error to indicate there was some kind of trouble. Subclasses must
+   * implement this.
+   *
+   * **Note:** The structure of this (base) class ensures that only one call to
+   * this method will be ongoing at any given time. See {@link #sendAll} and
+   * {@link #_sendAll} for details.
+   *
+   * @abstract
+   * @param {string} message The message to send.
+   */
+  async _impl_sendMessage(message) {
+    return this._mustOverride(message);
+  }
+
+  /**
+   * Underlying implementation of {@link #sendAll}. Calls to this method are
+   * wrapped by {@link #_sendAllPiler} to ensure only one call is active at any
+   * given time.
+   */
+  async _sendAll() {
+    let e = this._sendHead;
+
+    for (;;) {
+      e = e.nextOfNow(BaseServerConnection.EVENT_send);
+
+      if (e === null) {
+        break;
+      }
+
+      // We found a message to send. _First_ tell the subclass to do its thing,
+      // and only after it returns successfully, update the `_sendHead`. This
+      // ordering ensures that we don't drop messages _at this layer_ (but it
+      // could still happen at other layers). Because only one call to this
+      // method is active at any time, that also means that only one call to
+      // `_impl_sendMessage()` (immediately below) is active at any time. This
+      // is why it's safe to manipulate `_sendHead` as we do here.
+      const [message] = e.payload.args;
+      await this._impl_sendMessage(message);
+      this._sendHead = e;
+    }
   }
 
   /**
