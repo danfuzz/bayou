@@ -28,7 +28,7 @@ export default class VarInfo extends CommonBase {
   async get() {
     // **Note:** The "printable" form of a bearer token is redacted, such that
     // the secret portion is not represented.
-    const tokenIds = Auth.rootTokens.map(t => t.printableId);
+    const tokenIds = Auth.rootTokens.map(t => t.safeString);
 
     return {
       pid:        process.pid,

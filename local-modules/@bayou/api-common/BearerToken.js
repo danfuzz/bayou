@@ -83,12 +83,22 @@ export default class BearerToken extends BaseKey {
   }
 
   /**
-   * Gets the printable form of the ID. This class adds an "ASCII ellipsis" to
-   * the ID, to make it clear that the ID is a redaction of the full token.
+   * Implementation as required by the superclass.
    *
-   * @returns {string} The printable form of the ID.
+   * @returns {string} The secret to use for challenges, as a hex string.
    */
-  _impl_printableId() {
+  _impl_challengeSecret() {
+    const buf = Buffer.from(this._secretToken, 'utf-8');
+
+    return buf.toString('hex');
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {string} The safe string form of this instance.
+   */
+  _impl_safeString() {
     return `${this.id}-...`;
   }
 }

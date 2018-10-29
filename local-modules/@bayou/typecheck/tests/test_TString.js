@@ -25,13 +25,13 @@ const NON_STRING_CASES = [
 
 describe('@bayou/typecheck/TString', () => {
   describe('check(value)', () => {
-    it('should return the provided value when passed a string', () => {
+    it('accepts strings', () => {
       const value = 'this better work!';
 
       assert.strictEqual(TString.check(value), value);
     });
 
-    it('should throw an Error when passed anything other than a string', () => {
+    it('rejects anything other than a string', () => {
       assert.throws(() => TString.check(54));
       assert.throws(() => TString.check(true));
       assert.throws(() => TString.check([]));
@@ -42,13 +42,13 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('check(value, regex)', () => {
-    it('should allow a string when it matches the provided regex', () => {
+    it('accepts a string which matches the given regex', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.doesNotThrow(() => TString.check(value, /^([a-f0-9]{2})+$/));
     });
 
-    it('should throw an Error when a string fails to match the provided regex', () => {
+    it('rejects a non-matching string', () => {
       const value = 'this better not work!';
 
       assert.throws(() => TString.check(value, /^([a-f0-9]{2})+$/));
@@ -56,13 +56,13 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('hexBytes(value)', () => {
-    it('should return the provided value if it is a string of hex bytes', () => {
+    it('accepts a string of hex bytes', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value), value);
     });
 
-    it('should throw an Error when anything other than a string of hex bytes is provided', () => {
+    it('rejects a string of non-hex', () => {
       const value = 'this better not work!';
 
       assert.throws(() => TString.hexBytes(value));
@@ -70,19 +70,19 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('hexBytes(value, minBytes)', () => {
-    it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
+    it('accepts a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value, 11), value);
     });
 
-    it('should return the provided value if it is a string of hex bytes greater than the required minimum length', () => {
+    it('accepts a string of hex bytes greater than the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value, 3), value);
     });
 
-    it('should throw an Error if the number of bytes is less than the minimum', () => {
+    it('rejects too-short strings', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 128));
@@ -90,31 +90,31 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('hexBytes(value, minBytes, maxBytes)', () => {
-    it('should return the provided value if it is a string of hex bytes of the required minimum length', () => {
+    it('accepts a string of hex bytes of the required minimum length', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value, 11, 128), value);
     });
 
-    it('should return the provided value if it is a string of hex bytes within the required length range', () => {
+    it('accepts a string of hex bytes within the required length range', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value, 3, 128), value);
     });
 
-    it('should return the provided value if it is a string of hex bytes equal to the maximum length', () => {
+    it('accepts a string of hex bytes equal to the maximum length', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.strictEqual(TString.hexBytes(value, 3, 11), value);
     });
 
-    it('should throw an Error if the number of bytes is less than the minimum', () => {
+    it('rejects too-short strings', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 32, 64));
     });
 
-    it('should throw an Error if the number of bytes is greater than the minimum', () => {
+    it('rejects too-long strings', () => {
       const value = 'deadbeef7584930215cafe';
 
       assert.throws(() => TString.hexBytes(value, 4, 8));
@@ -340,33 +340,33 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('nonEmpty()', () => {
-    it('should return the provided value if it is a string with length >= 1', () => {
-      const value = 'This better work!';
+    it('accepts strings of length `1` or longer', () => {
+      function test(value) {
+        assert.strictEqual(TString.nonEmpty(value), value);
+      }
 
-      assert.strictEqual(TString.nonEmpty(value), value);
+      test('x');
+      test('xy');
+      test('This better work!');
     });
 
-    it('should throw an Error if value is a string of length 0', () => {
-      const value = '';
-
-      assert.throws(() => TString.nonEmpty(value));
+    it('should throw if value is a string of length 0', () => {
+      assert.throws(() => TString.nonEmpty(''));
     });
   });
 
   describe('orNull()', () => {
-    it('should return the provided value if it is a string', () => {
+    it('accepts strings', () => {
       const value = 'This better work!';
 
       assert.strictEqual(TString.orNull(value), value);
     });
 
-    it('should return the provided value if it is null', () => {
-      const value = null;
-
-      assert.strictEqual(TString.orNull(value), value);
+    it('accepts `null`', () => {
+      assert.strictEqual(TString.orNull(null), null);
     });
 
-    it('should throw an Error if value is not a string and is not null', () => {
+    it('rejects non-`null` non-strings', () => {
       assert.throws(() => TString.orNull(undefined));
       assert.throws(() => TString.orNull(5.1));
       assert.throws(() => TString.orNull([]));
@@ -376,32 +376,75 @@ describe('@bayou/typecheck/TString', () => {
   });
 
   describe('urlAbsolute()', () => {
-    it('should return the provided value if it is an absolute URL string', () => {
-      const value = 'https://www.example.com/';
+    it('accepts absolute URLs', () => {
+      function test(value) {
+        assert.strictEqual(TString.urlAbsolute(value), value, value);
+      }
 
-      assert.strictEqual(TString.urlAbsolute(value), value);
+      test('https://www.example.com/');
+      test('http://foo.com/');
+      test('https://bar.baz.co/florp');
+      test('https://bar.baz.co/florp/');
+      test('https://bar.baz.co/biff/boo');
     });
 
-    it('should throw an Error if value is not a URL string at all', () => {
-      assert.throws(() => TString.urlAbsolute('this better not work!'));
-      assert.throws(() => TString.urlAbsolute('/home/users/fnord'));
-      assert.throws(() => TString.urlAbsolute('http:example.com'));
-      assert.throws(() => TString.urlAbsolute('http:example.com/foo'));
-      assert.throws(() => TString.urlAbsolute('http:/example.com'));
-      assert.throws(() => TString.urlAbsolute('http://example.com')); // Needs final slash.
-      assert.throws(() => TString.urlAbsolute(5.1));
-      assert.throws(() => TString.urlAbsolute(undefined));
-      assert.throws(() => TString.urlAbsolute(null));
+    it('rejects non-absolute URLs', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('/home/users/fnord');
+      test('http:example.com');
+      test('http:example.com/foo');
+      test('http:/example.com');
+      test('http://example.com'); // Needs final slash.
     });
 
-    it('should throw an Error if value has auth info', () => {
-      assert.throws(() => TString.urlAbsolute('http://user@example.com/'));
-      assert.throws(() => TString.urlAbsolute('http://user:pass@example.com/'));
+    it('rejects non-URLs', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('');
+      test('this better not work!');
+      test(5.1);
+      test(undefined);
+      test(null);
+    });
+
+    it('rejects URLs with auth info', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('http://user@example.com/');
+      test('http://user:pass@example.com/');
+    });
+
+    it('rejects URLs with a query', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('https://milk.com/?a=10');
+      test('https://milk.com/?x=1&y=2');
+      test('http://milk.com/bcd?e=10');
+      test('http://milk.com/bcd/efgh?i=123&jkl=234');
+    });
+
+    it('rejects URLs with a hash', () => {
+      function test(value) {
+        assert.throws(() => TString.urlAbsolute(value), /badValue/, inspect(value));
+      }
+
+      test('https://milk.com/#florp');
+      test('http://milk.com/bcd#florp');
+      test('http://milk.com/bcd/efgh#florp');
     });
   });
 
   describe('urlOrigin()', () => {
-    it('should return the provided value if it is an origin-only URL', () => {
+    it('accepts origin-only URLs', () => {
       let which = 0;
       function test(value) {
         which++;
@@ -413,22 +456,36 @@ describe('@bayou/typecheck/TString', () => {
       test('http://florp.co.uk:123');
     });
 
-    it('should throw an Error if value is not an origin-only URL', () => {
-      assert.throws(() => TString.urlOrigin('http://foo.bar/'));
-      assert.throws(() => TString.urlOrigin('http://foo.bar/x'));
-      assert.throws(() => TString.urlOrigin('https://foo@bar.com'));
-      assert.throws(() => TString.urlOrigin('https://florp:like@example.com'));
+    it('rejects URLs that are not origin-only', () => {
+      function test(value) {
+        assert.throws(() => TString.urlOrigin(value), /badValue/, inspect(value));
+      }
+
+      test('http://foo.bar/'); // Shouldn't end with a slash.
+      test('http://foo.bar/x');
+      test('https://foo@bar.com');
+      test('https://florp:like@example.com');
+      test('http://foo.bar/?a=10');
+      test('http://foo.bar/x?a=10');
+      test('http://foo.bar/x/?a=10');
+      test('http://foo.bar/#123');
+      test('http://foo.bar/baz#123');
+      test('http://foo.bar/baz/#123');
     });
 
-    it('should throw an Error if value is not a URL string at all', () => {
-      assert.throws(() => TString.urlOrigin('this better not work!'));
-      assert.throws(() => TString.urlOrigin('/home/users/fnord'));
-      assert.throws(() => TString.urlOrigin('http:example.com'));
-      assert.throws(() => TString.urlOrigin('http:example.com/foo'));
-      assert.throws(() => TString.urlOrigin('http:/example.com'));
-      assert.throws(() => TString.urlOrigin(5.1));
-      assert.throws(() => TString.urlOrigin(undefined));
-      assert.throws(() => TString.urlOrigin(null));
+    it('rejects non-URLs', () => {
+      function test(value) {
+        assert.throws(() => TString.urlOrigin(value), /badValue/, inspect(value));
+      }
+
+      test('this better not work!');
+      test('/home/users/fnord');
+      test('http:example.com');
+      test('http:example.com/foo');
+      test('http:/example.com');
+      test(5.1);
+      test(undefined);
+      test(null);
     });
   });
 });

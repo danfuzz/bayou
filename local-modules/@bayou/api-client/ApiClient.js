@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, CodableError, ConnectionError, Message, Response } from '@bayou/api-common';
+import { BaseKey, CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -197,8 +197,8 @@ export default class ApiClient extends CommonBase {
   /**
    * Gets a proxy for the target with the given ID or which is controlled by the
    * given key (or which was so controlled prior to authorizing it away). The
-   * target must already have been authorized for this method to work (otherwise
-   * it is an error); use `authorizeTarget()` to perform authorization.
+   * target must already be known to this instance for this method to work
+   * (otherwise it is an error).
    *
    * @param {string|BaseKey} idOrKey ID or key for the target.
    * @returns {Proxy} Proxy which locally represents the so-identified
@@ -250,6 +250,20 @@ export default class ApiClient extends CommonBase {
     this._connectionId = id;
     this._updateLogger();
     this._log.event.open();
+
+    // Test to make sure newly-proxied objects get returned as expected.
+    // **TODO:** Remove this once we have unit test coverage for this
+    // functionality.
+    /*
+    (async () => {
+      const counter = await this.meta.makeCounter();
+      this._log.info('Got counter:', counter);
+      const c0 = await counter.count();
+      const c1 = await counter.count();
+      const c2 = await counter.count();
+      this._log.info('Got counts:', c0, c1, c2);
+    })();
+    */
 
     return true;
   }
@@ -342,7 +356,12 @@ export default class ApiClient extends CommonBase {
         callback.reject(rejectReason);
       } else {
         this._log.detail(`Resolve ${id}:`, result);
-        callback.resolve(result);
+        if (result instanceof Remote) {
+          // The result is a proxied object, not a regular value.
+          callback.resolve(this._targets.addOrGet(result.targetId));
+        } else {
+          callback.resolve(result);
+        }
       }
     } else {
       // See above about `server_bug`.
@@ -384,8 +403,11 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
-   * Init or reset the state having to do with an active connection. See the
-   * constructor for documentation about these fields.
+   * Gets a proxy
+
+  /**
+   * Initializes or resets the state having to do with an active connection. See
+   * the constructor for documentation about these fields.
    */
   _resetConnection() {
     this._ws              = null;

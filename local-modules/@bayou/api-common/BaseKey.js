@@ -2,10 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
+// module, which is why this is possible to import regardless of environment.
+import crypto from 'crypto';
+
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors, URL } from '@bayou/util-common';
+import { CommonBase, Errors, Random, URL } from '@bayou/util-common';
 
 import TargetId from './TargetId';
 
@@ -20,12 +24,11 @@ import TargetId from './TargetId';
  * Instances of this (base) class hold two pieces of information:
  *
  * * A URL at which the resource is available.
- * * The ID of the resource.
+ * * The ID of the resource. **Note:** The ID is _not_ meant to require secrecy
+ *   in order for the system to be secure. That is, IDs are not required to be
+ *   unguessable.
  *
  * In addition, subclasses can include additional information.
- *
- * **Note:** The resource ID is _not_ meant to require secrecy in order for
- * the system to be secure. That is, IDs are not required to be unguessable.
  */
 export default class BaseKey extends CommonBase {
   /**
@@ -86,11 +89,6 @@ export default class BaseKey extends CommonBase {
     return new URL(this._url).origin;
   }
 
-  /** {string} URL at which the resource may be accessed, or `*`. */
-  get url() {
-    return this._url;
-  }
-
   /** {string} Key / resource identifier. */
   get id() {
     return this._id;
@@ -98,11 +96,16 @@ export default class BaseKey extends CommonBase {
 
   /**
    * {string} Printable and security-safe (i.e. redacted if necessary) form of
-   * the token. This includes an "ASCII ellipsis" (`...`) if to indicate
-   * redaction.
+   * the token. This will include an "ASCII ellipsis" (`...`) if needed, to
+   * indicate redaction.
    */
-  get printableId() {
-    return this._impl_printableId();
+  get safeString() {
+    return TString.check(this._impl_safeString());
+  }
+
+  /** {string} URL at which the resource may be accessed, or `*`. */
+  get url() {
+    return this._url;
   }
 
   /**
@@ -112,33 +115,30 @@ export default class BaseKey extends CommonBase {
    *
    * @param {string} challenge The challenge. This must be a string which was
    *   previously returned as the `challenge` binding from a call to
-   *   `makeChallenge()` (either in this process or any other).
+   *   {@link #makeChallenge} (either in this process or any other).
    * @returns {string} The challenge response. It is guaranteed to be at least
    *   16 characters long.
    */
   challengeResponseFor(challenge) {
-    TString.minLen(challenge, 16);
-    const response = this._impl_challengeResponseFor(challenge);
-    return TString.minLen(response, 16);
+    TString.hexBytes(challenge, 8, 8);
+
+    const secret = TString.nonEmpty(this._impl_challengeSecret());
+    const hash   = crypto.createHash('sha256');
+
+    hash.update(Buffer.from(challenge, 'hex'));
+    hash.update(Buffer.from(secret, 'hex'));
+
+    return hash.digest('hex');
   }
 
   /**
-   * Main implementation of `challengeResponseFor()`. By default this throws
-   * an error ("not implemented"). Subclasses wishing to support challenges
-   * must override this to do something else.
-   *
-   * @param {string} challenge The challenge. It is guaranteed to be a string of
-   *   at least 16 characters.
-   * @returns {string} The challenge response.
-   */
-  _impl_challengeResponseFor(challenge) {
-    return this._mustOverride(challenge);
-  }
-
-  /**
-   * Custom inspector function, as called by `util.inspect()`. This
-   * implementation redacts the contents so as to prevent inadvertent logging of
-   * the secret values.
+   * Custom inspector function, as called by `util.inspect()`, which returns a
+   * string that identifies the class and includes just the URL and ID
+   * properties. The main point of this implementation is to make it so that
+   * subclasses can define additional properties which are security-sensitive
+   * without worrying about those properties ending up in the `inspect()`
+   * output. (That is, subclasses don't have to override this method in order to
+   * ensure good security hygiene with respect to stringification.)
    *
    * @param {Int} depth_unused Current inspection depth.
    * @param {object} opts Inspection options.
@@ -149,7 +149,7 @@ export default class BaseKey extends CommonBase {
 
     return (opts.depth < 0)
       ? `${name} {...}`
-      : `${name} { ${this._url} ${this.printableId} }`;
+      : `${name} { ${this._url} ${this.id} }`;
   }
 
   /**
@@ -160,34 +160,43 @@ export default class BaseKey extends CommonBase {
    *   string and `response` to the expected response.
    */
   makeChallengePair() {
-    const challenge = this._impl_randomChallengeString();
+    const challenge = BaseKey._randomChallengeString();
     const response  = this.challengeResponseFor(challenge);
 
-    TString.minLen(challenge, 16);
     return { challenge, response };
   }
 
   /**
-   * Creates and returns a random challenge string. The returned string must be
-   * at least 16 characters long but may be longer. By default this throws an
-   * error ("not implemented"). Subclasses wishing to support challenges must
-   * override this to do something else.
+   * Value which should be used as the secret for this instance, when
+   * constructing a challenge-response pair. Subclasses wishing to support
+   * challenges must override this.
    *
-   * @returns {string} A random challenge string.
+   * @abstract
+   * @returns {string} The secret to use for challenges. Must be a non-empty
+   *   string of hexadecimal digits.
    */
-  _impl_randomChallengeString() {
+  _impl_challengeSecret() {
     return this._mustOverride();
   }
 
   /**
-   * Gets the printable form of the ID. This defaults to the same as `.id`,
-   * but subclasses can override this if they want to produce something
-   * different. If the form has any redaction, it should use `...` (an ASCII
-   * ellipsis) to indicate that fact.
+   * Main implementation of {@link #safeString}. Subclasses must provide an
+   * implementation of this.
    *
-   * @returns {string} The printable form of the ID.
+   * @abstract
+   * @returns {string} The redacted string form of this instance.
    */
-  _impl_printableId() {
-    return this.id;
+  _impl_safeString() {
+    return this._mustOverride();
+  }
+
+  /**
+   * Creates and returns a random challenge string, as a sequence of hexadecimal
+   * digits.
+   *
+   * @returns {string} A random challenge string.
+   */
+  static _randomChallengeString() {
+    return Random.hexByteString(8);
   }
 }

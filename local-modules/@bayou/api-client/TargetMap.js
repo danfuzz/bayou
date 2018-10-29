@@ -18,11 +18,14 @@ export default class TargetMap extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {function} sendMessage Function to call to send a message. This is
-   *   bound to the private `_send()` method on an instance of
-   *   {@link ApiClient}. (This arrangement is done, instead of making a public
-   *   `send()` method on {@link ApiClient}, so as to make it clear that the
-   *   right way to send messages is via the exposed proxies.)
+   * @param {function} sendMessage Function to call to send a message. It is
+   *   called with two arguments, `targetId` (a string) and `payload` (a
+   *   functor). This is typically bound to the private `_send()` method on an
+   *   instance of {@link ApiClient}. (This arrangement is done, instead of
+   *   making a public `send()` method on {@link ApiClient}, so as to make it
+   *   clear that the right way to send messages is via the exposed proxies.
+   *   This arrangement also makes it possible to test this class in isolation
+   *   from the higher layer.)
    */
   constructor(sendMessage) {
     super();
@@ -55,6 +58,19 @@ export default class TargetMap extends CommonBase {
     const result = TargetHandler.makeProxy(this._sendMessage, id);
     this._targets.set(id, result);
     return result;
+  }
+
+  /**
+   * Adds the target as if by {@link #add} if not already bound, or returns the
+   * pre-existing binding as if by {@link #get}.
+   *
+   * @param {string} id Target ID.
+   * @returns {Proxy} The corresponding proxy.
+   */
+  addOrGet(id) {
+    const already = this.getOrNull(id);
+
+    return (already === null) ? this.add(id) : already;
   }
 
   /**

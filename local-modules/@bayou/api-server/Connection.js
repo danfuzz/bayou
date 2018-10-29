@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { ProxiedObject } from '@bayou/api-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
@@ -49,9 +50,6 @@ export default class Connection extends CommonBase {
      * _Probably_ but not _guaranteed_ to be unique.
      */
     this._connectionId = Random.shortLabel('conn');
-
-    /** {Int} Count of messages received. Used for liveness logging. */
-    this._messageCount = 0;
 
     /** {Codec} The codec to use. */
     this._codec = context.codec;
@@ -169,10 +167,16 @@ export default class Connection extends CommonBase {
 
   /**
    * Helper for `handleJsonMessage()` which actually performs the method call
-   * requested by the given message. Because `undefined` is not used on the API,
-   * a top-level `undefined` result (which, e.g., is what is returned from a
-   * method that just falls through to the end or `return`s without specifying
-   * a value) is replaced by `null`.
+   * requested by the given message.
+   *
+   * Because `undefined` is not used across the API boundary, a top-level
+   * `undefined` result (which, notably, is what is returned from a method that
+   * just falls through to the end or `return`s without specifying a value) is
+   * replaced by `null`.
+   *
+   * In addition, if the result is an instance of {@link ProxiedObject}, it
+   * is replaced with a {@link Remote} which can represent it across the API
+   * boundary.
    *
    * @param {Message} msg Parsed message.
    * @returns {*} Whatever the called method returns, except `null` replacing
@@ -182,7 +186,19 @@ export default class Connection extends CommonBase {
     const target = await this._getTarget(msg.targetId);
     const result = await target.call(msg.payload);
 
-    return (result === undefined) ? null : result;
+    if (result === undefined) {
+      // See method header comment.
+      return null;
+    } else if (result instanceof ProxiedObject) {
+      // The result isn't a regular encodable value. Instead, it will end up
+      // proxied across the connection. This is achieved by encoding it as a
+      // `Remote`, which the far side of the connection will convert into a
+      // proxy on its side. **TODO:** This conversion shouldn't just be limited
+      // to direct return values.
+      return this._context.getRemoteFor(result);
+    } else {
+      return result;
+    }
   }
 
   /**
