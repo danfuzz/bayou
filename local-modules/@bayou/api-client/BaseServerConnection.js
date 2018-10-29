@@ -5,7 +5,7 @@
 import { EventSource, CallPiler } from '@bayou/prom-util';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors, Functor } from '@bayou/util-common';
+import { CommonBase, Functor } from '@bayou/util-common';
 
 /** {string} Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id_unknown';
@@ -31,15 +31,6 @@ export default class BaseServerConnection extends CommonBase {
 
   /** {string} Event name to use for the very first event emitted. */
   static get EVENT_start() { return 'start'; }
-
-  /** {string} Connection state "closed" (no currenct connection). */
-  static get STATE_closed() { return 'closed'; }
-
-  /** {string} Connection state "opening" (in the process of becoming open). */
-  static get STATE_opening() { return 'opening'; }
-
-  /** {string} Connection state "open" (open and active). */
-  static get STATE_open() { return 'open'; }
 
   /**
    * Constructs an instance. Once constructed, it is valid to send messages
@@ -117,31 +108,6 @@ export default class BaseServerConnection extends CommonBase {
    */
   get log() {
     return this._log;
-  }
-
-  /**
-   * {string} State of the connection. One of the static `STATE_*` constants
-   * defined by this class. It is up to subclasses to update this value.
-   */
-  get state() {
-    return this._state;
-  }
-
-  set state(state) {
-    switch (state) {
-      case BaseServerConnection.STATE_closed:
-      case BaseServerConnection.STATE_open:
-      case BaseServerConnection.STATE_opening: {
-        // Valid.
-        break;
-      }
-
-      default: {
-        throw Errors.badValue(state, String, 'connection state');
-      }
-    }
-
-    this._state = state;
   }
 
   /**
