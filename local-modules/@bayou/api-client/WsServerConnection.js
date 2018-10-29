@@ -131,8 +131,7 @@ export default class WsServerConnection extends BaseServerConnection {
   }
 
   /**
-   * Handles a `close` event coming from a websocket. This logs the closure and
-   * terminates all active messages by rejecting their promises.
+   * Handles a `close` event coming from a websocket.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -148,10 +147,6 @@ export default class WsServerConnection extends BaseServerConnection {
    * Handles an `error` event coming from a websocket. This behaves similarly
    * to the `close` event.
    *
-   * **Note:** Because errors in this case are typically due to transient
-   * connection issues (e.g. network went away) and not due to fundamental
-   * system issues, this is logged as `info` and not `error` (or `warn`).
-   *
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
@@ -164,11 +159,7 @@ export default class WsServerConnection extends BaseServerConnection {
   }
 
   /**
-   * Handles a `message` event coming from a websocket. In this case, messages
-   * are expected to be the responses from previously-sent messages (e.g.
-   * method calls), encoded as JSON. The `id` of the response is used to look up
-   * the callback function in `this._callbacks`. That callback is then called in
-   * a separate turn.
+   * Handles a `message` event coming from a websocket.
    *
    * @param {object} event Event that caused this callback.
    */
@@ -178,9 +169,7 @@ export default class WsServerConnection extends BaseServerConnection {
   }
 
   /**
-   * Handles an `open` event coming from a websocket. In this case, it sends
-   * any pending messages (that were enqueued while the socket was still in the
-   * process of opening).
+   * Handles an `open` event coming from a websocket.
    *
    * @param {object} event Event that caused this callback.
    */
