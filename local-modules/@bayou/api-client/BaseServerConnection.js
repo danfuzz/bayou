@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { EventSource, CallPiler } from '@bayou/prom-util';
+import { EventSource, CallPiler } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Functor } from '@bayou/util-common';
