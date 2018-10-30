@@ -56,7 +56,7 @@ export default class WsServerConnection extends BaseServerConnection {
    * @abstract
    */
   async _impl_beReceiving() {
-    return this._ensureOpen();
+    await this._ensureOpen();
   }
 
   /**

@@ -170,7 +170,7 @@ export default class BaseServerConnection extends CommonBase {
   async sendAll() {
     // Call `_sendAll()` if not already in progress, or if in progress merely
     // wait for the return of that in-progress call.
-    return this._sendAllPiler.call();
+    await this._sendAllPiler.call();
   }
 
   /**
@@ -180,7 +180,7 @@ export default class BaseServerConnection extends CommonBase {
    * @abstract
    */
   async _impl_beReceiving() {
-    return this._mustOverride();
+    this._mustOverride();
   }
 
   /**
@@ -197,7 +197,7 @@ export default class BaseServerConnection extends CommonBase {
    * @param {string} message The message to send.
    */
   async _impl_sendMessage(message) {
-    return this._mustOverride(message);
+    this._mustOverride(message);
   }
 
   /**
