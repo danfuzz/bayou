@@ -213,14 +213,14 @@ export default class Connection extends CommonBase {
     try {
       msg = this._codec.decodeJson(msg);
     } catch (error) {
-      return ConnectionError.connection_nonsense(this._connectionId, error.message);
+      return ConnectionError.connectionNonsense(this._connectionId, error.message);
     }
 
     if (msg instanceof Message) {
       return msg;
     }
 
-    return ConnectionError.connection_nonsense(
+    return ConnectionError.connectionNonsense(
       this._connectionId, 'Did not receive `Message` object.');
   }
 
@@ -241,7 +241,7 @@ export default class Connection extends CommonBase {
     const context = this._context;
 
     if (context === null) {
-      throw ConnectionError.connection_closed(this._connectionId, 'Connection closed.');
+      throw ConnectionError.connectionClosed(this._connectionId, 'Connection closed.');
     }
 
     return context.getAuthorizedTarget(idOrToken);

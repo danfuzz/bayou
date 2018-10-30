@@ -18,8 +18,15 @@ describe('@bayou/api-common/Message', () => {
       assert.doesNotThrow(() => new Message(37, 'target', VALID_FUNCTOR));
     });
 
-    it('rejects `id`s which are not non-negative integers', () => {
-      assert.throws(() => new Message('this better not work!', 'foo', VALID_FUNCTOR));
+    it('accepts string `id`s of appropriate length', () => {
+      assert.doesNotThrow(() => new Message('12345678', 'target', VALID_FUNCTOR));
+      assert.doesNotThrow(() => new Message('abcdefghijklmnop', 'target', VALID_FUNCTOR));
+    });
+
+    it('rejects `id`s which are not non-negative integers or appropriate-length strings', () => {
+      assert.throws(() => new Message('', 'foo', VALID_FUNCTOR));
+      assert.throws(() => new Message('nope', 'foo', VALID_FUNCTOR));
+      assert.throws(() => new Message('nopenop', 'foo', VALID_FUNCTOR));
       assert.throws(() => new Message(3.7, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(true, 'target', VALID_FUNCTOR));
       assert.throws(() => new Message(null, 'target', VALID_FUNCTOR));
@@ -69,9 +76,11 @@ describe('@bayou/api-common/Message', () => {
 
   describe('.id', () => {
     it('is the constructed `id`', () => {
-      const msg = new Message(1234, 'target', VALID_FUNCTOR);
+      const msg1 = new Message(1234, 'target', VALID_FUNCTOR);
+      const msg2 = new Message('xyzxyzxyz', 'target', VALID_FUNCTOR);
 
-      assert.strictEqual(msg.id, 1234);
+      assert.strictEqual(msg1.id, 1234);
+      assert.strictEqual(msg2.id, 'xyzxyzxyz');
     });
   });
 

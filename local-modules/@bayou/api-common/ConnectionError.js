@@ -20,10 +20,10 @@ export default class ConnectionError extends InfoError {
    * @param {string} detail Human-oriented detail message about the problem.
    * @returns {ConnectionError} An appropriately-constructed error.
    */
-  static connection_closed(connectionId, detail) {
+  static connectionClosed(connectionId, detail) {
     TString.check(connectionId);
     TString.check(detail);
-    return new ConnectionError('connection_closed', connectionId, detail);
+    return new ConnectionError('connectionClosed', connectionId, detail);
   }
 
   /**
@@ -34,9 +34,9 @@ export default class ConnectionError extends InfoError {
    * @param {string} connectionId Connection ID string.
    * @returns {ConnectionError} An appropriately-constructed error.
    */
-  static connection_closing(connectionId) {
+  static connectionClosing(connectionId) {
     TString.check(connectionId);
-    return new ConnectionError('connection_closing', connectionId);
+    return new ConnectionError('connectionClosing', connectionId);
   }
 
   /**
@@ -46,9 +46,9 @@ export default class ConnectionError extends InfoError {
    * @param {string} connectionId Connection ID string.
    * @returns {ConnectionError} An appropriately-constructed error.
    */
-  static connection_error(connectionId) {
+  static connectionError(connectionId) {
     TString.check(connectionId);
-    return new ConnectionError('connection_error', connectionId);
+    return new ConnectionError('connectionError', connectionId);
   }
 
   /**
@@ -60,10 +60,10 @@ export default class ConnectionError extends InfoError {
    * @param {string} detail Human-oriented detail message about the problem.
    * @returns {ConnectionError} An appropriately-constructed error.
    */
-  static connection_nonsense(connectionId, detail) {
+  static connectionNonsense(connectionId, detail) {
     TString.check(connectionId);
     TString.check(detail);
-    return new ConnectionError('connection_nonsense', connectionId, detail);
+    return new ConnectionError('connectionNonsense', connectionId, detail);
   }
 
   /**

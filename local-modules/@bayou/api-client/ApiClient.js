@@ -293,7 +293,7 @@ export default class ApiClient extends CommonBase {
 
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
-    const error = ConnectionError.connection_closed(this._connectionId, desc);
+    const error = ConnectionError.connectionClosed(this._connectionId, desc);
 
     this._handleTermination(event, error);
   }
@@ -314,7 +314,7 @@ export default class ApiClient extends CommonBase {
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the
     // `ConnectionError` description.
-    const error = ConnectionError.connection_error(this._connectionId);
+    const error = ConnectionError.connectionError(this._connectionId);
     this._handleTermination(event, error);
   }
 
@@ -333,7 +333,7 @@ export default class ApiClient extends CommonBase {
     const response = this._codec.decodeJson(event.data);
 
     if (!(response instanceof Response)) {
-      throw ConnectionError.connection_nonsense(this._connectionId, 'Got strange response.');
+      throw ConnectionError.connectionNonsense(this._connectionId, 'Got strange response.');
     }
 
     const { id, result, error } = response;
@@ -351,7 +351,7 @@ export default class ApiClient extends CommonBase {
         // transparently and straightforwardly (e.g. and notably, they don't
         // have to "unwrap" the errors in the usual case), while still being
         // able to ascertain the foreign origin of the errors when warranted.
-        const remoteCause = new CodableError('remote_error', this.connectionId);
+        const remoteCause = CodableError.remoteError(this.connectionId);
         const rejectReason = new CodableError(remoteCause, error.info);
         callback.reject(rejectReason);
       } else {
@@ -365,7 +365,7 @@ export default class ApiClient extends CommonBase {
       }
     } else {
       // See above about `server_bug`.
-      throw ConnectionError.connection_nonsense(this._connectionId, `Orphan call for ID ${id}.`);
+      throw ConnectionError.connectionNonsense(this._connectionId, `Orphan call for ID ${id}.`);
     }
   }
 
@@ -448,10 +448,10 @@ export default class ApiClient extends CommonBase {
         // The detail string here differentiates this case from cases where the
         // API message was already queued up or sent before the websocket became
         // closed.
-        return Promise.reject(ConnectionError.connection_closed(this._connectionId, 'Already closed.'));
+        return Promise.reject(ConnectionError.connectionClosed(this._connectionId, 'Already closed.'));
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(this.connection_closing(this._connectionId));
+        return Promise.reject(ConnectionError.connectionClosing(this._connectionId));
       }
     }
 

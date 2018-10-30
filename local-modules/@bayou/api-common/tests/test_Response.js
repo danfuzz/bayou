@@ -25,7 +25,16 @@ describe('@bayou/api-common/Response', () => {
       test(12345);
     });
 
-    it('rejects `id`s which are not non-negative integers', () => {
+    it('accepts string `id`s of appropriate length', () => {
+      function test(id) {
+        assert.doesNotThrow(() => new Response(id, 'x'), /badValue/);
+      }
+
+      test('12345678');
+      test('abcdefghijklmnopqrstuvwxyz');
+    });
+
+    it('rejects `id`s which are not non-negative integers or appropriate-length strings', () => {
       function test(id) {
         assert.throws(() => new Response(id, 'x'), /badValue/);
       }
@@ -34,9 +43,12 @@ describe('@bayou/api-common/Response', () => {
       test(0.5);
       test(NaN);
 
+      test('');
+      test('1');
+      test('1234567');
+
       test(undefined);
       test(null);
-      test('123');
       test([]);
     });
 
@@ -101,7 +113,7 @@ describe('@bayou/api-common/Response', () => {
 
     it('is a `CodableError` with the message in the payload when the constructed `error` was not an `InfoError`', () => {
       const e      = new Error('Yikes!');
-      const expect = new CodableError('general_error', 'Yikes!');
+      const expect = CodableError.generalError('Yikes!');
       const r      = new Response(1, null, e);
 
       assert.instanceOf(r.error, CodableError);

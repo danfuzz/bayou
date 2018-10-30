@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt } from '@bayou/typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Functor } from '@bayou/util-common';
 
 import TargetId from './TargetId';
@@ -16,8 +16,8 @@ export default class Message extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} id Message ID, used to match requests and responses. Must be
-   *   a non-negative integer.
+   * @param {Int|string} id Message ID, used to match requests and responses.
+   *   Must be a non-negative integer or a string of at least eight characters.
    * @param {string} targetId ID of the target object to send to.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
@@ -25,8 +25,10 @@ export default class Message extends CommonBase {
   constructor(id, targetId, payload) {
     super();
 
-    /** {Int} Message ID. */
-    this._id = TInt.nonNegative(id);
+    /** {Int|string} Message ID. */
+    this._id = ((typeof id) === 'number')
+      ? TInt.nonNegative(id)
+      : TString.minLen(id, 8);
 
     /** {string} ID of the target object. */
     this._targetId = TargetId.check(targetId);
@@ -49,7 +51,7 @@ export default class Message extends CommonBase {
     return [this._id, this._targetId, this._payload];
   }
 
-  /** {Int} Message ID. */
+  /** {Int|string} Message ID. */
   get id() {
     return this._id;
   }

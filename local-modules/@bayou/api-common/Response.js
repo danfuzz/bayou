@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TInt, TObject } from '@bayou/typecheck';
-import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
+import { TInt, TObject, TString } from '@bayou/typecheck';
+import { CommonBase, ErrorUtil, Errors, InfoError } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 
@@ -19,8 +19,8 @@ export default class Response extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {Int} id Message ID, used to match requests and responses. Must be
-   *   a non-negative integer.
+   * @param {Int|string} id Message ID, used to match requests and responses.
+   *   Must be a non-negative integer or a string of at least eight characters.
    * @param {*} result Non-error result. Must be `null` if `error` is non-`null`
    *   (but note that `null` is a valid non-error result).
    * @param {Error|null} [error = null] Error response, or `null` if there is no
@@ -35,8 +35,10 @@ export default class Response extends CommonBase {
       throw Errors.badUse('`result` and `error` cannot both be non-`null`.');
     }
 
-    /** {Int} Message ID. */
-    this._id = TInt.nonNegative(id);
+    /** {Int|string} Message ID. */
+    this._id = ((typeof id) === 'number')
+      ? TInt.nonNegative(id)
+      : TString.minLen(id, 8);
 
     /**
      * {*} Non-error result, if any. Always `null` if this is an error
@@ -131,7 +133,7 @@ export default class Response extends CommonBase {
       return new CodableError(error.info);
     } else {
       // Adopt the message. Lose the rest of the info.
-      return new CodableError(new Functor('general_error', error.message));
+      return CodableError.generalError(error.message);
     }
   }
 }
