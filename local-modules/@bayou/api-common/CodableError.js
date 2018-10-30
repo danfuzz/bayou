@@ -19,6 +19,23 @@ export default class CodableError extends InfoError {
   }
 
   /**
+   * Constructs a "general" error (no particularly well-structured payload),
+   * meant to be a catch-all for when there's nothing better that can be thrown.
+   *
+   * @param {...*} args Arbitrary arguments. If the first argument is an
+   *   `Error`, it is treated as the error "cause."
+   * @returns {CodableError} An appropriately-constructed error.
+   */
+  static generalError(...args) {
+    if (args[0] instanceof Error) {
+      const [cause, ...rest] = args;
+      return new CodableError(cause, 'generalError', ...rest);
+    } else {
+      return new CodableError('generalError', ...args);
+    }
+  }
+
+  /**
    * Constructs an instance. Arguments are the same as for {@link InfoError}.
    *
    * **Note:** If a `cause` argument is given, the constructed instance will
@@ -79,14 +96,14 @@ export default class CodableError extends InfoError {
 
     if (error instanceof InfoError) {
       if (error.cause === null) {
-        return new CodableError(error.info);
+        return CodableError.generalError(error.info);
       } else {
-        return new CodableError(error.cause, error.info);
+        return CodableError.generalError(error.cause, error.info);
       }
     }
 
     // It's an `Error` outside of the control of this system. The best we can do
     // is re-encapsulate its `name` and `message`.
-    return new CodableError('general_error', error.name, error.message);
+    return CodableError.generalError(error.name, error.message);
   }
 }

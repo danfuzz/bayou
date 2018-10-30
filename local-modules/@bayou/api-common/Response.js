@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TInt, TObject } from '@bayou/typecheck';
-import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
+import { CommonBase, ErrorUtil, Errors, InfoError } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 
@@ -131,7 +131,7 @@ export default class Response extends CommonBase {
       return new CodableError(error.info);
     } else {
       // Adopt the message. Lose the rest of the info.
-      return new CodableError(new Functor('general_error', error.message));
+      return CodableError.generalError(error.message);
     }
   }
 }

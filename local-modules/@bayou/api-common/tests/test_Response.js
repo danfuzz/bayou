@@ -101,7 +101,7 @@ describe('@bayou/api-common/Response', () => {
 
     it('is a `CodableError` with the message in the payload when the constructed `error` was not an `InfoError`', () => {
       const e      = new Error('Yikes!');
-      const expect = new CodableError('general_error', 'Yikes!');
+      const expect = CodableError.generalError('Yikes!');
       const r      = new Response(1, null, e);
 
       assert.instanceOf(r.error, CodableError);
