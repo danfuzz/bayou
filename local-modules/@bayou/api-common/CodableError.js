@@ -4,6 +4,7 @@
 
 import { inspect } from 'util';
 
+import { TString } from '@bayou/typecheck';
 import { InfoError } from '@bayou/util-common';
 
 /**
@@ -33,6 +34,21 @@ export default class CodableError extends InfoError {
     } else {
       return new CodableError('generalError', ...args);
     }
+  }
+
+  /**
+   * Constructs an error meant to be used as a "cause" to indicate that the
+   * linked error originated from the far side of a connection.
+   *
+   * **TODO:** Maybe this should be defined on `ConnectionError` instead?
+   *
+   * @param {String} connectionId ID of the connection from which the linked
+   *   error came.
+   * @returns {CodableError} An appropriately-constructed error.
+   */
+  static remoteError(connectionId) {
+    TString.nonEmpty(connectionId);
+    return new CodableError('remoteError', connectionId);
   }
 
   /**

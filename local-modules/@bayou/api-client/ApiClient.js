@@ -351,7 +351,7 @@ export default class ApiClient extends CommonBase {
         // transparently and straightforwardly (e.g. and notably, they don't
         // have to "unwrap" the errors in the usual case), while still being
         // able to ascertain the foreign origin of the errors when warranted.
-        const remoteCause = new CodableError('remote_error', this.connectionId);
+        const remoteCause = CodableError.remoteError(this.connectionId);
         const rejectReason = new CodableError(remoteCause, error.info);
         callback.reject(rejectReason);
       } else {
