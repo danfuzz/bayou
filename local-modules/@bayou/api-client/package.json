@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@bayou/api-common": "local",
+    "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
