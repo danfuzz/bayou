@@ -14,6 +14,9 @@ import TargetMap from './TargetMap';
  * API connection with a server. This is a layer on top of
  * {@link BaseServerConnection} which provides API semantics, not just sending
  * and receiving of (uninterpreted) data blobs.
+ *
+ * **TODO:** This class is an as-yet nonfunctional work-in-progress. See the
+ * header comment in {@link ApiClient} for more details.
  */
 export default class ApiClientNew extends CommonBase {
   /**

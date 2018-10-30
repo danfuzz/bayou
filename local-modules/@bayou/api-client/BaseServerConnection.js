@@ -21,6 +21,9 @@ const log = new Logger('api-conn');
  *
  * **Note:** At this layer, messages are all strings. **TODO:** They should be
  * binary (arrays of bytes) instead.
+ *
+ * **TODO:** This class is an as-yet nonfunctional work-in-progress. See the
+ * header comment in {@link ApiClient} for more details.
  */
 export default class BaseServerConnection extends CommonBase {
   /** {string} Event name to use for received messages. */

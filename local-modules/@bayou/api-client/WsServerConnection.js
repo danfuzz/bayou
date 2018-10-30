@@ -10,6 +10,9 @@ import BaseServerConnection from './BaseServerConnection';
 /**
  * Server connection handler which uses a websocket to communicate with a
  * server, using the standard URI endpoint `/api`.
+ *
+ * **TODO:** This class is an as-yet nonfunctional work-in-progress. See the
+ * header comment in {@link ApiClient} for more details.
  */
 export default class WsServerConnection extends BaseServerConnection {
   /**
