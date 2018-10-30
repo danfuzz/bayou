@@ -4,6 +4,7 @@
 
 import { inspect } from 'util';
 
+import { TString } from '@bayou/typecheck';
 import { InfoError } from '@bayou/util-common';
 
 /**
@@ -16,6 +17,38 @@ export default class CodableError extends InfoError {
   /** {string} Name of this class for the sake of API coding. */
   static get CODEC_TAG() {
     return 'Error';
+  }
+
+  /**
+   * Constructs a "general" error (no particularly well-structured payload),
+   * meant to be a catch-all for when there's nothing better that can be thrown.
+   *
+   * @param {...*} args Arbitrary arguments. If the first argument is an
+   *   `Error`, it is treated as the error "cause."
+   * @returns {CodableError} An appropriately-constructed error.
+   */
+  static generalError(...args) {
+    if (args[0] instanceof Error) {
+      const [cause, ...rest] = args;
+      return new CodableError(cause, 'generalError', ...rest);
+    } else {
+      return new CodableError('generalError', ...args);
+    }
+  }
+
+  /**
+   * Constructs an error meant to be used as a "cause" to indicate that the
+   * linked error originated from the far side of a connection.
+   *
+   * **TODO:** Maybe this should be defined on `ConnectionError` instead?
+   *
+   * @param {String} connectionId ID of the connection from which the linked
+   *   error came.
+   * @returns {CodableError} An appropriately-constructed error.
+   */
+  static remoteError(connectionId) {
+    TString.nonEmpty(connectionId);
+    return new CodableError('remoteError', connectionId);
   }
 
   /**
@@ -79,14 +112,14 @@ export default class CodableError extends InfoError {
 
     if (error instanceof InfoError) {
       if (error.cause === null) {
-        return new CodableError(error.info);
+        return CodableError.generalError(error.info);
       } else {
-        return new CodableError(error.cause, error.info);
+        return CodableError.generalError(error.cause, error.info);
       }
     }
 
     // It's an `Error` outside of the control of this system. The best we can do
     // is re-encapsulate its `name` and `message`.
-    return new CodableError('general_error', error.name, error.message);
+    return CodableError.generalError(error.name, error.message);
   }
 }
