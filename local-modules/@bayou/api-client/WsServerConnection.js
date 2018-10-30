@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Condition } from '@bayou/prom-util';
+import { Condition } from '@bayou/promise-util';
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
