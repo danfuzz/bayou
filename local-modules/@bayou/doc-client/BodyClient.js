@@ -41,7 +41,7 @@ const PULL_DELAY_MSEC = 1000;
  * How long to wait (in msec) after detecting an error, before attempting to
  * restart.
  */
-const RESTART_DELAY_MSEC = 10000;
+const RESTART_DELAY_MSEC = 5 * 1000; // Five seconds.
 
 /**
  * Tag used to identify this module as the source of a Quill event or action.
