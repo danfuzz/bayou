@@ -67,6 +67,20 @@ export default class ConnectionError extends InfoError {
   }
 
   /**
+   * Constructs an error indicating that the _local_ side of the API received a
+   * target ID that it didn't already know about.
+   *
+   * @param {string} connectionId Connection ID string.
+   * @param {string} targetId ID of the target in question.
+   * @returns {ConnectionError} An appropriately-constructed error.
+   */
+  static unknownTargetId(connectionId, targetId) {
+    TString.check(connectionId);
+    TString.check(targetId);
+    return new ConnectionError('unknownTargetId', connectionId, targetId);
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {...*} args Constructor arguments, as described by `InfoError`.
