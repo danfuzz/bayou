@@ -174,7 +174,7 @@ export default class ApiClient extends CommonBase {
     if (result) {
       // We have already initiated authorization on this target. Return the
       // promise from the original initiation.
-      this._log.info('Already authing:', id);
+      this._log.event.concurrentAuth(id);
       return result;
     }
 
@@ -243,9 +243,8 @@ export default class ApiClient extends CommonBase {
       return true;
     } else if (this._ws !== null) {
       // In the middle of getting opened. Arguably this should do something a
-      // bit more efficient (instead of issuing a separate API call), but also
-      // this shouldn't ever happen, so it's not that big a deal.
-      this._log.info('open() called while in the middle of opening.');
+      // bit more efficient (instead of issuing a separate API call).
+      this._log.event.concurrentOpen();
       await this.meta.ping();
       return true;
     }
