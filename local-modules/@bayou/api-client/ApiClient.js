@@ -434,11 +434,11 @@ export default class ApiClient extends CommonBase {
    * @param {string} target Name of the target object.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
-   * @returns {Promise} Promise for the result (or error) of the call. In the
-   *   case of an error, the rejection reason will always be an instance of
-   *   `ConnectionError` (see which for details).
+   * @returns {*} Result or error returned by the remote call. In the case of an
+   *   error, the rejection reason will always be an instance of
+   *  {@link ConnectionError} (see which for details).
    */
-  _send(target, payload) {
+  async _send(target, payload) {
     const wsState = (this._ws === null)
       ? WebSocket.CLOSED
       : this._ws.readyState;
