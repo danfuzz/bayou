@@ -79,13 +79,4 @@ export default class ConnectionError extends InfoError {
     TString.check(targetId);
     return new ConnectionError('unknownTargetId', connectionId, targetId);
   }
-
-  /**
-   * Constructs an instance.
-   *
-   * @param {...*} args Constructor arguments, as described by `InfoError`.
-   */
-  constructor(...args) {
-    super(...args);
-  }
 }
