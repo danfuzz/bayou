@@ -19,7 +19,7 @@ const log = new Logger('api');
  * {Int} The amount of time in msec a target must be idle and unaccessed before
  * it is considered sufficiently idle to warrant automated cleanup.
  */
-const IDLE_TIME_MSEC = 20 * 60 * 1000; // Twenty minutes.
+const IDLE_TIME_MSEC = 4 * 60 * 60 * 1000; // Four hours.
 
 /**
  * Binding context for an API server or session therein. Instances of this class
