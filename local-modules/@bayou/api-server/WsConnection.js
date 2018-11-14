@@ -21,9 +21,7 @@ export default class WsConnection extends Connection {
   constructor(ws, req, context) {
     super(context);
 
-    // **TODO:** Remove this once we're a bit more sure about what to expect.
-    this._log.info(`Websocket host: ${req.headers.host}`);
-    this._log.info(`Websocket origin: ${req.headers.origin}`);
+    this._log.event.websocketOrigin(req.headers.origin);
 
     /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;
@@ -53,7 +51,7 @@ export default class WsConnection extends Connection {
    * @param {object} error The error event.
    */
   _handleError(error) {
-    this._log.info('Error:', error);
+    this._log.event.websocketError(error);
     this.close();
   }
 
