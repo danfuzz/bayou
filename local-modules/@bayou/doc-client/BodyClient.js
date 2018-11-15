@@ -941,8 +941,26 @@ export default class BodyClient extends StateMachine {
    * @param {BodySnapshot} snapshot New snapshot.
    */
   _updateWithSnapshot(snapshot) {
+    const selection = this._quill.getSelection();
+
     this._snapshot = BodyClient._validateSnapshot(snapshot);
     this._quill.setContents(snapshot.contents.toQuillForm(), CLIENT_SOURCE);
+
+    if (selection) {
+      // Preserve the previous selection (caret) across the content update. It
+      // will have been set if we are currently re-setting up the content after
+      // a disconnect / reconnect. Without doing this, the selection would just
+      // be reset to the start of the document (because that's what
+      // `setContents()` does). What we do here -- setting it to exactly what it
+      // was before -- is optimistic in that it's possible that the document
+      // could have changed in between the disconnect and reconnect, but it's
+      // also reasonable because much of the time it'll turn out either to be
+      // correct or not to matter. **TODO:** If we wanted to be cleverer, we
+      // could note the revision numbers of the before and after snapshots and
+      // do some OT operations (if they don't match) to transform the selection
+      // to the new state.
+      this._quill.setSelection(selection);
+    }
 
     // This prevents "undo" from backing over the snapshot. When first starting
     // up, this means the user can't undo and find themselves looking at the
