@@ -89,7 +89,13 @@ export default class ApiClient extends CommonBase {
     this._pendingMessages = null;
 
     /**
-     * {TargetMap} Map of names to target proxies. See {@link
+     * {Map<string, BaseKey>} Map of IDs to keys, for keys which have been
+     * added via {@link #authorizeTarget}.
+     */
+    this._keys = new Map();
+
+    /**
+     * {TargetMap} Map of names/IDs to target proxies. See {@link
      * TargetMap#constructor} for details about the argument.
      */
     this._targets = new TargetMap(this._send.bind(this));
@@ -168,12 +174,14 @@ export default class ApiClient extends CommonBase {
     if (result) {
       // We have already initiated authorization on this target. Return the
       // promise from the original initiation.
-      this._log.info('Already authing:', id);
+      this._log.event.concurrentAuth(id);
       return result;
     }
 
     // It's not yet bound as a target, and authorization isn't currently in
     // progress.
+
+    this._keys.set(id, key);
 
     result = (async () => {
       try {
@@ -235,9 +243,8 @@ export default class ApiClient extends CommonBase {
       return true;
     } else if (this._ws !== null) {
       // In the middle of getting opened. Arguably this should do something a
-      // bit more efficient (instead of issuing a separate API call), but also
-      // this shouldn't ever happen, so it's not that big a deal.
-      this._log.info('open() called while in the middle of opening.');
+      // bit more efficient (instead of issuing a separate API call).
+      this._log.event.concurrentOpen();
       await this.meta.ping();
       return true;
     }
@@ -431,14 +438,14 @@ export default class ApiClient extends CommonBase {
    * in turn called by a proxy object representing an object on the far side of
    * the connection.
    *
-   * @param {string} target Name of the target object.
+   * @param {string} target Name/ID of the target object.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
-   * @returns {Promise} Promise for the result (or error) of the call. In the
-   *   case of an error, the rejection reason will always be an instance of
-   *   `ConnectionError` (see which for details).
+   * @returns {*} Result or error returned by the remote call. In the case of an
+   *   error, the rejection reason will always be an instance of
+   *  {@link ConnectionError} (see which for details).
    */
-  _send(target, payload) {
+  async _send(target, payload) {
     const wsState = (this._ws === null)
       ? WebSocket.CLOSED
       : this._ws.readyState;
@@ -455,6 +462,24 @@ export default class ApiClient extends CommonBase {
       }
       case WebSocket.CLOSING: {
         return Promise.reject(ConnectionError.connectionClosing(this._connectionId));
+      }
+    }
+
+    if (this._targets.getOrNull(target) === null) {
+      // `target` isn't in the map of same. It's probably the case that it
+      // represents a key that was authed in an earlier since-closed websocket
+      // connection.
+      const key = this._keys.get(target);
+      if (key === undefined) {
+        // Nope! Totally unknown ID. Most likely indicates a bug in a higher
+        // layer of the system.
+        return Promise.reject(ConnectionError.unknownTargetId(this._connectionId, target));
+      } else {
+        // Yep! We found the original key. Reauthorize it and then let the call
+        // proceed.
+        this._log.event.reauthorizing(target);
+        await this.authorizeTarget(key);
+        this._log.event.reauthed(target);
       }
     }
 

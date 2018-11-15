@@ -25,23 +25,30 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
 const ERROR_MAX_PER_MINUTE = 2.25;
 
 /**
- * How long to wait (in msec) after receiving a local change (to allow time for
- * other changes to get coalesced) before pushing a change up to the server.
+ * {Int} How long to wait (in msec) after receiving a local change (to allow
+ * time for other changes to get coalesced) before pushing a change up to the
+ * server.
  */
 const PUSH_DELAY_MSEC = 1000;
 
 /**
- * How long to wait (in msec) after receiving a server change (to allow time for
- * other changes to get coalesced) before requesting additional changes from
- * the server.
+ * {Int} How long to wait (in msec) after receiving a server change (to allow
+ * time for other changes to get coalesced) before requesting additional changes
+ * from the server.
  */
 const PULL_DELAY_MSEC = 1000;
 
 /**
- * How long to wait (in msec) after detecting an error, before attempting to
- * restart.
+ * {Int} How long to wait (in msec) after detecting the first error in the error
+ * window, before attempting to restart.
  */
-const RESTART_DELAY_MSEC = 10000;
+const FIRST_RESTART_DELAY_MSEC = 1000; // One second.
+
+/**
+ * {Int} How long to wait (in msec) after detecting an error after the first,
+ * before attempting to restart.
+ */
+const RESTART_DELAY_MSEC = 5 * 1000; // Five seconds.
 
 /**
  * Tag used to identify this module as the source of a Quill event or action.
@@ -270,7 +277,10 @@ export default class BodyClient extends StateMachine {
     // be handled differently than a clean start from scratch.
 
     (async () => {
-      await Delay.resolve(RESTART_DELAY_MSEC);
+      const delayMsec = (this._errorStamps.length === 1)
+        ? FIRST_RESTART_DELAY_MSEC
+        : RESTART_DELAY_MSEC;
+      await Delay.resolve(delayMsec);
       this.start();
     })();
 
@@ -334,7 +344,7 @@ export default class BodyClient extends StateMachine {
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
     // necessary.)
-    this._docSession.apiClient.open();
+    await this._docSession.apiClient.open();
 
     // Perform a challenge-response to authorize access to the document.
     try {
