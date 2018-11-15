@@ -4,9 +4,22 @@
 # Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 #
 # Script library (to include via `.`) containing common build system logic.
-# This assumes that `baseDir` and `progDir` have been set up using the usual
-# boilerplate.
 #
+
+# Set up `bayouLibDir` to be the directory where this file resides. The
+# following is similar to the usual script-dir-finding boilerplate, except we
+# start with `${BASH_SOURCE[0]}` which is the currently-executing file and not
+# `$0` which is the main invoked file.
+function init-bayou-lib-dir {
+    local newp p="${BASH_SOURCE[0]}"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    bayouLibDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+}
+init-bayou-lib-dir
 
 # Helper for `check-build-dependencies` which validates one dependency.
 function check-dependency {
@@ -117,7 +130,7 @@ function rsync-archive {
 # output directory. See `out-dir-setup` in this directory for details on the
 # arguments which can be passed here.
 function set-up-out {
-    outDir="$(${progDir}/lib/out-dir-setup "$@")"
+    outDir="$(${bayouLibDir}/out-dir-setup "$@")"
     if (( $? != 0 )); then
         return 1
     fi
