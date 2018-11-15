@@ -45,6 +45,9 @@ showHelp=0
 # Options to pass to `set-up-out`.
 outOpts=()
 
+# Is this a dry run?
+dryRun=0
+
 # Should the source files get compiled (transpiled)?
 compileSource=0
 
@@ -72,7 +75,8 @@ while true; do
         --compile)
             compileSource=1
             ;;
-        --dry-run|--verbose)
+        --dry-run)
+            dryRun=1
             publishOpts+=("$1")
             ;;
         --out=?*)
@@ -92,6 +96,9 @@ while true; do
             ;;
         --rescope=?*)
             rescopes+=("${1#*=}")
+            ;;
+        --verbose)
+            publishOpts+=("$1")
             ;;
         --) # End of all options
             shift
@@ -399,11 +406,15 @@ function publish-modules {
         plural=''
     fi
     echo ''
-    echo "Published ${publishCount} module${plural}."
+    if (( ${dryRun} )); then
+        echo "Dry-run published ${publishCount} module${plural}."
+    else
+        echo "Published ${publishCount} module${plural}."
+    fi
 
     if (( ${#errors[@]} != 0 )); then
         echo '' 1>&2
-        echo 'Trouble publishing the following:' 1>&2
+        echo 'Trouble with the following modules:' 1>&2
 
         for name in "${errors[@]}"; do
             echo "  ${name}"
