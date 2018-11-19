@@ -136,6 +136,31 @@ export default class DocSession extends CommonBase {
     return this._apiClient;
   }
 
+  /**
+   * {string|null} Token which identifies the author (user) under whose
+   * authority the session is run. `null` if {@link #_key} is being used.
+   */
+  get authorToken() {
+    return this._authorToken;
+  }
+
+  /**
+   * {string|null} ID of the document to be edited in this session. `null` if
+   * {@link #_key} is being used.
+   */
+  get documentId() {
+    return this._documentId;
+  }
+
+  /**
+   * {string|null} ID of the caret to be controlled in this session. `null` if
+   * {@link #_key} is being used _or_ if a new caret needs to be created for
+   * this instance.
+   */
+  get caretId() {
+    return this._caretId;
+  }
+
   /** {CaretTracker} Caret tracker for this session. */
   get caretTracker() {
     if (this._caretTracker === null) {
