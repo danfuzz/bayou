@@ -69,6 +69,9 @@ export default class DocSession extends CommonBase {
       // **Note:** This clause can't possibly be run yet, because of the call to
       // `BaseKey.check()` above (which guarantees that `_key` is non-`null`).
       // That will change once the new session code is more fleshed out.
+      // **TODO:** Consider performing more validation of these strings. If
+      // they're problematic, we'll _eventually_ get errors back from the
+      // server, but maybe it's better to know sooner.
       this._authorToken = TString.check(authorToken);
       this._documentId = TString.check(documentId);
       this._caretId = TString.orNull(caretId);
