@@ -37,7 +37,7 @@ export default class DocSession extends CommonBase {
    *   `key` is being used). If being used and `null`, a new caret will be
    *   created for this session.
    */
-  constructor(key, authorToken, documentId, caretId) {
+  constructor(key, authorToken = null, documentId = null, caretId = null) {
     super();
 
     /**
