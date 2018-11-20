@@ -242,6 +242,19 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Handler for all `error` events (errors that were uncaught by other handlers
+   * and which would by default just cause the state machine to die). In this
+   * case, we make it turn into an "unrecoverable" error, which is the same as
+   * what happens when the instance receives too many API errors.
+   *
+   * @param {Error} error The error.
+   */
+  _handle_any_error(error) {
+    this._log.error('Unexpected error in handler', error);
+    this.s_unrecoverableError();
+  }
+
+  /**
    * In any state, handles event `apiError`. This is a "normal" occurrence if
    * the error has to do with the network connection (e.g. the network drops),
    * but is considered unusual (and error-worthy) if it happens for some other
