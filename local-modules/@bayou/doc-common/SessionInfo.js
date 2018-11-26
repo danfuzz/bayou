@@ -68,6 +68,16 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
+   * {string} Most-specific log tag to use with this instance. This is the caret
+   * ID if non-`null` or otherwise the document ID.
+   */
+  get logTag() {
+    return (this._caretId !== null)
+      ? this._caretId
+      : this._documentId;
+  }
+
+  /**
    * Gets reconstruction arguments for this instance.
    *
    * @returns {array<*>} Reconstruction arguments.

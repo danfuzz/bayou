@@ -73,6 +73,20 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
+  describe('.logTag', () => {
+    it('should be the `caretId` if non-`null`', () => {
+      const id = 'caretness';
+      const si = new SessionInfo('token', 'doc', id);
+      assert.strictEqual(si.logTag, id);
+    });
+
+    it('should be the `documentId` if `caretId === null`', () => {
+      const id = 'docness';
+      const si = new SessionInfo('token', id);
+      assert.strictEqual(si.logTag, id);
+    });
+  });
+
   describe('deconstruct()', () => {
     it('should return a two-element array when constructed with two arguments', () => {
       const si     = new SessionInfo('token', 'id');
