@@ -4,6 +4,5 @@
 
 import BodyClient from './BodyClient';
 import DocSession from './DocSession';
-import SessionInfo from './SessionInfo';
 
-export { BodyClient, DocSession, SessionInfo };
+export { BodyClient, DocSession };
