@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { SessionInfo } from '@bayou/doc-client';
+import { SessionInfo } from '@bayou/doc-common';
 
-describe('@bayou/doc-client/SessionInfo', () => {
+describe('@bayou/doc-common/SessionInfo', () => {
   describe('constructor()', () => {
     it('should accept three strings', () => {
       // **TODO:** Will have to be updated when validation is improved. Likewise

@@ -7,7 +7,8 @@ import { CommonBase } from '@bayou/util-common';
 
 /**
  * Holder for all the information needed to define a user editing session. This
- * class is just a container for the info. See {@link DocSession} for usage.
+ * class is just a container for the info. See {@link doc-client/DocSession} for
+ * usage.
  */
 export default class SessionInfo extends CommonBase {
   /**
