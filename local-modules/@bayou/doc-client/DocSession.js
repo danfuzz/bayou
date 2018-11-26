@@ -5,9 +5,9 @@
 import { ApiClient } from '@bayou/api-client';
 import { BaseKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
-import { TString } from '@bayou/typecheck';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';
 import PropertyClient from './PropertyClient';
@@ -22,63 +22,50 @@ export default class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseKey} key Key that identifies the session and grants access to
-   *   it. **Note:** A session is specifically tied to a specific caret, which
-   *   is associated with a single document and a specific author.
-   * @param {string|null} [authorToken = null] Token which identifies the author
-   *   (user) under whose authority the session is run. This is only used if it
-   *   is non-`null` _and_ `key` is `null`. **TODO:** This argument is ignored
-   *   for now but will ultimately replace `key`.
-   * @param {string|null} [documentId = null] ID of the document to be edited in
-   *   this session. Only used if `authorToken` is being used (not if `key` is
-   *   being used).
-   * @param {string|null} [caretId = null] ID of a pre-existing caret to control
-   *   with this instance. Only used if `authorToken` is being used (not if
-   *   `key` is being used). If being used and `null`, a new caret will be
-   *   created for this session.
+   * @param {BaseKey|SessionInfo|null} keyOrInfo Key or info object that
+   *   identifies the session and grants access to it. **Note:** A session is
+   *   tied to a specific caret, which is associated with a single document and
+   *   author. If passed a `SessionInfo` without a caret ID, then the act of
+   *   establishing the session will cause a new caret to be created. If `null`,
+   *   the remaining arguments are used to construct a `SessionInfo`.
+   * @param {string|null} [authorToken = null] `SessionInfo` constructor
+   *   argument. **TODO:** Remove this once call sites consistently pass a
+   *   `SessionInfo`.
+   * @param {string|null} [documentId = null] `SessionInfo` constructor
+   *   argument. **TODO:** Remove this once call sites consistently pass a
+   *   `SessionInfo`.
+   * @param {string|null} [caretId = null] `SessionInfo` constructor argument.
+   *   **TODO:** Remove this once call sites consistently pass a `SessionInfo`.
    */
-  constructor(key, authorToken = null, documentId = null, caretId = null) {
+  constructor(keyOrInfo, authorToken = null, documentId = null, caretId = null) {
     super();
 
-    /**
-     * {BaseKey} Key that identifies the server-side session and grants access
-     * to it.
-     */
-    this._key = BaseKey.check(key);
-
-    /**
-     * {string|null} Token which identifies the author (user) under whose
-     * authority the session is run. `null` if {@link #_key} is being used.
-     */
-    this._authorToken = null;
-
-    /**
-     * {string|null} ID of the document to be edited in this session. `null` if
-     * {@link #_key} is being used.
-     */
-    this._documentId = null;
-
-    /**
-     * {string|null} ID of the caret to be controlled in this session. `null` if
-     * {@link #_key} is being used _or_ if a new caret needs to be created for
-     * this instance.
-     */
-    this._caretId = null;
-
-    if (this._key === null) {
-      // **Note:** This clause can't possibly be run yet, because of the call to
-      // `BaseKey.check()` above (which guarantees that `_key` is non-`null`).
-      // That will change once the new session code is more fleshed out.
-      // **TODO:** Consider performing more validation of these strings. If
-      // they're problematic, we'll _eventually_ get errors back from the
-      // server, but maybe it's better to know sooner.
-      this._authorToken = TString.check(authorToken);
-      this._documentId = TString.check(documentId);
-      this._caretId = TString.orNull(caretId);
+    if (keyOrInfo === null) {
+      keyOrInfo = new SessionInfo(authorToken, documentId, caretId);
     }
 
-    /** {Logger} Logger specific to this document's ID. */
-    this._log = log.withAddedContext(key.id);
+    /**
+     * {SessionInfo} Identifying and authorizing information for the session.
+     * If `null`, then {@link #_key} is being used instead of this.
+     */
+    this._sessionInfo = (keyOrInfo instanceof SessionInfo) ? keyOrInfo : null;
+
+    /**
+     * {BaseKey|null} Key that identifies the server-side session and grants
+     * access to it. If `null`, then {@link #_sessionInfo} is being used
+     * instead of this.
+     */
+    this._key = (this._sessionInfo === null) ? BaseKey.check(keyOrInfo) : null;
+
+    /**
+     * {Logger} Maximally-specific logger. **TODO:** Because {@link
+     * #_sessionInfo} might not have a caret ID but the session will
+     * _eventually_ have one, it probably doesn't make sense to have this
+     * defined in this class.
+     */
+    this._log = (this._key !== null)
+      ? log.withAddedContext(this._key.id)
+      : log.withAddedContext(this._sessionInfo.logTag);
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in the getter
@@ -123,6 +110,11 @@ export default class DocSession extends CommonBase {
    * @returns {ApiClient} API client interface.
    */
   get apiClient() {
+    // **TODO:** Allow `sessionInfo`!
+    if (this._sessionInfo !== null) {
+      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
+    }
+
     if (this._apiClient === null) {
       this._log.detail('Opening API client...');
       this._apiClient = new ApiClient(this._key.url, appCommon_TheModule.fullCodec);
@@ -136,31 +128,6 @@ export default class DocSession extends CommonBase {
     return this._apiClient;
   }
 
-  /**
-   * {string|null} Token which identifies the author (user) under whose
-   * authority the session is run. `null` if {@link #_key} is being used.
-   */
-  get authorToken() {
-    return this._authorToken;
-  }
-
-  /**
-   * {string|null} ID of the document to be edited in this session. `null` if
-   * {@link #_key} is being used.
-   */
-  get documentId() {
-    return this._documentId;
-  }
-
-  /**
-   * {string|null} ID of the caret to be controlled in this session. `null` if
-   * {@link #_key} is being used _or_ if a new caret needs to be created for
-   * this instance.
-   */
-  get caretId() {
-    return this._caretId;
-  }
-
   /** {CaretTracker} Caret tracker for this session. */
   get caretTracker() {
     if (this._caretTracker === null) {
@@ -170,7 +137,10 @@ export default class DocSession extends CommonBase {
     return this._caretTracker;
   }
 
-  /** {BaseKey} The session key. */
+  /**
+   * {BaseKey|null} The session key, or `null` if {@link #sessionInfo} is being
+   * used.
+   */
   get key() {
     return this._key;
   }
@@ -185,6 +155,14 @@ export default class DocSession extends CommonBase {
   }
 
   /**
+   * {SessionInfo|null} Information which identifies and authorizes the session,
+   * or `null` if {@link #key} is being used.
+   */
+  get sessionInfo() {
+    return this._sessionInfo;
+  }
+
+  /**
    * Returns a proxy for the the server-side session object. This will cause the
    * API client connection to be established if it is not already established or
    * opening. The return value from this method always resolves to the same
@@ -194,6 +172,11 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
+    // **TODO:** Allow `sessionInfo`!
+    if (this._sessionInfo !== null) {
+      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
+    }
+
     if (this._sessionProxyPromise === null) {
       this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
 
