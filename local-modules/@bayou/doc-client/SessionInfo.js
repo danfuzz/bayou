@@ -65,4 +65,15 @@ export default class SessionInfo extends CommonBase {
   get caretId() {
     return this._caretId;
   }
+
+  /**
+   * Gets reconstruction arguments for this instance.
+   *
+   * @returns {array<*>} Reconstruction arguments.
+   */
+  deconstruct() {
+    return (this._caretId === null)
+      ? [this._authorToken, this._documentId]
+      : [this._authorToken, this._documentId, this._caretId];
+  }
 }

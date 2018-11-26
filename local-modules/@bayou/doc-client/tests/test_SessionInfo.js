@@ -72,4 +72,20 @@ describe('@bayou/doc-client/SessionInfo', () => {
       assert.isNull(result.caretId);
     });
   });
+
+  describe('deconstruct()', () => {
+    it('should return a two-element array when constructed with two arguments', () => {
+      const si     = new SessionInfo('token', 'id');
+      const result = si.deconstruct();
+
+      assert.deepEqual(result, ['token', 'id']);
+    });
+
+    it('should return a three-element array when constructed with three non-`null` arguments', () => {
+      const si     = new SessionInfo('token', 'id', 'c');
+      const result = si.deconstruct();
+
+      assert.deepEqual(result, ['token', 'id', 'c']);
+    });
+  });
 });
