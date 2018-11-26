@@ -124,12 +124,12 @@ export default class DocSession extends CommonBase {
    */
   get apiClient() {
     if (this._apiClient === null) {
-      log.detail('Opening API client...');
+      this._log.detail('Opening API client...');
       this._apiClient = new ApiClient(this._key.url, appCommon_TheModule.fullCodec);
 
       (async () => {
         await this._apiClient.open();
-        log.detail('API client open.');
+        this._log.detail('API client open.');
       })();
     }
 
