@@ -4,6 +4,7 @@
 
 import { BaseKey, CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
+import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
@@ -157,6 +158,25 @@ export default class ApiClientNew extends CommonBase {
 
     this._pendingAuths.set(id, result); // It's now pending.
     return result;
+  }
+
+  /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key. This will create the proxy if it did not previously exist. This
+   * method does _not_ check to see if the far side of the connection knows
+   * about the so-identified target (or if it does, whether it allows access to
+   * it without further authorization).
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getProxy(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.addOrGet(id);
   }
 
   /**

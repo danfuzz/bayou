@@ -205,6 +205,25 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
+   * Gets a proxy for the target with the given ID or which is controlled by the
+   * given key. This will create the proxy if it did not previously exist. This
+   * method does _not_ check to see if the far side of the connection knows
+   * about the so-identified target (or if it does, whether it allows access to
+   * it without further authorization).
+   *
+   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @returns {Proxy} Proxy which locally represents the so-identified
+   *   server-side target.
+   */
+  getProxy(idOrKey) {
+    const id = (idOrKey instanceof BaseKey)
+      ? idOrKey.id
+      : TString.check(idOrKey);
+
+    return this._targets.addOrGet(id);
+  }
+
+  /**
    * Opens the websocket. Once open, any pending messages will get sent to the
    * server side. If the socket is already open (or in the process of opening),
    * this does not re-open (that is, the existing open is allowed to continue).
