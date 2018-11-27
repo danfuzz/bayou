@@ -42,7 +42,7 @@ export default class DocSession extends CommonBase {
 
     // **TODO:** Remove this when the extra arguments are removed.
     if (keyOrInfo === null) {
-      keyOrInfo = new SessionInfo('http://localhost:8080', authorToken, documentId, caretId);
+      keyOrInfo = new SessionInfo('http://localhost:8080/api', authorToken, documentId, caretId);
     }
 
     /**

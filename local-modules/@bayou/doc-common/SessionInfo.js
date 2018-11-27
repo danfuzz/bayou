@@ -14,8 +14,8 @@ export default class SessionInfo extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} serverUrl Origin-only URL of the server to connect to in
-   *   order to use the session.
+   * @param {string} serverUrl URL of the server to connect to in order to use
+   *   the session.
    * @param {string} authorToken Token which identifies the author (user) under
    *   whose authority the session is to be run.
    * @param {string} documentId ID of the document to be edited in the session.
@@ -30,11 +30,8 @@ export default class SessionInfo extends CommonBase {
     // they're problematic, we'll _eventually_ get errors back from the server,
     // but arguably it's better to know sooner.
 
-    /**
-     * {string} Origin-only URL of the server to connect to in order to use the
-     * session.
-     */
-    this._serverUrl = TString.urlOrigin(serverUrl);
+    /** {string} URL of the server to connect to in order to use the session. */
+    this._serverUrl = TString.urlAbsolute(serverUrl);
 
     /**
      * {string} Token which identifies the author (user) under whose authority
