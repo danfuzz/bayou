@@ -141,8 +141,7 @@ export default class ApiClient extends CommonBase {
   /**
    * Performs a challenge-response authorization for a given key. When the
    * returned promise resolves successfully, that means that the corresponding
-   * target (that is, `this.getTarget(key)`) can be accessed without further
-   * authorization.
+   * target can be accessed without further authorization.
    *
    * If `key.id` is already mapped as a target, it is returned directly, without
    * further authorization. If it is in the middle of being authorized, the
@@ -203,24 +202,6 @@ export default class ApiClient extends CommonBase {
 
     this._pendingAuths.set(id, result); // It's now pending.
     return result;
-  }
-
-  /**
-   * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key (or which was so controlled prior to authorizing it away). The
-   * target must already be known to this instance for this method to work
-   * (otherwise it is an error).
-   *
-   * @param {string|BaseKey} idOrKey ID or key for the target.
-   * @returns {Proxy} Proxy which locally represents the so-identified
-   *   server-side target.
-   */
-  getTarget(idOrKey) {
-    const id = (idOrKey instanceof BaseKey)
-      ? idOrKey.id
-      : TString.check(idOrKey);
-
-    return this._targets.get(id);
   }
 
   /**
