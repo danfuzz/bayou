@@ -10,7 +10,8 @@
 //   used to authenticate access to a particular documemt.
 // * `BAYOU_NODE` -- The DOM node into which the editor should be embedded.
 // * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
-//   from connection trouble.
+//   from connection trouble. It gets passed the `SessionInfo` or `SplitKey`
+//   which was initially used to establish the connection.
 //
 // See `TopControl` for more details about these parameters.
 
