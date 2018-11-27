@@ -22,13 +22,13 @@ export default class WsServerConnection extends BaseServerConnection {
    * yet ready for traffic, the messages will get enqueued and then later
    * replayed in-order once the socket becomes ready.
    *
-   * @param {string} url The server origin, as an `http` or `https` URL.
+   * @param {string} serverUrl The server origin, as an `http` or `https` URL.
    */
-  constructor(url) {
+  constructor(serverUrl) {
     super();
 
     /** {string} Base URL for the server. */
-    this._baseUrl = WsServerConnection._getBaseUrl(url);
+    this._baseUrl = WsServerConnection._getBaseUrl(serverUrl);
 
     /** {string} URL to use when connecting a websocket. */
     this._wsUrl = WsServerConnection._getWsUrl(this._baseUrl);

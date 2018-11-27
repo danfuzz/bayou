@@ -33,17 +33,17 @@ export default class ApiClient extends CommonBase {
    * socket isn't yet ready for traffic, the messages will get enqueued and then
    * replayed in order once the socket becomes ready.
    *
-   * @param {string} url The server origin, as an `http` or `https` URL.
+   * @param {string} serverUrl The server origin, as an `http` or `https` URL.
    * @param {Codec} codec Codec instance to use. In order to function properly,
    *   its registry must include all of the encodable classes defined in
    *   `@bayou/api-common` classes. See
    *   {@link @bayou/api-common.TheModule.registerCodecs}.
    */
-  constructor(url, codec) {
+  constructor(serverUrl, codec) {
     super();
 
     /** {string} Base URL for the server. */
-    this._baseUrl = ApiClient._getBaseUrl(url);
+    this._baseUrl = ApiClient._getBaseUrl(serverUrl);
 
     /** {Codec} Codec instance to use. */
     this._codec = Codec.check(codec);
