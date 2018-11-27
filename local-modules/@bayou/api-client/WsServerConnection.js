@@ -45,11 +45,6 @@ export default class WsServerConnection extends BaseServerConnection {
     Object.seal(this);
   }
 
-  /** {string} Base URL for the remote endpoint this client gets attached to. */
-  get baseUrl() {
-    return this._baseUrl;
-  }
-
   /**
    * Implementation as required by the superclass.
    *

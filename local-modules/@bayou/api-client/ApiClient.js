@@ -113,11 +113,6 @@ export default class ApiClient extends CommonBase {
     Object.seal(this);
   }
 
-  /** {string} Base URL for the remote endpoint this client gets attached to. */
-  get baseUrl() {
-    return this._baseUrl;
-  }
-
   /**
    * {string} The connection ID if known, or a reasonably suggestive string if
    * not. This class automatically sets the ID when connections get made, so
