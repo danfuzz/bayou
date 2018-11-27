@@ -257,11 +257,16 @@ export default class ApiClient extends CommonBase {
     this._updateLogger();
     this._log.event.opening();
 
-    const id = await this.meta.connectionId();
+    try {
+      const id = await this.meta.connectionId();
 
-    this._connectionId = id;
-    this._updateLogger();
-    this._log.event.open();
+      this._connectionId = id;
+      this._updateLogger();
+      this._log.event.open();
+    } catch (e) {
+      this._log.event.errorDuringOpen(e);
+      throw e;
+    }
 
     // Test to make sure newly-proxied objects get returned as expected.
     // **TODO:** Remove this once we have unit test coverage for this
@@ -303,7 +308,7 @@ export default class ApiClient extends CommonBase {
    * @param {object} event Event that caused this callback.
    */
   _handleClose(event) {
-    this._log.info('Closed:', event);
+    this._log.event.closed(event);
 
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
@@ -323,7 +328,7 @@ export default class ApiClient extends CommonBase {
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
-    this._log.info('Error:', event);
+    this._log.event.error(event);
 
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the
