@@ -357,7 +357,12 @@ export default class BodyClient extends StateMachine {
     // won't become open synchronously, the API client code allows us to start
     // sending messages over it immediately. (They'll just get queued up as
     // necessary.)
-    await this._docSession.apiClient.open();
+    try {
+      await this._docSession.apiClient.open();
+    } catch (e) {
+      this.q_apiError('open', e);
+      return;
+    }
 
     // Perform a challenge-response to authorize access to the document.
     try {

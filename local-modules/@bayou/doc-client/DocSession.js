@@ -120,8 +120,14 @@ export default class DocSession extends CommonBase {
       this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
       (async () => {
-        await this._apiClient.open();
-        this._log.event.opened(url);
+        try {
+          await this._apiClient.open();
+          this._log.event.opened(url);
+        } catch (e) {
+          // (a) Log the problem, and (b) make sure an error doesn't percolate
+          // back to the top as an uncaught promise rejection.
+          this._log.event.openFailed(url);
+        }
       })();
     }
 
