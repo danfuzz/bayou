@@ -138,14 +138,6 @@ export default class DocSession extends CommonBase {
     return this._caretTracker;
   }
 
-  /**
-   * {BaseKey|null} The session key, or `null` if {@link #sessionInfo} is being
-   * used.
-   */
-  get key() {
-    return this._key;
-  }
-
   /** {PropertyClient} Property accessor this session. */
   get propertyClient() {
     if (this._propertyClient === null) {
@@ -157,7 +149,7 @@ export default class DocSession extends CommonBase {
 
   /**
    * {SessionInfo|null} Information which identifies and authorizes the session,
-   * or `null` if {@link #key} is being used.
+   * or `null` if this instance was constructed with a `SplitKey`.
    */
   get sessionInfo() {
     return this._sessionInfo;
