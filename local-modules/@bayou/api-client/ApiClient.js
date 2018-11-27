@@ -33,17 +33,17 @@ export default class ApiClient extends CommonBase {
    * socket isn't yet ready for traffic, the messages will get enqueued and then
    * replayed in order once the socket becomes ready.
    *
-   * @param {string} url The server origin, as an `http` or `https` URL.
+   * @param {string} serverUrl The server endpoint, as an `http` or `https` URL.
    * @param {Codec} codec Codec instance to use. In order to function properly,
    *   its registry must include all of the encodable classes defined in
    *   `@bayou/api-common` classes. See
    *   {@link @bayou/api-common.TheModule.registerCodecs}.
    */
-  constructor(url, codec) {
+  constructor(serverUrl, codec) {
     super();
 
-    /** {string} Base URL for the server. */
-    this._baseUrl = ApiClient._getBaseUrl(url);
+    /** {string} The server endpoint, as an `http` or `https` URL. */
+    this._serverUrl = TString.urlAbsolute(serverUrl);
 
     /** {Codec} Codec instance to use. */
     this._codec = Codec.check(codec);
@@ -110,12 +110,9 @@ export default class ApiClient extends CommonBase {
     // Initialize the active connection fields (described above).
     this._resetConnection();
 
-    Object.seal(this);
-  }
+    this._log.event.constructed(serverUrl);
 
-  /** {string} Base URL for the remote endpoint this client gets attached to. */
-  get baseUrl() {
-    return this._baseUrl;
+    Object.seal(this);
   }
 
   /**
@@ -144,8 +141,7 @@ export default class ApiClient extends CommonBase {
   /**
    * Performs a challenge-response authorization for a given key. When the
    * returned promise resolves successfully, that means that the corresponding
-   * target (that is, `this.getTarget(key)`) can be accessed without further
-   * authorization.
+   * target can be accessed without further authorization.
    *
    * If `key.id` is already mapped as a target, it is returned directly, without
    * further authorization. If it is in the middle of being authorized, the
@@ -210,20 +206,21 @@ export default class ApiClient extends CommonBase {
 
   /**
    * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key (or which was so controlled prior to authorizing it away). The
-   * target must already be known to this instance for this method to work
-   * (otherwise it is an error).
+   * given key. This will create the proxy if it did not previously exist. This
+   * method does _not_ check to see if the far side of the connection knows
+   * about the so-identified target (or if it does, whether it allows access to
+   * it without further authorization).
    *
    * @param {string|BaseKey} idOrKey ID or key for the target.
    * @returns {Proxy} Proxy which locally represents the so-identified
    *   server-side target.
    */
-  getTarget(idOrKey) {
+  getProxy(idOrKey) {
     const id = (idOrKey instanceof BaseKey)
       ? idOrKey.id
       : TString.check(idOrKey);
 
-    return this._targets.get(id);
+    return this._targets.addOrGet(id);
   }
 
   /**
@@ -283,13 +280,15 @@ export default class ApiClient extends CommonBase {
 
   /** {string} The websocket URL for this instance. */
   get _websocketUrl() {
-    const url = new URL(this._baseUrl);
+    const url = new URL(this._serverUrl);
 
     // Convert the URL scheme to either `ws` or `wss`, corresponding to `http`
     // or `https`.
     url.protocol = url.protocol.replace(/^http/, 'ws');
 
-    // Drop the original path, and replace it with just `/api`.
+    // Drop the original path, and replace it with just `/api`. **TODO:** We
+    // should instead assume that the path is valid, instead of forcing one
+    // particular value.
     url.pathname = '/api';
 
     return url.href;
@@ -524,15 +523,5 @@ export default class ApiClient extends CommonBase {
     }
 
     this._log = log.withAddedContext(id);
-  }
-
-  /**
-   * Gets the base URL for the given original URL.
-   *
-   * @param {string} origUrl The original URL.
-   * @returns {string} The corresponding base URL.
-   */
-  static _getBaseUrl(origUrl) {
-    return new URL(origUrl).origin;
   }
 }

@@ -42,7 +42,7 @@ export default class DocSession extends CommonBase {
 
     // **TODO:** Remove this when the extra arguments are removed.
     if (keyOrInfo === null) {
-      keyOrInfo = new SessionInfo('http://localhost:8080', authorToken, documentId, caretId);
+      keyOrInfo = new SessionInfo('http://localhost:8080/api', authorToken, documentId, caretId);
     }
 
     /**
@@ -111,18 +111,17 @@ export default class DocSession extends CommonBase {
    * @returns {ApiClient} API client interface.
    */
   get apiClient() {
-    // **TODO:** Allow `sessionInfo`!
-    if (this._sessionInfo !== null) {
-      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
-    }
+    const url = (this._sessionInfo !== null)
+      ? this._sessionInfo.serverUrl
+      : this._key.url;
 
     if (this._apiClient === null) {
-      this._log.detail('Opening API client...');
-      this._apiClient = new ApiClient(this._key.url, appCommon_TheModule.fullCodec);
+      this._log.event.opening(url);
+      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
       (async () => {
         await this._apiClient.open();
-        this._log.detail('API client open.');
+        this._log.event.opened(url);
       })();
     }
 
@@ -138,14 +137,6 @@ export default class DocSession extends CommonBase {
     return this._caretTracker;
   }
 
-  /**
-   * {BaseKey|null} The session key, or `null` if {@link #sessionInfo} is being
-   * used.
-   */
-  get key() {
-    return this._key;
-  }
-
   /** {PropertyClient} Property accessor this session. */
   get propertyClient() {
     if (this._propertyClient === null) {
@@ -157,7 +148,7 @@ export default class DocSession extends CommonBase {
 
   /**
    * {SessionInfo|null} Information which identifies and authorizes the session,
-   * or `null` if {@link #key} is being used.
+   * or `null` if this instance was constructed with a `SplitKey`.
    */
   get sessionInfo() {
     return this._sessionInfo;

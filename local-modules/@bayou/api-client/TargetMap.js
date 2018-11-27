@@ -9,10 +9,13 @@ import { CommonBase, Errors } from '@bayou/util-common';
 import TargetHandler from './TargetHandler';
 
 /**
- * Map of the various targets being provided by a connection. Items present in
- * this map are assumed to be _uncontrolled_ targets, that is, without an
- * auth requirements (or, to the extent that auth requirements were ever
- * present, that they have already been fulfilled).
+ * Map of the various targets being provided over a connection. Items present in
+ * this map are assumed to be _uncontrolled_ targets, that is, either (a) with
+ * implied auth (e.g. a bearer token), or (b) without any auth requirements
+ * (including, to the extent that auth requirements were ever present, that they
+ * have already been fulfilled). This assumption only comes into play by virtue
+ * of the fact that the _other_ side of the connection will balk if there turn
+ * out to be auth requirements on targets that get referenced.
  */
 export default class TargetMap extends CommonBase {
   /**
