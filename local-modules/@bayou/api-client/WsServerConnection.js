@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Condition } from '@bayou/promise-util';
+import { TString } from '@bayou/typecheck';
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
@@ -27,11 +28,11 @@ export default class WsServerConnection extends BaseServerConnection {
   constructor(serverUrl) {
     super();
 
-    /** {string} Base URL for the server. */
-    this._baseUrl = WsServerConnection._getBaseUrl(serverUrl);
+    /** {string} The server endpoint, as an `http` or `https` URL. */
+    this._serverUrl = TString.urlAbsolute(serverUrl);
 
     /** {string} URL to use when connecting a websocket. */
-    this._wsUrl = WsServerConnection._getWsUrl(this._baseUrl);
+    this._websocketUrl = WsServerConnection._getWebsocketUrl(this._serverUrl);
 
     /** {WebSocket|null} Actual websocket instance. */
     this._ws = null;
@@ -41,6 +42,8 @@ export default class WsServerConnection extends BaseServerConnection {
      * every state change to {@link #_ws}.
      */
     this._wsStateChange = new Condition();
+
+    this.log.event.constructed(serverUrl);
 
     Object.seal(this);
   }
@@ -92,7 +95,7 @@ export default class WsServerConnection extends BaseServerConnection {
     for (;;) {
       if (this._ws === null) {
         // No active socket. Create (and start to open) it.
-        this._ws           = new WebSocket(this._wsUrl);
+        this._ws           = new WebSocket(this._websocketUrl);
         this._ws.onclose   = this._handleClose.bind(this);
         this._ws.onerror   = this._handleError.bind(this);
         this._ws.onmessage = this._handleMessage.bind(this);
@@ -189,29 +192,21 @@ export default class WsServerConnection extends BaseServerConnection {
   }
 
   /**
-   * Gets the base URL for the given original URL.
-   *
-   * @param {string} origUrl The original URL.
-   * @returns {string} The corresponding base URL.
-   */
-  static _getBaseUrl(origUrl) {
-    return new URL(origUrl).origin;
-  }
-
-  /**
    * Gets the websocket URL corresponding to the given base URL.
    *
    * @param {string} baseUrl The base URL.
    * @returns {string} The corresponding websocket URL.
    */
-  static _getWsUrl(baseUrl) {
+  static _getWebsocketUrl(baseUrl) {
     const url = new URL(baseUrl);
 
     // Convert the URL scheme to either `ws` or `wss`, corresponding to `http`
     // or `https`.
     url.protocol = url.protocol.replace(/^http/, 'ws');
 
-    // Drop the original path, and replace it with just `/api`.
+    // Drop the original path, and replace it with just `/api`. **TODO:** We
+    // should instead assume that the path is valid, instead of forcing one
+    // particular value.
     url.pathname = '/api';
 
     return url.href;
