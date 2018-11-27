@@ -111,18 +111,17 @@ export default class DocSession extends CommonBase {
    * @returns {ApiClient} API client interface.
    */
   get apiClient() {
-    // **TODO:** Allow `sessionInfo`!
-    if (this._sessionInfo !== null) {
-      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
-    }
+    const url = (this._sessionInfo !== null)
+      ? this._sessionInfo.serverUrl
+      : this._key.url;
 
     if (this._apiClient === null) {
-      this._log.detail('Opening API client...');
-      this._apiClient = new ApiClient(this._key.url, appCommon_TheModule.fullCodec);
+      this._log.event.opening(url);
+      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
       (async () => {
         await this._apiClient.open();
-        this._log.detail('API client open.');
+        this._log.event.opened(url);
       })();
     }
 
