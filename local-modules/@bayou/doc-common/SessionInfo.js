@@ -14,6 +14,8 @@ export default class SessionInfo extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {string} serverUrl Origin-only URL of the server to connect to in
+   *   order to use the session.
    * @param {string} authorToken Token which identifies the author (user) under
    *   whose authority the session is to be run.
    * @param {string} documentId ID of the document to be edited in the session.
@@ -21,12 +23,18 @@ export default class SessionInfo extends CommonBase {
    *   with the session. If `null`, a new caret will ultimately be created for
    *   the session.
    */
-  constructor(authorToken, documentId, caretId = null) {
+  constructor(serverUrl, authorToken, documentId, caretId = null) {
     super();
 
     // **TODO:** Consider performing more validation of the arguements. If
     // they're problematic, we'll _eventually_ get errors back from the server,
     // but arguably it's better to know sooner.
+
+    /**
+     * {string} Origin-only URL of the server to connect to in order to use the
+     * session.
+     */
+    this._serverUrl = TString.urlOrigin(serverUrl);
 
     /**
      * {string} Token which identifies the author (user) under whose authority
@@ -68,6 +76,14 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
+   * {string} Origin-only URL of the server to connect to in order to use the
+   * session.
+   */
+  get serverUrl() {
+    return this._serverUrl;
+  }
+
+  /**
    * {string} Most-specific log tag to use with this instance. This is the caret
    * ID if non-`null` or otherwise the document ID.
    */
@@ -83,8 +99,8 @@ export default class SessionInfo extends CommonBase {
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return (this._caretId === null)
-      ? [this._authorToken, this._documentId]
-      : [this._authorToken, this._documentId, this._caretId];
+    const most = [this._serverUrl, this._authorToken, this._documentId];
+
+    return (this._caretId === null) ? most : [...most, this._caretId];
   }
 }

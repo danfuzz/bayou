@@ -40,8 +40,9 @@ export default class DocSession extends CommonBase {
   constructor(keyOrInfo, authorToken = null, documentId = null, caretId = null) {
     super();
 
+    // **TODO:** Remove this when the extra arguments are removed.
     if (keyOrInfo === null) {
-      keyOrInfo = new SessionInfo(authorToken, documentId, caretId);
+      keyOrInfo = new SessionInfo('http://localhost:8080', authorToken, documentId, caretId);
     }
 
     /**
