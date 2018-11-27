@@ -19,6 +19,7 @@ import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
+import SessionInfo from './SessionInfo';
 
 /**
  * Utilities for this module.
@@ -61,5 +62,6 @@ export default class TheModule extends UtilityClass {
     registry.registerClass(PropertyDelta);
     registry.registerClass(PropertyOp);
     registry.registerClass(PropertySnapshot);
+    registry.registerClass(SessionInfo);
   }
 }

@@ -18,6 +18,7 @@ import PropertyChange from './PropertyChange';
 import PropertyDelta from './PropertyDelta';
 import PropertyOp from './PropertyOp';
 import PropertySnapshot from './PropertySnapshot';
+import SessionInfo from './SessionInfo';
 import Timeouts from './Timeouts';
 
 export {
@@ -37,5 +38,6 @@ export {
   PropertyDelta,
   PropertyOp,
   PropertySnapshot,
+  SessionInfo,
   Timeouts
 };
