@@ -4,7 +4,8 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context, Target } from '@bayou/api-server';
-import { Network, Storage } from '@bayou/config-server';
+import { Auth, Network, Storage } from '@bayou/config-server';
+import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -69,5 +70,46 @@ export default class RootAccess extends CommonBase {
       `  key url: ${key.url}`);
 
     return key;
+  }
+
+  /**
+   * Makes an instance of {@link SessionInfo} which corresponds to a specific
+   * author editing a specific document, on the server (or server cluster)
+   * running this method.
+   *
+   * @param {string} authorId ID which corresponds to the author of changes that
+   *   are made using the resulting authorization.
+   * @param {string} docId ID of the document which the resulting authorization
+   *   allows access to.
+   * @returns {SplitKey} A split token (ID + secret) which provides the
+   *   requested access.
+   */
+  async makeSessionInfo(authorId, docId) {
+    log.event.sessionRequested(authorId, docId);
+
+    // These checks round-trip with the back-end to do full (not just syntactic)
+    // validation.
+    await Promise.all([
+      Storage.dataStore.checkExistingAuthorId(authorId),
+      Storage.dataStore.checkExistingDocumentId(docId)
+    ]);
+
+    // We'll need the file complex as soon as the client becomes active, so
+    // might as well warm it up. But also, this ensures that the complex is in
+    // at least a semblance of a valid state before we return the info to the
+    // caller.
+    await DocServer.theOne.getFileComplex(docId);
+
+    log.event.sessionInfoValid(authorId, docId);
+
+    const url         = `${Network.baseUrl}/api`;
+    const authorToken = await Auth.getAuthorToken(authorId);
+
+    // **Note:** `authorToken` is a bearer token, which means it will get safely
+    // redacted in the logs.
+    log.event.gotAuthorToken(authorToken);
+
+    // ...but we just want to return the string form of the token.
+    return new SessionInfo(url, authorToken.secretToken, docId);
   }
 }
