@@ -328,7 +328,7 @@ export default class ApiClient extends CommonBase {
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
-    this._log.event.error(event);
+    this._log.event.websocketError(event);
 
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the

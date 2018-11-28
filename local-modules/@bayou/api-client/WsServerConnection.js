@@ -102,13 +102,13 @@ export default class WsServerConnection extends BaseServerConnection {
         this._ws.onopen    = this._handleOpen.bind(this);
 
         this._updateLogger();
-        this.log.event.wsState('opening');
+        this.log.event.websocketState('opening');
       }
 
       switch (this._ws.readyState) {
         case WebSocket.CLOSED: {
           // Clear out `_ws` and iterate to retry.
-          this.log.event.wsState('closed');
+          this.log.event.websocketState('closed');
           this._ws.onclose   = null;
           this._ws.onerror   = null;
           this._ws.onmessage = null;
@@ -119,21 +119,21 @@ export default class WsServerConnection extends BaseServerConnection {
 
         case WebSocket.CLOSING: {
           // Wait for it to be closed.
-          this.log.event.wsState('closing');
+          this.log.event.websocketState('closing');
           await this._wsStateChange.whenTrue();
           break;
         }
 
         case WebSocket.CONNECTING: {
           // Wait for it to be open (or fail to connect).
-          this.log.event.wsState('connecting');
+          this.log.event.websocketState('connecting');
           await this._wsStateChange.whenTrue();
           break;
         }
 
         case WebSocket.OPEN: {
           // What we've wanted all along!
-          this.log.event.wsState('open');
+          this.log.event.websocketState('open');
           break;
         }
       }
@@ -149,7 +149,7 @@ export default class WsServerConnection extends BaseServerConnection {
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
 
-    this.log.event.wsCloseEvent(event, desc);
+    this.log.event.websocketClose(event, desc);
     this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
 
@@ -163,7 +163,7 @@ export default class WsServerConnection extends BaseServerConnection {
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it as a "description"
     // (or similar).
-    this.log.event.wsErrorEvent(event);
+    this.log.event.websocketError(event);
 
     this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
@@ -174,7 +174,7 @@ export default class WsServerConnection extends BaseServerConnection {
    * @param {object} event Event that caused this callback.
    */
   _handleMessage(event) {
-    this.log.event.wsRawMessage(event.data);
+    this.log.event.rawMessage(event.data);
     this.received(event.data);
   }
 
@@ -187,7 +187,7 @@ export default class WsServerConnection extends BaseServerConnection {
     // **Note:** The open event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it as a "description"
     // (or similar).
-    this.log.event.wsOpenEvent(event);
+    this.log.event.websocketOpen(event);
     this._wsStateChange.onOff(); // Intercom with `_ensureOpen()`.
   }
 
