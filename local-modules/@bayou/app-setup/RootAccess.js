@@ -77,12 +77,10 @@ export default class RootAccess extends CommonBase {
    * author editing a specific document, on the server (or server cluster)
    * running this method.
    *
-   * @param {string} authorId ID which corresponds to the author of changes that
-   *   are made using the resulting authorization.
-   * @param {string} docId ID of the document which the resulting authorization
-   *   allows access to.
-   * @returns {SplitKey} A split token (ID + secret) which provides the
-   *   requested access.
+   * @param {string} authorId ID of the author (user) who will be driving the
+   *   session.
+   * @param {string} docId ID of the document to be accessed.
+   * @returns {SessionInfo} Corresponding info struct.
    */
   async makeSessionInfo(authorId, docId) {
     log.event.sessionRequested(authorId, docId);
