@@ -183,21 +183,25 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
-    // **TODO:** Allow `sessionInfo`!
+    if (this._sessionProxyPromise !== null) {
+      // **Note:** Because this is an `async` method, it's okay to return a
+      // promise.
+      return this._sessionProxyPromise;
+    }
+
     if (this._sessionInfo !== null) {
+      // **TODO:** Allow `sessionInfo`!
       throw Errors.wtf('Cannot use `sessionInfo`... yet!');
-    }
-
-    if (this._sessionProxyPromise === null) {
+    } else {
+      // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
+      // is used ubiquitously.
       this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
-
-      // Log a note once the promise resolves.
-      await this._sessionProxyPromise;
-      this._log.info('Received session proxy.');
     }
 
-    // **Note:** Because this is an `async` method, it's okay to return a
-    // promise.
-    return this._sessionProxyPromise;
+    // Log a note once the promise resolves.
+    const proxy = await this._sessionProxyPromise;
+    this._log.event.gotSessionProxy();
+
+    return proxy;
   }
 }
