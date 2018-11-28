@@ -14,12 +14,18 @@ export default class BodyDeltaHtml extends UtilityClass {
    * Produces an HTML representation of the contents of this instance.
    *
    * @param {BodyDelta} bodyDelta The delta to convert to HTML.
+   * @param {CustomConverter} [customConverter = null] Optional custom
+   *   converter to account for custom op types.
    *
    * @returns {string} An HTML representation of the contents of given delta.
    */
-  static toHtmlForm(bodyDelta) {
+  static toHtmlForm(bodyDelta, customConverter = null) {
     const quillOps = bodyDelta.toQuillForm().ops;
     const converter = new QuillDeltaToHtmlConverter(quillOps);
+
+    if (customConverter !== null) {
+      converter.renderCustomWith(customConverter);
+    }
 
     return converter.convert();
   }
