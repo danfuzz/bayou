@@ -14,9 +14,9 @@ import FileComplex from './FileComplex';
  * author, and caret. Instances of this class are exposed across the API
  * boundary, and as such all public methods are available for client use.
  *
- * For document access methods, this passes non-mutating methods through to the
- * underlying {@link BodyControl} while implicitly adding an author argument to
- * methods that modify the document.
+ * For access methods, this passes non-mutating methods through to the
+ * underlying `*Control` instances, while implicitly adding author ID and/or
+ * caret ID as appropriate to methods that perform modifications.
  */
 export default class DocSession extends CommonBase {
   /**
