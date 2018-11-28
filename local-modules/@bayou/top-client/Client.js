@@ -32,13 +32,12 @@ export default class Client extends UtilityClass {
    *   fundamental system setup is performed.
    */
   static async run(configFunction) {
-    Client._init(configFunction, 'Starting...');
+    Client._init(configFunction);
 
     const control = new TopControl(window);
-    log.detail('Made `control`.');
 
     await control.start();
-    log.info('Now running!');
+    log.event.started();
   }
 
   /**
@@ -53,7 +52,7 @@ export default class Client extends UtilityClass {
    *   non-test client bundle).
    */
   static async runUnitTests(configFunction, testsClass) {
-    Client._init(configFunction, 'Starting up testing environment...');
+    Client._init(configFunction);
 
     const testFilter = window.BAYOU_TEST_FILTER || null;
 
@@ -62,6 +61,8 @@ export default class Client extends UtilityClass {
     document.body.appendChild(elem);
 
     (async () => {
+      log.event.testsRunning();
+
       const failures = await testsClass.runAll(testFilter);
 
       let msg;
@@ -72,6 +73,8 @@ export default class Client extends UtilityClass {
       }
 
       elem.innerHTML = msg;
+
+      log.event.testsDone();
     })();
   }
 
@@ -80,16 +83,15 @@ export default class Client extends UtilityClass {
    *
    * @param {function} configFunction Function to call in order to perform
    *   system configuration.
-   * @param {string} msg Message to log to indicate startup is in progress.
    */
-  static _init(configFunction, msg) {
+  static _init(configFunction) {
     // Init logging.
     ClientSink.init();
-    log.info(msg);
+    log.event.starting();
 
     // Inject all the system configs.
     configFunction();
-    log.detail('System configured.');
+    log.event.configured();
 
     // Init the environment utilities.
     ClientEnv.init(window);
