@@ -237,12 +237,12 @@ export default class DebugTools {
   async _handle_edit(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = await this._makeEncodedKey(documentId, authorId);
+    const info       = await this._makeEncodedInfo(documentId, authorId);
 
-    // These are already strings (JSON-encoded even, in the case of `key`),
+    // These are already strings (JSON-encoded even, in the case of `info`),
     // but we still have to JSON-encode _those_ strings, so as to make them
     // proper JS source within the <script> block below.
-    const quotedKey        = JSON.stringify(key);
+    const quotedInfo       = JSON.stringify(info);
     const quotedDocumentId = JSON.stringify(documentId);
     const quotedAuthorId   = JSON.stringify(authorId);
 
@@ -250,7 +250,7 @@ export default class DebugTools {
     const head =
       '<title>Editor</title>\n' +
       '<script>\n' +
-      `  BAYOU_KEY         = ${quotedKey};\n` +
+      `  BAYOU_KEY         = ${quotedInfo};\n` +
       `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
       `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
       '</script>\n' +
@@ -271,9 +271,9 @@ export default class DebugTools {
   async _handle_key(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const key        = await this._makeEncodedKey(documentId, authorId);
+    const info       = await this._makeEncodedInfo(documentId, authorId);
 
-    this._jsonResponse(res, key);
+    this._jsonResponse(res, info);
   }
 
   /**
@@ -393,14 +393,15 @@ export default class DebugTools {
   }
 
   /**
-   * Makes and returns a new authorization key for the given document / author
+   * Makes and returns new authorization info for the given document / author
    * combo, as a JSON-encoded string.
    *
    * @param {string} documentId The document ID.
    * @param {string} authorId The author ID.
    * @returns {string} A new `SplitKey` encoded as JSON.
    */
-  async _makeEncodedKey(documentId, authorId) {
+  async _makeEncodedInfo(documentId, authorId) {
+    // **TODO:** Replace this with construction of `SessionInfo`.
     const key = await this._rootAccess.makeAccessKey(authorId, documentId);
     return appCommon_TheModule.fullCodec.encodeJson(key);
   }
