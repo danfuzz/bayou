@@ -91,6 +91,8 @@ export default class DocSession extends CommonBase {
      * non-`null` in `getSessionProxy()`.
      */
     this._sessionProxyPromise = null;
+
+    Object.seal(this);
   }
 
   /**
