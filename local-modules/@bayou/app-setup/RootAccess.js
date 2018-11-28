@@ -105,11 +105,10 @@ export default class RootAccess extends CommonBase {
     const url         = `${Network.baseUrl}/api`;
     const authorToken = await Auth.getAuthorToken(authorId);
 
-    // **Note:** `authorToken` is a bearer token, which means it will get safely
-    // redacted in the logs.
-    log.event.gotAuthorToken(authorToken);
+    // Only log the safe (redacted) form of the token.
+    log.event.gotAuthorToken(authorToken.safeString);
 
-    // ...but we just want to return the string form of the token.
+    // ...but we do need to return the full string to the caller.
     return new SessionInfo(url, authorToken.secretToken, docId);
   }
 }
