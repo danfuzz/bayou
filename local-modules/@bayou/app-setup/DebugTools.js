@@ -401,7 +401,11 @@ export default class DebugTools {
    * @returns {string} A new `SplitKey` encoded as JSON.
    */
   async _makeEncodedInfo(documentId, authorId) {
-    // **TODO:** Replace this with construction of `SessionInfo`.
+    // **TODO:** This is just a "dry run" for now. Ultimately this should get
+    // returned.
+    await this._rootAccess.makeSessionInfo(authorId, documentId);
+
+    // **TODO:** Replace this with construction of `SessionInfo` (above).
     const key = await this._rootAccess.makeAccessKey(authorId, documentId);
     return appCommon_TheModule.fullCodec.encodeJson(key);
   }
