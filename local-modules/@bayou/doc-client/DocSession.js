@@ -7,7 +7,7 @@ import { BaseKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';
 import PropertyClient from './PropertyClient';
