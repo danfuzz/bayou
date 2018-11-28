@@ -16,10 +16,11 @@
  * this case, we rely on the `/key/*` debugging endpoints to generate a new key.
  * If that's successful, we report it back up through the layers.
  */
-function BAYOU_RECOVER(key) {
-  var docId = DEBUG_DOCUMENT_ID;
+function BAYOU_RECOVER(keyOrInfo) {
+  var docId    = DEBUG_DOCUMENT_ID;
   var authorId = DEBUG_AUTHOR_ID;
-  var url = `${new URL(key.url).origin}/debug/key/${docId}/${authorId}`;
+  var origin   = new URL(keyOrInfo.url || keyOrInfo.serverUrl).origin;
+  var url      = `${origin}/debug/key/${docId}/${authorId}`;
 
   return new Promise((res, rej_unused) => {
     var req = new XMLHttpRequest();

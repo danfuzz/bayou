@@ -48,10 +48,11 @@ export default class ApiClientNew extends CommonBase {
     this._nextId = 0;
 
     /**
-     * {object<Int, {resolve, reject}>} Map from message IDs to response
-     * callbacks. Each callback is an object that maps `resolve` and `reject` to
-     * functions that obey the usual promise contract for functions of those
-     * names.
+     * {object<Int,{message, resolve, reject}>} Map from message IDs to response
+     * callbacks and original message info (the latter for debugging). Each
+     * element is an object that maps `resolve` and `reject` to functions that
+     * obey the usual promise contract for functions of those names, and
+     * `message` to the originally-sent {@link Message}.
      */
     this._callbacks = {};
 
@@ -312,7 +313,10 @@ export default class ApiClientNew extends CommonBase {
   _handleTermination(event_unused, error) {
     // Reject the promises of any currently-pending messages.
     for (const id in this._callbacks) {
-      this._callbacks[id].reject(error);
+      const { message, reject } = this._callbacks[id];
+
+      this._log.event.rejectDuringTermination(...message.deconstruct());
+      reject(error);
     }
 
     // Clear the state related to the websocket. It is safe to re-open the
@@ -338,17 +342,17 @@ export default class ApiClientNew extends CommonBase {
     const id = this._nextId;
     this._nextId++;
 
-    const msg     = new Message(id, target, payload);
-    const msgJson = this._codec.encodeJson(msg);
+    const message = new Message(id, target, payload);
+    const msgJson = this._codec.encodeJson(message);
 
-    this.log.info('Sending:', msg);
+    this.log.info('Sending:', message);
 
     await this._connection.send(msgJson);
 
-    this.log.info('Queued:', msg);
+    this.log.info('Queued:', message);
 
     return new Promise((resolve, reject) => {
-      this._callbacks[id] = { resolve, reject };
+      this._callbacks[id] = { message, resolve, reject };
     });
   }
 }

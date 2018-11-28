@@ -74,10 +74,12 @@ export default class ApiClient extends CommonBase {
     this._nextId = 0;
 
     /**
-     * {object<Int,{resolve, reject}>} Map from message IDs to response
-     * callbacks. Each callback is an object that maps `resolve` and `reject` to
-     * functions that obey the usual promise contract for functions of those
-     * names. Initialized and reset in `_resetConnection()`.
+     * {object<Int,{message, resolve, reject}>} Map from message IDs to response
+     * callbacks and original message info (the latter for debugging). Each
+     * element is an object that maps `resolve` and `reject` to functions that
+     * obey the usual promise contract for functions of those names, and
+     * `message` to the originally-sent {@link Message}. Initialized and reset
+     * in {@link #_resetConnection()}.
      */
     this._callbacks = null;
 
@@ -255,11 +257,16 @@ export default class ApiClient extends CommonBase {
     this._updateLogger();
     this._log.event.opening();
 
-    const id = await this.meta.connectionId();
+    try {
+      const id = await this.meta.connectionId();
 
-    this._connectionId = id;
-    this._updateLogger();
-    this._log.event.open();
+      this._connectionId = id;
+      this._updateLogger();
+      this._log.event.open();
+    } catch (e) {
+      this._log.event.errorDuringOpen(e);
+      throw e;
+    }
 
     // Test to make sure newly-proxied objects get returned as expected.
     // **TODO:** Remove this once we have unit test coverage for this
@@ -301,7 +308,7 @@ export default class ApiClient extends CommonBase {
    * @param {object} event Event that caused this callback.
    */
   _handleClose(event) {
-    this._log.info('Closed:', event);
+    this._log.event.closed(event);
 
     const code = WebsocketCodes.close(event.code);
     const desc = event.reason ? `${code}: ${event.reason}` : code;
@@ -321,7 +328,7 @@ export default class ApiClient extends CommonBase {
    * @param {object} event Event that caused this callback.
    */
   _handleError(event) {
-    this._log.info('Error:', event);
+    this._log.event.error(event);
 
     // **Note:** The error event does not have any particularly useful extra
     // info, so -- alas -- there is nothing to get out of it for the
@@ -406,7 +413,10 @@ export default class ApiClient extends CommonBase {
   _handleTermination(event_unused, error) {
     // Reject the promises of any currently-pending messages.
     for (const id in this._callbacks) {
-      this._callbacks[id].reject(error);
+      const { message, reject } = this._callbacks[id];
+
+      this._log.event.rejectDuringTermination(...message.deconstruct());
+      reject(error);
     }
 
     // Clear the state related to the websocket. It is safe to re-open the
@@ -485,18 +495,18 @@ export default class ApiClient extends CommonBase {
     const id = this._nextId;
     this._nextId++;
 
-    const msg     = new Message(id, target, payload);
-    const msgJson = this._codec.encodeJson(msg);
+    const message = new Message(id, target, payload);
+    const msgJson = this._codec.encodeJson(message);
 
     switch (wsState) {
       case WebSocket.CONNECTING: {
         // Not yet open. Need to queue it up.
-        this._log.detail('Queued:', msg);
+        this._log.detail('Queued:', message);
         this._pendingMessages.push(msgJson);
         break;
       }
       case WebSocket.OPEN: {
-        this._log.detail('Sent:', msg);
+        this._log.detail('Sent:', message);
         this._ws.send(msgJson);
         break;
       }
@@ -508,7 +518,7 @@ export default class ApiClient extends CommonBase {
     }
 
     return new Promise((resolve, reject) => {
-      this._callbacks[id] = { resolve, reject };
+      this._callbacks[id] = { message, resolve, reject };
     });
   }
 
