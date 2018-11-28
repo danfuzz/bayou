@@ -201,8 +201,6 @@ export default class DocSession extends CommonBase {
       } else {
         proxyPromise = authorProxy.findExistingSession(info.documentId, info.caretId);
       }
-
-      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
     } else {
       // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
       // is used ubiquitously.
