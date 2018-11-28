@@ -382,7 +382,7 @@ export default class BodyClient extends StateMachine {
 
     try {
       const info = await infoPromise;
-      this._log.info('Session info:', info);
+      this._log.event.sessionInfo(info);
     } catch (e) {
       this.q_apiError('getLogInfo', e);
       return;

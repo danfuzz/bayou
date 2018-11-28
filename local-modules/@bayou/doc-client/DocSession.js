@@ -7,7 +7,7 @@ import { BaseKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';
 import PropertyClient from './PropertyClient';
@@ -91,6 +91,8 @@ export default class DocSession extends CommonBase {
      * non-`null` in `getSessionProxy()`.
      */
     this._sessionProxyPromise = null;
+
+    Object.seal(this);
   }
 
   /**
@@ -181,21 +183,36 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
-    // **TODO:** Allow `sessionInfo`!
+    if (this._sessionProxyPromise !== null) {
+      // **Note:** Because this is an `async` method, it's okay to return a
+      // promise.
+      return this._sessionProxyPromise;
+    }
+
+    let proxyPromise;
+
     if (this._sessionInfo !== null) {
-      throw Errors.wtf('Cannot use `sessionInfo`... yet!');
+      const info        = this._sessionInfo;
+      const api         = this._apiClient;
+      const authorProxy = api.getProxy(info.authorToken);
+
+      if (info.caretId === null) {
+        proxyPromise = authorProxy.makeNewSession(info.documentId);
+      } else {
+        proxyPromise = authorProxy.findExistingSession(info.documentId, info.caretId);
+      }
+    } else {
+      // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
+      // is used ubiquitously.
+      proxyPromise = this.apiClient.authorizeTarget(this._key);
     }
 
-    if (this._sessionProxyPromise === null) {
-      this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
+    this._sessionProxyPromise = proxyPromise;
 
-      // Log a note once the promise resolves.
-      await this._sessionProxyPromise;
-      this._log.info('Received session proxy.');
-    }
+    // Log a note once the promise resolves.
+    const proxy = await proxyPromise;
+    this._log.event.gotSessionProxy();
 
-    // **Note:** Because this is an `async` method, it's okay to return a
-    // promise.
-    return this._sessionProxyPromise;
+    return proxy;
   }
 }

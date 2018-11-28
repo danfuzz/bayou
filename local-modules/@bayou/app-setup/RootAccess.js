@@ -4,7 +4,8 @@
 
 import { SplitKey } from '@bayou/api-common';
 import { Context, Target } from '@bayou/api-server';
-import { Network, Storage } from '@bayou/config-server';
+import { Auth, Network, Storage } from '@bayou/config-server';
+import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
@@ -54,10 +55,10 @@ export default class RootAccess extends CommonBase {
 
     const fileComplex = await DocServer.theOne.getFileComplex(docId);
 
-    const url       = `${Network.baseUrl}/api`;
+    const url      = `${Network.baseUrl}/api`;
     const targetId = this._context.randomSplitKeyId();
-    const session   = await fileComplex.makeNewSession(authorId);
-    const key       = new SplitKey(url, targetId);
+    const session  = await fileComplex.makeNewSession(authorId);
+    const key      = new SplitKey(url, targetId);
     this._context.addTarget(new Target(key, session));
 
     log.info(
@@ -69,5 +70,43 @@ export default class RootAccess extends CommonBase {
       `  key url: ${key.url}`);
 
     return key;
+  }
+
+  /**
+   * Makes an instance of {@link SessionInfo} which corresponds to a specific
+   * author editing a specific document, on the server (or server cluster)
+   * running this method.
+   *
+   * @param {string} authorId ID of the author (user) who will be driving the
+   *   session.
+   * @param {string} docId ID of the document to be accessed.
+   * @returns {SessionInfo} Corresponding info struct.
+   */
+  async makeSessionInfo(authorId, docId) {
+    log.event.sessionRequested(authorId, docId);
+
+    // These checks round-trip with the back-end to do full (not just syntactic)
+    // validation.
+    await Promise.all([
+      Storage.dataStore.checkExistingAuthorId(authorId),
+      Storage.dataStore.checkExistingDocumentId(docId)
+    ]);
+
+    // We'll need the file complex as soon as the client becomes active, so
+    // might as well warm it up. But also, this ensures that the complex is in
+    // at least a semblance of a valid state before we return the info to the
+    // caller.
+    await DocServer.theOne.getFileComplex(docId);
+
+    log.event.sessionInfoValid(authorId, docId);
+
+    const url         = `${Network.baseUrl}/api`;
+    const authorToken = await Auth.getAuthorToken(authorId);
+
+    // Only log the safe (redacted) form of the token.
+    log.event.gotAuthorToken(authorToken.safeString);
+
+    // ...but we do need to return the full string to the caller.
+    return new SessionInfo(url, authorToken.secretToken, docId);
   }
 }

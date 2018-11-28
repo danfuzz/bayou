@@ -31,9 +31,6 @@ export default class CaretTracker extends CommonBase {
     /** {DocSession} Session that this instance is tied to. */
     this._docSession = DocSession.check(docSession);
 
-    /** {Logger} Logger specific to the session. */
-    this._log = docSession.log;
-
     /**
      * {Proxy|null} Proxy for the server-side session object. Becomes non-`null`
      * when the promise for same resolves, as arranged for in this constructor,
@@ -69,7 +66,7 @@ export default class CaretTracker extends CommonBase {
       this._caretId      = await this._sessionProxy.getCaretId();
       this._updating     = false;
 
-      this._log.info(`Caret tracker ready; caret ID \`${this._caretId}\`.`);
+      this._docSession.log.event.nowTrackingCaret(this._caretId);
 
       // Give the update loop a chance to send caret updates that happened
       // during initialization (if any).
