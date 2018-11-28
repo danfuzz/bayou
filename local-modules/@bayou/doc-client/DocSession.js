@@ -189,17 +189,30 @@ export default class DocSession extends CommonBase {
       return this._sessionProxyPromise;
     }
 
+    let proxyPromise;
+
     if (this._sessionInfo !== null) {
-      // **TODO:** Allow `sessionInfo`!
+      const info        = this._sessionInfo;
+      const api         = this._apiClient;
+      const authorProxy = api.getProxy(info.authorToken);
+
+      if (info.caretId === null) {
+        proxyPromise = authorProxy.makeNewSession(info.documentId);
+      } else {
+        proxyPromise = authorProxy.findExistingSession(info.documentId, info.caretId);
+      }
+
       throw Errors.wtf('Cannot use `sessionInfo`... yet!');
     } else {
       // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
       // is used ubiquitously.
-      this._sessionProxyPromise = this.apiClient.authorizeTarget(this._key);
+      proxyPromise = this.apiClient.authorizeTarget(this._key);
     }
 
+    this._sessionProxyPromise = proxyPromise;
+
     // Log a note once the promise resolves.
-    const proxy = await this._sessionProxyPromise;
+    const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
     return proxy;
