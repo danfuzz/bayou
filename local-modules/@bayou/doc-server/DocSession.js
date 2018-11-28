@@ -281,14 +281,14 @@ export default class DocSession extends CommonBase {
    * logging. Specifically, the client side will call this method and log the
    * results during session initiation.
    *
-   * @returns {string} A succinct identification string.
+   * @returns {object} Succinct identification.
    */
   getLogInfo() {
-    const fileId   = this._fileComplex.file.id;
-    const caretId  = this._caretId;
-    const authorId = this._authorId;
+    const file   = this._fileComplex.file.id;
+    const caret  = this._caretId;
+    const author = this._authorId;
 
-    return `file ${fileId}; caret ${caretId}; author ${authorId}`;
+    return { file, caret, author };
   }
 
   /**
