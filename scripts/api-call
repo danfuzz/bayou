@@ -29,7 +29,7 @@ init-prog
 argError=0
 
 # URL to contact.
-serverUrl=http://localhost:8080/api
+serverUrl='http://localhost:8080/api'
 
 # Need help?
 showHelp=0
