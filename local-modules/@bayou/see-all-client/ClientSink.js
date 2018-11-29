@@ -77,12 +77,19 @@ export default class ClientSink extends BaseSink {
     } else {
       for (const a of payload.args) {
         switch (typeof a) {
-          case 'object':   { formatStr.push((a === null) ? ' %s' : ' %o'); break; }
-          case 'function': { formatStr.push(' %o');                        break; }
-          default:         { formatStr.push(' %s');                        break; }
-        }
+          case 'function':
+          case 'object': {
+            formatStr.push(' ');
+            formatValue(a);
+            break;
+          }
 
-        args.push(a);
+          default: {
+            formatStr.push(' %s');
+            args.push(a);
+            break;
+          }
+        }
       }
     }
 
