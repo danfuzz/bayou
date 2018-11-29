@@ -280,7 +280,7 @@ export default class BodyClient extends StateMachine {
     // When this happens, higher-level logic can notice and take further action.
     this._addErrorStamp();
     if (this._isUnrecoverablyErrored()) {
-      this._log.info('Too many errors!');
+      this._log.event.cannotRecover();
       this.s_unrecoverableError();
       return;
     }
@@ -892,9 +892,10 @@ export default class BodyClient extends StateMachine {
     const errorCount      = this._errorStamps.length;
     const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
 
-    this._log.info(
-      `Error window: ${errorCount} total; ` +
-      `${Math.round(errorsPerMinute * 100) / 100} per minute`);
+    this._log.event.errorWindow({
+      total:     errorCount,
+      perMinute: Math.round(errorsPerMinute * 100) / 100
+    });
 
     return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
   }
