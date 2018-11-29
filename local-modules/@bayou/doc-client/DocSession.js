@@ -213,6 +213,19 @@ export default class DocSession extends CommonBase {
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
+    if (this._sessionInfo !== null) {
+      const info = this._sessionInfo;
+
+      if (info.caretId === null) {
+        // The session got started without a caret ID, which means a new caret
+        // will have been created. Update `_sessionInfo` accordingly.
+        const caretId = await proxy.getCaretId();
+
+        this._sessionInfo = info.withCaretId(caretId);
+        this._log.event.gotCaret(caretId);
+      }
+    }
+
     return proxy;
   }
 }
