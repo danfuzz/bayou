@@ -1,0 +1,153 @@
+#!/bin/bash
+#
+# Copyright 2016-2018 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+# Cleans the built product directory. See `--help` for details.
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# URL to contact.
+serverUrl=http://localhost:8080/api
+
+# Need help?
+showHelp=0
+
+# Create directory?
+create=0
+
+# Output directory.
+outDir=''
+
+while true; do
+    case $1 in
+        -h|--help)
+            showHelp=1
+            break
+            ;;
+        --url=?*)
+            serverUrl="${1#*=}"
+            ;;
+        --) # End of all options
+            shift
+            break
+            ;;
+        -?*)
+            echo "Unknown option: $1" 1>&2
+            argError=1
+            break
+            ;;
+        *)  # Default case: No more options, break out of the loop.
+            break
+    esac
+
+    shift
+done
+
+if (( $# < 2 )); then
+    echo 'Missing <target> and/or <method-name>.' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [<opt> ...] <target> <method-name> <method-arg> ..."
+    echo '  Issue an API call in a one-off session. Each of the <method-arg>s must'
+    echo '  be valid JSON.'
+    echo ''
+    echo '  --url=<url>'
+    echo '    URL of the server to contact. Defaults to `localhost` (etc.).'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+target="$1"
+methodName="$2"
+shift 2
+
+methodArgs=("$@")
+
+#
+# Main script
+#
+
+# Make the method name and args into a JSON array.
+call="[\"${methodName}\"$(for arg in "${methodArgs[@]}"; do printf ',%s' "${arg}"; done)]"
+
+payload="$(jq \
+    --arg target "${target}" \
+    --argjson call "${call}" \
+    --null-input \
+    --compact-output \
+    '{"Message": [0, $target, {"f": $call}]}' \
+    2>/dev/null
+)"
+
+if [[ $? != 0 ]]; then
+    echo 'Invalid argument(s).' 1>&2
+    exit 1
+fi
+
+response="$(curl \
+    --silent \
+    --header 'Content-Type: application/json; charset=utf-8' \
+    --data-raw "${payload}" \
+    "${serverUrl}"
+)"
+
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+
+# Validate the response as JSON. If not, just write it without interpretation.
+
+echo "${response}" | jq . >/dev/null 2>&1
+
+if [[ $? != 0 ]]; then
+    echo "${response}"
+    exit 1
+fi
+
+# Parse it as an encoded `Response`.
+
+echo "${response}" | jq '
+    if
+        .Response
+    then
+        if
+            (.Response | length) == 3
+        then
+            { "ok": false, "error": .Response[2] }
+        else
+            { "ok": true, "result": .Response[1] }
+        end
+    else
+        { "ok": false, "InvalidResponse": . }
+    end
+'
