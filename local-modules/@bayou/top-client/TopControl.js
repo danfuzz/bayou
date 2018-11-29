@@ -128,7 +128,7 @@ export default class TopControl {
 
     const newInfo = await this._recover(this._editorComplex.docSession.keyOrInfo);
 
-    if (typeof newKey !== 'string') {
+    if (typeof newInfo !== 'string') {
       log.info('Nothing more to do. :\'(');
       return;
     }
