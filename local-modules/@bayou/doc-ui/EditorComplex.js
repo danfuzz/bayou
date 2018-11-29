@@ -62,10 +62,10 @@ export default class EditorComplex extends CommonBase {
     this._ready = new Condition();
 
     /**
-     * {SessionInfo|SplitKey|null} Access credentials to the session to use for
-     * server communication. Set in {@link #_initSession()}.
+     * {SessionInfo|SplitKey|null} Key or info object that identifies the
+     * session and grants access to it. Set in {@link #_initSession()}.
      */
-    this._sessionKey = null;
+    this._sessionInfo = null;
 
     /**
      * {DocSession|null} Session control/management instance. Set in
@@ -236,8 +236,8 @@ export default class EditorComplex extends CommonBase {
       log.event.usingKey(keyOrInfo.toString());
     }
 
-    this._sessionKey  = keyOrInfo;
-    this._docSession  = new DocSession(this._sessionKey);
+    this._sessionInfo = keyOrInfo;
+    this._docSession  = new DocSession(this._sessionInfo);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
     this._titleClient = new TitleClient(this);
 
