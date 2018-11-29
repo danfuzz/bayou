@@ -31,7 +31,7 @@
 
   // Grab the base URL out of the encoded info. This is kinda gross, but when
   // we're here we haven't yet loaded the API code, and in order to load that
-  // code we need to know the base URL, whee! So we just do the minimal bit of
+  // code we need to know the server URL, whee! So we just do the minimal bit of
   // parsing needed to get the URL and then head on our merry way. See
   // {@link @bayou/api-common/SessionInfo} and
   // {@link @bayou/api-common/SplitKey}, the encoded forms in particular, if you
