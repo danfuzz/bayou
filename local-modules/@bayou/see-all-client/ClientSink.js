@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSink, SeeAll } from '@bayou/see-all';
+import { Functor } from '@bayou/util-common';
 
 // The whole point of this file is to use `console.<whatever>`, so...
 /* eslint-disable no-console */
@@ -43,26 +44,36 @@ export default class ClientSink extends BaseSink {
       default:      { logMethod = 'log';   break; }
     }
 
-    if (logRecord.isEvent()) {
-      formatStr.push('%c%s');
-      args.push('color: #840; font-weight: bold');
-      args.push(` ${payload.name}(`);
+    function formatValue(value) {
+      if (value instanceof Functor) {
+        // Handle functors specially, so that they look "functorish" rather
+        // than being undifferentiated "decomposed objects."
 
-      let first = true;
-      for (const a of payload.args) {
-        if (first) {
-          first = false;
-        } else {
-          formatStr.push('%s');
-          args.push(', ');
+        formatStr.push('%s(');
+        args.push(value.name);
+
+        let first = true;
+        for (const a of value.args) {
+          if (first) {
+            first = false;
+          } else {
+            formatStr.push(', ');
+          }
+
+          formatValue(a);
         }
 
+        formatStr.push(')');
+      } else {
         formatStr.push('%o');
-        args.push(a);
+        args.push(value);
       }
+    }
 
-      formatStr.push('%s');
-      args.push(')');
+    if (logRecord.isEvent()) {
+      formatStr.push('%c ');
+      args.push('color: #840; font-weight: bold');
+      formatValue(payload);
     } else {
       for (const a of payload.args) {
         switch (typeof a) {
