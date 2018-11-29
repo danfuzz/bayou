@@ -250,7 +250,7 @@ export default class DebugTools {
     const head =
       '<title>Editor</title>\n' +
       '<script>\n' +
-      `  BAYOU_KEY         = ${quotedInfo};\n` +
+      `  BAYOU_INFO        = ${quotedInfo};\n` +
       `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
       `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
       '</script>\n' +

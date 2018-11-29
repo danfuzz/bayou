@@ -120,4 +120,52 @@ describe('@bayou/doc-common/SessionInfo', () => {
       assert.deepEqual(result, [SERVER_URL, 'token', 'id', 'c']);
     });
   });
+
+  describe('withCaretId', () => {
+    it('should return a new instance given a valid `caretId`', () => {
+      const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
+      const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
+
+      function test(c) {
+        const result1 = orig1.withCaretId(c);
+        const expect1 = new SessionInfo(orig1.serverUrl, orig1.authorToken, orig1.documentId, c);
+        assert.deepEqual(result1, expect1);
+
+        const result2 = orig2.withCaretId(c);
+        const expect2 = new SessionInfo(orig2.serverUrl, orig2.authorToken, orig2.documentId, c);
+        assert.deepEqual(result2, expect2);
+      }
+
+      test('beep');
+      test('boop');
+    });
+
+    it('should reject invalid IDs', () => {
+      const si = new SessionInfo(SERVER_URL, 'token', 'doc');
+
+      function test(value) {
+        assert.throws(() => si.withCaretId(value), /badValue/);
+      }
+
+      test(undefined);
+      test(null);
+      test(914);
+      test(['x']);
+    });
+  });
+
+  describe('withoutCaretId', () => {
+    it('should return a new instance with `caretId === null`', () => {
+      function test(orig) {
+        const result = orig.withoutCaretId();
+        const expect = new SessionInfo(orig.serverUrl, orig.authorToken, orig.documentId);
+
+        assert.isNull(result.caretId);
+        assert.deepEqual(result, expect);
+      }
+
+      test(new SessionInfo(SERVER_URL, 'a', 'b', 'c'));
+      test(new SessionInfo(`${SERVER_URL}/123`, 'd', 'e'));
+    });
+  });
 });

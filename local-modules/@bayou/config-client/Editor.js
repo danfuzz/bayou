@@ -35,12 +35,12 @@ export default class Editor extends UtilityClass {
    *
    * @param {object} window Window which will ultimately contain one or more
    *   editors.
-   * @param {string} baseUrl Base URL that points to the server to use.
+   * @param {string} serverUrl URL at which to contact the server.
    * @returns {Promise|undefined} A promise whose resolution indicates the end
    *   of hook activity, or `undefined` if there is nothing to wait for.
    */
-  static aboutToRun(window, baseUrl) {
-    return use.Editor.aboutToRun(window, baseUrl);
+  static aboutToRun(window, serverUrl) {
+    return use.Editor.aboutToRun(window, serverUrl);
   }
 
   /**

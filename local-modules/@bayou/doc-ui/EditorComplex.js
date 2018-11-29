@@ -34,7 +34,7 @@ export default class EditorComplex extends CommonBase {
    * Constructs an instance.
    *
    * @param {SplitKey} sessionKey Access credentials to the session to use for
-   *   server communication.
+   *   server communication. **TODO:** Should also accept `SessionInfo`.
    * @param {Window} window The browser window in which we are operating.
    * @param {Element} topNode DOM element to attach the complex to.
    */
@@ -97,6 +97,8 @@ export default class EditorComplex extends CommonBase {
     // author overlay instances. And _all_ of this needs to be done before we
     // make a `BodyClient` (which gets done by `_initSession()`).
     (async () => {
+      log.event.starting();
+
       // Do all of the DOM setup for the instance.
       const [headerNode, titleNode, bodyNode, authorOverlayNode] =
         await this._domSetup(topNode, sessionKey.baseUrl);
@@ -177,10 +179,11 @@ export default class EditorComplex extends CommonBase {
   /**
    * Hook this instance up to a new session.
    *
-   * @param {SplitKey} sessionKey New session key to use.
+   * @param {SplitKey} sessionKey New session key to use. **TODO:** Should also
+   *   accept `SessionInfo`.
    */
   connectNewSession(sessionKey) {
-    log.info('Hooking up new session:', sessionKey.toString());
+    log.event.restarting();
     this._initSession(sessionKey, false);
   }
 
@@ -209,11 +212,14 @@ export default class EditorComplex extends CommonBase {
   /**
    * Initialize the session, based on the given key.
    *
-   * @param {SplitKey} sessionKey The session key.
+   * @param {SplitKey} sessionKey The session key. **TODO:** Should also accept
+   *   `SessionInfo`.
    * @param {boolean} fromConstructor `true` iff this call is from the
    *   constructor.
    */
   _initSession(sessionKey, fromConstructor) {
+    log.event.usingKey(sessionKey.toString());
+
     this._sessionKey  = SplitKey.check(sessionKey);
     this._docSession  = new DocSession(this._sessionKey);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
@@ -226,9 +232,9 @@ export default class EditorComplex extends CommonBase {
     (async () => {
       await this._bodyClient.when_idle();
       if (fromConstructor) {
-        log.info('Initialization complete!');
+        log.event.started();
       } else {
-        log.info('Done with reinitialization.');
+        log.event.restarted();
       }
     })();
   }

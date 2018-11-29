@@ -6,14 +6,16 @@
 // become/embed a Bayou editor. It assumes that the `window` object (that is,
 // the global context) contains the following bindings:
 //
-// * `BAYOU_KEY` -- The JSON-encoded form of an instance of `SplitKey`, to be
-//   used to authenticate access to a particular documemt.
+// * `BAYOU_INFO` -- The JSON-encoded form of an instance of `SessionInfo` or
+//   `SplitKey`, to be used to identify and authenticate access to a particular
+//   document.
 // * `BAYOU_NODE` -- The DOM node into which the editor should be embedded.
 // * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
 //   from connection trouble. It gets passed the `SessionInfo` or `SplitKey`
 //   which was initially used to establish the connection.
 //
-// See `TopControl` for more details about these parameters.
+// See {@link @bayou/top-client/TopControl} for more details about these
+// parameters.
 
 // Disable Eslint, because this file is delivered as-is and has to be fairly
 // conservative.
@@ -22,20 +24,31 @@
 // We wrap everything in an immediately-executed function so as to avoid
 // polluting the global namespace.
 (function () {
-  if (!(window.BAYOU_KEY && window.BAYOU_NODE)) {
+  if (!(window.BAYOU_INFO && window.BAYOU_NODE)) {
     // **Note:** This code is run too early to be able to use
     // `@bayou/util-common`'s error facilities.
     throw new Error('Missing configuration.');
   }
 
-  // Grab the base URL out of the encoded key. This is kinda gross, but when
+  // Grab the base URL out of the encoded info. This is kinda gross, but when
   // we're here we haven't yet loaded the API code, and in order to load that
-  // code we need to know the base URL, whee! So we just do the minimal bit of
+  // code we need to know the server URL, whee! So we just do the minimal bit of
   // parsing needed to get the URL and then head on our merry way. See
-  // {@link @bayou/api-common/SplitKey}, the encoded form in particular, if you
+  // {@link @bayou/api-common/SessionInfo} and
+  // {@link @bayou/api-common/SplitKey}, the encoded forms in particular, if you
   // want to understand what's going on.
-  var key = JSON.parse(window.BAYOU_KEY);
-  var url = key.SplitKey[0];
+  var info = JSON.parse(window.BAYOU_INFO);
+  var url;
+
+  if (info.SessionInfo) {
+    url = info.SessionInfo[0];
+  } else if (info.SplitKey) {
+    // **TODO:** Remove this once `SessionInfo` is used ubiquitously.
+    url = info.SplitKey[0];
+  } else {
+    throw new Error('Unrecognized format for `BAYOU_INFO`.');
+  }
+
   var baseUrl = ((url === '*') ? window.location : new URL(url)).origin;
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
