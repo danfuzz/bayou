@@ -100,4 +100,26 @@ export default class SessionInfo extends CommonBase {
 
     return (this._caretId === null) ? most : [...most, this._caretId];
   }
+
+  /**
+   * Makes an instance just like this one, except with a new value for
+   * `caretId`.
+   *
+   * @param {string|null} caretId ID of a pre-existing caret to control with the
+   *   session.
+   * @returns {SessionInfo} An appropriately-constructed instance.
+   */
+  withCaretId(caretId) {
+    TString.check(caretId);
+    return new SessionInfo(this._serverUrl, this._authorToken, this._documentId, caretId);
+  }
+
+  /**
+   * Makes an instance just like this one, except with `null` for `caretId`.
+   *
+   * @returns {SessionInfo} An appropriately-constructed instance.
+   */
+  withoutCaretId() {
+    return new SessionInfo(this._serverUrl, this._authorToken, this._documentId);
+  }
 }
