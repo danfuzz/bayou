@@ -105,7 +105,7 @@ export default class SessionInfo extends CommonBase {
    * Makes an instance just like this one, except with a new value for
    * `caretId`.
    *
-   * @param {string|null} caretId ID of a pre-existing caret to control with the
+   * @param {string} caretId ID of a pre-existing caret to control with the
    *   session.
    * @returns {SessionInfo} An appropriately-constructed instance.
    */
