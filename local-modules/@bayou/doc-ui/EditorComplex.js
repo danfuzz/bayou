@@ -63,25 +63,25 @@ export default class EditorComplex extends CommonBase {
 
     /**
      * {SessionInfo|SplitKey|null} Key or info object that identifies the
-     * session and grants access to it. Set in {@link #_initSession()}.
+     * session and grants access to it. Set in {@link #_initSession}.
      */
     this._sessionInfo = null;
 
     /**
      * {DocSession|null} Session control/management instance. Set in
-     * `_initSession()`.
+     * {@link #_initSession}.
      */
     this._docSession = null;
 
     /**
      * {BodyClient|null} Document body client instance (API-to-editor hookup).
-     * Set in `_initSession()`.
+     * Set in {@link #_initSession}.
      */
     this._bodyClient = null;
 
     /**
      * {TitleClient|null} Document title client instance (API-to-editor hookup).
-     * Set in `_initSession()`.
+     * Set in {@link #_initSession}.
      */
     this._titleClient = null;
 
@@ -97,10 +97,10 @@ export default class EditorComplex extends CommonBase {
     this._caretState = new CaretState(this);
 
     // The rest of the initialization has to happen asynchronously. In
-    // particular, there is no avoiding the asynchrony in `_domSetup()`, and
-    // that setup needs to be complete before we construct the Quill and
+    // particular, there is no avoiding the asynchrony in {@link #_domSetup},
+    // and that setup needs to be complete before we construct the Quill and
     // author overlay instances. And _all_ of this needs to be done before we
-    // make a `BodyClient` (which gets done by `_initSession()`).
+    // make a `BodyClient` (which gets done by {@link #_initSession}).
     (async () => {
       log.event.starting();
 
