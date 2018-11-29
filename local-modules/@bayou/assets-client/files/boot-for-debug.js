@@ -60,11 +60,11 @@ window.addEventListener('load', () => {
     throw new Error('Could not find editor node!');
   }
 
-  // This gets used by `boot-from-key`.
+  // This gets used by `boot-from-info`.
   window.BAYOU_NODE = editorNode;
 
   // Add the standard bootstrap code to the page.
   var elem = document.createElement('script');
-  elem.src = '/boot-from-key.js';
+  elem.src = '/boot-from-info.js';
   document.head.appendChild(elem);
 })

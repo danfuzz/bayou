@@ -14,7 +14,8 @@
 //   from connection trouble. It gets passed the `SessionInfo` or `SplitKey`
 //   which was initially used to establish the connection.
 //
-// See `TopControl` for more details about these parameters.
+// See {@link @bayou/top-client/TopControl} for more details about these
+// parameters.
 
 // Disable Eslint, because this file is delivered as-is and has to be fairly
 // conservative.
