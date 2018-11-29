@@ -34,12 +34,6 @@ serverUrl='http://localhost:8080/api'
 # Need help?
 showHelp=0
 
-# Create directory?
-create=0
-
-# Output directory.
-outDir=''
-
 while true; do
     case $1 in
         -h|--help)
