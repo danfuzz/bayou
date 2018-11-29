@@ -73,7 +73,12 @@ export default class TopControl {
    */
   async start() {
     // Let the outer app do its setup.
-    await Editor.aboutToRun(this._window, this._sessionInfo.baseUrl);
+
+    // **TODO:** Simplify this once `SessionInfo` is used ubiquitously.
+    const serverUrl = (this._sessionInfo instanceof SessionInfo)
+      ? this._sessionInfo.serverUrl
+      : this._sessionInfo.baseUrl;
+    await Editor.aboutToRun(this._window, serverUrl);
 
     // Arrange for the rest of initialization to happen once the initial page
     // contents are ready (from the browser's perspective).
