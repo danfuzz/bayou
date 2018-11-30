@@ -10,6 +10,7 @@ import { SplitKey } from '@bayou/api-common';
 import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
+import { SessionInfo } from '@bayou/doc-common';
 import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
@@ -33,13 +34,17 @@ export default class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {SplitKey} sessionKey Access credentials to the session to use for
-   *   server communication. **TODO:** Should also accept `SessionInfo`.
+   * @param {SplitKey|SessionInfo} keyOrInfo Key or info object that identifies
+   *   the session and grants access to it.
    * @param {Window} window The browser window in which we are operating.
    * @param {Element} topNode DOM element to attach the complex to.
    */
-  constructor(sessionKey, window, topNode) {
-    SplitKey.check(sessionKey);
+  constructor(keyOrInfo, window, topNode) {
+    // **TODO:** Simplify this once we stop using `SplitKey`s.
+    if (!(keyOrInfo instanceof SessionInfo)) {
+      SplitKey.check(keyOrInfo);
+    }
+
     TObject.check(window, Window);
     TObject.check(topNode, Element);
 
@@ -57,26 +62,26 @@ export default class EditorComplex extends CommonBase {
     this._ready = new Condition();
 
     /**
-     * {SplitKey|null} Access credentials to the session to use for server
-     * communication. Set in `_initSession()`.
+     * {SessionInfo|SplitKey|null} Key or info object that identifies the
+     * session and grants access to it. Set in {@link #_initSession}.
      */
-    this._sessionKey = null;
+    this._sessionInfo = null;
 
     /**
      * {DocSession|null} Session control/management instance. Set in
-     * `_initSession()`.
+     * {@link #_initSession}.
      */
     this._docSession = null;
 
     /**
      * {BodyClient|null} Document body client instance (API-to-editor hookup).
-     * Set in `_initSession()`.
+     * Set in {@link #_initSession}.
      */
     this._bodyClient = null;
 
     /**
      * {TitleClient|null} Document title client instance (API-to-editor hookup).
-     * Set in `_initSession()`.
+     * Set in {@link #_initSession}.
      */
     this._titleClient = null;
 
@@ -92,16 +97,21 @@ export default class EditorComplex extends CommonBase {
     this._caretState = new CaretState(this);
 
     // The rest of the initialization has to happen asynchronously. In
-    // particular, there is no avoiding the asynchrony in `_domSetup()`, and
-    // that setup needs to be complete before we construct the Quill and
+    // particular, there is no avoiding the asynchrony in {@link #_domSetup},
+    // and that setup needs to be complete before we construct the Quill and
     // author overlay instances. And _all_ of this needs to be done before we
-    // make a `BodyClient` (which gets done by `_initSession()`).
+    // make a `BodyClient` (which gets done by {@link #_initSession}).
     (async () => {
       log.event.starting();
 
+      // **TODO:** Simplify this once we stop using `SplitKey`s.
+      const serverUrl = (keyOrInfo instanceof SessionInfo)
+        ? keyOrInfo.serverUrl
+        : keyOrInfo.baseUrl;
+
       // Do all of the DOM setup for the instance.
       const [headerNode, titleNode, bodyNode, authorOverlayNode] =
-        await this._domSetup(topNode, sessionKey.baseUrl);
+        await this._domSetup(topNode, serverUrl);
 
       // The Provider component wraps our React application and makes the
       // Redux store available in the context of all of the wrapped
@@ -130,7 +140,7 @@ export default class EditorComplex extends CommonBase {
       Editor.editorComplexInit(this);
 
       // Do session setup using the initial key.
-      this._initSession(sessionKey, true);
+      this._initSession(keyOrInfo, true);
 
       this._ready.value = true;
     })();
@@ -212,16 +222,22 @@ export default class EditorComplex extends CommonBase {
   /**
    * Initialize the session, based on the given key.
    *
-   * @param {SplitKey} sessionKey The session key. **TODO:** Should also accept
-   *   `SessionInfo`.
+   * @param {SplitKey|SessionInfo} keyOrInfo Key or info object that
+   *   identifies the session and grants access to it.
    * @param {boolean} fromConstructor `true` iff this call is from the
    *   constructor.
    */
-  _initSession(sessionKey, fromConstructor) {
-    log.event.usingKey(sessionKey.toString());
+  _initSession(keyOrInfo, fromConstructor) {
+    // **TODO:** Simplify this once we stop using `SplitKey`s.
+    if (keyOrInfo instanceof SessionInfo) {
+      log.event.usingInfo(keyOrInfo);
+    } else {
+      SplitKey.check(keyOrInfo);
+      log.event.usingKey(keyOrInfo.toString());
+    }
 
-    this._sessionKey  = SplitKey.check(sessionKey);
-    this._docSession  = new DocSession(this._sessionKey);
+    this._sessionInfo = keyOrInfo;
+    this._docSession  = new DocSession(this._sessionInfo);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
     this._titleClient = new TitleClient(this);
 
@@ -244,11 +260,13 @@ export default class EditorComplex extends CommonBase {
    * ready to have Quill and the author overlay attached to it.
    *
    * @param {Element} topNode The top DOM node for the complex.
-   * @param {string} baseUrl Base URL of the server.
+   * @param {string} serverUrl URL used to contact the server.
    * @returns {array<Element>} Array of `[headerNode, titleNode, bodyNode,
    *   authorOverlayNode]`, for immediate consumption by the constructor.
    */
-  async _domSetup(topNode, baseUrl) {
+  async _domSetup(topNode, serverUrl) {
+    const baseUrl = new URL(serverUrl).origin;
+
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
       throw Errors.badUse('Expected `topNode` to be a `div`.');
