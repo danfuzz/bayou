@@ -13,8 +13,6 @@
     "@bayou/see-all": "local",
     "@bayou/state-machine": "local",
     "@bayou/typecheck": "local",
-    "@bayou/ui-embeds": "local",
-    "@bayou/ui-components": "local",
     "@bayou/util-client": "local",
     "@bayou/util-common": "local"
   }
