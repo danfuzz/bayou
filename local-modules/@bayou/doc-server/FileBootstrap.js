@@ -262,11 +262,11 @@ export default class FileBootstrap extends BaseDataManager {
 
     await this.file.create();
 
-    // `revNum` is the next available in order to append migration or
-    // error note `FileChange` to the end of the doc, while retaining
-    // history. In the future, we will presumably replace the entire
-    // notion of conveying information through appending notes in the
-    // document itself, and this entire code block will disappear.
+    // `revNum` is the next available in order to append migration or error note
+    // `FileChange` to the end of the document, while retaining history. In the
+    // future, we will presumably replace the entire notion of conveying
+    // information through appending notes in the document itself, and this
+    // entire code block will disappear.
     const currentRevNum = this.file.currentSnapshot.revNum;
     const initialFileChange = new FileChange(currentRevNum + 1, initOps);
     await this.file.appendChange(initialFileChange, FILE_CREATE_TIMEOUT_MSEC);

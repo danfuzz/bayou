@@ -56,7 +56,7 @@ export default class DocServer extends Singleton {
     // here, because that would be a waste if it turns out we've already cached
     // a valid result. Once we determine that we need to construct a new
     // complex (below), we'll call through to the back-end to get a file ID, and
-    // that call implicitly validates the doc ID.
+    // that call implicitly validates the document ID.
     Storage.dataStore.checkDocumentIdSyntax(docId);
 
     // Look for a cached or in-progress result.
@@ -109,7 +109,8 @@ export default class DocServer extends Singleton {
         if (docId === fileId) {
           result.log.info('Constructed new complex.');
         } else {
-          // Only explicitly note the file ID when it differs from the doc ID.
+          // Only explicitly note the file ID when it differs from the document
+          // ID.
           result.log.info(`Constructed new complex, with file ID \`${fileId}\`.`);
         }
 
@@ -139,15 +140,15 @@ export default class DocServer extends Singleton {
    * @returns {function} An appropriately-constructed function.
    */
   _complexReaper(docId) {
-    // **Note:** This function _used to_ remove the doc binding from the
+    // **Note:** This function _used to_ remove the document binding from the
     // `_complexes` map on the presumption that it was a known-dead weak
     // reference. That code has been deleted. First of all, the only benefit
     // would have been that it meant that the weak reference itself could get
     // GC'ed (and a dead weakref doesn't actually take up significant storage).
     // Second, and more importantly, this could fail due to a race condition: If
-    // the same doc was requested _after_ the old one was GC'ed and _before_
-    // this reaper was called, the cleanup code here would have incorrectly
-    // removed a perfectly valid binding.
+    // the same document was requested _after_ the old one was GC'ed and
+    // _before_ this reaper was called, the cleanup code here would have
+    // incorrectly removed a perfectly valid binding.
     return () => {
       log.info('Reaped idle file complex:', docId);
     };

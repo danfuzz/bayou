@@ -372,7 +372,7 @@ export default class LogRecord extends CommonBase {
       result.push('\n');
     }
 
-    // Append the stack if available and appropriate. See the header doc for
+    // Append the stack if available and appropriate. See the header comment for
     // more info.
     if (   this.isMessage()
         && (this.stack !== null)

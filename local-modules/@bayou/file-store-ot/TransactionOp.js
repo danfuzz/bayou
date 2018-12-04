@@ -34,7 +34,7 @@ const TYPE_Hash    = 'Hash';
 const TYPE_Index   = 'Index';
 const TYPE_Path    = 'Path';
 
-// Operation schemata. See the doc for {@link TransactionOp#propsFromName} for
+// Operation schemata. See the docs for {@link TransactionOp#propsFromName} for
 // details.
 //
 // **Note:** The comments below aren't "real" JSDoc comments, because JSDoc
