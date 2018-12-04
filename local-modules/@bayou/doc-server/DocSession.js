@@ -306,9 +306,7 @@ export default class DocSession extends CommonBase {
    * @returns {string} The document ID.
    */
   getDocumentId() {
-    // **TODO:** This is incorrect, because the file ID isn't necessarily the
-    // same thing as its document ID!
-    return this._fileComplex.fileAccess.file.id;
+    return this._fileComplex.fileAccess.documentId;
   }
 
   /**
