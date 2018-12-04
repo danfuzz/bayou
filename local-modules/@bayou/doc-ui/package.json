@@ -9,7 +9,6 @@
     "@bayou/quill-util": "local",
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
-    "@bayou/ui-components": "local",
     "@bayou/util-client": "local",
     "@bayou/util-common": "local"
   }

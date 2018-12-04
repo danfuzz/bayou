@@ -2,10 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-
 import { SplitKey } from '@bayou/api-common';
 import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
@@ -14,7 +10,6 @@ import { SessionInfo } from '@bayou/doc-common';
 import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
-import { Header } from '@bayou/ui-components';
 import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
@@ -110,19 +105,8 @@ export default class EditorComplex extends CommonBase {
         : keyOrInfo.baseUrl;
 
       // Do all of the DOM setup for the instance.
-      const [headerNode, titleNode, bodyNode, authorOverlayNode] =
+      const [headerNode_unused, titleNode, bodyNode, authorOverlayNode] =
         await this._domSetup(topNode, serverUrl);
-
-      // The Provider component wraps our React application and makes the
-      // Redux store available in the context of all of the wrapped
-      // components. This is needed for the calls to `react-redux.connect()`
-      // that are used within each of the header components.
-      ReactDOM.render(
-        <Provider store={ this._clientStore.store }>
-          <Header />
-        </Provider>,
-        headerNode
-      );
 
       // Construct the `QuillProm` instances.
       const [titleQuill, bodyQuill] = this._quillSetup(titleNode, bodyNode);

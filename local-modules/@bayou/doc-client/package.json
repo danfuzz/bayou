@@ -4,7 +4,6 @@
     "@bayou/api-common": "local",
     "@bayou/app-common": "local",
     "@bayou/config-client": "local",
-    "@bayou/data-model-client": "local",
     "@bayou/deps-react": "local",
     "@bayou/doc-common": "local",
     "@bayou/ot-common": "local",
@@ -13,8 +12,6 @@
     "@bayou/see-all": "local",
     "@bayou/state-machine": "local",
     "@bayou/typecheck": "local",
-    "@bayou/ui-embeds": "local",
-    "@bayou/ui-components": "local",
     "@bayou/util-client": "local",
     "@bayou/util-common": "local"
   }

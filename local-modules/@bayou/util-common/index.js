@@ -14,7 +14,6 @@ import PropertyIterable from './PropertyIterable';
 import Random from './Random';
 import Singleton from './Singleton';
 import StringUtil from './StringUtil';
-import Units from './Units';
 import WebsocketCodes from './WebsocketCodes';
 
 export {
@@ -30,7 +29,6 @@ export {
   Random,
   Singleton,
   StringUtil,
-  Units,
   WebsocketCodes
 };
 
