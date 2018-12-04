@@ -278,17 +278,25 @@ export default class DocSession extends CommonBase {
 
   /**
    * Returns a bit of identifying info about this instance, for the purposes of
-   * logging. Specifically, the client side will call this method and log the
-   * results during session initiation.
+   * logging. Specifically, the client will call this method and log the result
+   * during session initiation.
    *
    * @returns {object} Succinct identification.
    */
   getLogInfo() {
-    const file   = this._fileComplex.file.id;
-    const caret  = this._caretId;
-    const author = this._authorId;
+    const result = {
+      author:   this.getAuthorId(),
+      caret:    this.getCaretId(),
+      document: this.getDocumentId(),
+      file:     this.getFileId()
+    };
 
-    return { file, caret, author };
+    // Only include the file ID if it's not the same as the document ID.
+    if (result.file === result.document) {
+      delete result.file;
+    }
+
+    return result;
   }
 
   /**
@@ -301,7 +309,16 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns the document ID of the file controlled by this instance.
+   * Returns the caret ID of this instance.
+   *
+   * @returns {string} The caret ID.
+   */
+  getCaretId() {
+    return this._caretId;
+  }
+
+  /**
+   * Returns the ID of the document controlled by this instance.
    *
    * @returns {string} The document ID.
    */
@@ -310,11 +327,11 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns the caret ID of this instance.
+   * Returns the ID of the file controlled by this instance.
    *
-   * @returns {string} The caret ID.
+   * @returns {string} The file ID.
    */
-  getCaretId() {
-    return this._caretId;
+  getFileId() {
+    return this._fileComplex.fileAccess.file.id;
   }
 }
