@@ -33,10 +33,12 @@ export default class FileComplex extends BaseComplexMember {
    * Constructs an instance.
    *
    * @param {Codec} codec Codec instance to use.
+   * @param {string} documentId ID of the document associated with this
+   *   instance.
    * @param {BaseFile} file The underlying document storage.
    */
-  constructor(codec, file) {
-    super(new FileAccess(codec, file), 'complex');
+  constructor(codec, documentId, file) {
+    super(new FileAccess(codec, documentId, file), 'complex');
 
     /**
      * {FileBootstrap} Bootstrap handler, and also where the complex members are

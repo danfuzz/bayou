@@ -5,6 +5,7 @@
 import { Codec } from '@bayou/codec';
 import { BaseFile, FileCodec } from '@bayou/file-store';
 import { BaseLogger, Logger } from '@bayou/see-all';
+import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /** {Logger} Logger to use for this module. */
@@ -22,15 +23,24 @@ export default class FileAccess extends CommonBase {
    * Constructs an instance.
    *
    * @param {Codec} codec Codec instance to use.
+   * @param {string} documentId ID of the document associated with this
+   *   instance.
    * @param {BaseFile} file The underlying document storage.
    * @param {BaseLogger} [logger = null] If non-`null`, logger to use instead of
    *   the usual one. This is only meant to be used for unit testing.
    */
-  constructor(codec, file, logger = null) {
+  constructor(codec, documentId, file, logger = null) {
     super();
 
     /** {Codec} Codec instance to use. */
     this._codec = Codec.check(codec);
+
+    /**
+     * {string} ID of the document associated with this instance. **Note:** Just
+     * verified to be a string, because the actual ID syntax should have been
+     * checked at a higher layer.
+     */
+    this._documentId = TString.check(documentId);
 
     /** {BaseFile} The underlying document storage. */
     this._file = BaseFile.check(file);
@@ -48,6 +58,11 @@ export default class FileAccess extends CommonBase {
   /** {Codec} Codec instance to use with the underlying file. */
   get codec() {
     return this._codec;
+  }
+
+  /** {string} ID of the document associated with this instance. */
+  get documentId() {
+    return this._documentId;
   }
 
   /** {BaseFile} The underlying document storage. */

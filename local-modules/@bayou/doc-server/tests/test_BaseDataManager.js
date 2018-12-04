@@ -11,7 +11,7 @@ import { TransactionSpec } from '@bayou/file-store-ot';
 import { MockFile } from '@bayou/file-store/mocks';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
-const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, new MockFile('blort'));
+const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, 'doc-123', new MockFile('blort'));
 
 describe('@bayou/doc-server/BaseDataManager', () => {
   describe('.initSpec', () => {

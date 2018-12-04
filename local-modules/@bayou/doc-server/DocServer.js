@@ -94,7 +94,7 @@ export default class DocServer extends Singleton {
         const fileId  = docInfo.fileId;
 
         const file   = await Storage.fileStore.getFile(fileId);
-        const result = new FileComplex(this._codec, file);
+        const result = new FileComplex(this._codec, docId, file);
 
         result.log.info('Initializing...');
         await result.init();
