@@ -109,16 +109,16 @@ export default class BodyControl extends DurableControl {
   /**
    * Queues up an HTML export of the current body snapshot.
    *
-   * @param {RevisionNumber} revNum The revision number of the
-   *   body snapshot to conver to HTML.
-   * @param {string} docId The document Id.
+   * @param {RevisionNumber} revNum The revision number of the body snapshot to
+   *   convert to HTML.
+   * @param {string} documentId The document ID.
    */
-  async queueHtmlExport(revNum, docId) {
+  async queueHtmlExport(revNum, documentId) {
     RevisionNumber.check(revNum);
-    Storage.dataStore.checkDocumentIdSyntax(docId);
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
 
     const snapshot = await this._impl_getSnapshot(revNum);
-    await HtmlExport.exportHtml(snapshot, docId);
+    await HtmlExport.exportHtml(snapshot, documentId);
   }
 
   /**

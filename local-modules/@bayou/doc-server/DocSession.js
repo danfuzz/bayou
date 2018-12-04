@@ -109,11 +109,11 @@ export default class DocSession extends CommonBase {
     // revision would result if the `delta` were able to be applied directly. If
     // we get "lucky" (win any races) that will be the actual revision number,
     // but the ultimate result might have a higher `revNum`.
-    const change = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
+    const change           = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
     const bodyChangeResult = await this._bodyControl.update(change);
-    const docId = this.getDocumentId();
+    const documentId       = this.getDocumentId();
 
-    this._bodyControl.queueHtmlExport(bodyChangeResult.revNum, docId);
+    this._bodyControl.queueHtmlExport(bodyChangeResult.revNum, documentId);
 
     return bodyChangeResult;
   }

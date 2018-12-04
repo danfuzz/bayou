@@ -40,20 +40,20 @@ export default class RootAccess extends CommonBase {
    *
    * @param {string} authorId ID which corresponds to the author of changes that
    *   are made using the resulting authorization.
-   * @param {string} docId ID of the document which the resulting authorization
-   *   allows access to.
+   * @param {string} documentId ID of the document which the resulting
+   *   authorization allows access to.
    * @returns {SplitKey} A split token (ID + secret) which provides the
    *   requested access.
    */
-  async makeAccessKey(authorId, docId) {
+  async makeAccessKey(authorId, documentId) {
     // These checks round-trip with the back-end to do full (not just syntactic)
     // validation.
     await Promise.all([
       Storage.dataStore.checkExistingAuthorId(authorId),
-      Storage.dataStore.checkExistingDocumentId(docId)
+      Storage.dataStore.checkExistingDocumentId(documentId)
     ]);
 
-    const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
 
     const url      = `${Network.baseUrl}/api`;
     const targetId = this._context.randomSplitKeyId();
@@ -63,11 +63,11 @@ export default class RootAccess extends CommonBase {
 
     log.info(
       'Newly-authorized access.\n',
-      `  author:  ${authorId}\n`,
-      `  doc:     ${docId}\n`,
-      `  caret:   ${session.getCaretId()}\n`,
-      `  key id:  ${key.safeString}\n`, // This is safe to log (not security-sensitive).
-      `  key url: ${key.url}`);
+      `  author:   ${authorId}\n`,
+      `  document: ${documentId}\n`,
+      `  caret:    ${session.getCaretId()}\n`,
+      `  key id:   ${key.safeString}\n`, // This is safe to log (not security-sensitive).
+      `  key url:  ${key.url}`);
 
     return key;
   }
@@ -79,26 +79,26 @@ export default class RootAccess extends CommonBase {
    *
    * @param {string} authorId ID of the author (user) who will be driving the
    *   session.
-   * @param {string} docId ID of the document to be accessed.
+   * @param {string} documentId ID of the document to be accessed.
    * @returns {SessionInfo} Corresponding info struct.
    */
-  async makeSessionInfo(authorId, docId) {
-    log.event.sessionRequested(authorId, docId);
+  async makeSessionInfo(authorId, documentId) {
+    log.event.sessionRequested(authorId, documentId);
 
     // These checks round-trip with the back-end to do full (not just syntactic)
     // validation.
     await Promise.all([
       Storage.dataStore.checkExistingAuthorId(authorId),
-      Storage.dataStore.checkExistingDocumentId(docId)
+      Storage.dataStore.checkExistingDocumentId(documentId)
     ]);
 
     // We'll need the file complex as soon as the client becomes active, so
     // might as well warm it up. But also, this ensures that the complex is in
     // at least a semblance of a valid state before we return the info to the
     // caller.
-    await DocServer.theOne.getFileComplex(docId);
+    await DocServer.theOne.getFileComplex(documentId);
 
-    log.event.sessionInfoValid(authorId, docId);
+    log.event.sessionInfoValid(authorId, documentId);
 
     const url         = `${Network.baseUrl}/api`;
     const authorToken = await Auth.getAuthorToken(authorId);
@@ -107,6 +107,6 @@ export default class RootAccess extends CommonBase {
     log.event.gotAuthorToken(authorToken.safeString);
 
     // ...but we do need to return the full string to the caller.
-    return new SessionInfo(url, authorToken.secretToken, docId);
+    return new SessionInfo(url, authorToken.secretToken, documentId);
   }
 }

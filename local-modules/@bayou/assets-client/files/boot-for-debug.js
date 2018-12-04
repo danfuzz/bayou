@@ -17,10 +17,10 @@
  * If that's successful, we report it back up through the layers.
  */
 function BAYOU_RECOVER(keyOrInfo) {
-  var docId    = DEBUG_DOCUMENT_ID;
-  var authorId = DEBUG_AUTHOR_ID;
-  var origin   = new URL(keyOrInfo.url || keyOrInfo.serverUrl).origin;
-  var url      = `${origin}/debug/key/${docId}/${authorId}`;
+  var documentId = DEBUG_DOCUMENT_ID;
+  var authorId   = DEBUG_AUTHOR_ID;
+  var origin     = new URL(keyOrInfo.url || keyOrInfo.serverUrl).origin;
+  var url        = `${origin}/debug/key/${documentId}/${authorId}`;
 
   return new Promise((res, rej_unused) => {
     var req = new XMLHttpRequest();
