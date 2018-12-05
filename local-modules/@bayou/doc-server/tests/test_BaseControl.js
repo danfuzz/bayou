@@ -25,7 +25,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   mocks_TheModule.registerCodecs(CODEC.registry);
 
   /** {FileAccess} Convenient instance of `FileAccess`. */
-  const FILE_ACCESS = new FileAccess(CODEC, new MockFile('blort'));
+  const FILE_ACCESS = new FileAccess(CODEC, 'doc-xyz', new MockFile('blort'));
 
   describe('.changeClass', () => {
     it('should reflect the subclass\'s implementation', () => {
@@ -176,7 +176,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   describe('appendChange()', () => {
     it('should perform an appropriate transaction given a valid change', async () => {
       const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control = new MockControl(fileAccess, 'boop');
       const expectedMockChangeRevNum = 99;
       const change = new MockChange(expectedMockChangeRevNum, [['x', 'f'], ['y', 'b']]);
@@ -212,10 +212,10 @@ describe('@bayou/doc-server/BaseControl', () => {
     });
 
     it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
-      const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       let actualFileChange;
       let actualTimeout;
@@ -259,10 +259,10 @@ describe('@bayou/doc-server/BaseControl', () => {
     });
 
     it('should call the snapshot maybe-writer and html exporter, and return `true` if the transaction succeeds', async () => {
-      const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
         get: () => new MockSnapshot(100, [['yes']])
@@ -279,10 +279,10 @@ describe('@bayou/doc-server/BaseControl', () => {
     });
 
     it('should return `false` if the transaction fails due to a precondition failure', async () => {
-      const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
         get: () => new MockSnapshot(100, [['yes']])
@@ -305,10 +305,10 @@ describe('@bayou/doc-server/BaseControl', () => {
     });
 
     it('should rethrow any transaction error other than a precondition failure and timeout', async () => {
-      const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control = new MockControl(fileAccess, 'boop');
-      const change = new MockChange(99, [['x', 'f'], ['y', 'b']]);
+      const file       = new MockFile('blort');
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
+      const control    = new MockControl(fileAccess, 'boop');
+      const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
       Object.defineProperty(file, 'currentSnapshot', {
         get: () => new MockSnapshot(100, [['x']])
@@ -332,7 +332,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     it('should reject an empty change', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(101, []);
 
@@ -341,7 +341,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     it('should reject a change of the wrong type', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
 
       await assert.isRejected(control.appendChange('not_a_change'), /badValue/);
@@ -349,7 +349,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     it('should reject an invalid timeout value', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
@@ -368,9 +368,9 @@ describe('@bayou/doc-server/BaseControl', () => {
 
   describe('currentRevNum()', () => {
     it('should use the result of the transaction it performed', async () => {
-      const file = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
-      const control = new MockControl(fileAccess, 'boop');
+      const file           = new MockFile('blort');
+      const fileAccess     = new FileAccess(CODEC, 'doc-1', file);
+      const control        = new MockControl(fileAccess, 'boop');
       const expectedRevNum = 1234;
 
       const fileOp = FileOp.op_writePath('/mock_control/revision_number', CODEC.encodeJsonBuffer(expectedRevNum));
@@ -384,9 +384,9 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     it('should reject improper transaction results', async () => {
       async function test(revNum) {
-        const file = new MockFile('blort');
-        const fileAccess = new FileAccess(CODEC, file);
-        const control = new MockControl(fileAccess, 'boop');
+        const file       = new MockFile('blort');
+        const fileAccess = new FileAccess(CODEC, 'doc-1', file);
+        const control    = new MockControl(fileAccess, 'boop');
 
         // TODO: Replace with stub
         Object.defineProperty(file, 'currentSnapshot', {
@@ -966,7 +966,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   describe('whenRevNum()', () => {
     it('should return promptly if the revision is already available', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
 
       file._impl_transact = (spec_unused) => {
@@ -984,7 +984,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     it.skip('should issue transactions until the revision is written', async () => {
       const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, file);
+      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
 
       let revNum = 11;

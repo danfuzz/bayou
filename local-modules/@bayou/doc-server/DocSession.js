@@ -22,7 +22,7 @@ export default class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {fileComplex} fileComplex File complex representing the underlying
+   * @param {FileComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
@@ -109,11 +109,11 @@ export default class DocSession extends CommonBase {
     // revision would result if the `delta` were able to be applied directly. If
     // we get "lucky" (win any races) that will be the actual revision number,
     // but the ultimate result might have a higher `revNum`.
-    const change = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
+    const change           = new BodyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
     const bodyChangeResult = await this._bodyControl.update(change);
-    const docId = this.getDocumentId();
+    const documentId       = this.getDocumentId();
 
-    this._bodyControl.queueHtmlExport(bodyChangeResult.revNum, docId);
+    this._bodyControl.queueHtmlExport(bodyChangeResult.revNum, documentId);
 
     return bodyChangeResult;
   }
@@ -278,17 +278,25 @@ export default class DocSession extends CommonBase {
 
   /**
    * Returns a bit of identifying info about this instance, for the purposes of
-   * logging. Specifically, the client side will call this method and log the
-   * results during session initiation.
+   * logging. Specifically, the client will call this method and log the result
+   * during session initiation.
    *
    * @returns {object} Succinct identification.
    */
   getLogInfo() {
-    const file   = this._fileComplex.file.id;
-    const caret  = this._caretId;
-    const author = this._authorId;
+    const result = {
+      author:   this.getAuthorId(),
+      caret:    this.getCaretId(),
+      document: this.getDocumentId(),
+      file:     this.getFileId()
+    };
 
-    return { file, caret, author };
+    // Only include the file ID if it's not the same as the document ID.
+    if (result.file === result.document) {
+      delete result.file;
+    }
+
+    return result;
   }
 
   /**
@@ -301,22 +309,29 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Returns the document ID of the file controlled by this instance.
-   *
-   * @returns {string} The document ID.
-   */
-  getDocumentId() {
-    // **TODO:** This is incorrect, because the file ID isn't necessarily the
-    // same thing as its document ID!
-    return this._fileComplex.fileAccess.file.id;
-  }
-
-  /**
    * Returns the caret ID of this instance.
    *
    * @returns {string} The caret ID.
    */
   getCaretId() {
     return this._caretId;
+  }
+
+  /**
+   * Returns the ID of the document controlled by this instance.
+   *
+   * @returns {string} The document ID.
+   */
+  getDocumentId() {
+    return this._fileComplex.fileAccess.documentId;
+  }
+
+  /**
+   * Returns the ID of the file controlled by this instance.
+   *
+   * @returns {string} The file ID.
+   */
+  getFileId() {
+    return this._fileComplex.fileAccess.file.id;
   }
 }

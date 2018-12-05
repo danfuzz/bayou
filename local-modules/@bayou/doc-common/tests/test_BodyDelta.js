@@ -198,7 +198,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
           assert.deepEqual(result.ops, change.ops);
         });
 
-        it('should produce the new doc when composing the orig doc with the diff', () => {
+        it('should produce the new document when composing the orig document with the diff', () => {
           const diff   = origDoc.diff(newDoc);
           const result = origDoc.compose(diff, true);
           assert.instanceOf(result, BodyDelta);

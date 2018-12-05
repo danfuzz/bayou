@@ -416,7 +416,7 @@ export default class BodyClient extends StateMachine {
     } else {
       const source = QuillEvents.propsOf(firstChange).source;
       if (source !== CLIENT_SOURCE) {
-        // We expected the change to be the one we generated from the doc
+        // We expected the change to be the one we generated from the document
         // update (above), but the `source` we got speaks otherwise.
         throw Errors.wtf('Bad `source` for initial change.');
       }
@@ -479,7 +479,7 @@ export default class BodyClient extends StateMachine {
 
     // Ask the server for any changes, but only if there isn't already a pending
     // request for same. (Otherwise, we would flood the server for new change
-    // requests while the local user is updating the doc.)
+    // requests while the local user is updating the document.)
     if (!this._pendingChangeAfter) {
       this._pendingChangeAfter = true;
 
@@ -652,8 +652,8 @@ export default class BodyClient extends StateMachine {
    */
   _handle_collecting_wantToUpdate(baseSnapshot) {
     if (this._snapshot.revNum !== baseSnapshot.revNum) {
-      // As with the `gotQuillEvent` event, we ignore this event if the doc has
-      // changed out from under us.
+      // As with the `gotQuillEvent` event, we ignore this event if the document
+      // has changed out from under us.
       this._becomeIdle();
       return;
     }
@@ -777,7 +777,7 @@ export default class BodyClient extends StateMachine {
     //    Quill's current document state, yielding a document that includes
     //    the server's current state along with `dMore`. Update both the
     //    local document model and Quill to include the changes from the
-    //    server. At this point, the local doc still doesn't know about
+    //    server. At this point, the local document still doesn't know about
     //    `dMore`.
     // 3. Transform (rebase) `dMore` with regard to (on top of)
     //    `dCorrection`, yielding `dNewMore` This is the delta which can be

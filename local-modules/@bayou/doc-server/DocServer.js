@@ -48,20 +48,20 @@ export default class DocServer extends Singleton {
    * Gets the `FileComplex` for the document with the given ID. It is okay (not
    * an error) if the underlying file doesn't happen to exist.
    *
-   * @param {string} docId The document ID.
+   * @param {string} documentId The document ID.
    * @returns {FileComplex} The corresponding `FileComplex`.
    */
-  async getFileComplex(docId) {
-    // **Note:** We don't make an `async` back-end call to check the `docId`
-    // here, because that would be a waste if it turns out we've already cached
-    // a valid result. Once we determine that we need to construct a new
-    // complex (below), we'll call through to the back-end to get a file ID, and
-    // that call implicitly validates the doc ID.
-    Storage.dataStore.checkDocumentIdSyntax(docId);
+  async getFileComplex(documentId) {
+    // **Note:** We don't make an `async` back-end call to check the
+    // `documentId` here, because that would be a waste if it turns out we've
+    // already cached a valid result. Once we determine that we need to
+    // construct a new complex (below), we'll call through to the back-end to
+    // get a file ID, and that call implicitly validates the document ID.
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
 
     // Look for a cached or in-progress result.
 
-    const already = this._complexes.get(docId);
+    const already = this._complexes.get(documentId);
     if (already) {
       // There's something in the cache. There are two possibilities...
       if (already instanceof Promise) {
@@ -79,7 +79,7 @@ export default class DocServer extends Singleton {
         }
         // The weak reference is dead. We'll fall through and construct a new
         // result.
-        log.withAddedContext(docId).info('Cached complex was gc\'ed.');
+        log.withAddedContext(documentId).info('Cached complex was gc\'ed.');
       }
     }
 
@@ -90,36 +90,37 @@ export default class DocServer extends Singleton {
       try {
         // This validates the document ID and lets us find out the corresponding
         // file ID.
-        const docInfo = await Storage.dataStore.getDocumentInfo(docId);
+        const docInfo = await Storage.dataStore.getDocumentInfo(documentId);
         const fileId  = docInfo.fileId;
 
         const file   = await Storage.fileStore.getFile(fileId);
-        const result = new FileComplex(this._codec, file);
+        const result = new FileComplex(this._codec, documentId, file);
 
         result.log.info('Initializing...');
         await result.init();
         result.log.info('Done initializing.');
 
-        const resultRef = weak(result, this._complexReaper(docId));
+        const resultRef = weak(result, this._complexReaper(documentId));
 
         // Replace the promise in the cache with a weak reference to the actaul
         // result.
-        this._complexes.set(docId, resultRef);
+        this._complexes.set(documentId, resultRef);
 
-        if (docId === fileId) {
+        if (documentId === fileId) {
           result.log.info('Constructed new complex.');
         } else {
-          // Only explicitly note the file ID when it differs from the doc ID.
+          // Only explicitly note the file ID when it differs from the document
+          // ID.
           result.log.info(`Constructed new complex, with file ID \`${fileId}\`.`);
         }
 
         return result;
       } catch (e) {
-        log.error(`Trouble constructing complex ${docId}.`, e);
+        log.error(`Trouble constructing complex ${documentId}.`, e);
 
         // Remove the promise in the cache, so that we will try again instead of
         // continuing to report this error.
-        this._complexes.delete(docId);
+        this._complexes.delete(documentId);
 
         throw e; // Becomes the rejection value of the promise.
       }
@@ -127,29 +128,29 @@ export default class DocServer extends Singleton {
 
     // Store the the promise for the result in the cache, and return it.
 
-    log.withAddedContext(docId).info('About to construct complex.');
-    this._complexes.set(docId, resultPromise);
+    log.withAddedContext(documentId).info('About to construct complex.');
+    this._complexes.set(documentId, resultPromise);
     return resultPromise;
   }
 
   /**
    * Returns a weak reference callback function for the indicated document ID.
    *
-   * @param {string} docId Document ID of the file complex to remove.
+   * @param {string} documentId Document ID of the file complex to remove.
    * @returns {function} An appropriately-constructed function.
    */
-  _complexReaper(docId) {
-    // **Note:** This function _used to_ remove the doc binding from the
+  _complexReaper(documentId) {
+    // **Note:** This function _used to_ remove the document binding from the
     // `_complexes` map on the presumption that it was a known-dead weak
     // reference. That code has been deleted. First of all, the only benefit
     // would have been that it meant that the weak reference itself could get
     // GC'ed (and a dead weakref doesn't actually take up significant storage).
     // Second, and more importantly, this could fail due to a race condition: If
-    // the same doc was requested _after_ the old one was GC'ed and _before_
-    // this reaper was called, the cleanup code here would have incorrectly
-    // removed a perfectly valid binding.
+    // the same document was requested _after_ the old one was GC'ed and
+    // _before_ this reaper was called, the cleanup code here would have
+    // incorrectly removed a perfectly valid binding.
     return () => {
-      log.info('Reaped idle file complex:', docId);
+      log.info('Reaped idle file complex:', documentId);
     };
   }
 }

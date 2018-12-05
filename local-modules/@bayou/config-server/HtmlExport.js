@@ -13,11 +13,11 @@ export default class HtmlExport extends UtilityClass {
   /**
    * Converts the snapshot of given revision number to html.
    *
-   * @param {string} docId The id for the document in question.
+   * @param {string} documentId The id for the document in question.
    * @param {BodySnapshot} bodySnapshot The snapshot to convert
    *   to html.
    */
-  static async exportHtml(docId, bodySnapshot) {
-    use.HtmlExport.exportHtml(bodySnapshot, docId);
+  static async exportHtml(documentId, bodySnapshot) {
+    use.HtmlExport.exportHtml(bodySnapshot, documentId);
   }
 }

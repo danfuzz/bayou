@@ -17,7 +17,7 @@ describe('@bayou/doc-server/BaseComplexMember', () => {
     it('should accept a `FileAccess` and reflect it in the getters', () => {
       const codec  = appCommon_TheModule.modelCodec;
       const file   = new MockFile('blort');
-      const fa     = new FileAccess(codec, file);
+      const fa     = new FileAccess(codec, 'x', file);
       const result = new BaseComplexMember(fa, 'boop');
 
       assert.strictEqual(result.codec,      codec);
@@ -37,7 +37,7 @@ describe('@bayou/doc-server/BaseComplexMember', () => {
     it('should use the `logLabel` to create an appropriate `log`', () => {
       const codec  = appCommon_TheModule.modelCodec;
       const log    = new MockLogger();
-      const fa     = new FileAccess(codec, new MockFile('file-id'), log);
+      const fa     = new FileAccess(codec, 'x', new MockFile('file-id'), log);
       const result = new BaseComplexMember(fa, 'boop');
 
       result.log.info('florp', 'like');

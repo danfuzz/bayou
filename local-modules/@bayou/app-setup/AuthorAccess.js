@@ -58,20 +58,20 @@ export default class AuthorAccess extends CommonBase {
    * **TODO:** Context binding ought to happen at a different layer of the
    * system. See comment about this in {@link #makeNewSession} for more details.
    *
-   * @param {string} docId ID of the document which the session is for.
+   * @param {string} documentId ID of the document which the session is for.
    * @param {string} caretId ID of the caret.
    * @returns {string} Target ID within the API context which refers to the
    *   session. This is _not_ the same as the `caretId`.
    */
-  async findExistingSession(docId, caretId) {
+  async findExistingSession(documentId, caretId) {
     // We only check the document ID syntax here, because we can count on the
     // call to `getFileComplex()` to do a full validity check as part of its
     // work.
-    Storage.dataStore.checkDocumentIdSyntax(docId);
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
 
     CaretId.check(caretId);
 
-    const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
     const session     = await fileComplex.findExistingSession(this._authorId, caretId);
     const targetId    = this._context.randomId();
 
@@ -79,10 +79,10 @@ export default class AuthorAccess extends CommonBase {
 
     log.info(
       'Bound session for pre-existing caret.\n',
-      `  target: ${targetId}\n`,
-      `  doc:    ${docId}\n`,
-      `  author: ${this._authorId}\n`,
-      `  caret:  ${caretId}`);
+      `  target:   ${targetId}\n`,
+      `  document: ${documentId}\n`,
+      `  author:   ${this._authorId}\n`,
+      `  caret:    ${caretId}`);
 
     return targetId;
   }
@@ -103,18 +103,18 @@ export default class AuthorAccess extends CommonBase {
    * possible, such as (a) a similar change to `RootAccess`, and (b) the
    * possibility of un-exposing `_context` from `Application`.
    *
-   * @param {string} docId ID of the document which the resulting bound object
-   *   allows access to.
+   * @param {string} documentId ID of the document which the resulting bound
+   *   object allows access to.
    * @returns {string} Target ID within the API context which refers to the
    *   session. This is _not_ the same as the `caretId`.
    */
-  async makeNewSession(docId) {
+  async makeNewSession(documentId) {
     // We only check the document ID syntax here, because we can count on the
     // call to `getFileComplex()` to do a full validity check as part of its
     // work.
-    Storage.dataStore.checkDocumentIdSyntax(docId);
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
 
-    const fileComplex = await DocServer.theOne.getFileComplex(docId);
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
     const targetId    = this._context.randomId();
 
     // **Note:** This call includes data store back-end validation of the author
@@ -125,10 +125,10 @@ export default class AuthorAccess extends CommonBase {
 
     log.info(
       'Created session for new caret.\n',
-      `  target: ${targetId}\n`,
-      `  doc:    ${docId}\n`,
-      `  author: ${this._authorId}\n`,
-      `  caret:  ${session.getCaretId()}`);
+      `  target:   ${targetId}\n`,
+      `  document: ${documentId}\n`,
+      `  author:   ${this._authorId}\n`,
+      `  caret:    ${session.getCaretId()}`);
 
     return targetId;
   }
