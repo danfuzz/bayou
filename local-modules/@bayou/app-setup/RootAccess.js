@@ -125,6 +125,6 @@ export default class RootAccess extends CommonBase {
     // Return the full token string to the caller, as it (the client) will
     // ultimately need to pass it back in full. (Usually it's a bad idea to
     // return unredacted tokens; this (kind of) case is the main exception.)
-    return new SessionInfo(url, authorToken.secretToken, documentId);
+    return new SessionInfo(url, authorToken, documentId);
   }
 }

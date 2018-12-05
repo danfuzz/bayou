@@ -352,6 +352,6 @@ export default class DocSession extends CommonBase {
     const documentId  = this.getDocumentId();
     const caretId     = this.getCaretId();
 
-    return new SessionInfo(url, authorToken.secretToken, documentId, caretId);
+    return new SessionInfo(url, authorToken, documentId, caretId);
   }
 }
