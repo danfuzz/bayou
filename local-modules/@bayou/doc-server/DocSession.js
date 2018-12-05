@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Storage } from '@bayou/config-server';
+import { Network, Storage } from '@bayou/config-server';
 import { BodyChange, CaretId, PropertyChange, SessionInfo } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { CommonBase } from '@bayou/util-common';
@@ -347,7 +347,11 @@ export default class DocSession extends CommonBase {
    *   one.
    */
   getSessionInfo() {
-    // **TODO:** Fill this in!
-    return new SessionInfo('http://localhost/TODO', 'TODO', this.getDocumentId(), this.getCaretId());
+    const url         = `${Network.baseUrl}/api`;
+    const authorToken = 'TODO'; // **TODO:** Fill this in!
+    const documentId  = this.getDocumentId();
+    const caretId     = this.getCaretId();
+
+    return new SessionInfo(url, authorToken, documentId, caretId);
   }
 }
