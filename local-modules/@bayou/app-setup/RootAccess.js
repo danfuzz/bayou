@@ -61,6 +61,18 @@ export default class RootAccess extends CommonBase {
     const key      = new SplitKey(url, targetId);
     this._context.addTarget(new Target(key, session));
 
+    // As a "dry run" for the transition to new-style session management, try to
+    // get an author token for `authorId`, and log what happens. **TODO:**
+    // Remove this -- heck, remove this whole method -- once new-style sessions
+    // are consistently used.
+    try {
+      const authorToken = await Auth.getAuthorToken(authorId);
+      const authority   = await Auth.tokenAuthority(authorToken);
+      log.event.gotAuthorToken({ where: 'makeAccessKey', token: authorToken.safeString, authority });
+    } catch (e) {
+      log.event.failedToGetAuthorToken(e);
+    }
+
     log.info(
       'Newly-authorized access.\n',
       `  author:   ${authorId}\n`,
@@ -103,10 +115,16 @@ export default class RootAccess extends CommonBase {
     const url         = `${Network.baseUrl}/api`;
     const authorToken = await Auth.getAuthorToken(authorId);
 
-    // Only log the safe (redacted) form of the token.
-    log.event.gotAuthorToken(authorToken.safeString);
+    // As a bit of extra visibility / validation as we transition to new-style
+    // sessions, get and log the "authority" granted to `authorToken`. This had
+    // better turn out to be that it grants edit access to the author in
+    // question! **Note:** Only log the safe (redacted) form of the token.
+    const authority = await Auth.tokenAuthority(authorToken);
+    log.event.gotAuthorToken({ where: 'makeSessionInfo', token: authorToken.safeString, authority });
 
-    // ...but we do need to return the full string to the caller.
-    return new SessionInfo(url, authorToken.secretToken, documentId);
+    // Return the full token string to the caller, as it (the client) will
+    // ultimately need to pass it back in full. (Usually it's a bad idea to
+    // return unredacted tokens; this (kind of) case is the main exception.)
+    return new SessionInfo(url, authorToken, documentId);
   }
 }

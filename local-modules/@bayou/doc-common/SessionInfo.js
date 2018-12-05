@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BearerToken } from '@bayou/api-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -16,8 +17,9 @@ export default class SessionInfo extends CommonBase {
    *
    * @param {string} serverUrl URL of the server to connect to in order to use
    *   the session.
-   * @param {string} authorToken Token which identifies the author (user) under
-   *   whose authority the session is to be run.
+   * @param {string|BearerToken} authorToken Token which identifies the author
+   *   (user) under whose authority the session is to be run. If passed as a
+   *   {@link BearerToken}, gets converted to its `secretToken` string.
    * @param {string} documentId ID of the document to be edited in the session.
    * @param {string|null} [caretId = null] ID of a pre-existing caret to control
    *   with the session. If `null`, a new caret will ultimately be created for
@@ -37,7 +39,9 @@ export default class SessionInfo extends CommonBase {
      * {string} Token which identifies the author (user) under whose authority
      * the session is to be run.
      */
-    this._authorToken = TString.check(authorToken);
+    this._authorToken = (authorToken instanceof BearerToken)
+      ? authorToken.secretToken
+      : TString.check(authorToken);
 
     /** {string} ID of the document to be edited in the session. */
     this._documentId = TString.check(documentId);
