@@ -19,9 +19,13 @@ function customConverter(customOp) {
   return expectedUnfoundCustomOpHtml;
 }
 
+function urlParserNoOp(url) {
+  return url;
+}
+
 function testHtml(ops, expectedHtml) {
   const delta = new BodyDelta(ops);
-  const result = BodyDeltaHtml.toHtmlForm(delta, customConverter);
+  const result = BodyDeltaHtml.toHtmlForm(delta, customConverter, { urlSanitizer: urlParserNoOp });
 
   assert.deepEqual(result, expectedHtml);
 }
@@ -46,6 +50,11 @@ describe('@bayou/doc-server/BodyDeltaHtml', () => {
 
     it('should produce expected HTML string when invalid custom op', () => {
       testHtml([BodyOp.op_embed('unregisteredCustomOp')], `<p>${expectedUnfoundCustomOpHtml}</p>`);
+    });
+
+    it('should produce non-altered url', () => {
+      const unsafeLink = 'test.com';
+      testHtml([BodyOp.op_text('unsafe link', { link: unsafeLink })], `<p><a href="${unsafeLink}" target="_blank">unsafe link</a></p>`);
     });
   });
 });
