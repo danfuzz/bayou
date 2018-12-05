@@ -5,6 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
+import { BearerToken } from '@bayou/api-common';
 import { SessionInfo } from '@bayou/doc-common';
 
 /** {string} Handy valid server URL. */
@@ -26,6 +27,12 @@ describe('@bayou/doc-common/SessionInfo', () => {
 
     it('should accept three strings and `null`', () => {
       const result = new SessionInfo(SERVER_URL, 'one', 'two', null);
+      assert.isFrozen(result);
+    });
+
+    it('should accept a `BearerToken` for the `authorToken` argument', () => {
+      const token  = new BearerToken('x', 'y');
+      const result = new SessionInfo(SERVER_URL, token, 'boop');
       assert.isFrozen(result);
     });
 
@@ -55,10 +62,17 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.authorToken', () => {
-    it('should be the constructed value', () => {
+    it('should be the constructed value if constructed from a string', () => {
       const token  = 'florp';
       const result = new SessionInfo(SERVER_URL, token, 'x');
       assert.strictEqual(result.authorToken, token);
+    });
+
+    it('should be the `secretToken` from a `BearerToken` if that was used in construction', () => {
+      const secret = 'the-secret';
+      const token  = new BearerToken('the-id', secret);
+      const result = new SessionInfo(SERVER_URL, token, 'boop');
+      assert.strictEqual(result.authorToken, secret);
     });
   });
 
