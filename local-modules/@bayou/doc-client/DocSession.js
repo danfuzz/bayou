@@ -213,6 +213,17 @@ export default class DocSession extends CommonBase {
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
+    if (this._sessionInfo === null) {
+      // "Dry run" of converting to a new-style session. **TODO:** Make this
+      // result used for realsies instead of just being logged.
+      try {
+        const sessionInfo = await proxy.getSessionInfo();
+        this._log.event.convertedToSessionInfo(sessionInfo);
+      } catch (e) {
+        this._log.event.failedToConvertSession(e);
+      }
+    }
+
     if (this._sessionInfo !== null) {
       const info = this._sessionInfo;
 
