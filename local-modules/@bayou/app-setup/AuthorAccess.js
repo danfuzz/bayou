@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Context, Target } from '@bayou/api-server';
+import { ProxiedObject } from '@bayou/api-server';
 import { Storage } from '@bayou/config-server';
 import { CaretId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
@@ -24,10 +24,10 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} authorId ID of the author on whose behalf this instance
    *  acts.
-   * @param {Context} context The API context that is managed by this instance,
-   *   that is, where auth-controlled resources end up getting bound.
+   * @param {Context} context_unused The API context that is managed by this
+   *   instance, that is, where auth-controlled resources end up getting bound.
    */
-  constructor(authorId, context) {
+  constructor(authorId, context_unused) {
     super();
 
     /**
@@ -37,9 +37,6 @@ export default class AuthorAccess extends CommonBase {
      * and constructors aren't allowed to be `async`.
      */
     this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
-
-    /** {Context} The API context to use. */
-    this._context = Context.check(context);
 
     /** {Logger} Logger for this instance. */
     this._log = log.withAddedContext(authorId);
@@ -73,35 +70,22 @@ export default class AuthorAccess extends CommonBase {
 
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
     const session     = await fileComplex.findExistingSession(this._authorId, caretId);
-    const targetId    = this._context.randomId();
-
-    this._context.addTarget(new Target(targetId, session));
 
     log.info(
       'Bound session for pre-existing caret.\n',
-      `  target:   ${targetId}\n`,
       `  document: ${documentId}\n`,
       `  author:   ${this._authorId}\n`,
       `  caret:    ${caretId}`);
 
-    return targetId;
+    // The `ProxiedObject` wrapper tells the API to return this to the far side
+    // of the connection as a reference, not by encoding its contents.
+    return new ProxiedObject(session);
   }
 
   /**
    * Adds a binding to this instance's associated context for a new editing
    * session on the given document, representing a newly-created caret. If the
    * document doesn't exist, this will cause it to be created.
-   *
-   * **TODO:** Context binding ought to happen at a different layer of the
-   * system. Maybe something like: An API method implementation can return an
-   * instance of a new class `BindResult` which gets noticed by `api-server`
-   * during API dispatch, which causes it to perform binding. This method would
-   * then return a session object (`fileComplex.makeNewSession(...)`) wrapped in
-   * an instance of that new class. This arrangement would mean that this class
-   * won't have to explicitly know about a context, nor even have to worry about
-   * generating IDs. Further upstream / parallel simplifications will also be
-   * possible, such as (a) a similar change to `RootAccess`, and (b) the
-   * possibility of un-exposing `_context` from `Application`.
    *
    * @param {string} documentId ID of the document which the resulting bound
    *   object allows access to.
@@ -115,21 +99,19 @@ export default class AuthorAccess extends CommonBase {
     Storage.dataStore.checkDocumentIdSyntax(documentId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const targetId    = this._context.randomId();
 
     // **Note:** This call includes data store back-end validation of the author
     // ID.
     const session = await fileComplex.makeNewSession(this._authorId);
 
-    this._context.addTarget(new Target(targetId, session));
-
     log.info(
       'Created session for new caret.\n',
-      `  target:   ${targetId}\n`,
       `  document: ${documentId}\n`,
       `  author:   ${this._authorId}\n`,
       `  caret:    ${session.getCaretId()}`);
 
-    return targetId;
+    // The `ProxiedObject` wrapper tells the API to return this to the far side
+    // of the connection as a reference, not by encoding its contents.
+    return new ProxiedObject(session);
   }
 }

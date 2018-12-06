@@ -193,8 +193,7 @@ export default class DocSession extends CommonBase {
 
     if (this._sessionInfo !== null) {
       const info        = this._sessionInfo;
-      const api         = this._apiClient;
-      const authorProxy = api.getProxy(info.authorToken);
+      const authorProxy = this.apiClient.getProxy(info.authorToken);
 
       if (info.caretId === null) {
         proxyPromise = authorProxy.makeNewSession(info.documentId);
