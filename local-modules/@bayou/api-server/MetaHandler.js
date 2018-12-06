@@ -6,8 +6,6 @@ import { TString } from '@bayou/typecheck';
 import { Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
-import ProxiedObject from './ProxiedObject';
-
 /** {Int} How long an unanswered challenge remains active for, in msec. */
 const CHALLENGE_TIMEOUT_MSEC = 5 * 60 * 1000; // Five minutes.
 
@@ -141,28 +139,5 @@ export default class MetaHandler {
    */
   ping() {
     return true;
-  }
-
-  /**
-   * Makes a new counter, which is kept on the server and returned to the client
-   * as a proxied object. The method `count()` on the result returns the next
-   * number in sequence, starting with `0`.
-   *
-   * **TODO:** This method only exists for ad-hoc testing of the API mechanism
-   * and should be removed once we have real tests.
-   *
-   * @returns {ProxiedObject} A new counter.
-   */
-  makeCounter() {
-    let value = -1;
-
-    const result = {
-      count() {
-        value++;
-        return value;
-      }
-    };
-
-    return new ProxiedObject(result);
   }
 }

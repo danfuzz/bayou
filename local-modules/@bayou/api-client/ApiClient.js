@@ -268,20 +268,6 @@ export default class ApiClient extends CommonBase {
       throw e;
     }
 
-    // Test to make sure newly-proxied objects get returned as expected.
-    // **TODO:** Remove this once we have unit test coverage for this
-    // functionality.
-    /*
-    (async () => {
-      const counter = await this.meta.makeCounter();
-      this._log.info('Got counter:', counter);
-      const c0 = await counter.count();
-      const c1 = await counter.count();
-      const c2 = await counter.count();
-      this._log.info('Got counts:', c0, c1, c2);
-    })();
-    */
-
     return true;
   }
 

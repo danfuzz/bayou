@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Remote, SplitKey } from '@bayou/api-common';
-import { ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
+import ProxiedObject from './ProxiedObject';
 import Target from './Target';
 import TokenAuthorizer from './TokenAuthorizer';
 
@@ -33,15 +33,22 @@ export default class Context extends CommonBase {
    * Constructs an instance which is initially empty.
    *
    * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {string} logTag Tag to use as part of the logging prefix.
    * @param {TokenAuthorizer|null} [tokenAuth = null] Optional authorizer for
    *   bearer tokens. If non-`null`, this is used to map bearer tokens into
    *   usable target objects.
    */
-  constructor(codec, tokenAuth = null) {
+  constructor(codec, logTag, tokenAuth = null) {
     super();
 
     /** {Codec} The codec to use for connections / sessions. */
     this._codec = Codec.check(codec);
+
+    /** {string} Tag to use as part of the logging prefix. */
+    this._logTag = TString.check(logTag);
+
+    /** {Logger} Logger for this instance. */
+    this._log = log.withAddedContext(logTag);
 
     /**
      * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
@@ -81,7 +88,7 @@ export default class Context extends CommonBase {
   /**
    * Adds a {@link Target} to this instance's map of same, and also adds the
    * remote map from the target's wrapped object to its corresponding
-   * {@link Remote} representative. The given `target`must not have an ID that
+   * {@link Remote} representative. The given `target` must not have an ID that
    * is already represented in the map. In addition, the object wrapped by
    * `target` must not already be bound to another ID. (That is, for any given
    * instance of this class, there is a one-to-one mapping between IDs and
@@ -95,6 +102,7 @@ export default class Context extends CommonBase {
    */
   addTarget(target) {
     Target.check(target);
+
     const id     = target.id;
     const obj    = target.directObject;
     const remote = new Remote(id);
@@ -117,10 +125,16 @@ export default class Context extends CommonBase {
    * Clones this instance. The resulting clone has a separate underlying map.
    * That is, adding targets to the clone does not affect its progenitor.
    *
+   * @param {string|null} [logTag = null] New tag to use for logging, or `null`
+   *   to use the original from this instance.
    * @returns {Context} The newly-cloned instance.
    */
-  clone() {
-    const result = new Context(this._codec, this._tokenAuth);
+  clone(logTag = null) {
+    if (logTag === null) {
+      logTag = this._logTag;
+    }
+
+    const result = new Context(this._codec, logTag, this._tokenAuth);
 
     for (const t of this._map.values()) {
       result.addTarget(t);
@@ -228,9 +242,17 @@ export default class Context extends CommonBase {
     const obj     = proxiedObject.target;
     const already = this._remoteMap.get(obj);
 
-    return (already === undefined)
-      ? this.addTarget(new Target(this.randomId(), obj))
-      : already;
+    if (already !== undefined) {
+      return already;
+    }
+
+    const targetId = this._randomId();
+    const target   = new Target(targetId, obj);
+    const remote   = this.addTarget(target);
+
+    this._log.event.newRemote(targetId, obj);
+
+    return remote;
   }
 
   /**
@@ -244,32 +266,6 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
-  }
-
-  /**
-   * Makes a new random ID for use with this instance, which (a) is guaranteed
-   * not to be used by the instance already, and (b) will not be mistaken by
-   * the token handler (if any) for a token. **Note:** If not bound promptly
-   * (that is, within the same turn of execution when this method is called), it
-   * is conceivably possible for a duplicate ID to be returned and then
-   * ultimately result in a "duplicate target" error in {@link #addTarget}.
-   *
-   * @returns {string} A random unused target ID.
-   */
-  randomId() {
-    const tokenAuth = this._tokenAuth;
-    const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
-
-    for (;;) {
-      const result = `${prefix}${Random.hexByteString(4)}`;
-
-      if (!this.hasId(result)) {
-        return result;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
   }
 
   /**
@@ -344,20 +340,46 @@ export default class Context extends CommonBase {
 
     this._lastIdleCleanup = now;
 
-    log.event.idleCleanup('start');
+    this._log.event.idleCleanup('start');
 
     // Note: The ECMAScript spec guarantees that it is safe to delete keys from
     // a map while iterating over it. See
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
     for (const [id, target] of map) {
       if (target.wasIdleAsOf(idleLimit)) {
-        log.event.idleCleanupRemoved(id);
+        this._log.event.idleCleanupRemoved(id);
         map.delete(id);
         remoteMap.delete(target.directObject);
       }
     }
 
-    log.event.idleCleanup('done');
+    this._log.event.idleCleanup('done');
+  }
+
+  /**
+   * Makes a new random ID for use with this instance, which (a) is guaranteed
+   * not to be used by the instance already, and (b) will not be mistaken by
+   * the token handler (if any) for a token. **Note:** If not bound promptly
+   * (that is, within the same turn of execution when this method is called), it
+   * is conceivably possible for a duplicate ID to be returned and then
+   * ultimately result in a "duplicate target" error in {@link #addTarget}.
+   *
+   * @returns {string} A random unused target ID.
+   */
+  _randomId() {
+    const tokenAuth = this._tokenAuth;
+    const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
+
+    for (;;) {
+      const result = `${prefix}${Random.hexByteString(4)}`;
+
+      if (!this.hasId(result)) {
+        return result;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
   }
 
   /**

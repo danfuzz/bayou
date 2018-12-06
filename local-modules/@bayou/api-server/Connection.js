@@ -3,13 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
-import { ProxiedObject } from '@bayou/api-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
 import Context from './Context';
 import MetaHandler from './MetaHandler';
+import ProxiedObject from './ProxiedObject';
 import Target from './Target';
 
 /** {Logger} Logger. */
@@ -42,14 +42,14 @@ export default class Connection extends CommonBase {
   constructor(context) {
     super();
 
-    /** {Context} The binding context to provide access to. */
-    this._context = Context.check(context).clone();
-
     /**
      * {string} Short label string used to identify this connection in logs.
      * _Probably_ but not _guaranteed_ to be unique.
      */
     this._connectionId = Random.shortLabel('conn');
+
+    /** {Context} The binding context to provide access to. */
+    this._context = Context.check(context).clone(this._connectionId);
 
     /** {Codec} The codec to use. */
     this._codec = context.codec;

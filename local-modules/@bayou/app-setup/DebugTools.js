@@ -401,13 +401,18 @@ export default class DebugTools {
    * @returns {string} A new `SplitKey` encoded as JSON.
    */
   async _makeEncodedInfo(documentId, authorId) {
-    // **TODO:** This is just a "dry run" for now. Ultimately this should get
-    // returned.
-    await this._rootAccess.makeSessionInfo(authorId, documentId);
+    // As an aid to the transition to new-style sessions, if the `authorId` has
+    // the suffix `-key`, then we strip the suffix and produce an old-style
+    // session access key. **TODO:** Remove this once new-style sessions are
+    // used consistently.
+    if (authorId.endsWith('-key')) {
+      authorId = authorId.replace(/-key$/, '');
+      const key = await this._rootAccess.makeAccessKey(authorId, documentId);
+      return appCommon_TheModule.fullCodec.encodeJson(key);
+    }
 
-    // **TODO:** Replace this with construction of `SessionInfo` (above).
-    const key = await this._rootAccess.makeAccessKey(authorId, documentId);
-    return appCommon_TheModule.fullCodec.encodeJson(key);
+    const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
+    return appCommon_TheModule.fullCodec.encodeJson(info);
   }
 
   /**
