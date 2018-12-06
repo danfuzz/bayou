@@ -88,7 +88,7 @@ export default class Context extends CommonBase {
   /**
    * Adds a {@link Target} to this instance's map of same, and also adds the
    * remote map from the target's wrapped object to its corresponding
-   * {@link Remote} representative. The given `target`must not have an ID that
+   * {@link Remote} representative. The given `target` must not have an ID that
    * is already represented in the map. In addition, the object wrapped by
    * `target` must not already be bound to another ID. (That is, for any given
    * instance of this class, there is a one-to-one mapping between IDs and
@@ -102,6 +102,7 @@ export default class Context extends CommonBase {
    */
   addTarget(target) {
     Target.check(target);
+
     const id     = target.id;
     const obj    = target.directObject;
     const remote = new Remote(id);
