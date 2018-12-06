@@ -43,7 +43,7 @@ export default class Application extends CommonBase {
      * other objects of use to the server.
      */
     this._context =
-      new Context(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
+      new Context(appCommon_TheModule.fullCodec, 'top-context', new AppAuthorizer(this));
 
     /**
      * {RootAccess} The "root access" object. This is the object which tokens

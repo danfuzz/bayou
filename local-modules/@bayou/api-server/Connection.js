@@ -42,14 +42,14 @@ export default class Connection extends CommonBase {
   constructor(context) {
     super();
 
-    /** {Context} The binding context to provide access to. */
-    this._context = Context.check(context).clone();
-
     /**
      * {string} Short label string used to identify this connection in logs.
      * _Probably_ but not _guaranteed_ to be unique.
      */
     this._connectionId = Random.shortLabel('conn');
+
+    /** {Context} The binding context to provide access to. */
+    this._context = Context.check(context).clone(this._connectionId);
 
     /** {Codec} The codec to use. */
     this._codec = context.codec;

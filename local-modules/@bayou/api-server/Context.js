@@ -33,15 +33,22 @@ export default class Context extends CommonBase {
    * Constructs an instance which is initially empty.
    *
    * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {string} logTag Tag to use as part of the logging prefix.
    * @param {TokenAuthorizer|null} [tokenAuth = null] Optional authorizer for
    *   bearer tokens. If non-`null`, this is used to map bearer tokens into
    *   usable target objects.
    */
-  constructor(codec, tokenAuth = null) {
+  constructor(codec, logTag, tokenAuth = null) {
     super();
 
     /** {Codec} The codec to use for connections / sessions. */
     this._codec = Codec.check(codec);
+
+    /** {string} Tag to use as part of the logging prefix. */
+    this._logTag = TString.check(logTag);
+
+    /** {Logger} Logger for this instance. */
+    this._log = log.withAddedContext(logTag);
 
     /**
      * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
@@ -117,10 +124,16 @@ export default class Context extends CommonBase {
    * Clones this instance. The resulting clone has a separate underlying map.
    * That is, adding targets to the clone does not affect its progenitor.
    *
+   * @param {string|null} [logTag = null] New tag to use for logging, or `null`
+   *   to use the original from this instance.
    * @returns {Context} The newly-cloned instance.
    */
-  clone() {
-    const result = new Context(this._codec, this._tokenAuth);
+  clone(logTag = null) {
+    if (logTag === null) {
+      logTag = this._logTag;
+    }
+
+    const result = new Context(this._codec, logTag, this._tokenAuth);
 
     for (const t of this._map.values()) {
       result.addTarget(t);
@@ -236,7 +249,7 @@ export default class Context extends CommonBase {
     const target   = new Target(targetId, obj);
     const remote   = this.addTarget(target);
 
-    log.event.newRemote(targetId, obj);
+    this._log.event.newRemote(targetId, obj);
 
     return remote;
   }
@@ -352,20 +365,20 @@ export default class Context extends CommonBase {
 
     this._lastIdleCleanup = now;
 
-    log.event.idleCleanup('start');
+    this._log.event.idleCleanup('start');
 
     // Note: The ECMAScript spec guarantees that it is safe to delete keys from
     // a map while iterating over it. See
     // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
     for (const [id, target] of map) {
       if (target.wasIdleAsOf(idleLimit)) {
-        log.event.idleCleanupRemoved(id);
+        this._log.event.idleCleanupRemoved(id);
         map.delete(id);
         remoteMap.delete(target.directObject);
       }
     }
 
-    log.event.idleCleanup('done');
+    this._log.event.idleCleanup('done');
   }
 
   /**
