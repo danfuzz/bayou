@@ -246,7 +246,7 @@ export default class Context extends CommonBase {
       return already;
     }
 
-    const targetId = this.randomId();
+    const targetId = this._randomId();
     const target   = new Target(targetId, obj);
     const remote   = this.addTarget(target);
 
@@ -266,32 +266,6 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
-  }
-
-  /**
-   * Makes a new random ID for use with this instance, which (a) is guaranteed
-   * not to be used by the instance already, and (b) will not be mistaken by
-   * the token handler (if any) for a token. **Note:** If not bound promptly
-   * (that is, within the same turn of execution when this method is called), it
-   * is conceivably possible for a duplicate ID to be returned and then
-   * ultimately result in a "duplicate target" error in {@link #addTarget}.
-   *
-   * @returns {string} A random unused target ID.
-   */
-  randomId() {
-    const tokenAuth = this._tokenAuth;
-    const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
-
-    for (;;) {
-      const result = `${prefix}${Random.hexByteString(4)}`;
-
-      if (!this.hasId(result)) {
-        return result;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
   }
 
   /**
@@ -380,6 +354,32 @@ export default class Context extends CommonBase {
     }
 
     this._log.event.idleCleanup('done');
+  }
+
+  /**
+   * Makes a new random ID for use with this instance, which (a) is guaranteed
+   * not to be used by the instance already, and (b) will not be mistaken by
+   * the token handler (if any) for a token. **Note:** If not bound promptly
+   * (that is, within the same turn of execution when this method is called), it
+   * is conceivably possible for a duplicate ID to be returned and then
+   * ultimately result in a "duplicate target" error in {@link #addTarget}.
+   *
+   * @returns {string} A random unused target ID.
+   */
+  _randomId() {
+    const tokenAuth = this._tokenAuth;
+    const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
+
+    for (;;) {
+      const result = `${prefix}${Random.hexByteString(4)}`;
+
+      if (!this.hasId(result)) {
+        return result;
+      }
+
+      // We managed to get an ID collision. Unlikely, but it can happen. So,
+      // just iterate and try again.
+    }
   }
 
   /**
