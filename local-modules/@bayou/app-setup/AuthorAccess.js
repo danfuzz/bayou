@@ -42,7 +42,7 @@ export default class AuthorAccess extends CommonBase {
     this._context = Context.check(context);
 
     /** {Logger} Logger for this instance. */
-    this._log = log.withContext(authorId);
+    this._log = log.withAddedContext(authorId);
 
     Object.freeze(this);
   }
