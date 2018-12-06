@@ -3,13 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
-import { ProxiedObject } from '@bayou/api-server';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
 import Context from './Context';
 import MetaHandler from './MetaHandler';
+import ProxiedObject from './ProxiedObject';
 import Target from './Target';
 
 /** {Logger} Logger. */

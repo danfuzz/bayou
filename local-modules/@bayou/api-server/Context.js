@@ -3,12 +3,12 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Remote, SplitKey } from '@bayou/api-common';
-import { ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
+import ProxiedObject from './ProxiedObject';
 import Target from './Target';
 import TokenAuthorizer from './TokenAuthorizer';
 
@@ -228,9 +228,17 @@ export default class Context extends CommonBase {
     const obj     = proxiedObject.target;
     const already = this._remoteMap.get(obj);
 
-    return (already === undefined)
-      ? this.addTarget(new Target(this.randomId(), obj))
-      : already;
+    if (already !== undefined) {
+      return already;
+    }
+
+    const targetId = this.randomId();
+    const target   = new Target(targetId, obj);
+    const remote   = this.addTarget(target);
+
+    log.event.newRemote(targetId, obj);
+
+    return remote;
   }
 
   /**
