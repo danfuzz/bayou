@@ -78,7 +78,7 @@ export default class AuthorAccess extends CommonBase {
       `  caret:    ${caretId}`);
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
-    // of the connection as a reference, not by encoding its contents.
+    // of the connection as a reference, instead of by encoding its contents.
     return new ProxiedObject(session);
   }
 
@@ -111,7 +111,7 @@ export default class AuthorAccess extends CommonBase {
       `  caret:    ${session.getCaretId()}`);
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
-    // of the connection as a reference, not by encoding its contents.
+    // of the connection as a reference, instead of by encoding its contents.
     return new ProxiedObject(session);
   }
 }
