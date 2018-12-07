@@ -37,8 +37,8 @@ export default class TargetMap extends CommonBase {
     this._sendMessage = TFunction.checkCallable(sendMessage);
 
     /**
-     * {Map<string, TargetHandler>} The targets being provided, as a map from ID
-     * to proxy.
+     * {Map<string, Proxy>} The targets being provided, as a map from ID to
+     * corresponding proxy.
      */
     this._targets = new Map();
 
