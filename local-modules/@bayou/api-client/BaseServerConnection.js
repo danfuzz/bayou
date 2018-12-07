@@ -4,7 +4,7 @@
 
 import { EventSource, CallPiler } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { TString } from '@bayou/typecheck';
+import { TBoolean, TString } from '@bayou/typecheck';
 import { CommonBase, Functor } from '@bayou/util-common';
 
 /** {string} Value used for an unknown connection ID. */
@@ -152,6 +152,16 @@ export default class BaseServerConnection extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is connected to `localhost`. This is
+   * mostly of use during testing.
+   *
+   * @returns {boolean} `true` iff this instance's server is running locally.
+   */
+  isLocal() {
+    return TBoolean.check(this._impl_isLocal());
+  }
+
+  /**
    * Indicates whether or not this instance believes it is sufficiently open,
    * such that it is possible to send messages. This method returns `true` if
    * the instance is in the middle of opening (and is enqueuing messages) or is
@@ -160,7 +170,7 @@ export default class BaseServerConnection extends CommonBase {
    * @returns {boolean} `true` iff this instance is open, per above.
    */
   isOpen() {
-    return this._connection.isOpen();
+    return TBoolean.check(this._impl_isOpen());
   }
 
   /**
@@ -193,6 +203,17 @@ export default class BaseServerConnection extends CommonBase {
    */
   async _impl_beReceiving() {
     this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #isLocal}.
+   *
+   * @abstract
+   * @returns {boolean} `true` iff this instance connects to a locally-running
+   *   server.
+   */
+  _impl_isLocal() {
+    return this._mustOverride();
   }
 
   /**
