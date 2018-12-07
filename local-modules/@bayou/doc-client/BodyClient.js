@@ -353,18 +353,8 @@ export default class BodyClient extends StateMachine {
   async _handle_detached_start() {
     // **TODO:** This whole flow should probably be protected by a timeout.
 
-    // Open (or reopen) the connection to the server. Even though the connection
-    // won't become open synchronously, the API client code allows us to start
-    // sending messages over it immediately. (They'll just get queued up as
-    // necessary.)
-    try {
-      await this._docSession.apiClient.open();
-    } catch (e) {
-      this.q_apiError('open', e);
-      return;
-    }
-
-    // Perform necessary handshaking to gain access to the document.
+    // Open (or reopen) the connection to the server, and perform any necessary
+    // handshaking to gain access to the document.
     try {
       this._sessionProxy = await this._docSession.getSessionProxy();
     } catch (e) {
