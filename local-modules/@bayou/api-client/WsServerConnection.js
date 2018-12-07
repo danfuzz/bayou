@@ -50,11 +50,21 @@ export default class WsServerConnection extends BaseServerConnection {
 
   /**
    * Implementation as required by the superclass.
-   *
-   * @abstract
    */
   async _impl_beReceiving() {
     await this._ensureOpen();
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @returns {boolean} `true` iff this instance is open.
+   */
+  _impl_isOpen() {
+    // **TODO:** This is `true` on the theory that this class takes care of
+    // re-establishing dropped connections. However, eventually it shoud
+    // probably give up in the face of repeated failures and so return `false`.
+    return true;
   }
 
   /**

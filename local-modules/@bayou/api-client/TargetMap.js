@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TargetId } from '@bayou/api-common';
-import { TFunction } from '@bayou/typecheck';
+import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import TargetHandler from './TargetHandler';
@@ -37,10 +37,13 @@ export default class TargetMap extends CommonBase {
     this._sendMessage = TFunction.checkCallable(sendMessage);
 
     /**
-     * {Map<string, TargetHandler>} The targets being provided, as a map from ID
-     * to proxy.
+     * {Map<string, Proxy>} The targets being provided, as a map from ID to
+     * corresponding proxy.
      */
     this._targets = new Map();
+
+    /** {Set<Proxy>} The set of all proxies handled by this instance. */
+    this._proxies = new Set();
 
     Object.freeze(this);
   }
@@ -59,7 +62,10 @@ export default class TargetMap extends CommonBase {
     }
 
     const result = TargetHandler.makeProxy(this._sendMessage, id);
+
     this._targets.set(id, result);
+    this._proxies.add(result);
+
     return result;
   }
 
@@ -81,6 +87,7 @@ export default class TargetMap extends CommonBase {
    */
   clear() {
     this._targets.clear();
+    this._proxies.clear();
   }
 
   /**
@@ -111,5 +118,21 @@ export default class TargetMap extends CommonBase {
   getOrNull(id) {
     TargetId.check(id);
     return this._targets.get(id) || null;
+  }
+
+  /**
+   * Indicates whether or not this instance is the one that handles the given
+   * presumed-proxy. This returns `true` if the given `obj` is a `Proxy` that
+   * was returned by a call to {@link #add} or {@link #addOrGet} on this
+   * instance, _and_ it was not subsequently removed.
+   *
+   * @param {object} obj The presumed-proxy in question.
+   * @returns {boolean} `true` if `obj` is a proxy handled by this instance, or
+   *   `false` if not.
+   */
+  handles(obj) {
+    TObject.check(obj);
+
+    return this._proxies.has(obj);
   }
 }

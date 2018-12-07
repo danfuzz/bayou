@@ -181,6 +181,33 @@ export default class ApiClientNew extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is the one that handles the given
+   * presumed-proxy. This returns `true` if the given `obj` is a `Proxy` that
+   * was returned by a call to {@link #getProxy} on this instance, _and_ it was
+   * not subsequently removed.
+   *
+   * @param {object} obj The presumed-proxy in question.
+   * @returns {boolean} `true` if `obj` is a proxy handled by this instance, or
+   *   `false` if not.
+   */
+  handles(obj) {
+    return this._targets.handles(obj);
+  }
+
+  /**
+   * Indicates whether or not this instance believes its connection is
+   * sufficiently open, such that it is possible to send messages. This method
+   * returns `true` if the instance is in the middle of opening (and is
+   * enqueuing messages) or is fully open and actively exchanging messages with
+   * a server.
+   *
+   * @returns {boolean} `true` iff this instance is open, per above.
+   */
+  isOpen() {
+    return this._connection.isOpen();
+  }
+
+  /**
    * Opens the connection, if not already open. Once open, any pending messages
    * will get sent to the server side. If the connection is already open (or in
    * the process of opening), this does not re-open it; that is, the existing

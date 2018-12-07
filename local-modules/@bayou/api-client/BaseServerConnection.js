@@ -152,6 +152,18 @@ export default class BaseServerConnection extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance believes it is sufficiently open,
+   * such that it is possible to send messages. This method returns `true` if
+   * the instance is in the middle of opening (and is enqueuing messages) or is
+   * fully open and actively exchanging messages with a server.
+   *
+   * @returns {boolean} `true` iff this instance is open, per above.
+   */
+  isOpen() {
+    return this._connection.isOpen();
+  }
+
+  /**
    * Indicates that a new message has been received. This is meant to be used by
    * subclasses.
    *
@@ -181,6 +193,16 @@ export default class BaseServerConnection extends CommonBase {
    */
   async _impl_beReceiving() {
     this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #isOpen}.
+   *
+   * @abstract
+   * @returns {boolean} `true` iff this instance is open.
+   */
+  _impl_isOpen() {
+    return this._mustOverride();
   }
 
   /**

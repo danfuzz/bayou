@@ -69,8 +69,8 @@ export default class DocSession extends CommonBase {
       : log.withAddedContext(this._sessionInfo.logTag);
 
     /**
-     * {ApiClient|null} API client instance. Set to non-`null` in the getter
-     * `apiClient`.
+     * {ApiClient|null} API client instance. Set to non-`null` in
+     * {@link #_getApiClient}.
      */
     this._apiClient = null;
 
@@ -101,39 +101,6 @@ export default class DocSession extends CommonBase {
    */
   get log() {
     return this._log;
-  }
-
-  /**
-   * {ApiClient} API client instance to use. This is always the same instance
-   * for any given instance of this class. (That is, this value is never
-   * updated.) The client is not guaranteed to be open at the time it is
-   * returned; however, `open()` will have been called on it, which means that
-   * it will at least be in the _process_ of opening.
-   *
-   * @returns {ApiClient} API client interface.
-   */
-  get apiClient() {
-    const url = (this._sessionInfo !== null)
-      ? this._sessionInfo.serverUrl
-      : this._key.url;
-
-    if (this._apiClient === null) {
-      this._log.event.opening(url);
-      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
-
-      (async () => {
-        try {
-          await this._apiClient.open();
-          this._log.event.opened(url);
-        } catch (e) {
-          // (a) Log the problem, and (b) make sure an error doesn't percolate
-          // back to the top as an uncaught promise rejection.
-          this._log.event.openFailed(url);
-        }
-      })();
-    }
-
-    return this._apiClient;
   }
 
   /** {CaretTracker} Caret tracker for this session. */
@@ -183,17 +150,27 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
+    const api = this._getApiClient();
+
     if (this._sessionProxyPromise !== null) {
-      // **Note:** Because this is an `async` method, it's okay to return a
-      // promise.
-      return this._sessionProxyPromise;
+      const proxy = await this._sessionProxyPromise;
+
+      if (api.handles(proxy)) {
+        // The session proxy we already had is still apparently valid, so it's
+        // safe to return it.
+        this._log.event.sessionStillValid();
+        return proxy;
+      }
+
+      // Fall through to re-set-up the session.
+      this._log.event.mustReestablishSession();
     }
 
     let proxyPromise;
 
     if (this._sessionInfo !== null) {
       const info        = this._sessionInfo;
-      const authorProxy = this.apiClient.getProxy(info.authorToken);
+      const authorProxy = api.getProxy(info.authorToken);
 
       if (info.caretId === null) {
         proxyPromise = authorProxy.makeNewSession(info.documentId);
@@ -203,7 +180,7 @@ export default class DocSession extends CommonBase {
     } else {
       // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
       // is used ubiquitously.
-      proxyPromise = this.apiClient.authorizeTarget(this._key);
+      proxyPromise = api.authorizeTarget(this._key);
     }
 
     this._sessionProxyPromise = proxyPromise;
@@ -237,5 +214,37 @@ export default class DocSession extends CommonBase {
     }
 
     return proxy;
+  }
+
+  /**
+   * {ApiClient} API client instance to use. The client is not guaranteed to be
+   * fully open at the time it is returned; however, `open()` will have been
+   * called on it, which means that it will at least be in the _process_ of
+   * opening and available to enqueue (if not actually transmit) messages.
+   *
+   * @returns {ApiClient} API client interface.
+   */
+  _getApiClient() {
+    const url = (this._sessionInfo !== null)
+      ? this._sessionInfo.serverUrl
+      : this._key.url;
+
+    if ((this._apiClient === null) || !this._apiClient.isOpen()) {
+      this._log.event.opening(url);
+      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
+
+      (async () => {
+        try {
+          await this._apiClient.open();
+          this._log.event.opened(url);
+        } catch (e) {
+          // (a) Log the problem, and (b) make sure an error doesn't percolate
+          // back to the top as an uncaught promise rejection.
+          this._log.event.openFailed(url);
+        }
+      })();
+    }
+
+    return this._apiClient;
   }
 }
