@@ -226,6 +226,20 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is the one that handles the given
+   * presumed-proxy. This returns `true` if the given `obj` is a `Proxy` that
+   * was returned by a call to {@link #getProxy} on this instance, _and_ it was
+   * not subsequently removed.
+   *
+   * @param {object} obj The presumed-proxy in question.
+   * @returns {boolean} `true` if `obj` is a proxy handled by this instance, or
+   *   `false` if not.
+   */
+  handles(obj) {
+    return this._targets.handles(obj);
+  }
+
+  /**
    * Opens the websocket. Once open, any pending messages will get sent to the
    * server side. If the socket is already open (or in the process of opening),
    * this does not re-open (that is, the existing open is allowed to continue).
