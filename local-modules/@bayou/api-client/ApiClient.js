@@ -240,6 +240,25 @@ export default class ApiClient extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance believes its connection is
+   * sufficiently open, such that it is possible to send messages. This method
+   * returns `true` if the instance is in the middle of opening (and is
+   * enqueuing messages) or is fully open and actively exchanging messages with
+   * a server.
+   *
+   * @returns {boolean} `true` iff this instance is open, per above.
+   */
+  isOpen() {
+    if (this._ws === null) {
+      return false;
+    }
+
+    const readyState = this._ws.readyState;
+
+    return (readyState === WebSocket.CONNECTING) || (readyState === WebSocket.OPEN);
+  }
+
+  /**
    * Opens the websocket. Once open, any pending messages will get sent to the
    * server side. If the socket is already open (or in the process of opening),
    * this does not re-open (that is, the existing open is allowed to continue).
