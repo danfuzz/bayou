@@ -88,7 +88,7 @@ export default class DocSession extends CommonBase {
 
     /**
      * {Promise<Proxy>|null} Promise for the API session proxy. Set to
-     * non-`null` in `getSessionProxy()`.
+     * non-`null` in {@link #getSessionProxy}.
      */
     this._sessionProxyPromise = null;
 
@@ -177,9 +177,15 @@ export default class DocSession extends CommonBase {
       } else {
         proxyPromise = authorProxy.findExistingSession(info.documentId, info.caretId);
       }
+    } else if (api.isLocal()) {
+      // Transition an old-style session to a new-style one, but -- for now
+      // -- only if running in a local-dev situation, so as to limit the blast
+      // radius in case things aren't quite working. **TODO:** Remove the
+      // `isLocal()` test and the following `else`, once it is safe to always
+      // convert old sessions, and then remove this clause (and the `if`
+      // cladding) once {@link #_sessionInfo} is used ubiquitously.
+      proxyPromise = this._convertOldSession();
     } else {
-      // **TODO:** Remove the `if` and this clause once {@link #_sessionInfo}
-      // is used ubiquitously.
       proxyPromise = api.authorizeTarget(this._key);
     }
 
@@ -188,17 +194,6 @@ export default class DocSession extends CommonBase {
     // Log a note once the promise resolves.
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
-
-    if (this._sessionInfo === null) {
-      // "Dry run" of converting to a new-style session. **TODO:** Make this
-      // result used for realsies instead of just being logged.
-      try {
-        const sessionInfo = await proxy.getSessionInfo();
-        this._log.event.convertedToSessionInfo(sessionInfo);
-      } catch (e) {
-        this._log.event.failedToConvertSession(e);
-      }
-    }
 
     if (this._sessionInfo !== null) {
       const info = this._sessionInfo;
@@ -217,10 +212,32 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * {ApiClient} API client instance to use. The client is not guaranteed to be
-   * fully open at the time it is returned; however, `open()` will have been
-   * called on it, which means that it will at least be in the _process_ of
-   * opening and available to enqueue (if not actually transmit) messages.
+   * Converts the old-style session auth in {@link #_key} to the info which can
+   * be used to establish an equivalent, saving it in {@link #_sessionInfo}, and
+   * goes ahead and establishes the session in the new style.
+   *
+   * @returns {Proxy} Session authorization info.
+   */
+  async _convertOldSession() {
+    const api = this._getApiClient();
+    const proxy = await api.authorizeTarget(this._key);
+
+    this._log.event.gotOldStyleSession();
+
+    const info = await proxy.getSessionInfo();
+
+    this._log.event.convertedToSessionInfo(info);
+
+    const authorProxy = api.getProxy(info.authorToken);
+
+    return authorProxy.findExistingSession(info.documentId, info.caretId);
+  }
+
+  /**
+   * API client instance to use. The client is not guaranteed to be fully open
+   * at the time it is returned; however, `open()` will have been called on it,
+   * which means that it will at least be in the _process_ of opening and
+   * available to enqueue (if not actually transmit) messages.
    *
    * @returns {ApiClient} API client interface.
    */

@@ -195,6 +195,16 @@ export default class ApiClientNew extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is connected to `localhost`. This is
+   * mostly of use during testing.
+   *
+   * @returns {boolean} `true` iff this instance's server is running locally.
+   */
+  isLocal() {
+    return this._connection.isLocal();
+  }
+
+  /**
    * Indicates whether or not this instance believes its connection is
    * sufficiently open, such that it is possible to send messages. This method
    * returns `true` if the instance is in the middle of opening (and is

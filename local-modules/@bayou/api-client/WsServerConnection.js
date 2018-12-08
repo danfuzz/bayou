@@ -58,6 +58,18 @@ export default class WsServerConnection extends BaseServerConnection {
   /**
    * Implementation as required by the superclass.
    *
+   * @returns {boolean} `true` iff this instance connects to a locally-running
+   *   server.
+   */
+  _impl_isLocal() {
+    const hostname = new URL(this._serverUrl).hostname;
+
+    return hostname === 'localhost';
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
    * @returns {boolean} `true` iff this instance is open.
    */
   _impl_isOpen() {
