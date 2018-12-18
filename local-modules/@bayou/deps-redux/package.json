@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "eslint": "^4.7.1"
+    "redux": "^3.7.2"
   }
 }

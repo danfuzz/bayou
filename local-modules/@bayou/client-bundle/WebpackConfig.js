@@ -163,9 +163,6 @@ export default class WebpackConfig extends Singleton {
                         ]
                       }
                     }
-                  ],
-                  [
-                    require.resolve('babel-preset-react')
                   ]
                 ]
               }
@@ -225,73 +222,6 @@ export default class WebpackConfig extends Singleton {
                 minimize: true
               }
             }]
-          },
-
-          {
-            test: /\.module.less$/,
-            use: [
-              {
-                loader: 'style-loader'
-              },
-              {
-                loader: 'css-loader',
-                options: { modules: true }
-              },
-              {
-                loader: 'less-loader'
-              }
-            ]
-          },
-
-          {
-            test: /^((?!\.module).)*less$/,
-            use: [
-              {
-                loader: 'style-loader'
-              },
-              {
-                loader: 'css-loader'
-              },
-              {
-                loader: 'less-loader'
-              }
-            ]
-          },
-
-          // This makes `.css` files `import`able into our JavaScript code.
-          // Doing so injects the CSS into the DOM (currently configured to add
-          // a `<style>` element to the `<head>`). This allows us to easily
-          // break all of our CSS files into multiple modules and only load them
-          // when needed. As part of this process each class name is transformed
-          // to be a unique random string.
-          {
-            test: /\.css$/,
-            use: [
-              {
-                loader: 'style-loader'
-              },
-              {
-                loader: 'css-loader'
-              }
-            ]
-          },
-
-          // Same as `.css` handling above but reference counts the objects
-          // loaded into JavaScript. Calling `style.use()` increments the count,
-          // and `style.unuse()` decrements the count. Whenever the count is
-          // greater than zero the styles are active in the DOM. When it is zero
-          // the styles are removed. See `README.md` in this directory
-          // for examples.
-          {
-            test: /.ucss$/,
-            use: [
-              {
-                loader: 'style-loader/useable'
-              },
-              {
-                loader: 'css-loader'
-              }
-            ]
           }
         ]
       }
