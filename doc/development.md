@@ -73,16 +73,8 @@ $ ./scripts/clean
 
 ### Editor setup
 
-You may want to install live linting into your editor.
-
-If you use the Atom editor, the package `linter-eslint` can do that. Because
-the project uses React and JSX, the easiest way to get linting to work is to
-use npm to globally install ESLint and its React plugin, and configure Atom
-`linter-eslint` to use that:
-
-```
-$ npm install -g eslint eslint-plugin-react
-```
+You may want to install live linting into your editor. If you use the Atom
+editor, the package `linter-eslint` can do that.
 
 - - - - - - - - - -
 

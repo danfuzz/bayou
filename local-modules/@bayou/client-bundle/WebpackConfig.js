@@ -163,9 +163,6 @@ export default class WebpackConfig extends Singleton {
                         ]
                       }
                     }
-                  ],
-                  [
-                    require.resolve('babel-preset-react')
                   ]
                 ]
               }

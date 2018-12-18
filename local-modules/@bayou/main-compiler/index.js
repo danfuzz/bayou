@@ -45,9 +45,6 @@ const BROWSER_VERSIONS = [
  */
 const BABEL_PRESET_ENV = require.resolve('babel-preset-env');
 
-/** {object} The Babel `react` preset. See above for rationale. */
-const BABEL_PRESET_REACT = require.resolve('babel-preset-react');
-
 /** {object<string,object>} Map from configuration names to Babel configs. */
 const BABEL_CONFIGS = {
   'client': Object.freeze({
@@ -59,8 +56,7 @@ const BABEL_CONFIGS = {
         {
           targets: { browsers: BROWSER_VERSIONS }
         }
-      ],
-      [BABEL_PRESET_REACT]
+      ]
     ]
   }),
 
@@ -76,8 +72,7 @@ const BABEL_CONFIGS = {
             node:     NODE_VERSION
           }
         }
-      ],
-      [BABEL_PRESET_REACT]
+      ]
     ]
   }),
 
