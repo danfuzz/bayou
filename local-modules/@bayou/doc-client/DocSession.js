@@ -187,6 +187,19 @@ export default class DocSession extends CommonBase {
       proxyPromise = this._convertOldSession();
     } else {
       proxyPromise = api.authorizeTarget(this._key);
+
+      // "Dry run" of converting to a new-style session. This is done
+      // asynchronously with respect to the rest of this method, so as not to
+      // disturb the primary control flow.
+      (async () => {
+        try {
+          const dryRunProxy = await proxyPromise;
+          const sessionInfo = await dryRunProxy.getSessionInfo();
+          this._log.event.dryRunConverted(sessionInfo);
+        } catch (e) {
+          this._log.event.dryRunFailed(e);
+        }
+      })();
     }
 
     this._sessionProxyPromise = proxyPromise;
