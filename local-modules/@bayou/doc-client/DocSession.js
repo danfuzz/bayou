@@ -212,6 +212,22 @@ export default class DocSession extends CommonBase {
   }
 
   /**
+   * Makes sure the underlying server connection is in the process of being
+   * established.
+   */
+  open() {
+    const api = this._getApiClient();
+
+    if (!api.isOpen()) {
+      // Even though `_getApiClient()` will eventually get the client opened,
+      // it makes that `open()` call asynchronously. In this case, we want to
+      // guarantee that `open()` was called synchronously before this method
+      // returns.
+      api.open();
+    }
+  }
+
+  /**
    * Converts the old-style session auth in {@link #_key} to the info which can
    * be used to establish an equivalent, saving it in {@link #_sessionInfo}, and
    * goes ahead and establishes the session in the new style.
@@ -219,7 +235,7 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} Session authorization info.
    */
   async _convertOldSession() {
-    const api = this._getApiClient();
+    const api   = this._getApiClient();
     const proxy = await api.authorizeTarget(this._key);
 
     this._log.event.gotOldStyleSession();
