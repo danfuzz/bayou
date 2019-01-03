@@ -22,32 +22,18 @@ export default class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseKey|SessionInfo|null} keyOrInfo Key or info object that
-   *   identifies the session and grants access to it. **Note:** A session is
-   *   tied to a specific caret, which is associated with a single document and
-   *   author. If passed a `SessionInfo` without a caret ID, then the act of
-   *   establishing the session will cause a new caret to be created. If `null`,
-   *   the remaining arguments are used to construct a `SessionInfo`.
-   * @param {string|null} [authorToken = null] `SessionInfo` constructor
-   *   argument. **TODO:** Remove this once call sites consistently pass a
-   *   `SessionInfo`.
-   * @param {string|null} [documentId = null] `SessionInfo` constructor
-   *   argument. **TODO:** Remove this once call sites consistently pass a
-   *   `SessionInfo`.
-   * @param {string|null} [caretId = null] `SessionInfo` constructor argument.
-   *   **TODO:** Remove this once call sites consistently pass a `SessionInfo`.
+   * @param {BaseKey|SessionInfo} keyOrInfo Key or info object that identifies
+   *   the session and grants access to it. **Note:** A session is tied to a
+   *   specific caret, which is associated with a single document and author. If
+   *   passed a `SessionInfo` without a caret ID, then the act of establishing
+   *   the session will cause a new caret to be created.
    */
-  constructor(keyOrInfo, authorToken = null, documentId = null, caretId = null) {
+  constructor(keyOrInfo) {
     super();
 
-    // **TODO:** Remove this when the extra arguments are removed.
-    if (keyOrInfo === null) {
-      keyOrInfo = new SessionInfo('http://localhost:8080/api', authorToken, documentId, caretId);
-    }
-
     /**
-     * {SessionInfo} Identifying and authorizing information for the session.
-     * If `null`, then {@link #_key} is being used instead of this.
+     * {SessionInfo|null} Identifying and authorizing information for the
+     * session. If `null`, then {@link #_key} is being used instead of this.
      */
     this._sessionInfo = (keyOrInfo instanceof SessionInfo) ? keyOrInfo : null;
 
@@ -213,11 +199,13 @@ export default class DocSession extends CommonBase {
 
       if (info.caretId === null) {
         // The session got started without a caret ID, which means a new caret
-        // will have been created. Update `_sessionInfo` accordingly.
+        // will have been created. Update `_sessionInfo` and `_log` accordingly.
         const caretId = await proxy.getCaretId();
 
-        this._sessionInfo = info.withCaretId(caretId);
         this._log.event.gotCaret(caretId);
+
+        this._sessionInfo = info.withCaretId(caretId);
+        this._log         = log.withAddedContext(this._sessionInfo.logTag);
       }
     }
 
