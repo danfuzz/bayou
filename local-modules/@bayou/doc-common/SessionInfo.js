@@ -107,6 +107,18 @@ export default class SessionInfo extends CommonBase {
 
   /**
    * Makes an instance just like this one, except with a new value for
+   * `authorToken`.
+   *
+   * @param {string|BearerToken} authorToken New token to use. If passed as a
+   *   {@link BearerToken}, gets converted to its `secretToken` string.
+   * @returns {SessionInfo} An appropriately-constructed instance.
+   */
+  withAuthorToken(authorToken) {
+    return new SessionInfo(this._serverUrl, authorToken, this._documentId, this._caretId);
+  }
+
+  /**
+   * Makes an instance just like this one, except with a new value for
    * `caretId`.
    *
    * @param {string} caretId ID of a pre-existing caret to control with the

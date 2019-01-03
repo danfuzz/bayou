@@ -135,7 +135,58 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
-  describe('withCaretId', () => {
+  describe('withAuthorToken()', () => {
+    it('should return a new instance given a string', () => {
+      const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
+      const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
+
+      function test(token) {
+        const result1 = orig1.withAuthorToken(token);
+        const expect1 = new SessionInfo(orig1.serverUrl, token, orig1.documentId, orig1.caretId);
+        assert.deepEqual(result1, expect1);
+
+        const result2 = orig2.withAuthorToken(token);
+        const expect2 = new SessionInfo(orig2.serverUrl, token, orig2.documentId, orig2.caretId);
+        assert.deepEqual(result2, expect2);
+      }
+
+      test('blort');
+      test('boop');
+    });
+
+    it('should return a new instance given a `BearerToken`', () => {
+      const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
+      const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
+
+      function test(token) {
+        const result1 = orig1.withAuthorToken(token);
+        const expect1 = new SessionInfo(orig1.serverUrl, token.secretToken, orig1.documentId, orig1.caretId);
+        assert.deepEqual(result1, expect1);
+
+        const result2 = orig2.withAuthorToken(token);
+        const expect2 = new SessionInfo(orig2.serverUrl, token.secretToken, orig2.documentId, orig2.caretId);
+        assert.deepEqual(result2, expect2);
+      }
+
+      test(new BearerToken('abc', '123'));
+      test(new BearerToken('blort', 'florp'));
+    });
+
+    it('should reject invalid arguments', () => {
+      const si = new SessionInfo(SERVER_URL, 'token', 'doc');
+
+      function test(value) {
+        assert.throws(() => si.withAuthorToken(value), /badValue/);
+      }
+
+      test(undefined);
+      test(null);
+      test(914);
+      test(['x']);
+    });
+  });
+
+  describe('withCaretId()', () => {
     it('should return a new instance given a valid `caretId`', () => {
       const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
       const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
@@ -168,7 +219,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
-  describe('withoutCaretId', () => {
+  describe('withoutCaretId()', () => {
     it('should return a new instance with `caretId === null`', () => {
       function test(orig) {
         const result = orig.withoutCaretId();
