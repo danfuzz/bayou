@@ -28,7 +28,7 @@ export default class SessionInfo extends CommonBase {
   constructor(serverUrl, authorToken, documentId, caretId = null) {
     super();
 
-    // **TODO:** Consider performing more validation of the arguements. If
+    // **TODO:** Consider performing more validation of the arguments. If
     // they're problematic, we'll _eventually_ get errors back from the server,
     // but arguably it's better to know sooner.
 
