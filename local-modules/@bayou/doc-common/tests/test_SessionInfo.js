@@ -68,11 +68,10 @@ describe('@bayou/doc-common/SessionInfo', () => {
       assert.strictEqual(result.authorToken, token);
     });
 
-    it('should be the `secretToken` from a `BearerToken` if that was used in construction', () => {
-      const secret = 'the-secret';
-      const token  = new BearerToken('the-id', secret);
+    it('should be the constructed value if constructed from a `BearerToken`', () => {
+      const token  = new BearerToken('the-id', 'the-secret');
       const result = new SessionInfo(SERVER_URL, token, 'boop');
-      assert.strictEqual(result.authorToken, secret);
+      assert.strictEqual(result.authorToken, token);
     });
   });
 
@@ -102,6 +101,51 @@ describe('@bayou/doc-common/SessionInfo', () => {
     it('should be `null` if not passed in the constructor', () => {
       const result = new SessionInfo(SERVER_URL, 'token', 'doc');
       assert.isNull(result.caretId);
+    });
+  });
+
+  describe('.logInfo', () => {
+    it('should reflect the constructed `serverUrl`', () => {
+      const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
+      const info = si.logInfo;
+
+      assert.strictEqual(info.serverUrl, si.serverUrl);
+    });
+
+    it('should reflect the constructed `documentId`', () => {
+      const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
+      const info = si.logInfo;
+
+      assert.strictEqual(info.documentId, si.documentId);
+    });
+
+    it('should reflect the constructed `caretId` if present', () => {
+      const si   = new SessionInfo(SERVER_URL, 'token', 'doc', 'the-present-id');
+      const info = si.logInfo;
+
+      assert.strictEqual(info.caretId, si.caretId);
+    });
+
+    it('should not bind `caretId` if the instance has no `caretId`', () => {
+      const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
+      const info = si.logInfo;
+
+      assert.doesNotHaveAnyKeys(info, { caretId: null });
+    });
+
+    it('should include a redacted form of `authorToken` if it is a string', () => {
+      const si   = new SessionInfo(SERVER_URL, 'token-token-whee-whee-whee-whee', 'doc');
+      const info = si.logInfo;
+
+      assert.strictEqual(info.authorToken, 'token-token-whee...');
+    });
+
+    it('should include the `safeString` of `authorToken` if it is a `BearerToken`', () => {
+      const token = new BearerToken('token-id', 'the-full-secret');
+      const si    = new SessionInfo(SERVER_URL, token, 'doc');
+      const info  = si.logInfo;
+
+      assert.strictEqual(info.authorToken, token.safeString);
     });
   });
 
@@ -160,11 +204,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
 
       function test(token) {
         const result1 = orig1.withAuthorToken(token);
-        const expect1 = new SessionInfo(orig1.serverUrl, token.secretToken, orig1.documentId, orig1.caretId);
+        const expect1 = new SessionInfo(orig1.serverUrl, token, orig1.documentId, orig1.caretId);
         assert.deepEqual(result1, expect1);
 
         const result2 = orig2.withAuthorToken(token);
-        const expect2 = new SessionInfo(orig2.serverUrl, token.secretToken, orig2.documentId, orig2.caretId);
+        const expect2 = new SessionInfo(orig2.serverUrl, token, orig2.documentId, orig2.caretId);
         assert.deepEqual(result2, expect2);
       }
 

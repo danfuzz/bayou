@@ -214,7 +214,7 @@ export default class EditorComplex extends CommonBase {
   _initSession(keyOrInfo, fromConstructor) {
     // **TODO:** Simplify this once we stop using `SplitKey`s.
     if (keyOrInfo instanceof SessionInfo) {
-      log.event.usingInfo(keyOrInfo);
+      log.event.usingInfo(keyOrInfo.logInfo);
     } else {
       SplitKey.check(keyOrInfo);
       log.event.usingKey(keyOrInfo.toString());

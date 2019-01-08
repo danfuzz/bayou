@@ -18,8 +18,7 @@ export default class SessionInfo extends CommonBase {
    * @param {string} serverUrl URL of the server to connect to in order to use
    *   the session.
    * @param {string|BearerToken} authorToken Token which identifies the author
-   *   (user) under whose authority the session is to be run. If passed as a
-   *   {@link BearerToken}, gets converted to its `secretToken` string.
+   *   (user) under whose authority the session is to be run.
    * @param {string} documentId ID of the document to be edited in the session.
    * @param {string|null} [caretId = null] ID of a pre-existing caret to control
    *   with the session. If `null`, a new caret will ultimately be created for
@@ -28,7 +27,7 @@ export default class SessionInfo extends CommonBase {
   constructor(serverUrl, authorToken, documentId, caretId = null) {
     super();
 
-    // **TODO:** Consider performing more validation of the arguements. If
+    // **TODO:** Consider performing more validation of the arguments. If
     // they're problematic, we'll _eventually_ get errors back from the server,
     // but arguably it's better to know sooner.
 
@@ -39,9 +38,7 @@ export default class SessionInfo extends CommonBase {
      * {string} Token which identifies the author (user) under whose authority
      * the session is to be run.
      */
-    this._authorToken = (authorToken instanceof BearerToken)
-      ? authorToken.secretToken
-      : TString.check(authorToken);
+    this._authorToken = (authorToken instanceof BearerToken) ? authorToken : TString.check(authorToken);
 
     /** {string} ID of the document to be edited in the session. */
     this._documentId = TString.check(documentId);
@@ -85,6 +82,31 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
+   * {object} Ad-hoc object with the contents of this instance, suitable for
+   * logging. In particular, the {@link #authorToken} is represented in redacted
+   * form.
+   */
+  get logInfo() {
+    const caretId       = this._caretId;
+    const token         = this._authorToken;
+    const redactedToken = (token instanceof BearerToken)
+      ? token.safeString
+      : BearerToken.redactString(token);
+
+    const result = {
+      serverUrl:   this._serverUrl,
+      authorToken: redactedToken,
+      documentId:  this._documentId
+    };
+
+    if (caretId !== null) {
+      result.caretId = caretId;
+    }
+
+    return result;
+  }
+
+  /**
    * {string} Most-specific log tag to use with this instance. This is the caret
    * ID if non-`null` or otherwise the document ID.
    */
@@ -95,22 +117,24 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
-   * Gets reconstruction arguments for this instance.
+   * Gets reconstruction arguments for this instance. In deconstructed form,
+   * the `authorToken` is always represented as a string.
    *
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    const most = [this._serverUrl, this._authorToken, this._documentId];
+    const origToken   = this._authorToken;
+    const authorToken = (origToken instanceof BearerToken) ? origToken.secretToken : origToken;
+    const maybeCaret  = (this._caretId === null) ? [] : [this._caretId];
 
-    return (this._caretId === null) ? most : [...most, this._caretId];
+    return [this._serverUrl, authorToken, this._documentId, ...maybeCaret];
   }
 
   /**
    * Makes an instance just like this one, except with a new value for
    * `authorToken`.
    *
-   * @param {string|BearerToken} authorToken New token to use. If passed as a
-   *   {@link BearerToken}, gets converted to its `secretToken` string.
+   * @param {string|BearerToken} authorToken New token to use.
    * @returns {SessionInfo} An appropriately-constructed instance.
    */
   withAuthorToken(authorToken) {

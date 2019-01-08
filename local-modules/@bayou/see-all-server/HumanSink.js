@@ -9,13 +9,10 @@ import stripAnsi from 'strip-ansi';
 import { format } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
-import { BaseSink, LogRecord, LogTag, Logger, SeeAll } from '@bayou/see-all';
+import { BaseSink, Logger, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
 import Redactor from './Redactor';
-
-// The whole point of this file is to use `console.<whatever>`, so...
-/* eslint-disable no-console */
 
 /**
  * {Int} Default width of output, in columns. This is used when _not_ outputting
@@ -42,17 +39,6 @@ const PREFIX_ADJUST_INCREMENT = 4;
 const MAX_EVENT_STRING_LENGTH = 200;
 
 /**
- * {Int} Maximum number of "skippable" events to not-skip in a burst.
- */
-const MAX_SKIPPABLE_BURST_COUNT = 5;
-
-/**
- * {Int} Number of msec which should be considered the burst duration, when
- * figuring out whether a skippable message should be skipped.
- */
-const SKIPPABLE_BURST_MSEC = 2000; // Two seconds.
-
-/**
  * Implementation of the `@bayou/see-all` logging sink protocol which writes
  * logs in a human-friendly text form to one or both of (a) a file and (b) the
  * console.
@@ -67,10 +53,12 @@ export default class HumanSink extends BaseSink {
   static patchConsole() {
     const consoleLogger = new Logger('node-console');
 
+    /* eslint-disable no-console */
     console.info  = (...args) => { consoleLogger.info(format(...args));  };
     console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
     console.error = (...args) => { consoleLogger.error(format(...args)); };
     console.log   = console.info;
+    /* eslint-enable no-console */
   }
 
   /**
@@ -133,18 +121,6 @@ export default class HumanSink extends BaseSink {
      */
     this._recentLineCount = 0;
 
-    /**
-     * {Int} Timestamp after which any current log skipping activity should end
-     * and / or reset.
-     */
-    this._skipEndTime = 0;
-
-    /**
-     * {Int} Number of log records that are accounted for in the current burst
-     * of skippable log records.
-     */
-    this._skipCount = 0;
-
     SeeAll.theOne.add(this);
   }
 
@@ -154,10 +130,6 @@ export default class HumanSink extends BaseSink {
    * @param {LogRecord} logRecord The record to write.
    */
   _impl_sinkLog(logRecord) {
-    if (this._shouldSkip(logRecord)) {
-      return;
-    }
-
     logRecord = Redactor.redact(logRecord);
 
     const prefix = this._makePrefix(logRecord);
@@ -307,47 +279,6 @@ export default class HumanSink extends BaseSink {
   }
 
   /**
-   * Handle the possibility of skipping output for a given record.
-   *
-   * @param {LogRecord} logRecord Record in question.
-   * @returns {boolean} `true` if the record should be skipped in the output.
-   */
-  _shouldSkip(logRecord) {
-    const emitSkipLogIfNecessary = () => {
-      const skipCount = this._skipCount;
-      if (skipCount > 0) {
-        this._skipCount   = 0;
-        this._skipEndTime = 0;
-
-        if (skipCount > MAX_SKIPPABLE_BURST_COUNT) {
-          const count      = skipCount - MAX_SKIPPABLE_BURST_COUNT;
-          const countStr   = (count === 1) ? '1 log record' : `${count} log records`;
-          const msg        = chalk.dim(`Skipped ${countStr}.`);
-          const skipRecord = LogRecord.forMessage(logRecord.timeMsec, null, LogTag.LOG, 'info', msg);
-
-          this._impl_sinkLog(skipRecord);
-        }
-      }
-    };
-
-    const timeMsec = logRecord.timeMsec;
-    const skipEnd  = this._skipEndTime;
-
-    if (!HumanSink._isSkippable(logRecord)) {
-      emitSkipLogIfNecessary();
-      return false;
-    } else if (timeMsec >= skipEnd) {
-      emitSkipLogIfNecessary();
-      this._skipEndTime = timeMsec + SKIPPABLE_BURST_MSEC;
-      this._skipCount = 0;
-      return false;
-    } else {
-      this._skipCount++;
-      return (this._skipCount > MAX_SKIPPABLE_BURST_COUNT);
-    }
-  }
-
-  /**
    * Creates a colorized message string from a time record.
    *
    * @param {LogRecord} logRecord Time log record.
@@ -379,16 +310,5 @@ export default class HumanSink extends BaseSink {
     if (this._path !== null) {
       fs.appendFileSync(this._path, text);
     }
-  }
-
-  /**
-   * Is the given log record skippable for the purposes of human-oriented
-   * logging?
-   *
-   * @param {LogRecord} logRecord Record in question.
-   * @returns {boolean} `true` if it should be considered skippable.
-   */
-  static _isSkippable(logRecord) {
-    return logRecord.isEvent() || (logRecord.payload.name === 'detail');
   }
 }
