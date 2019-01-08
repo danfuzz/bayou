@@ -14,9 +14,6 @@ import { TBoolean, TString } from '@bayou/typecheck';
 
 import Redactor from './Redactor';
 
-// The whole point of this file is to use `console.<whatever>`, so...
-/* eslint-disable no-console */
-
 /**
  * {Int} Default width of output, in columns. This is used when _not_ outputting
  * to an actual console or when the width of the console cannot be determined.
@@ -56,10 +53,12 @@ export default class HumanSink extends BaseSink {
   static patchConsole() {
     const consoleLogger = new Logger('node-console');
 
+    /* eslint-disable no-console */
     console.info  = (...args) => { consoleLogger.info(format(...args));  };
     console.warn  = (...args) => { consoleLogger.warn(format(...args));  };
     console.error = (...args) => { consoleLogger.error(format(...args)); };
     console.log   = console.info;
+    /* eslint-enable no-console */
   }
 
   /**
