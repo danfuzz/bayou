@@ -38,9 +38,7 @@ export default class SessionInfo extends CommonBase {
      * {string} Token which identifies the author (user) under whose authority
      * the session is to be run.
      */
-    this._authorToken = (authorToken instanceof BearerToken)
-      ? authorToken.secretToken
-      : TString.check(authorToken);
+    this._authorToken = (authorToken instanceof BearerToken) ? authorToken : TString.check(authorToken);
 
     /** {string} ID of the document to be edited in the session. */
     this._documentId = TString.check(documentId);
