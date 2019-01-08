@@ -18,8 +18,7 @@ export default class SessionInfo extends CommonBase {
    * @param {string} serverUrl URL of the server to connect to in order to use
    *   the session.
    * @param {string|BearerToken} authorToken Token which identifies the author
-   *   (user) under whose authority the session is to be run. If passed as a
-   *   {@link BearerToken}, gets converted to its `secretToken` string.
+   *   (user) under whose authority the session is to be run.
    * @param {string} documentId ID of the document to be edited in the session.
    * @param {string|null} [caretId = null] ID of a pre-existing caret to control
    *   with the session. If `null`, a new caret will ultimately be created for
@@ -95,22 +94,24 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
-   * Gets reconstruction arguments for this instance.
+   * Gets reconstruction arguments for this instance. In deconstructed form,
+   * the `authorToken` is always represented as a string.
    *
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    const most = [this._serverUrl, this._authorToken, this._documentId];
+    const origToken   = this._authorToken;
+    const authorToken = (origToken instanceof BearerToken) ? origToken.secretToken : origToken;
+    const maybeCaret  = (this._caretId === null) ? [] : [this._caretId];
 
-    return (this._caretId === null) ? most : [...most, this._caretId];
+    return [this._serverUrl, authorToken, this._documentId, ...maybeCaret];
   }
 
   /**
    * Makes an instance just like this one, except with a new value for
    * `authorToken`.
    *
-   * @param {string|BearerToken} authorToken New token to use. If passed as a
-   *   {@link BearerToken}, gets converted to its `secretToken` string.
+   * @param {string|BearerToken} authorToken New token to use.
    * @returns {SessionInfo} An appropriately-constructed instance.
    */
   withAuthorToken(authorToken) {

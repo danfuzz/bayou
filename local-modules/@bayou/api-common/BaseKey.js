@@ -33,8 +33,8 @@ import TargetId from './TargetId';
 export default class BaseKey extends CommonBase {
   /**
    * Redacts a string for use in error messages and logging. This is generally
-   * done in error-handling code which expects that its string argument _might_
-   * be security-sensitive.
+   * done in logging and error-handling code which expects that its string
+   * argument _might_ be security-sensitive.
    *
    * @param {string} origString The original string.
    * @returns {string} The redacted form.
