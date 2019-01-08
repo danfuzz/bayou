@@ -82,6 +82,31 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
+   * {object} Ad-hoc object with the contents of this instance, suitable for
+   * logging. In particular, the {@link #authorToken} is represented in redacted
+   * form.
+   */
+  get logInfo() {
+    const caretId       = this._caretId;
+    const token         = this._authorToken;
+    const redactedToken = (token instanceof BearerToken)
+      ? token.safeString
+      : BearerToken.redactString(token);
+
+    const result = {
+      serverUrl:   this._serverUrl,
+      authorToken: redactedToken,
+      documentId:  this._documentId
+    };
+
+    if (caretId !== null) {
+      result.caretId = caretId;
+    }
+
+    return result;
+  }
+
+  /**
    * {string} Most-specific log tag to use with this instance. This is the caret
    * ID if non-`null` or otherwise the document ID.
    */
