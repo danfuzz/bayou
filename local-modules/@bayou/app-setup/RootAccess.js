@@ -8,6 +8,7 @@ import { Auth, Network, Storage } from '@bayou/config-server';
 import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
+import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /** Logger. */
@@ -29,6 +30,12 @@ export default class RootAccess extends CommonBase {
 
     /** {Context} The API context to use. */
     this._context = Context.check(context);
+
+    /**
+     * {Map<string,BearerToken>} Map from author IDs to corresponding tokens, as
+     * registered by {@link #useToken}.
+     */
+    this._tokenMap = new Map();
 
     Object.freeze(this);
   }
@@ -66,7 +73,7 @@ export default class RootAccess extends CommonBase {
     // Remove this -- heck, remove this whole method -- once new-style sessions
     // are consistently used.
     try {
-      const authorToken = await Auth.getAuthorToken(authorId);
+      const authorToken = await this._getAuthorToken(authorId);
       const authority   = await Auth.tokenAuthority(authorToken);
       log.event.gotAuthorToken({ where: 'makeAccessKey', token: authorToken.safeString, authority });
     } catch (e) {
@@ -113,7 +120,7 @@ export default class RootAccess extends CommonBase {
     log.event.sessionInfoValid(authorId, documentId);
 
     const url         = `${Network.baseUrl}/api`;
-    const authorToken = await Auth.getAuthorToken(authorId);
+    const authorToken = await this._getAuthorToken(authorId);
 
     // As a bit of extra visibility / validation as we transition to new-style
     // sessions, get and log the "authority" granted to `authorToken`. This had
@@ -126,5 +133,35 @@ export default class RootAccess extends CommonBase {
     // ultimately need to pass it back in full. (Usually it's a bad idea to
     // return unredacted tokens; this (kind of) case is the main exception.)
     return new SessionInfo(url, authorToken, documentId);
+  }
+
+  /**
+   * Registers a token to use for the given author ID. When done, the registered
+   * token is used in favor of calling {@link Auth#getAuthorToken}.
+   *
+   * @param {string} authorId The author ID.
+   * @param {string} authorToken The corresponding author token.
+   */
+  useToken(authorId, authorToken) {
+    TString.check(authorId);
+    TString.check(authorToken);
+
+    this._tokenMap.set(authorId, Auth.tokenFromString(authorToken));
+  }
+
+  /**
+   * Gets a token to use for the given author ID.
+   *
+   * @param {string} authorId The author ID.
+   * @returns {BearerToken} The corresponding author token.
+   */
+  async _getAuthorToken(authorId) {
+    TString.check(authorId);
+
+    const found = this._tokenMap.get(authorId);
+
+    return (found !== undefined)
+      ? found
+      : Auth.getAuthorToken(authorId);
   }
 }

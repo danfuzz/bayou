@@ -7,10 +7,11 @@ import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
-import { Storage } from '@bayou/config-server';
+import { Auth, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /** Logger for this module. */
 const log = new Logger('app-debug');
@@ -22,13 +23,15 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
  * Introspection to help with debugging. Includes a request handler for hookup
  * to Express.
  */
-export default class DebugTools {
+export default class DebugTools extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {RootAccess} rootAccess The root access manager.
    */
   constructor(rootAccess) {
+    super();
+
     /** {RootAccess} The root access manager. */
     this._rootAccess = rootAccess;
 
@@ -38,6 +41,8 @@ export default class DebugTools {
     /** {Router} The router (request handler) for this instance. */
     this._router = new express.Router();
     this._addRoutes();
+
+    Object.freeze(this);
   }
 
   /**
@@ -69,6 +74,7 @@ export default class DebugTools {
     this._bindHandler('log');
     this._bindHandler('snapshot',    ':documentId');
     this._bindHandler('snapshot',    ':documentId/:revNum');
+    this._bindHandler('use-token',   ':authorId/:token');
 
     router.use(this._error.bind(this));
   }
@@ -185,6 +191,27 @@ export default class DebugTools {
       error.debugMsg = 'Bad value for `testFilter`.';
       throw error;
     }
+  }
+
+  /**
+   * Validates a token as a request parameter.
+   *
+   * @param {object} req_unused HTTP request.
+   * @param {string} value Request parameter value.
+   */
+  _check_token(req_unused, value) {
+    try {
+      if (Auth.isToken(value)) {
+        return;
+      }
+      Storage.dataStore.checkAuthorIdSyntax(value);
+    } catch (error) {
+      // Fall through and throw error.
+    }
+
+    const error = Errors.badValue(value, String, 'token');
+    error.debugMsg = 'Bad value for `token`.';
+    throw error;
   }
 
   /**
@@ -322,6 +349,21 @@ export default class DebugTools {
     const result = appCommon_TheModule.modelCodec.encodeJson(await snapshot, true);
 
     this._textResponse(res, result);
+  }
+
+  /**
+   * Registers a token to use to represent a given author. See
+   * {@link RootAccess} for the ultimate use site.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  async _handle_useToken(req, res) {
+    const authorId = req.params.authorId;
+    const token    = req.params.token;
+
+    this._rootAccess.useToken(authorId, token);
+    this._textResponse(res, 'Ok!');
   }
 
   /**
