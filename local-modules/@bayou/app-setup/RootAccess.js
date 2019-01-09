@@ -32,7 +32,7 @@ export default class RootAccess extends CommonBase {
     this._context = Context.check(context);
 
     /**
-     * {Map<string,string>} Map from author IDs to corresponding tokens, as
+     * {Map<string,BearerToken>} Map from author IDs to corresponding tokens, as
      * registered by {@link #useToken}.
      */
     this._tokenMap = new Map();
@@ -146,14 +146,14 @@ export default class RootAccess extends CommonBase {
     TString.check(authorId);
     TString.check(authorToken);
 
-    this._tokenMap.set(authorId, authorToken);
+    this._tokenMap.set(authorId, Auth.tokenFromString(authorToken));
   }
 
   /**
    * Gets a token to use for the given author ID.
    *
    * @param {string} authorId The author ID.
-   * @param {string} authorToken The corresponding author token.
+   * @param {BearerToken} authorToken The corresponding author token.
    */
   async _getAuthorToken(authorId) {
     TString.check(authorId);
