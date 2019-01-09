@@ -153,7 +153,7 @@ export default class RootAccess extends CommonBase {
    * Gets a token to use for the given author ID.
    *
    * @param {string} authorId The author ID.
-   * @param {BearerToken} authorToken The corresponding author token.
+   * @returns {BearerToken} The corresponding author token.
    */
   async _getAuthorToken(authorId) {
     TString.check(authorId);
