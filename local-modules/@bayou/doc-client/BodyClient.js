@@ -91,8 +91,10 @@ export default class BodyClient extends StateMachine {
    *
    * @param {QuillProm} quill Quill editor instance for the body.
    * @param {DocSession} docSession Server session control / manager.
+   * @param {boolean} [editingEnabled = true] Flag that determines whether
+   *   the document body should be editable.
    */
-  constructor(quill, docSession) {
+  constructor(quill, docSession, editingEnabled = true) {
     super('detached', docSession.log);
 
     /** {Quill} Editor object. */
@@ -103,6 +105,9 @@ export default class BodyClient extends StateMachine {
 
     /** {Logger} Logger specific to this client's session. */
     this._log = docSession.log;
+
+    /** {boolean} Editing enabled flag, true by default. */
+    this._editingEnabled = editingEnabled;
 
     /**
      * {Proxy|null} Local proxy for accessing the server session. Becomes
@@ -417,12 +422,14 @@ export default class BodyClient extends StateMachine {
     }
 
     // And with that, it's now safe to enable Quill so that it will accept user
-    // input.
-    this._quill.enable();
+    // input, if editing is enabled.
+    if (this._editingEnabled) {
+      this._quill.enable();
 
-    // Focus the editor area so the user can start typing right away rather than
-    // make them have to click-to-focus first.
-    QuillUtil.editorDiv(this._quill).focus();
+      // Focus the editor area so the user can start typing right away
+      // rather than make them have to click-to-focus first.
+      QuillUtil.editorDiv(this._quill).focus();
+    }
 
     // Head into our first iteration of idling while waiting for changes coming
     // in locally (from quill) or from the server.
