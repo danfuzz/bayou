@@ -25,7 +25,7 @@ describe('@bayou/api-common/TargetId', () => {
       test('_X_Y_');
       test('.x.Y.');
 
-      for (let len = 10; len <= 64; len++) {
+      for (let len = 200; len <= 256; len++) {
         test('x'.repeat(len));
         test(`-${'x'.repeat(len - 2)}-`);
         test(`_${'Y'.repeat(len - 2)}_`);
@@ -49,8 +49,8 @@ describe('@bayou/api-common/TargetId', () => {
     });
 
     it('should reject too-long strings', () => {
-      for (let i = 65; i < 100; i++) {
-        assert.throws(() => TargetId.check('x'.repeat(i)), /badValue/);
+      for (let i = 257; i < 500; i++) {
+        assert.throws(() => TargetId.check('x'.repeat(i)), /badValue/, `length ${i}`);
       }
     });
 

@@ -6,7 +6,7 @@ import { TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
 /** {RegExp} Regular expression which matches valid target IDs. */
-const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,64}$/;
+const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,256}$/;
 
 /**
  * Type representation of target IDs. The values themselves are always just
@@ -18,7 +18,7 @@ const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,64}$/;
  *
  * Syntactically, a target ID must be a string of consisting of ASCII-range
  * alphanumerics, underscore (`_`), dash (`-`), or period (`.`), which is at
- * least one and no longer than 64 characters.
+ * least one and no longer than 256 characters.
  */
 export default class TargetId extends UtilityClass {
   /**
