@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BearerToken } from '@bayou/api-common';
+import { BaseKey, BearerToken } from '@bayou/api-common';
 import { TokenMint } from '@bayou/api-server';
 import { BaseAuth } from '@bayou/config-server';
 import { TString } from '@bayou/typecheck';
@@ -144,6 +144,6 @@ export default class Auth extends BaseAuth {
 
     // **Note:** We redact the value to reduce the likelihood of leaking
     // security-sensitive info.
-    throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
+    throw Errors.badValue(BaseKey.redactString(tokenString), 'bearer token');
   }
 }
