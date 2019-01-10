@@ -30,9 +30,9 @@ const NODE_VERSION = 10;
  */
 const BROWSER_VERSIONS = [
   'Chrome >= 61',
-  'ChromeAndroid >= 61',
+  'ChromeAndroid >= 70',
   'Electron >= 1.8',
-  'Firefox >= 54',
+  'Firefox >= 60',
   'iOS >= 11',
   'Safari >= 11'
 ];
