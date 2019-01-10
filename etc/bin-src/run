@@ -78,7 +78,7 @@ function check-dependency {
 
 # Checks the versions of our various expected-installed dependencies.
 function check-environment-dependencies {
-    check-dependency 'Node' 'node --version' '^v\([89]\|10\)\.'
+    check-dependency 'Node' 'node --version' '^v1[01]\.'
 }
 
 # Matches the version of Node against the one used to build the product. This

@@ -54,7 +54,7 @@ function check-dependency {
 # Checks the versions of our various expected-installed dependencies, notably
 # including Node and npm.
 function check-build-dependencies {
-    check-dependency 'Node' 'node --version' '^v\([89]\|10\)\.'
+    check-dependency 'Node' 'node --version' '^v1[01]\.'
     check-dependency 'npm' 'npm --version' '^[56]\.'
     check-dependency 'jq' 'jq --version' '^jq-1\.'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
