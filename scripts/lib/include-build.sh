@@ -56,7 +56,7 @@ function check-dependency {
 function check-build-dependencies {
     check-dependency 'Node' 'node --version' '^v1[01]\.'
     check-dependency 'npm' 'npm --version' '^[56]\.'
-    check-dependency 'jq' 'jq --version' '^jq-1\.'
+    check-dependency 'jq' 'jq --version' '^jq-1\.[56]'
     check-dependency 'rsync' 'rsync --version' '.' # No actual version check.
 }
 
