@@ -22,7 +22,7 @@ const minimist = require('minimist');
 const path     = require('path');
 
 /** {Int} Node version to target. */
-const NODE_VERSION = 8;
+const NODE_VERSION = 10;
 
 /**
  * {array<string>} Browser versions to target. See
