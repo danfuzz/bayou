@@ -41,57 +41,6 @@ export default class RootAccess extends CommonBase {
   }
 
   /**
-   * Makes an access key which specifically allows access to one document by
-   * one author. If the document doesn't exist, this will cause it to be
-   * created.
-   *
-   * @param {string} authorId ID which corresponds to the author of changes that
-   *   are made using the resulting authorization.
-   * @param {string} documentId ID of the document which the resulting
-   *   authorization allows access to.
-   * @returns {SplitKey} A split token (ID + secret) which provides the
-   *   requested access.
-   */
-  async makeAccessKey(authorId, documentId) {
-    // These checks round-trip with the back-end to do full (not just syntactic)
-    // validation.
-    await Promise.all([
-      Storage.dataStore.checkExistingAuthorId(authorId),
-      Storage.dataStore.checkExistingDocumentId(documentId)
-    ]);
-
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-
-    const url      = `${Network.baseUrl}/api`;
-    const targetId = this._context.randomSplitKeyId();
-    const session  = await fileComplex.makeNewSession(authorId);
-    const key      = new SplitKey(url, targetId);
-    this._context.addTarget(new Target(key, session));
-
-    // As a "dry run" for the transition to new-style session management, try to
-    // get an author token for `authorId`, and log what happens. **TODO:**
-    // Remove this -- heck, remove this whole method -- once new-style sessions
-    // are consistently used.
-    try {
-      const authorToken = await this._getAuthorToken(authorId);
-      const authority   = await Auth.tokenAuthority(authorToken);
-      log.event.gotAuthorToken({ where: 'makeAccessKey', token: authorToken.safeString, authority });
-    } catch (e) {
-      log.event.failedToGetAuthorToken(e);
-    }
-
-    log.info(
-      'Newly-authorized access.\n',
-      `  author:   ${authorId}\n`,
-      `  document: ${documentId}\n`,
-      `  caret:    ${session.getCaretId()}\n`,
-      `  key id:   ${key.safeString}\n`, // This is safe to log (not security-sensitive).
-      `  key url:  ${key.url}`);
-
-    return key;
-  }
-
-  /**
    * Makes an instance of {@link SessionInfo} which corresponds to a specific
    * author editing a specific document, on the server (or server cluster)
    * running this method.
