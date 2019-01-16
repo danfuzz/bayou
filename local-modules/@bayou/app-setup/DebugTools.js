@@ -64,13 +64,13 @@ export default class DebugTools extends CommonBase {
     this._bindParam('revNum');
     this._bindParam('testFilter');
 
+    this._bindHandler('access',      ':documentId');
+    this._bindHandler('access',      ':documentId/:authorId');
     this._bindHandler('change',      ':documentId/:revNum');
     this._bindHandler('client-test');
     this._bindHandler('client-test', ':testFilter');
     this._bindHandler('edit',        ':documentId');
     this._bindHandler('edit',        ':documentId/:authorId');
-    this._bindHandler('key',         ':documentId');
-    this._bindHandler('key',         ':documentId/:authorId');
     this._bindHandler('log');
     this._bindHandler('snapshot',    ':documentId');
     this._bindHandler('snapshot',    ':documentId/:revNum');
@@ -215,6 +215,21 @@ export default class DebugTools extends CommonBase {
   }
 
   /**
+   * Produces an access and authorization info for editing a document, and
+   * returns it directly, as JSON.
+   *
+   * @param {object} req HTTP request.
+   * @param {object} res HTTP response handler.
+   */
+  async _handle_access(req, res) {
+    const documentId = req.params.documentId;
+    const authorId   = this._getAuthorIdParam(req);
+    const info       = await this._makeEncodedInfo(documentId, authorId);
+
+    this._jsonResponse(res, info);
+  }
+
+  /**
    * Gets a particular change to a document.
    *
    * @param {object} req HTTP request.
@@ -286,21 +301,6 @@ export default class DebugTools extends CommonBase {
       '<div id="debugEditor"><p>Loading&hellip;</p></div>\n';
 
     this._htmlResponse(res, head, body);
-  }
-
-  /**
-   * Produces an authorization key for editing a document, and returns it
-   * directly, as JSON.
-   *
-   * @param {object} req HTTP request.
-   * @param {object} res HTTP response handler.
-   */
-  async _handle_key(req, res) {
-    const documentId = req.params.documentId;
-    const authorId   = this._getAuthorIdParam(req);
-    const info       = await this._makeEncodedInfo(documentId, authorId);
-
-    this._jsonResponse(res, info);
   }
 
   /**

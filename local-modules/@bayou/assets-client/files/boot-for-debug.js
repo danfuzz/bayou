@@ -13,14 +13,14 @@
 
 /**
  * This global function is what ultimately gets called to attempt recovery. In
- * this case, we rely on the `/key/*` debugging endpoints to generate a new key.
- * If that's successful, we report it back up through the layers.
+ * this case, we rely on the `/access/*` debugging endpoints to generate new
+ * access info. If that's successful, we report it back up through the layers.
  */
 function BAYOU_RECOVER(info) {
   var documentId = DEBUG_DOCUMENT_ID;
   var authorId   = DEBUG_AUTHOR_ID;
   var origin     = new URL(info.serverUrl).origin;
-  var url        = `${origin}/debug/key/${documentId}/${authorId}`;
+  var url        = `${origin}/debug/access/${documentId}/${authorId}`;
 
   return new Promise((res, rej_unused) => {
     var req = new XMLHttpRequest();
