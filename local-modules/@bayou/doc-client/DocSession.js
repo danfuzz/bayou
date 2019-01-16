@@ -87,17 +87,6 @@ export default class DocSession extends CommonBase {
     return this._caretTracker;
   }
 
-  /**
-   * {SessionInfo} Information which was originally used to construct
-   * this instance. Used for recovery from connection trouble.
-   *
-   * **TODO:** This should be removed and its use sites switched to
-   * `.sessionInfo`, once key-based session setup is retired.
-   */
-  get keyOrInfo() {
-    return this._sessionInfo;
-  }
-
   /** {PropertyClient} Property accessor this session. */
   get propertyClient() {
     if (this._propertyClient === null) {

@@ -131,7 +131,7 @@ export default class TopControl {
   async _recoverIfPossible() {
     log.error('Editor gave up!');
 
-    const newInfo = await this._recover(this._editorComplex.docSession.keyOrInfo);
+    const newInfo = await this._recover(this._editorComplex.docSession.sessionInfo);
 
     if (typeof newInfo !== 'string') {
       log.info('Nothing more to do. :\'(');
