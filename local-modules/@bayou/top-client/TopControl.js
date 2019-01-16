@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SplitKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { Editor } from '@bayou/config-client';
 import { SessionInfo } from '@bayou/doc-common';
@@ -31,15 +30,15 @@ export default class TopControl {
     // variables. Validate that they're present before doing anything further.
 
     /**
-     * {SplitKey|SessionInfo} The info that identifies and authorizes access to
-     * a session. Set initially based on the incoming parameter `BAYOU_INFO`
+     * {SessionInfo} The info that identifies and authorizes access to a
+     * session. Set initially based on the incoming parameter `BAYOU_INFO`
      * (transmitted via a `window` global), which is expected to be the
-     * JSON-encoded form of `SplitKey` or `SessionInfo`. The so-referenced
-     * session is tied to a specific document and a specific author, allowing
-     * general read access to the document and allowing modification to the
-     * document as the one specific author.
+     * JSON-encoded form of a `SessionInfo` instance. The so-referenced session
+     * is tied to a specific document and a specific author, allowing general
+     * read access to the document and possibly also allowing modification to
+     * the document as the one specific author.
      */
-    this._sessionInfo = this._parseAndFixInfo(window.BAYOU_INFO);
+    this._sessionInfo = this._parseInfo(window.BAYOU_INFO);
 
     /** {Element} DOM node to use for the editor. */
     this._editorNode = TObject.check(window.BAYOU_NODE, Element);
@@ -74,10 +73,7 @@ export default class TopControl {
   async start() {
     // Let the outer app do its setup.
 
-    // **TODO:** Simplify this once `SessionInfo` is used ubiquitously.
-    const serverUrl = (this._sessionInfo instanceof SessionInfo)
-      ? this._sessionInfo.serverUrl
-      : this._sessionInfo.baseUrl;
+    const serverUrl = this._sessionInfo.serverUrl;
     await Editor.aboutToRun(this._window, serverUrl);
 
     // Arrange for the rest of initialization to happen once the initial page
@@ -139,33 +135,20 @@ export default class TopControl {
     }
 
     log.info('Attempting recovery with new session info...');
-    const sessionInfo = this._parseAndFixInfo(newInfo);
+    const sessionInfo = this._parseInfo(newInfo);
     this._editorComplex.connectNewSession(sessionInfo);
     this._recoverySetup();
   }
 
   /**
-   * Parses session identification / authorization info, and fixes it if
-   * necessary to have a real (not wildcard) URL.
+   * Parses session identification / authorization info.
    *
    * @param {string} infoJson The info, in JSON-encoded form.
-   * @returns {SplitKey|SessionInfo} The parsed and fixed info.
+   * @returns {SessionInfo} The parsed info.
    */
-  _parseAndFixInfo(infoJson) {
+  _parseInfo(infoJson) {
     const info = appCommon_TheModule.fullCodec.decodeJson(infoJson);
 
-    if (info instanceof SessionInfo) {
-      // No fixing needed, because the URL is guaranteed to be valid.
-      return info;
-    }
-
-    SplitKey.check(info);
-
-    if (info.url === '*') {
-      const url = new URL(this._window.document.URL);
-      return info.withUrl(`${url.origin}/api`);
-    }
-
-    return info;
+    return SessionInfo.check(info);
   }
 }
