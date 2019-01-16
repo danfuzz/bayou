@@ -97,8 +97,7 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * {SessionInfo|null} Information which identifies and authorizes the session,
-   * or `null` if this instance was constructed with a `SplitKey`.
+   * {SessionInfo} Information which identifies and authorizes the session.
    */
   get sessionInfo() {
     return this._sessionInfo;
