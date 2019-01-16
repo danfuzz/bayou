@@ -755,8 +755,11 @@ export default class BaseControl extends BaseDataManager {
     const timedOut = () => {
       // Log a message -- it's at least somewhat notable, though it does occur
       // regularly -- and throw `timedOut` with the original timeout value. (If
-      // called as a result of catching a timeout from `transact()` the timeout
-      // value in the error might not be the original `timeoutMsec`.)
+      // called as a result of catching a timeout from a file transaction the
+      // timeout value in the error might not be the original `timeoutMsec`.)
+
+      // TODO: Make log message more descriptive, have timeoutMsec be the
+      // timeout that was hit, versus the original one.
       this.log.info(`\`whenRevNum()\` timed out: ${timeoutMsec}msec`);
       throw Errors.timedOut(timeoutMsec);
     };
