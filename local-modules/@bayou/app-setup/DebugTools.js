@@ -440,7 +440,8 @@ export default class DebugTools extends CommonBase {
    *
    * @param {string} documentId The document ID.
    * @param {string} authorId The author ID.
-   * @returns {string} A new `SplitKey` encoded as JSON.
+   * @returns {string} An appropriately-constructed `SessionInfo`, encoded as
+   *   JSON.
    */
   async _makeEncodedInfo(documentId, authorId) {
     const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
