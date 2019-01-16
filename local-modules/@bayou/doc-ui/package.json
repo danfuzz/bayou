@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@bayou/api-common": "local",
     "@bayou/config-client": "local",
     "@bayou/data-model-client": "local",
     "@bayou/doc-client": "local",

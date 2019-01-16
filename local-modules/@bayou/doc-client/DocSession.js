@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from '@bayou/api-client';
-import { BaseKey } from '@bayou/api-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
@@ -22,27 +21,19 @@ export default class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {BaseKey|SessionInfo} keyOrInfo Key or info object that identifies
-   *   the session and grants access to it. **Note:** A session is tied to a
-   *   specific caret, which is associated with a single document and author. If
-   *   passed a `SessionInfo` without a caret ID, then the act of establishing
-   *   the session will cause a new caret to be created.
+   * @param {SessionInfo} info Info object that identifies the session and
+   *   grants access to it. **Note:** A session is tied to a specific caret,
+   *   which is associated with a single document and author. If passed an
+   *   instance without a caret ID, then the act of establishing the session
+   *   will cause a new caret to be created.
    */
-  constructor(keyOrInfo) {
+  constructor(info) {
     super();
 
     /**
-     * {SessionInfo|null} Identifying and authorizing information for the
-     * session. If `null`, then {@link #_key} is being used instead of this.
+     * {SessionInfo} Identifying and authorizing information for the session.
      */
-    this._sessionInfo = (keyOrInfo instanceof SessionInfo) ? keyOrInfo : null;
-
-    /**
-     * {BaseKey|null} Key that identifies the server-side session and grants
-     * access to it. If `null`, then {@link #_sessionInfo} is being used
-     * instead of this.
-     */
-    this._key = (this._sessionInfo === null) ? BaseKey.check(keyOrInfo) : null;
+    this._sessionInfo = SessionInfo.check(info);
 
     /**
      * {Logger} Maximally-specific logger. **TODO:** Because {@link
@@ -50,9 +41,7 @@ export default class DocSession extends CommonBase {
      * _eventually_ have one, it probably doesn't make sense to have this
      * defined in this class.
      */
-    this._log = (this._key !== null)
-      ? log.withAddedContext(this._key.id)
-      : log.withAddedContext(this._sessionInfo.logTag);
+    this._log = log.withAddedContext(this._sessionInfo.logTag);
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in
@@ -98,17 +87,6 @@ export default class DocSession extends CommonBase {
     return this._caretTracker;
   }
 
-  /**
-   * {BaseKey|SessionInfo} Information which was originally used to construct
-   * this instance. Used for recovery from connection trouble.
-   *
-   * **TODO:** This should be removed and its use sites switched to
-   * `.sessionInfo`, once key-based session setup is retired.
-   */
-  get keyOrInfo() {
-    return this._key || this._sessionInfo;
-  }
-
   /** {PropertyClient} Property accessor this session. */
   get propertyClient() {
     if (this._propertyClient === null) {
@@ -152,41 +130,11 @@ export default class DocSession extends CommonBase {
       this._log.event.mustReestablishSession();
     }
 
-    let proxyPromise;
-
-    if (this._sessionInfo !== null) {
-      const info        = this._sessionInfo;
-      const authorProxy = api.getProxy(info.authorToken);
-
-      if (info.caretId === null) {
-        proxyPromise = authorProxy.makeNewSession(info.documentId);
-      } else {
-        proxyPromise = authorProxy.findExistingSession(info.documentId, info.caretId);
-      }
-    } else if (api.isLocal()) {
-      // Transition an old-style session to a new-style one, but -- for now
-      // -- only if running in a local-dev situation, so as to limit the blast
-      // radius in case things aren't quite working. **TODO:** Remove the
-      // `isLocal()` test and the following `else`, once it is safe to always
-      // convert old sessions, and then remove this clause (and the `if`
-      // cladding) once {@link #_sessionInfo} is used ubiquitously.
-      proxyPromise = this._convertOldSession();
-    } else {
-      proxyPromise = api.authorizeTarget(this._key);
-
-      // "Dry run" of converting to a new-style session. This is done
-      // asynchronously with respect to the rest of this method, so as not to
-      // disturb the primary control flow.
-      (async () => {
-        try {
-          const dryRunProxy = await proxyPromise;
-          const sessionInfo = await dryRunProxy.getSessionInfo();
-          this._log.event.dryRunConverted(sessionInfo);
-        } catch (e) {
-          this._log.event.dryRunFailed(e);
-        }
-      })();
-    }
+    const info         = this._sessionInfo;
+    const authorProxy  = api.getProxy(info.authorToken);
+    const proxyPromise = (info.caretId === null)
+      ? authorProxy.makeNewSession(info.documentId)
+      : authorProxy.findExistingSession(info.documentId, info.caretId);
 
     this._sessionProxyPromise = proxyPromise;
 
@@ -194,19 +142,15 @@ export default class DocSession extends CommonBase {
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
-    if (this._sessionInfo !== null) {
-      const info = this._sessionInfo;
+    if (info.caretId === null) {
+      // The session got started without a caret ID, which means a new caret
+      // will have been created. Update `_sessionInfo` and `_log` accordingly.
+      const caretId = await proxy.getCaretId();
 
-      if (info.caretId === null) {
-        // The session got started without a caret ID, which means a new caret
-        // will have been created. Update `_sessionInfo` and `_log` accordingly.
-        const caretId = await proxy.getCaretId();
+      this._log.event.gotCaret(caretId);
 
-        this._log.event.gotCaret(caretId);
-
-        this._sessionInfo = info.withCaretId(caretId);
-        this._log         = log.withAddedContext(this._sessionInfo.logTag);
-      }
+      this._sessionInfo = info.withCaretId(caretId);
+      this._log         = log.withAddedContext(this._sessionInfo.logTag);
     }
 
     return proxy;
@@ -229,28 +173,6 @@ export default class DocSession extends CommonBase {
   }
 
   /**
-   * Converts the old-style session auth in {@link #_key} to the info which can
-   * be used to establish an equivalent, saving it in {@link #_sessionInfo}, and
-   * goes ahead and establishes the session in the new style.
-   *
-   * @returns {Proxy} Session authorization info.
-   */
-  async _convertOldSession() {
-    const api   = this._getApiClient();
-    const proxy = await api.authorizeTarget(this._key);
-
-    this._log.event.gotOldStyleSession();
-
-    const info = await proxy.getSessionInfo();
-
-    this._log.event.convertedToSessionInfo(info);
-
-    const authorProxy = api.getProxy(info.authorToken);
-
-    return authorProxy.findExistingSession(info.documentId, info.caretId);
-  }
-
-  /**
    * API client instance to use. The client is not guaranteed to be fully open
    * at the time it is returned; however, `open()` will have been called on it,
    * which means that it will at least be in the _process_ of opening and
@@ -259,9 +181,7 @@ export default class DocSession extends CommonBase {
    * @returns {ApiClient} API client interface.
    */
   _getApiClient() {
-    const url = (this._sessionInfo !== null)
-      ? this._sessionInfo.serverUrl
-      : this._key.url;
+    const url = this._sessionInfo.serverUrl;
 
     if ((this._apiClient === null) || !this._apiClient.isOpen()) {
       this._log.event.opening(url);

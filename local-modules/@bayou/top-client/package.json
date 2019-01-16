@@ -3,7 +3,6 @@
   "testMain": "tests/index.js",
 
   "dependencies": {
-    "@bayou/api-common": "local",
     "@bayou/app-common": "local",
     "@bayou/config-client": "local",
     "@bayou/doc-ui": "local",
