@@ -52,8 +52,8 @@ export default class EditorComplex extends CommonBase {
     this._ready = new Condition();
 
     /**
-     * {SessionInfo|SplitKey|null} Key or info object that identifies the
-     * session and grants access to it. Set in {@link #_initSession}.
+     * {SessionInfo|null} Key or info object that identifies the session and
+     * grants access to it. Set in {@link #_initSession}.
      */
     this._sessionInfo = null;
 
