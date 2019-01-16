@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { SplitKey } from '@bayou/api-common';
 import { Editor } from '@bayou/config-client';
 import { ClientStore } from '@bayou/data-model-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
@@ -29,17 +28,13 @@ export default class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {SplitKey|SessionInfo} keyOrInfo Key or info object that identifies
-   *   the session and grants access to it.
+   * @param {SessionInfo} info Info object that identifies the session and
+   *   grants access to it.
    * @param {Window} window The browser window in which we are operating.
    * @param {Element} topNode DOM element to attach the complex to.
    */
-  constructor(keyOrInfo, window, topNode) {
-    // **TODO:** Simplify this once we stop using `SplitKey`s.
-    if (!(keyOrInfo instanceof SessionInfo)) {
-      SplitKey.check(keyOrInfo);
-    }
-
+  constructor(info, window, topNode) {
+    SessionInfo.check(info);
     TObject.check(window, Window);
     TObject.check(topNode, Element);
 
@@ -99,10 +94,7 @@ export default class EditorComplex extends CommonBase {
     (async () => {
       log.event.starting();
 
-      // **TODO:** Simplify this once we stop using `SplitKey`s.
-      const serverUrl = (keyOrInfo instanceof SessionInfo)
-        ? keyOrInfo.serverUrl
-        : keyOrInfo.baseUrl;
+      const serverUrl = info.serverUrl;
 
       // Do all of the DOM setup for the instance.
       const [headerNode_unused, titleNode, bodyNode, authorOverlayNode] =
@@ -123,8 +115,8 @@ export default class EditorComplex extends CommonBase {
       // Let the overlay do extra initialization.
       Editor.editorComplexInit(this);
 
-      // Do session setup using the initial key.
-      this._initSession(keyOrInfo, true);
+      // Do session setup using the initial info.
+      this._initSession(info, true);
 
       this._ready.value = true;
     })();
@@ -206,21 +198,17 @@ export default class EditorComplex extends CommonBase {
   /**
    * Initialize the session, based on the given key.
    *
-   * @param {SplitKey|SessionInfo} keyOrInfo Key or info object that
-   *   identifies the session and grants access to it.
+   * @param {SessionInfo} info Info object that identifies the session and
+   *   grants access to it.
    * @param {boolean} fromConstructor `true` iff this call is from the
    *   constructor.
    */
-  _initSession(keyOrInfo, fromConstructor) {
-    // **TODO:** Simplify this once we stop using `SplitKey`s.
-    if (keyOrInfo instanceof SessionInfo) {
-      log.event.usingInfo(keyOrInfo.logInfo);
-    } else {
-      SplitKey.check(keyOrInfo);
-      log.event.usingKey(keyOrInfo.toString());
-    }
+  _initSession(info, fromConstructor) {
+    SessionInfo.check(info);
 
-    this._sessionInfo = keyOrInfo;
+    log.event.usingInfo(info.logInfo);
+
+    this._sessionInfo = info;
     this._docSession  = new DocSession(this._sessionInfo);
     this._bodyClient  = new BodyClient(this._bodyQuill, this._docSession);
     this._titleClient = new TitleClient(this);
