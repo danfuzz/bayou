@@ -103,9 +103,6 @@ export default class BodyClient extends StateMachine {
     /** {DocSession} Server session control / manager. */
     this._docSession = DocSession.check(docSession);
 
-    /** {Logger} Logger specific to this client's session. */
-    this._log = docSession.log;
-
     /** {boolean} Editing enabled flag, true by default. */
     this._editingEnabled = editingEnabled;
 
@@ -255,7 +252,7 @@ export default class BodyClient extends StateMachine {
    * @param {Error} error The error.
    */
   _handle_any_error(error) {
-    this._log.error('Unexpected error in handler', error);
+    this.log.error('Unexpected error in handler', error);
     this.s_unrecoverableError();
   }
 
@@ -274,10 +271,10 @@ export default class BodyClient extends StateMachine {
 
     if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
-      this._log.info(reason.message);
+      this.log.info(reason.message);
     } else {
       // It's something more dire; could be a bug on either side, for example.
-      this._log.error(`Severe synch issue in \`${method}\``, reason);
+      this.log.error(`Severe synch issue in \`${method}\``, reason);
     }
 
     // Note the time of the error, and determine if we've hit the point of
@@ -285,7 +282,7 @@ export default class BodyClient extends StateMachine {
     // When this happens, higher-level logic can notice and take further action.
     this._addErrorStamp();
     if (this._isUnrecoverablyErrored()) {
-      this._log.event.cannotRecover();
+      this.log.event.cannotRecover();
       this.s_unrecoverableError();
       return;
     }
@@ -334,7 +331,7 @@ export default class BodyClient extends StateMachine {
     // This space intentionally left blank (except for logging): We might get
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
-    this._log.info('While in state `errorWait`:', name, args);
+    this.log.info('While in state `errorWait`:', name, args);
   }
 
   /**
@@ -347,7 +344,7 @@ export default class BodyClient extends StateMachine {
    * @param {...*} args The event arguments.
    */
   _handle_unrecoverableError_any(name, ...args) {
-    this._log.info('While in state `unrecoverableError`:', name, args);
+    this.log.info('While in state `unrecoverableError`:', name, args);
   }
 
   /**
@@ -377,7 +374,7 @@ export default class BodyClient extends StateMachine {
 
     try {
       const info = await infoPromise;
-      this._log.event.sessionInfo(info);
+      this.log.event.sessionInfo(info);
     } catch (e) {
       this.q_apiError('getLogInfo', e);
       return;
@@ -519,8 +516,6 @@ export default class BodyClient extends StateMachine {
    *   document revision.
    */
   _handle_idle_gotChangeAfter(baseRevNum, result) {
-    this._log.detail('Change from server:', result.revNum);
-
     // We only take action if the result's base (what the change is with regard
     // to) is the current `_snapshot`. If that _isn't_ the case, then what we
     // have here is a stale response of one sort or another. For example (and
@@ -689,7 +684,7 @@ export default class BodyClient extends StateMachine {
       } catch (e) {
         // **TODO:** Remove this logging once we figure out why we're seeing
         // this error.
-        this._log.event.badCompose(this._snapshot, delta);
+        this.log.event.badCompose(this._snapshot, delta);
         this.q_apiError('body_update', e);
       }
     })();
@@ -710,8 +705,6 @@ export default class BodyClient extends StateMachine {
     // for more detail.
     const dCorrection = correctedChange.delta;
     const vResultNum  = correctedChange.revNum;
-
-    this._log.detail('Correction from server:', correctedChange);
 
     if (dCorrection.isEmpty()) {
       // There is no change from what we expected. This means that no other
@@ -889,7 +882,7 @@ export default class BodyClient extends StateMachine {
     const errorCount      = this._errorStamps.length;
     const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
 
-    this._log.event.errorWindow({
+    this.log.event.errorWindow({
       total:     errorCount,
       perMinute: Math.round(errorsPerMinute * 100) / 100
     });

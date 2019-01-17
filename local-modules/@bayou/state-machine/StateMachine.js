@@ -130,6 +130,11 @@ export default class StateMachine {
     this._serviceEventQueue();
   }
 
+  /** {BaseLogger} The logger that this instance uses. */
+  get log() {
+    return this._log;
+  }
+
   /** {string} The name of the current state. */
   get state() {
     return this._stateName;
