@@ -95,7 +95,7 @@ export default class BodyClient extends StateMachine {
    *   the document body should be editable.
    */
   constructor(quill, docSession, editingEnabled = true) {
-    super('detached', docSession.log);
+    super('detached', docSession.log, true);
 
     /** {Quill} Editor object. */
     this._quill = quill;
