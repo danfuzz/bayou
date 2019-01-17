@@ -3,8 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Condition } from '@bayou/promise-util';
-import { Logger } from '@bayou/see-all';
-import { TObject } from '@bayou/typecheck';
+import { BaseLogger, Logger } from '@bayou/see-all';
+import { TBoolean, TObject, TString } from '@bayou/typecheck';
 import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
 
 /**
@@ -69,11 +69,20 @@ export default class StateMachine {
    * Constructs an instance.
    *
    * @param {string} initialState The initial state.
-   * @param {Logger} [logger = null] Logger to use.
+   * @param {BaseLogger|null} [logger = null] Logger to use, or `null` to
+   *   use a newly-constructed instance.
+   * @param {boolean} [verboseLogging = false] Whether to be chatty in the logs.
+   *   `true` is useful for debugging but is arguably too much to leave on on
+   *   an ongoing basis.
    */
-  constructor(initialState, logger = null) {
-    /** {Logger} Logger to use. */
-    this._log = logger || new Logger('state-machine');
+  constructor(initialState, logger = null, verboseLogging = false) {
+    TString.check(initialState);
+
+    /** {BaseLogger} Logger to use. */
+    this._log = (logger === null) ? new Logger('state-machine') : BaseLogger.check(logger);
+
+    /** {boolean} Whether to be particularly chatty in the logs. */
+    this._verboseLogging = TBoolean.check(verboseLogging);
 
     /** {string} The name of the current state. Set below. */
     this._stateName = null;
@@ -121,6 +130,11 @@ export default class StateMachine {
     this._serviceEventQueue();
   }
 
+  /** {BaseLogger} The logger that this instance uses. */
+  get log() {
+    return this._log;
+  }
+
   /** {string} The name of the current state. */
   get state() {
     return this._stateName;
@@ -149,7 +163,11 @@ export default class StateMachine {
         }
 
         const event = new Functor(name, ...args);
-        this._log.detail('Enqueued:', event);
+
+        if (this._verboseLogging) {
+          this._log.event.enqueued(event);
+        }
+
         this._eventQueue.push(event);
         this._anyEventPending.value = true;
       };
@@ -168,14 +186,20 @@ export default class StateMachine {
           return;
         }
 
-        this._log.detail('New state:', name);
+        if (this._verboseLogging) {
+          this._log.event.newState(name);
+        }
+
         this._stateName = name;
 
         // Trigger the awaiter for the state, if any.
         const condition = this._stateConditions.get(name);
         if (condition) {
           condition.onOff();
-          this._log.detail('Triggered awaiter for state:', name);
+
+          if (this._verboseLogging) {
+            this._log.event.triggeredWaiter(name);
+          }
 
           // Remove the condition, because in general, these kinds of state
           // awaiters are used only ephemerally.
@@ -185,15 +209,23 @@ export default class StateMachine {
 
       this[`when_${name}`] = () => {
         if (this._stateName === name) {
-          this._log.detail('Immediately-resolved awaiter for state:', name);
+          if (this._verboseLogging) {
+            this._log.event.immediatelyTriggeredWaiter(name);
+          }
+
           return Promise.resolve(true);
         } else {
-          this._log.detail('Awaiter added for state:', name);
+          if (this._verboseLogging) {
+            this._log.event.addedWaiter(name);
+          }
+
           let condition = this._stateConditions.get(name);
+
           if (!condition) {
             condition = new Condition();
             this._stateConditions.set(name, condition);
           }
+
           return condition.whenTrue();
         }
       };
@@ -247,8 +279,9 @@ export default class StateMachine {
     // Log the state name and event details (if not squelched), and occasional
     // count of how many events have been handled so far.
 
-    log.detail('In state:', stateName);
-    log.detail('Dispatching:', event);
+    if (this._verboseLogging) {
+      log.event.dequeued(event);
+    }
 
     // Dispatch the event. In case of exception, enqueue an `error` event.
     // (The default handler for the event will log an error and stop the queue.)
@@ -263,16 +296,13 @@ export default class StateMachine {
         this._anyEventPending.value = true; // "Wakes up" the servicer.
         return;
       } else {
-        log.detail('Uncaught error:', e);
         this.q_error(e);
       }
     }
 
-    log.detail('Done dispatching:', event);
-
     this._eventCount++;
     if ((this._eventCount % 25) === 0) {
-      log.info(`Handled ${this._eventCount} events.`);
+      log.event.eventsHandled(this._eventCount);
     }
   }
 
