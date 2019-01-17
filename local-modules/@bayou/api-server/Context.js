@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Remote, SplitKey } from '@bayou/api-common';
+import { Remote } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -266,29 +266,6 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
-  }
-
-  /**
-   * Makes a new random ID for use with this instance, which (a) is guaranteed
-   * not to be used by the instance already, and (b) abides by the syntax
-   * required by {@link SplitKey}.
-   *
-   * **TODO:** Remove this method once all authorization is done using bearer
-   * tokens.
-   *
-   * @returns {string} A random unused target ID, in `SplitKey` syntax.
-   */
-  randomSplitKeyId() {
-    for (;;) {
-      const result = SplitKey.randomId();
-
-      if (!this.hasId(result)) {
-        return result;
-      }
-
-      // We managed to get an ID collision. Unlikely, but it can happen. So,
-      // just iterate and try again.
-    }
   }
 
   /**
