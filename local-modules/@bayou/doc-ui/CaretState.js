@@ -4,9 +4,10 @@
 
 import { CaretSnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
+import { Errors } from '@bayou/util-common';
 
 /**
- * {object} Starting state for the caret redux store.
+ * {CaretSnapshot} Starting state for the caret redux store.
  */
 const INITIAL_STATE = CaretSnapshot.EMPTY;
 
@@ -116,6 +117,12 @@ export default class CaretState {
           docSession.log.detail(`Got caret change. ${snapshot.size} caret(s).`);
         }
       } catch (e) {
+        if (Errors.is_timedOut(e)) {
+          // Timeout is totally NBD; it just means that nothing changed. No need
+          // to log, and just iterate to retry the call.
+          continue;
+        }
+
         // Assume that the error isn't truly fatal. Most likely, it's because
         // the session got restarted or because the snapshot we have is too old
         // to get a change from. We just `null` out the snapshot and let the
