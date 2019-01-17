@@ -33,7 +33,7 @@
   // we're here we haven't yet loaded the API code, and in order to load that
   // code we need to know the server URL, whee! So we just do the minimal bit of
   // parsing needed to get the URL and then head on our merry way. See
-  // {@link @bayou/api-common/SessionInfo}, the encoded form in particular, if
+  // {@link @bayou/doc-common/SessionInfo}, the encoded form in particular, if
   // you want to understand what's going on.
   var info = JSON.parse(window.BAYOU_INFO);
   var url;
