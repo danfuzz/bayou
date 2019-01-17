@@ -6,13 +6,12 @@
 // become/embed a Bayou editor. It assumes that the `window` object (that is,
 // the global context) contains the following bindings:
 //
-// * `BAYOU_INFO` -- The JSON-encoded form of an instance of `SessionInfo` or
-//   `SplitKey`, to be used to identify and authenticate access to a particular
-//   document.
+// * `BAYOU_INFO` -- The JSON-encoded form of an instance of `SessionInfo`, to
+//   be used to identify and authenticate access to a particular document.
 // * `BAYOU_NODE` -- The DOM node into which the editor should be embedded.
 // * `BAYOU_RECOVER` (optional) -- Function to use when attempting to recover
-//   from connection trouble. It gets passed the `SessionInfo` or `SplitKey`
-//   which was initially used to establish the connection.
+//   from connection trouble. It gets passed the `SessionInfo` which was
+//   initially used to establish the connection.
 //
 // See {@link @bayou/top-client/TopControl} for more details about these
 // parameters.
@@ -34,22 +33,18 @@
   // we're here we haven't yet loaded the API code, and in order to load that
   // code we need to know the server URL, whee! So we just do the minimal bit of
   // parsing needed to get the URL and then head on our merry way. See
-  // {@link @bayou/api-common/SessionInfo} and
-  // {@link @bayou/api-common/SplitKey}, the encoded forms in particular, if you
-  // want to understand what's going on.
+  // {@link @bayou/doc-common/SessionInfo}, the encoded form in particular, if
+  // you want to understand what's going on.
   var info = JSON.parse(window.BAYOU_INFO);
   var url;
 
   if (info.SessionInfo) {
     url = info.SessionInfo[0];
-  } else if (info.SplitKey) {
-    // **TODO:** Remove this once `SessionInfo` is used ubiquitously.
-    url = info.SplitKey[0];
   } else {
     throw new Error('Unrecognized format for `BAYOU_INFO`.');
   }
 
-  var baseUrl = ((url === '*') ? window.location : new URL(url)).origin;
+  var baseUrl = new URL(url).origin;
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the boot process. You can find its main entrypoint in

@@ -45,11 +45,12 @@ export default class TopControl {
 
     /**
      * {function} Function to call when the editor finds itself in an
-     * unrecoverable (to it) situation. It gets called with the current key as
-     * its sole argument. If it returns at all, it is expected to return a new
-     * key to use (instead of `BAYOU_INFO`), or a promise for same; if it does
-     * not return a string (or promise which resolves to a string) that can be
-     * decoded into a `SplitKey`, the system will simply halt.
+     * unrecoverable (to it) situation. It gets called with the current session
+     * info as its sole argument. If it returns at all, it is expected to return
+     * a new instance of `SessionInfo` to use (instead of `BAYOU_INFO`), or a
+     * promise for same; if it does not return a string (or promise which
+     * resolves to a string) that can be decoded into a `SessionInfo`, the
+     * system will simply halt.
      *
      * If not supplied, this variable defaults to a no-op function.
      */
