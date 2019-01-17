@@ -6,7 +6,7 @@ import { ConnectionError } from '@bayou/api-common';
 import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
-import { TString } from '@bayou/typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';
 
@@ -194,13 +194,13 @@ export default class BodyClient extends StateMachine {
    * Validates a `gotChangeAfter` event. This represents a successful result
    * from the API call `body_getChangeAfter()`.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _check_gotChangeAfter(baseSnapshot, result) {
-    BodySnapshot.check(baseSnapshot);
+  _check_gotChangeAfter(baseRevNum, result) {
+    TInt.check(baseRevNum);
     BodyChange.check(result);
   }
 
@@ -211,11 +211,11 @@ export default class BodyClient extends StateMachine {
    * given base document). Put another way, this indicates that `_currentEvent`
    * has a resolved `next`.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    */
-  _check_gotQuillEvent(baseSnapshot) {
-    BodySnapshot.check(baseSnapshot);
+  _check_gotQuillEvent(baseRevNum) {
+    TInt.nonNegative(baseRevNum);
   }
 
   /**
@@ -239,11 +239,11 @@ export default class BodyClient extends StateMachine {
    * Validates a `wantToUpdate` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    */
-  _check_wantToUpdate(baseSnapshot) {
-    BodySnapshot.check(baseSnapshot);
+  _check_wantToUpdate(baseRevNum) {
+    TInt.check(baseRevNum);
   }
 
   /**
@@ -451,11 +451,11 @@ export default class BodyClient extends StateMachine {
    * to the local Quill instance.
    */
   _handle_idle_wantInput() {
-    // We grab the current local body snapshot, so we can refer back to it when
-    // a response comes. That is, `_snapshot` might have changed out from
-    // under us between when this event is handled and when the promises used
-    // here become resolved.
-    const baseSnapshot = this._snapshot;
+    // We grab the current revision number immediately, so we can refer back to
+    // it when a response comes. That is, `_snapshot` might have changed out
+    // from under us between when this event is handled and when the promises
+    // used here become resolved.
+    const baseRevNum = this._snapshot.revNum;
 
     // Ask Quill for any changes we haven't yet observed, via the document
     // change promise chain, but only if there isn't already a pending request
@@ -470,7 +470,7 @@ export default class BodyClient extends StateMachine {
       (async () => {
         await this._currentEvent.next;
         this._pendingQuillAwait = false;
-        this.q_gotQuillEvent(baseSnapshot);
+        this.q_gotQuillEvent(baseRevNum);
       })();
     }
 
@@ -482,9 +482,9 @@ export default class BodyClient extends StateMachine {
 
       (async () => {
         try {
-          const value = await this._sessionProxy.body_getChangeAfter(baseSnapshot.revNum);
+          const value = await this._sessionProxy.body_getChangeAfter(baseRevNum);
           this._pendingChangeAfter = false;
-          this.q_gotChangeAfter(baseSnapshot, value);
+          this.q_gotChangeAfter(baseRevNum, value);
         } catch (e) {
           this._pendingChangeAfter = false;
           if (Errors.is_timedOut(e)) {
@@ -513,19 +513,19 @@ export default class BodyClient extends StateMachine {
   /**
    * In state `idle`, handles event `gotChangeAfter`.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    * @param {BodyChange} result How to transform `baseSnapshot` to get a later
    *   document revision.
    */
-  _handle_idle_gotChangeAfter(baseSnapshot, result) {
+  _handle_idle_gotChangeAfter(baseRevNum, result) {
     this._log.detail('Change from server:', result.revNum);
 
     // We only take action if the result's base (what the change is with regard
     // to) is the current `_snapshot`. If that _isn't_ the case, then what we
     // have here is a stale response of one sort or another. For example (and
     // most likely), it might be the delayed result from an earlier iteration.
-    if (this._snapshot.revNum === baseSnapshot.revNum) {
+    if (this._snapshot.revNum === baseRevNum) {
       this._updateWithChange(result);
     }
 
@@ -544,12 +544,12 @@ export default class BodyClient extends StateMachine {
    * such, it is safe to ignore, because after the local change is integrated,
    * the system will fire off a new `body_getChangeAfter()` request.
    *
-   * @param {BodySnapshot} baseDoc_unused The document at the time of the
-   *   original request.
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
    * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
    *   later document revision.
    */
-  _handle_any_gotChangeAfter(baseDoc_unused, result_unused) {
+  _handle_any_gotChangeAfter(baseRevNum_unused, result_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -559,13 +559,13 @@ export default class BodyClient extends StateMachine {
    * to collect the changes for a short period of time before sending them up to
    * the server.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    */
-  _handle_idle_gotQuillEvent(baseSnapshot) {
+  _handle_idle_gotQuillEvent(baseRevNum) {
     const event = this._currentEvent.nextNow;
 
-    if ((this._snapshot.revNum !== baseSnapshot.revNum) || (event === null)) {
+    if ((this._snapshot.revNum !== baseRevNum) || (event === null)) {
       // This state machine event was generated with respect to a revision of
       // the document which has since been updated, or we ended up having two
       // state machine events for the same Quill event (which can happen for at
@@ -600,7 +600,7 @@ export default class BodyClient extends StateMachine {
         // that happened in the mean time.
         (async () => {
           await Delay.resolve(PUSH_DELAY_MSEC);
-          this.q_wantToUpdate(baseSnapshot);
+          this.q_wantToUpdate(baseRevNum);
         })();
 
         this.s_collecting();
@@ -632,10 +632,10 @@ export default class BodyClient extends StateMachine {
    * chain of local changes. As such, it is safe to ignore, because whatever
    * the change was, it will get handled by that pre-existing process.
    *
-   * @param {BodySnapshot} baseDoc_unused The document at the time of the
-   *   original request.
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
    */
-  _handle_any_gotQuillEvent(baseDoc_unused) {
+  _handle_any_gotQuillEvent(baseRevNum_unused) {
     // Nothing to do. Stay in the same state.
   }
 
@@ -644,11 +644,11 @@ export default class BodyClient extends StateMachine {
    * is time for the collected local changes to be sent up to the server for
    * integration.
    *
-   * @param {BodySnapshot} baseSnapshot The body state at the time of the
-   *   original request.
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
    */
-  _handle_collecting_wantToUpdate(baseSnapshot) {
-    if (this._snapshot.revNum !== baseSnapshot.revNum) {
+  _handle_collecting_wantToUpdate(baseRevNum) {
+    if (this._snapshot.revNum !== baseRevNum) {
       // As with the `gotQuillEvent` event, we ignore this event if the document
       // has changed out from under us.
       this._becomeIdle();
@@ -684,12 +684,12 @@ export default class BodyClient extends StateMachine {
     // future bugs, in the face of possible later changes to this class.
     (async () => {
       try {
-        const value = await this._sessionProxy.body_update(baseSnapshot.revNum, delta);
+        const value = await this._sessionProxy.body_update(baseRevNum, delta);
         this.q_gotUpdate(delta, value);
       } catch (e) {
         // **TODO:** Remove this logging once we figure out why we're seeing
         // this error.
-        this._log.event.badCompose(baseSnapshot, delta);
+        this._log.event.badCompose(this._snapshot, delta);
         this.q_apiError('body_update', e);
       }
     })();
