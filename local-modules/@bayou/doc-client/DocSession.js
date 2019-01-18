@@ -187,7 +187,7 @@ export default class DocSession extends CommonBase {
   /**
    * Gets the API client instance to use. The client will have been successfully
    * opened before this method returns (if it returns normally instead of
-   * throwing and error), but there is no guarantee that it won't have gotten
+   * throwing an error), but there is no guarantee that it won't have gotten
    * closed by the time the caller gets to run (because asynchrony).
    *
    * @returns {ApiClient} API client interface.
