@@ -7,7 +7,7 @@ import { Storage } from '@bayou/config-server';
 import { CaretId } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /** Logger. */
 const log = new Logger('author-access');
@@ -48,17 +48,18 @@ export default class AuthorAccess extends CommonBase {
    * Adds a binding to this instance's associated context for the pre-existing
    * editing session for the caret with the indicated ID, on the given document,
    * which must be a caret associated with the author that this instance
-   * represents. It is an error if the caret (or document) doesn't exist, and it
-   * is also an error if the caret exists but is not associated with this
-   * instance's author.
+   * represents. This method returns `null` if the arguments are valid but do
+   * not actually refer to a pre-existing session associated with the author
+   * represented by this instance.
    *
    * **TODO:** Context binding ought to happen at a different layer of the
    * system. See comment about this in {@link #makeNewSession} for more details.
    *
    * @param {string} documentId ID of the document which the session is for.
    * @param {string} caretId ID of the caret.
-   * @returns {ProxiedObject} Proxy wrapper (for return via API) of the found
-   *   session.
+   * @returns {ProxiedObject|null} Proxy wrapper (for return via API) of the
+   *   found session, or `null` if the `documentId` is valid but there is no
+   *   such pre-existing caret.
    */
   async findExistingSession(documentId, caretId) {
     // We only check the document ID syntax here, because we can count on the
@@ -69,7 +70,16 @@ export default class AuthorAccess extends CommonBase {
     CaretId.check(caretId);
 
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const session     = await fileComplex.findExistingSession(this._authorId, caretId);
+
+    let session;
+    try {
+      session = await fileComplex.findExistingSession(this._authorId, caretId);
+    } catch (e) {
+      if (Errors.is_badId(e)) {
+        // Per method header doc, this isn't considered a throwable offense.
+        return null;
+      }
+    }
 
     log.info(
       'Bound session for pre-existing caret.\n',
