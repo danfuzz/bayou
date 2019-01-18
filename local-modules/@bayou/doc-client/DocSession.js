@@ -117,7 +117,9 @@ export default class DocSession extends CommonBase {
 
     const api = this._getApiClient();
 
-    if (this._sessionProxyPromise !== null) {
+    if (this._sessionProxyPromise === null) {
+      this._log.event.initialSessionSetup();
+    } else {
       const proxy = await this._sessionProxyPromise;
 
       if (api.handles(proxy)) {
@@ -129,8 +131,6 @@ export default class DocSession extends CommonBase {
 
       // Fall through to re-set-up the session.
       this._log.event.mustReestablishSession();
-    } else {
-      this._log.event.initialSessionSetup();
     }
 
     const info         = this._sessionInfo;
