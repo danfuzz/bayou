@@ -329,6 +329,13 @@ export default class ApiClient extends CommonBase {
     // particular value.
     url.pathname = '/api';
 
+    if (url.pathname !== '/api') {
+      // Per the **TODO** above, note when we get what (today) is an unexpected
+      // path. If we never see this, it means we can address the **TODO** by
+      // removing the statement it's commenting on.
+      this._log.event.unusualUrlPath(url.pathname);
+    }
+
     return url.href;
   }
 
