@@ -127,6 +127,8 @@ export default class DocSession extends CommonBase {
 
       // Fall through to re-set-up the session.
       this._log.event.mustReestablishSession();
+    } else {
+      this._log.event.initialSessionSetup();
     }
 
     const info         = this._sessionInfo;
@@ -135,6 +137,7 @@ export default class DocSession extends CommonBase {
       ? authorProxy.makeNewSession(info.documentId)
       : authorProxy.findExistingSession(info.documentId, info.caretId);
 
+    this._log.event.usingInfo(info.logInfo);
     this._sessionProxyPromise = proxyPromise;
 
     // Log a note once the promise resolves.
@@ -167,6 +170,7 @@ export default class DocSession extends CommonBase {
       // it makes that `open()` call asynchronously. In this case, we want to
       // guarantee that `open()` was called synchronously before this method
       // returns.
+      this._log.event.synchronousApiOpen();
       api.open();
     }
   }
@@ -183,19 +187,22 @@ export default class DocSession extends CommonBase {
     const url = this._sessionInfo.serverUrl;
 
     if ((this._apiClient === null) || !this._apiClient.isOpen()) {
-      this._log.event.opening(url);
+      this._log.event.apiAboutToOpen(url);
       this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
       (async () => {
         try {
+          this._log.event.apiOpening();
           await this._apiClient.open();
-          this._log.event.opened(url);
+          this._log.event.apiOpened();
         } catch (e) {
           // (a) Log the problem, and (b) make sure an error doesn't percolate
           // back to the top as an uncaught promise rejection.
-          this._log.event.openFailed(url);
+          this._log.event.apiOpenFailed();
         }
       })();
+    } else {
+      this._log.event.apiAlreadyOpen();
     }
 
     return this._apiClient;
