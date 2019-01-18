@@ -57,8 +57,8 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} documentId ID of the document which the session is for.
    * @param {string} caretId ID of the caret.
-   * @returns {string} Target ID within the API context which refers to the
-   *   session. This is _not_ the same as the `caretId`.
+   * @returns {ProxiedObject} Proxy wrapper (for return via API) of the found
+   *   session.
    */
   async findExistingSession(documentId, caretId) {
     // We only check the document ID syntax here, because we can count on the
@@ -89,8 +89,8 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} documentId ID of the document which the resulting bound
    *   object allows access to.
-   * @returns {string} Target ID within the API context which refers to the
-   *   session. This is _not_ the same as the `caretId`.
+   * @returns {ProxiedObject} Proxy wrapper (for return via API) of the
+   *   newly-created session.
    */
   async makeNewSession(documentId) {
     // We only check the document ID syntax here, because we can count on the
