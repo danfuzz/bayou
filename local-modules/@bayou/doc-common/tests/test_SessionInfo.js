@@ -149,17 +149,18 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
-  describe('.logTag', () => {
-    it('should be the `caretId` if non-`null`', () => {
-      const id = 'caretness';
-      const si = new SessionInfo(SERVER_URL, 'token', 'doc', id);
-      assert.strictEqual(si.logTag, id);
+  describe('.logTags', () => {
+    it('should include the `caretId` if non-`null`', () => {
+      const did = 'docness';
+      const cid = 'caretness';
+      const si = new SessionInfo(SERVER_URL, 'token', did, cid);
+      assert.deepEqual(si.logTags, [did, cid]);
     });
 
-    it('should be the `documentId` if `caretId === null`', () => {
+    it('should be just the `documentId` if `caretId === null`', () => {
       const id = 'docness';
       const si = new SessionInfo(SERVER_URL, 'token', id);
-      assert.strictEqual(si.logTag, id);
+      assert.deepEqual(si.logTags, [id]);
     });
   });
 

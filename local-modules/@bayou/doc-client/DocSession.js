@@ -36,12 +36,10 @@ export default class DocSession extends CommonBase {
     this._sessionInfo = SessionInfo.check(info);
 
     /**
-     * {Logger} Maximally-specific logger. **TODO:** Because {@link
-     * #_sessionInfo} might not have a caret ID but the session will
-     * _eventually_ have one, it probably doesn't make sense to have this
-     * defined in this class.
+     * {Logger} Maximally-specific logger. This gets updated if/when
+     * {@link #_sessionInfo} gets updated (e.g. when the session gains a caret).
      */
-    this._log = log.withAddedContext(this._sessionInfo.logTag);
+    this._log = log.withAddedContext(...this._sessionInfo.logTags);
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in
@@ -72,7 +70,8 @@ export default class DocSession extends CommonBase {
 
   /**
    * {Logger} Logger to use when handling operations related to this instance.
-   * Logged messages include a reference to the session ID.
+   * Logged messages include a reference to the document ID and (if available)
+   * the caret ID.
    */
   get log() {
     return this._log;
@@ -113,9 +112,14 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
-    const api = this._getApiClient();
+    this._log.event.askedForSessionProxy();
 
-    if (this._sessionProxyPromise !== null) {
+    const api = await this._getApiClient();
+
+    if (this._sessionProxyPromise === null) {
+      this._log.event.initialSessionSetup();
+    } else {
+      this._log.event.checkingSessionValidity();
       const proxy = await this._sessionProxyPromise;
 
       if (api.handles(proxy)) {
@@ -135,9 +139,10 @@ export default class DocSession extends CommonBase {
       ? authorProxy.makeNewSession(info.documentId)
       : authorProxy.findExistingSession(info.documentId, info.caretId);
 
+    this._log.event.usingInfo(info.logInfo);
     this._sessionProxyPromise = proxyPromise;
 
-    // Log a note once the promise resolves.
+    this._log.event.gettingSessionProxy();
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
@@ -149,7 +154,7 @@ export default class DocSession extends CommonBase {
       this._log.event.gotCaret(caretId);
 
       this._sessionInfo = info.withCaretId(caretId);
-      this._log         = log.withAddedContext(this._sessionInfo.logTag);
+      this._log         = log.withAddedContext(...this._sessionInfo.logTags);
     }
 
     return proxy;
@@ -160,42 +165,53 @@ export default class DocSession extends CommonBase {
    * established.
    */
   open() {
-    const api = this._getApiClient();
+    this._log.event.askedToOpen();
 
-    if (!api.isOpen()) {
-      // Even though `_getApiClient()` will eventually get the client opened,
-      // it makes that `open()` call asynchronously. In this case, we want to
-      // guarantee that `open()` was called synchronously before this method
-      // returns.
-      api.open();
-    }
+    // This call ensures that, if the API client isn't yet constructed, or if
+    // it had gotten closed, that it gets (re)constructed and (re)opened. We
+    // swallow exceptions here because this method is synchronous: We don't want
+    // eventual-failure of the call to turn into a top-level "unhandled promise
+    // rejection" issue. If it fails, then other parts of the code will (or at
+    // least _should_) ultimately recognize the failure and retry (or eventually
+    // but explicitly give up).
+    (async () => {
+      try {
+        await this._getApiClient();
+      } catch (e) {
+        // **Note:** No need to log the error, because `_getApiClient()` will
+        // have already logged it.
+      }
+    })();
   }
 
   /**
-   * API client instance to use. The client is not guaranteed to be fully open
-   * at the time it is returned; however, `open()` will have been called on it,
-   * which means that it will at least be in the _process_ of opening and
-   * available to enqueue (if not actually transmit) messages.
+   * Gets the API client instance to use. The client will have been successfully
+   * opened before this method returns (if it returns normally instead of
+   * throwing an error), but there is no guarantee that it won't have gotten
+   * closed by the time the caller gets to run (because asynchrony).
    *
    * @returns {ApiClient} API client interface.
    */
-  _getApiClient() {
+  async _getApiClient() {
+    if ((this._apiClient !== null) && this._apiClient.isOpen()) {
+      this._log.event.apiAlreadyOpen();
+      return this._apiClient;
+    }
+
     const url = this._sessionInfo.serverUrl;
 
-    if ((this._apiClient === null) || !this._apiClient.isOpen()) {
-      this._log.event.opening(url);
-      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
+    this._log.event.apiAboutToOpen(url);
+    this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
-      (async () => {
-        try {
-          await this._apiClient.open();
-          this._log.event.opened(url);
-        } catch (e) {
-          // (a) Log the problem, and (b) make sure an error doesn't percolate
-          // back to the top as an uncaught promise rejection.
-          this._log.event.openFailed(url);
-        }
-      })();
+    try {
+      this._log.event.apiOpening();
+      await this._apiClient.open();
+      this._log.event.apiOpened();
+    } catch (e) {
+      // Log the problem, and rethrow. **TODO:** Consider this as a spot to
+      // add retry logic.
+      this._log.event.apiOpenFailed(e);
+      throw e;
     }
 
     return this._apiClient;

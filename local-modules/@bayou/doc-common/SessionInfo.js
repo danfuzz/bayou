@@ -107,13 +107,14 @@ export default class SessionInfo extends CommonBase {
   }
 
   /**
-   * {string} Most-specific log tag to use with this instance. This is the caret
-   * ID if non-`null` or otherwise the document ID.
+   * {array<string>} Log tags to use with this instance. The result lists the
+   * document ID (always) and the caret ID (if non-`null`).
    */
-  get logTag() {
-    return (this._caretId !== null)
-      ? this._caretId
-      : this._documentId;
+  get logTags() {
+    const documentId = this._documentId;
+    const caretId    = this._caretId;
+
+    return (caretId === null) ? [documentId] : [documentId, caretId];
   }
 
   /**
