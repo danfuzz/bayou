@@ -114,7 +114,7 @@ export default class DocSession extends CommonBase {
   async getSessionProxy() {
     this._log.event.askedForSessionProxy();
 
-    const api = this._getApiClient();
+    const api = await this._getApiClient();
 
     if (this._sessionProxyPromise === null) {
       this._log.event.initialSessionSetup();
@@ -167,41 +167,51 @@ export default class DocSession extends CommonBase {
   open() {
     this._log.event.askedToOpen();
 
-    // This method ensures that, if the API client isn't yet constructed, or if
-    // it had gotten closed, that it gets (re)constructed and (re)opened.
-    this._getApiClient();
+    // This call ensures that, if the API client isn't yet constructed, or if
+    // it had gotten closed, that it gets (re)constructed and (re)opened. We
+    // swallow exceptions here because this method is synchronous: We don't want
+    // eventual-failure of the call to turn into a top-level "unhandled promise
+    // rejection" issue. If it fails, then other parts of the code will (or at
+    // least _should_) ultimately recognize the failure and retry (or eventually
+    // but explicitly give up).
+    (async () => {
+      try {
+        await this._getApiClient();
+      } catch (e) {
+        // **Note:** No need to log the error, because `_getApiClient()` will
+        // have already logged it.
+      }
+    })();
   }
 
   /**
-   * API client instance to use. The client is not guaranteed to be fully open
-   * at the time it is returned; however, `open()` will be _about_ to be called
-   * on it (asynchronously), which means that it will at least be in the
-   * _process_ of opening. In addition, it is always safe to enqueue messages on
-   * an instance, even if not yet fully open (or even in the process of
-   * opening).
+   * Gets the API client instance to use. The client will have been successfully
+   * opened before this method returns (if it returns normally instead of
+   * throwing and error), but there is no guarantee that it won't have gotten
+   * closed by the time the caller gets to run (because asynchrony).
    *
    * @returns {ApiClient} API client interface.
    */
-  _getApiClient() {
+  async _getApiClient() {
+    if ((this._apiClient !== null) && this._apiClient.isOpen()) {
+      this._log.event.apiAlreadyOpen();
+      return this._apiClient;
+    }
+
     const url = this._sessionInfo.serverUrl;
 
-    if ((this._apiClient === null) || !this._apiClient.isOpen()) {
-      this._log.event.apiAboutToOpen(url);
-      this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
+    this._log.event.apiAboutToOpen(url);
+    this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
-      (async () => {
-        try {
-          this._log.event.apiOpening();
-          await this._apiClient.open();
-          this._log.event.apiOpened();
-        } catch (e) {
-          // (a) Log the problem, and (b) make sure an error doesn't percolate
-          // back to the top as an uncaught promise rejection.
-          this._log.event.apiOpenFailed();
-        }
-      })();
-    } else {
-      this._log.event.apiAlreadyOpen();
+    try {
+      this._log.event.apiOpening();
+      await this._apiClient.open();
+      this._log.event.apiOpened();
+    } catch (e) {
+      // Log the problem, and rethrow. **TODO:** Consider this as a spot to
+      // add retry logic.
+      this._log.event.apiOpenFailed(e);
+      throw e;
     }
 
     return this._apiClient;
