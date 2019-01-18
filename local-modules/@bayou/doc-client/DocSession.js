@@ -36,12 +36,10 @@ export default class DocSession extends CommonBase {
     this._sessionInfo = SessionInfo.check(info);
 
     /**
-     * {Logger} Maximally-specific logger. **TODO:** Because {@link
-     * #_sessionInfo} might not have a caret ID but the session will
-     * _eventually_ have one, it probably doesn't make sense to have this
-     * defined in this class.
+     * {Logger} Maximally-specific logger. This gets updated if/when
+     * {@link #_sessionInfo} gets updated (e.g. when the session gains a caret).
      */
-    this._log = log.withAddedContext(this._sessionInfo.logTag);
+    this._log = log.withAddedContext(...this._sessionInfo.logTags);
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in
@@ -72,7 +70,8 @@ export default class DocSession extends CommonBase {
 
   /**
    * {Logger} Logger to use when handling operations related to this instance.
-   * Logged messages include a reference to the session ID.
+   * Logged messages include a reference to the document ID and (if available)
+   * the caret ID.
    */
   get log() {
     return this._log;
@@ -155,7 +154,7 @@ export default class DocSession extends CommonBase {
       this._log.event.gotCaret(caretId);
 
       this._sessionInfo = info.withCaretId(caretId);
-      this._log         = log.withAddedContext(this._sessionInfo.logTag);
+      this._log         = log.withAddedContext(...this._sessionInfo.logTags);
     }
 
     return proxy;
