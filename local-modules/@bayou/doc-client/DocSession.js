@@ -120,6 +120,7 @@ export default class DocSession extends CommonBase {
     if (this._sessionProxyPromise === null) {
       this._log.event.initialSessionSetup();
     } else {
+      this._log.event.checkingSessionValidity();
       const proxy = await this._sessionProxyPromise;
 
       if (api.handles(proxy)) {
@@ -142,7 +143,7 @@ export default class DocSession extends CommonBase {
     this._log.event.usingInfo(info.logInfo);
     this._sessionProxyPromise = proxyPromise;
 
-    // Log a note once the promise resolves.
+    this._log.event.gettingSessionProxy();
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
 
