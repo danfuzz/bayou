@@ -57,6 +57,24 @@ export default class Errors extends UtilityClass {
   }
 
   /**
+   * Constructs an instance which indicates that a function, class, or module
+   * has received an invalid string ID of some sort (e.g. a file ID, document
+   * ID, etc.). The error includes the ID in question.
+   *
+   * This error is typically used to report a problem that crosses a line of
+   * responsibility.
+   *
+   * @param {Error} [cause] Error which caused this problem. **Note:** It is
+   *   optional. If the first argument isn't an `Error`, then it is taken to be
+   *   the `message`.
+   * @param {string} id The ID in question.
+   * @returns {InfoError} An appropriately-constructed error.
+   */
+  static badId(cause, id) {
+    return Errors._make('badId', cause, id);
+  }
+
+  /**
    * Constructs an instance which indicates that a function, class, or module is
    * somehow being misused. The error includes a human-oriented description of
    * the problem.
@@ -180,6 +198,16 @@ export default class Errors extends UtilityClass {
    */
   static wtf(cause, message) {
     return Errors._make('wtf', cause, message);
+  }
+
+  /**
+   * Indicates whether or not the given error is a `badId`.
+   *
+   * @param {Error} error Error in question.
+   * @returns {boolean} `true` iff it represents an ID problem.
+   */
+  static is_badId(error) {
+    return InfoError.hasName(error, 'badId');
   }
 
   /**
