@@ -113,6 +113,8 @@ export default class DocSession extends CommonBase {
    * @returns {Proxy} A proxy for the server-side session.
    */
   async getSessionProxy() {
+    this._log.event.askedForSessionProxy();
+
     const api = this._getApiClient();
 
     if (this._sessionProxyPromise !== null) {
@@ -163,23 +165,20 @@ export default class DocSession extends CommonBase {
    * established.
    */
   open() {
-    const api = this._getApiClient();
+    this._log.event.askedToOpen();
 
-    if (!api.isOpen()) {
-      // Even though `_getApiClient()` will eventually get the client opened,
-      // it makes that `open()` call asynchronously. In this case, we want to
-      // guarantee that `open()` was called synchronously before this method
-      // returns.
-      this._log.event.synchronousApiOpen();
-      api.open();
-    }
+    // This method ensures that, if the API client isn't yet constructed, or if
+    // it had gotten closed, that it gets (re)constructed and (re)opened.
+    this._getApiClient();
   }
 
   /**
    * API client instance to use. The client is not guaranteed to be fully open
-   * at the time it is returned; however, `open()` will have been called on it,
-   * which means that it will at least be in the _process_ of opening and
-   * available to enqueue (if not actually transmit) messages.
+   * at the time it is returned; however, `open()` will be _about_ to be called
+   * on it (asynchronously), which means that it will at least be in the
+   * _process_ of opening. In addition, it is always safe to enqueue messages on
+   * an instance, even if not yet fully open (or even in the process of
+   * opening).
    *
    * @returns {ApiClient} API client interface.
    */
