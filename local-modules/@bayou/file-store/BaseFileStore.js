@@ -22,13 +22,13 @@ export default class BaseFileStore extends CommonBase {
    * @param {string} fileId The file ID to validate, which must be a
    *   syntactically valid ID, per {@link Storage#isFileId}.
    * @returns {string} `fileId` if it is indeed valid.
-   * @throws {Error} `badData` error indicating an invalid file ID.
+   * @throws {Error} `badId` error indicating an invalid file ID.
    */
   async checkFileId(fileId) {
     const info = await this.getFileInfo(fileId);
 
     if (!info.valid) {
-      throw Errors.badData(`Invalid file ID: \`${fileId}\``);
+      throw Errors.badId(fileId);
     }
 
     return fileId;
@@ -53,7 +53,8 @@ export default class BaseFileStore extends CommonBase {
 
   /**
    * Gets the accessor for the file with the given ID. The file need not exist
-   * prior to calling this method.
+   * prior to calling this method, but it must be considered "valid" (having the
+   * potential to exist).
    *
    * @param {string} fileId The ID of the file to access. Must be a valid file
    *   ID as defined by the concrete subclass.

@@ -187,7 +187,7 @@ export default class CaretControl extends EphemeralControl {
    * Removes carets out of the snapshot that haven't been active recently.
    */
   async _removeIdleCarets() {
-    this.log.info('Checking for inactive carets.');
+    this.log.event.idleCheck();
 
     const snapshot = await this.getSnapshot();
 
@@ -195,20 +195,22 @@ export default class CaretControl extends EphemeralControl {
     // the current time. (That is, the following line cannot be moved above the
     // previous line.) Otherwise, we might produce a change with an out-of-order
     // timestamp.
-    const now         = Timestamp.now();
-    const minTime     = now.addMsec(-MAX_CARET_IDLE_MSEC);
-    let   newSnapshot = snapshot;
+    const now          = Timestamp.now();
+    const minTime      = now.addMsec(-MAX_CARET_IDLE_MSEC);
+    let   newSnapshot  = snapshot;
+    let   removedCount = 0;
 
     for (const [caretId, caret] of snapshot.entries()) {
       if (minTime.compareTo(caret.lastActive) > 0) {
         // Too old!
-        this.log.withAddedContext(caretId).info('Became inactive.');
+        this.log.withAddedContext(caretId).event.becameIdle();
         newSnapshot = newSnapshot.withoutCaret(caretId);
+        removedCount++;
       }
     }
 
-    if (snapshot === newSnapshot) {
-      this.log.info('No inactive carets.');
+    if (removedCount === 0) {
+      this.log.event.nothingIdle();
       return;
     }
 
@@ -225,6 +227,8 @@ export default class CaretControl extends EphemeralControl {
       // or some other one).
       this.log.warn('Error while removing idle carets.', e);
     }
+
+    this.log.event.removedIdle(removedCount);
   }
 
   // TODO: Implement validateChange for Caret Control

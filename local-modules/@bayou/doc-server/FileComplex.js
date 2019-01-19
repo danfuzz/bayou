@@ -92,6 +92,9 @@ export default class FileComplex extends BaseComplexMember {
    * @param {string} caretId ID of the caret.
    * @returns {DocSession} A session object to control the indicated
    *   pre-existing caret.
+   * @throws {InfoError} Thrown with name `badId` specifically if the caret is
+   *   not found (including if it exists but is controlled by a different
+   *   author).
    */
   async findExistingSession(authorId, caretId) {
     // **Note:** We only need to validate syntax, because if we actually find
@@ -110,7 +113,11 @@ export default class FileComplex extends BaseComplexMember {
           // ...and the author ID matches. Bingo!
           return foundSession;
         } else {
-          throw Errors.badUse(`Wrong author ID for caret: author \`${authorId}\`; caret \`${caretId}\``);
+          // Existing caret but wrong author ID for it. Log it (could be useful
+          // in identifying a malicious actor or just a bug), but report it back
+          // to the caller as simply an invalid ID.
+          this.log.event.authorCaretMismatch(authorId, caretId);
+          throw Errors.badId(caretId);
         }
       }
     }
@@ -120,10 +127,14 @@ export default class FileComplex extends BaseComplexMember {
     // author matches, we create and return the corresponding object.
 
     const caretSnapshot = await this.caretControl.getSnapshot();
-    const foundCaret    = caretSnapshot.get(caretId); // This throws if the caret isn't found.
+    const foundCaret = caretSnapshot.getOrNull(caretId);
 
-    if (foundCaret.authorId !== authorId) {
-      throw Errors.badUse(`Wrong author ID for session: author \`${authorId}\`; caret \`${caretId}\``);
+    if (foundCaret === null) {
+      throw Errors.badId(caretId);
+    } else if (foundCaret.authorId !== authorId) {
+      // See comment above on similar logging and error.
+      this.log.event.authorCaretMismatch(authorId, caretId);
+      throw Errors.badId(caretId);
     }
 
     return this._activateSession(authorId, caretId);
