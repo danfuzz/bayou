@@ -133,29 +133,15 @@ export default class DocSession extends CommonBase {
       this._log.event.mustReestablishSession();
     }
 
-    const info         = this._sessionInfo;
-    const authorProxy  = api.getProxy(info.authorToken);
-    const proxyPromise = (info.caretId === null)
-      ? authorProxy.makeNewSession(info.documentId)
-      : authorProxy.findExistingSession(info.documentId, info.caretId);
-
-    this._log.event.usingInfo(info.logInfo);
+    // Call a helper method to set up the proxy. We have to do it as a helper
+    // (or as an immediate-async-call block, but that's kinda ugly for such a
+    // big method), so that we can synchronously set `_sessionProxyPromise`.
+    const proxyPromise = this._fetchSessionProxy(api);
     this._sessionProxyPromise = proxyPromise;
 
     this._log.event.gettingSessionProxy();
     const proxy = await proxyPromise;
     this._log.event.gotSessionProxy();
-
-    if (info.caretId === null) {
-      // The session got started without a caret ID, which means a new caret
-      // will have been created. Update `_sessionInfo` and `_log` accordingly.
-      const caretId = await proxy.getCaretId();
-
-      this._log.event.gotCaret(caretId);
-
-      this._sessionInfo = info.withCaretId(caretId);
-      this._log         = log.withAddedContext(...this._sessionInfo.logTags);
-    }
 
     return proxy;
   }
@@ -215,5 +201,45 @@ export default class DocSession extends CommonBase {
     }
 
     return this._apiClient;
+  }
+
+  /**
+   * Helper for {@link #getSessionProxy}, which performs the main act of asking
+   * the server for a proxy, including fallback logic for when a requested
+   * caret turns out not to exist.
+   *
+   * @param {ApiClient} api The API instance to use.
+   * @returns {Proxy} Proxy for the session.
+   */
+  async _fetchSessionProxy(api) {
+    const info = this._sessionInfo;
+
+    this._log.event.usingInfo(info.logInfo);
+
+    const authorProxy = api.getProxy(info.authorToken);
+
+    if (info.caretId !== null) {
+      const result = await authorProxy.findExistingSession(info.documentId, info.caretId);
+      if (result !== null) {
+        return result;
+      }
+
+      // The caret didn't exist! Probably because the session was idle too
+      // long and got collected. Log it, and then fall through to create a
+      // session with a new caret.
+      this._log.event.missingCaret(info.caretId);
+    }
+
+    const result = await authorProxy.makeNewSession(info.documentId);
+
+    // Update `_sessionInfo` and `_log` with the new caret info.
+    const caretId = await result.getCaretId();
+
+    this._log.event.gotCaret(caretId);
+
+    this._sessionInfo = info.withCaretId(caretId);
+    this._log         = log.withAddedContext(...this._sessionInfo.logTags);
+
+    return result;
   }
 }
