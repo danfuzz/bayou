@@ -151,7 +151,7 @@ describe('@bayou/api-common/Response', () => {
     });
   });
 
-  describe('.deconstruct', () => {
+  describe('deconstruct()', () => {
     it('is a two-element array when there is no `error`', () => {
       const r = new Response(1, 'florp');
       const got = r.deconstruct();
@@ -164,6 +164,20 @@ describe('@bayou/api-common/Response', () => {
       const got = r.deconstruct();
 
       assert.deepEqual(got, [1, null, r.error]);
+    });
+  });
+
+  describe('isError()', () => {
+    it('is `false` when there is no `error`', () => {
+      const r = new Response(1, 'florp');
+
+      assert.isFalse(r.isError());
+    });
+
+    it('is `true` when there is an `error`', () => {
+      const r = new Response(1, null, new Error('oy'));
+
+      assert.isTrue(r.isError());
     });
   });
 });

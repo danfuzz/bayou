@@ -116,6 +116,16 @@ export default class Response extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this is an error-bearing instance.
+   *
+   * @returns {boolean} `true` if this is an error-bearing instance, or `false`
+   *   if not.
+   */
+  isError() {
+    return (this._error !== null);
+  }
+
+  /**
    * Fixes up an incoming `error` argument. `null` gets returned as-is.
    * Everything else gets converted into a `CodableError` of some sort.
    *
