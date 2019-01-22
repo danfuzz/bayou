@@ -143,18 +143,8 @@ export default class Connection extends CommonBase {
     // this call, log it, and return it for ulimate transmission back to the
     // caller.
 
-    const response = new Response((msg === null) ? 0 : msg.id, result, error);
-
-    let encodedResponse;
-    try {
-      encodedResponse = this._codec.encodeJson(response);
-    } catch (e) {
-      this._log.error('Could not encode response:', response);
-
-      // Last-ditch attempt to send a breadcrumb back to the caller.
-      const replacementResponse = new Response((msg === null) ? 0 : msg.id, null, e);
-      encodedResponse = this._codec.encodeJson(replacementResponse);
-    }
+    const response        = new Response((msg === null) ? 0 : msg.id, result, error);
+    const encodedResponse = this._encodeResponse(response);
 
     if (msg === null) {
       this._apiLog.nonMessageResponse(response);
@@ -202,7 +192,7 @@ export default class Connection extends CommonBase {
   }
 
   /**
-   * Helper for `handleJsonMessage()` which parses the original incoming
+   * Helper for {@link #handleJsonMessage()} which parses the original incoming
    * message.
    *
    * @param {string} msg Incoming message, in JSON-encoded form.
@@ -222,6 +212,44 @@ export default class Connection extends CommonBase {
 
     return ConnectionError.connectionNonsense(
       this._connectionId, 'Did not receive `Message` object.');
+  }
+
+  /**
+   * Helper for {@link #handleJsonMessage()} which encodes a response for
+   * sending back to the far side of a connection.
+   *
+   * @param {Response} response The response in question.
+   * @returns {string} The encoded form of `response`.
+   */
+  _encodeResponse(response) {
+    let problemValue;
+
+    try {
+      return this._codec.encodeJson(response);
+    } catch (e) {
+      if (response.isError()) {
+        // There is probably some bit of structured data in the error which
+        // can't get encoded. Stringify it, and try again.
+        try {
+          response = response.withConservativeError(response);
+          return this._codec.encodeJson(response);
+        } catch (subError) {
+          // Ignore this (inner) error, and fall through to report the original
+          // problem.
+        }
+
+        this._log.event.unencodableError(response, e);
+        problemValue = response.error;
+      } else {
+        this._log.event.unencodableResult(response, e);
+        problemValue = response.result;
+      }
+    }
+
+    // Last-ditch attempt to send a breadcrumb back to the caller.
+    const newError    = ConnectionError.couldNotEncode(problemValue);
+    const newResponse = new Response(response.id, null, newError).withConservativeError();
+    return this._codec.encodeJson(newResponse);
   }
 
   /**

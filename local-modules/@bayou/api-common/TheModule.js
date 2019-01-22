@@ -9,7 +9,6 @@ import CodableError from './CodableError';
 import Message from './Message';
 import Response from './Response';
 import Remote from './Remote';
-import SplitKey from './SplitKey';
 
 /**
  * Utilities for this module.
@@ -27,6 +26,5 @@ export default class TheModule extends UtilityClass {
     registry.registerClass(Message);
     registry.registerClass(Remote);
     registry.registerClass(Response);
-    registry.registerClass(SplitKey);
   }
 }

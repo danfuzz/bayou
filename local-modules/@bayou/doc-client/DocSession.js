@@ -28,18 +28,21 @@ export default class DocSession extends CommonBase {
    *   will cause a new caret to be created.
    */
   constructor(info) {
+    SessionInfo.check(info);
+
     super();
 
     /**
-     * {SessionInfo} Identifying and authorizing information for the session.
+     * {SessionInfo|null} Identifying and authorizing information for the
+     * session. Set in {@link #_updateSessionInfo}.
      */
-    this._sessionInfo = SessionInfo.check(info);
+    this._sessionInfo = null;
 
     /**
-     * {Logger} Maximally-specific logger. This gets updated if/when
-     * {@link #_sessionInfo} gets updated (e.g. when the session gains a caret).
+     * {Logger|null} Maximally-specific logger. This gets set and updated in
+     * parallel with {@link #_sessionInfo}, in {@link #_updateSessionInfo}.
      */
-    this._log = log.withAddedContext(...this._sessionInfo.logTags);
+    this._log = null;
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in
@@ -64,6 +67,8 @@ export default class DocSession extends CommonBase {
      * non-`null` in {@link #getSessionProxy}.
      */
     this._sessionProxyPromise = null;
+
+    this._updateSessionInfo(info);
 
     Object.seal(this);
   }
@@ -236,10 +241,21 @@ export default class DocSession extends CommonBase {
     const caretId = await result.getCaretId();
 
     this._log.event.gotCaret(caretId);
-
-    this._sessionInfo = info.withCaretId(caretId);
-    this._log         = log.withAddedContext(...this._sessionInfo.logTags);
+    this._updateSessionInfo(info.withCaretId(caretId));
 
     return result;
+  }
+
+  /**
+   * Update the {@link #_sessionInfo}, and perform a corresponding update on
+   * {@link #_log}.
+   *
+   * @param {SessionInfo} sessionInfo The new info.
+   */
+  _updateSessionInfo(sessionInfo) {
+    SessionInfo.check(sessionInfo);
+
+    this._sessionInfo = sessionInfo;
+    this._log         = log.withAddedContext(...sessionInfo.logTags);
   }
 }

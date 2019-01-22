@@ -2,8 +2,10 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TInt, TObject, TString } from '@bayou/typecheck';
-import { CommonBase, ErrorUtil, Errors, InfoError } from '@bayou/util-common';
+import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
 
 import CodableError from './CodableError';
 
@@ -55,7 +57,9 @@ export default class Response extends CommonBase {
     /**
      * {CodableError|null} Error response, or `null` if this instance doesn't
      * represent an error. This value is suitable for transmission across an API
-     * boundary.
+     * boundary, with the caveat that it requires the `Codec` which encodes the
+     * error to be able to encode all of the bits of any {@link InfoError}
+     * payload.
      */
     this._error = Response._fixError(error);
 
@@ -65,7 +69,9 @@ export default class Response extends CommonBase {
   /**
    * {CodableError|null} Error result, or `null` if this instance doesn't
    * represent an error. This value is guaranteed to be suitable for encoding
-   * across an API boundary.
+   * across an API boundary, with the caveat that it requires the `Codec` which
+   * encodes the error to be able to encode all of the bits of any {@link
+   * InfoError} payload.
    */
   get error() {
     return this._error;
@@ -113,6 +119,40 @@ export default class Response extends CommonBase {
     return (this._error === null)
       ? [this._id, this._result]
       : [this._id, null, this._error];
+  }
+
+  /**
+   * Indicates whether or not this is an error-bearing instance.
+   *
+   * @returns {boolean} `true` if this is an error-bearing instance, or `false`
+   *   if not.
+   */
+  isError() {
+    return (this._error !== null);
+  }
+
+  /**
+   * Constructs an instance just like this one, except with a very
+   * conservatively-defined error to replace the one in this instance.
+   * Specifically, the replacement error flattens any structured error payload
+   * from an {@link InfoError} (or subclass) to a string, to avoid object
+   * encoding problems (such as not having a codec suitable for a would-be
+   * encoded value).
+   *
+   * **Note:** If this instance has no error, this method returns `this`.
+   *
+   * @returns {Response} A suitably-constructed instance.
+   */
+  withConservativeError() {
+    if (!this.isError()) {
+      return this;
+    }
+
+    const info       = this.error.info;
+    const infoString = inspect(info.args);
+    const newInfo    = new Functor(info.name, infoString);
+
+    return new Response(this._id, null, new CodableError(newInfo));
   }
 
   /**

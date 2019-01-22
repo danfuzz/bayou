@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TString } from '@bayou/typecheck';
 import { InfoError } from '@bayou/util-common';
 
@@ -64,6 +66,22 @@ export default class ConnectionError extends InfoError {
     TString.check(connectionId);
     TString.check(detail);
     return new ConnectionError('connectionNonsense', connectionId, detail);
+  }
+
+  /**
+   * Constructs an error indicating that a particular value could not be
+   * encoded for transmission across an API boundary. This is typically
+   * indicative of a bug on the local side of the API connection.
+   *
+   * @param {string} connectionId Connection ID string.
+   * @param {*} value Value that was un-encodable.
+   * @returns {ConnectionError} An appropriately-constructed error.
+   */
+  static couldNotEncode(connectionId, value) {
+    TString.check(connectionId);
+
+    const valueString = inspect(value);
+    return new ConnectionError('couldNotEncode', connectionId, valueString);
   }
 
   /**
