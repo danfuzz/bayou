@@ -189,8 +189,8 @@ describe('@bayou/api-common/Response', () => {
     });
 
     it('replaces a non-`null` `error` as promised', () => {
-      const args        = [1, new Set(['x', 'y'])];
-      const expectError = new InfoError('boop', '[ 1, Set { \'x\', \'y\' } ]');
+      const args        = [1, { x: 'x', y: 'y' }];
+      const expectError = new InfoError('boop', '[ 1, { x: \'x\', y: \'y\' } ]');
       const r           = new Response(12, null, new InfoError('boop', ...args));
       const result      = r.withConservativeError();
 
