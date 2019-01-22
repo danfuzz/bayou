@@ -180,4 +180,23 @@ describe('@bayou/api-common/Response', () => {
       assert.isTrue(r.isError());
     });
   });
+
+  describe('withConservativeError()', () => {
+    it('returns `this` when there is no `error`', () => {
+      const r = new Response(1, 'florp');
+
+      assert.strictEqual(r.withConservativeError(), r);
+    });
+
+    it('replaces a non-`null` `error` as promised', () => {
+      const args        = [1, new Set(['x', 'y'])];
+      const expectError = new InfoError('boop', '[ 1, Set { \'x\', \'y\' } ]');
+      const r           = new Response(12, null, new InfoError('boop', ...args));
+      const result      = r.withConservativeError();
+
+      assert.strictEqual(result.id, r.id);
+      assert.isNull(result.result);
+      assert.deepEqual(result.error.info, expectError.info);
+    });
+  });
 });

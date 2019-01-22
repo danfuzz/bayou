@@ -222,15 +222,34 @@ export default class Connection extends CommonBase {
    * @returns {string} The encoded form of `response`.
    */
   _encodeResponse(response) {
+    let problemValue;
+
     try {
       return this._codec.encodeJson(response);
     } catch (e) {
-      this._log.error('Could not encode response:', response);
+      if (response.isError()) {
+        // There is probably some bit of structured data in the error which
+        // can't get encoded. Stringify it, and try again.
+        try {
+          response = response.withConservativeError(response);
+          return this._codec.encodeJson(response);
+        } catch (subError) {
+          // Ignore this (inner) error, and fall through to report the original
+          // problem.
+        }
 
-      // Last-ditch attempt to send a breadcrumb back to the caller.
-      const replacementResponse = new Response(response.id, null, e);
-      return this._codec.encodeJson(replacementResponse);
+        this._log.event.unencodableError(response, e);
+        problemValue = response.error;
+      } else {
+        this._log.event.unencodableResult(response, e);
+        problemValue = response.result;
+      }
     }
+
+    // Last-ditch attempt to send a breadcrumb back to the caller.
+    const newError    = ConnectionError.couldNotEncode(problemValue);
+    const newResponse = new Response(response.id, null, newError).withConservativeError();
+    return this._codec.encodeJson(newResponse);
   }
 
   /**
