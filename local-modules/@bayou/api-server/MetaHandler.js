@@ -17,6 +17,8 @@ export default class MetaHandler {
 
     /** {Logger} The connection-specific logger. */
     this._log = connection.log;
+
+    Object.freeze(this);
   }
 
   /**
