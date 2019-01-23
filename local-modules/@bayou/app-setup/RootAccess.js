@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Context } from '@bayou/api-server';
 import { Auth, Network, Storage } from '@bayou/config-server';
 import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
@@ -20,15 +19,9 @@ const log = new Logger('root-access');
 export default class RootAccess extends CommonBase {
   /**
    * Constructs an instance.
-   *
-   * @param {Context} context The API context that is managed by this instance,
-   *   that is, where auth-controlled resources end up getting bound.
    */
-  constructor(context) {
+  constructor() {
     super();
-
-    /** {Context} The API context to use. */
-    this._context = Context.check(context);
 
     /**
      * {Map<string,BearerToken>} Map from author IDs to corresponding tokens, as

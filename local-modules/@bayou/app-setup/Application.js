@@ -49,7 +49,7 @@ export default class Application extends CommonBase {
      * {RootAccess} The "root access" object. This is the object which tokens
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
-    this._rootAccess = new RootAccess(this._context);
+    this._rootAccess = new RootAccess();
 
     /**
      * {function} The top-level "Express application" run by this instance. It
