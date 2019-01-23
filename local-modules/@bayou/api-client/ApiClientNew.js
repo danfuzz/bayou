@@ -63,13 +63,6 @@ export default class ApiClientNew extends CommonBase {
     this._targets = new TargetMap(this._send.bind(this));
     this._targets.add('meta'); // The one guaranteed target.
 
-    /**
-     * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their
-     * proxy, for each ID currently in the middle of being authorized. Used to
-     * avoid re-issuing authorization requests.
-     */
-    this._pendingAuths = new Map();
-
     Object.seal(this);
   }
 
@@ -95,70 +88,6 @@ export default class ApiClientNew extends CommonBase {
    */
   get meta() {
     return this._targets.get('meta');
-  }
-
-  /**
-   * Performs a challenge-response authorization for a given key. When the
-   * returned promise resolves successfully, that means that the corresponding
-   * target can be accessed without further authorization.
-   *
-   * If `key.id` is already mapped as a target, it is returned directly, without
-   * further authorization. If it is in the middle of being authorized, the
-   * existing pending promise for the target is returned. (That is, this method
-   * is idempotent.)
-   *
-   * @param {BaseKey} key Key to authorize with.
-   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
-   *   represents the foreign target which is controlled by `key`, once
-   *   authorization is complete.
-   */
-  authorizeTarget(key) {
-    BaseKey.check(key);
-
-    const id   = key.id;
-    const meta = this.meta;
-    let result;
-
-    result = this._targets.getOrNull(id);
-    if (result !== null) {
-      // The target is already authorized and bound. Return it.
-      return result;
-    }
-
-    result = this._pendingAuths.get(id);
-    if (result) {
-      // We have already initiated authorization on this target. Return the
-      // promise from the original initiation.
-      this.log.info('Already authing:', id);
-      return result;
-    }
-
-    // It's not yet bound as a target, and authorization isn't currently in
-    // progress.
-
-    result = (async () => {
-      try {
-        const challenge = await meta.makeChallenge(id);
-        const response  = key.challengeResponseFor(challenge);
-
-        this.log.event.gotChallenge(id, challenge);
-        await meta.authWithChallengeResponse(challenge, response);
-
-        // Successful auth.
-        this.log.event.authed(id);
-        this._pendingAuths.delete(id); // It's no longer pending.
-        return this._targets.add(id);
-      } catch (error) {
-        // Trouble along the way. Clean out the pending auth, and propagate the
-        // error.
-        this.log.event.authFailed(id);
-        this._pendingAuths.delete(id);
-        throw error;
-      }
-    })();
-
-    this._pendingAuths.set(id, result); // It's now pending.
-    return result;
   }
 
   /**
