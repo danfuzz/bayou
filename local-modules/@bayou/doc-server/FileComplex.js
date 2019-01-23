@@ -156,7 +156,7 @@ export default class FileComplex extends BaseComplexMember {
 
     for (;;) {
       if (Date.now() >= timeoutTime) {
-        throw Errors.timedOut(timeoutTime);
+        throw Errors.timedOut(MAKE_SESSION_TIMEOUT_MSEC);
       }
 
       // Establish a new caret in the document, by creating and appending a
@@ -165,10 +165,15 @@ export default class FileComplex extends BaseComplexMember {
       const caretSnapshot  = await this.caretControl.getSnapshot();
       const caretId        = caretSnapshot.randomUnusedId();
       const newCaretChange = await this.caretControl.changeForNewCaret(caretId, authorId);
-      const appendResult   = await this.caretControl.appendChange(newCaretChange);
+
+      this.log.info(`Current caret snapshot revNum: ${caretSnapshot.revNum}`);
+      this.log.event.establishingNewCaret(authorId, caretId, newCaretChange.revNum);
+
+      const appendResult = await this.caretControl.appendChange(newCaretChange);
 
       if (appendResult) {
         // There was no append race, or we won it.
+        this.log.event.establishedNewCaret(authorId, caretId, newCaretChange.revNum);
         return this._activateSession(authorId, caretId);
       }
 

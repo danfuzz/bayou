@@ -224,9 +224,10 @@ export default class BaseControl extends BaseDataManager {
       await this._appendChangeWithRetry(fileChange, clampedTimeoutMsec);
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
+        const errorName = fileStoreOt_Errors.is_pathNotAbsent(e) ? 'pathNotAbsent' : 'pathHashMismatch';
         // One of these will get thrown if and when we lose an append race. This
         // regularly occurs when there are simultaneous editors.
-        this.log.info('Lost document append race for revision:', revNum);
+        this.log.info(`Lost document append race for revision with ${errorName} for revNum ${revNum}`);
         return false;
       } else {
         // No other errors are expected, so just rethrow.

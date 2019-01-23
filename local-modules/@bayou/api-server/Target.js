@@ -159,14 +159,4 @@ export default class Target extends CommonBase {
       return (lastAccess <= whenMsec);
     }
   }
-
-  /**
-   * Returns an instance just like this one, except without the `key`. This
-   * method is used during resource authorization.
-   *
-   * @returns {Target} An "uncontrolled" version of this instance.
-   */
-  withoutKey() {
-    return new Target(this._id, this._directObject, this._schema);
-  }
 }

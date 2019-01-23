@@ -145,18 +145,4 @@ describe('@bayou/api-server/Target', () => {
       }
     });
   });
-
-  describe('withoutKey()', () => {
-    it('should be the same as the original except with `null` for `key`', () => {
-      const id   = 'some-key-id';
-      const key  = new BearerToken(id, 'this-is-secret');
-      const orig = new Target(key, {});
-      const wk   = orig.withoutKey();
-
-      assert.strictEqual(wk.directObject, orig.directObject);
-      assert.strictEqual(wk.id, orig.id);
-      assert.strictEqual(wk.schema, orig.schema);
-      assert.isNull(wk.key);
-    });
-  });
 });
