@@ -60,7 +60,7 @@ export default class Context extends CommonBase {
     this._map = new Map();
 
     /**
-     * {Map<object, string>} Map from target objects (the things wrapped by
+     * {Map<object, Remote>} Map from target objects (the things wrapped by
      * instances of {@link Target}) to their corresponding {@link Remote}
      * instances.
      */
