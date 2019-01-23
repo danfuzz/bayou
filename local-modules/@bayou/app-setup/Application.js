@@ -82,13 +82,6 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * {Context} The top-level ID / token binding context.
-   */
-  get context() {
-    return this._context;
-  }
-
-  /**
    * {RootAccess} The "root access" object. This is the object which tokens
    * bearing {@link Auth#TYPE_root} authority grant access to.
    */
