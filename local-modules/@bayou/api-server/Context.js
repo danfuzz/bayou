@@ -144,10 +144,9 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets an authorized target. This will find _uncontrolled_ (already
-   * authorized) targets that were previously added via {@link #addTarget} as
-   * well as those authorized by virtue of this method being passed a valid
-   * authority-bearing token (in string form).
+   * Gets an authorized target. This will find targets that were previously
+   * added via {@link #addTarget} as well as those authorized by virtue of this
+   * method being passed a valid authority-bearing token (in string form).
    *
    * @param {string} idOrToken The target ID or a bearer token (in string form)
    *   which authorizes access to a target.
