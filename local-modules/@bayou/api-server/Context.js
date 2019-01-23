@@ -60,7 +60,7 @@ export default class Context extends CommonBase {
     this._map = new Map();
 
     /**
-     * {Map<object, string>} Map from target objects (the things wrapped by
+     * {Map<object, Remote>} Map from target objects (the things wrapped by
      * instances of {@link Target}) to their corresponding {@link Remote}
      * instances.
      */
@@ -144,10 +144,9 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets an authorized target. This will find _uncontrolled_ (already
-   * authorized) targets that were previously added via {@link #addTarget} as
-   * well as those authorized by virtue of this method being passed a valid
-   * authority-bearing token (in string form).
+   * Gets an authorized target. This will find targets that were previously
+   * added via {@link #addTarget} as well as those authorized by virtue of this
+   * method being passed a valid authority-bearing token (in string form).
    *
    * @param {string} idOrToken The target ID or a bearer token (in string form)
    *   which authorizes access to a target.
@@ -209,29 +208,11 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets the target associated with the indicated ID, but only if it is
-   * controlled (that is, it requires auth). This will throw an error if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  async getControlled(id) {
-    const result = this._getOrNull(id);
-
-    if ((result === null) || (result.key === null)) {
-      throw this._targetError(id, 'Not a controlled target');
-    }
-
-    return result;
-  }
-
-  /**
    * Gets a {@link Remote} which can be used with this instance to refer to
-   * the given {@link ProxiedObject}. If `obj` has been encountered before, the
-   * result will be a pre-existing instance; otherwise, it will be a
-   * newly-constructed instance (and will get added to this instance's set of
-   * targets).
+   * the given {@link ProxiedObject}. If `proxiedObject` has been encountered
+   * before, the result will be a pre-existing instance of {@link Remote};
+   * otherwise, it will be a newly-constructed instance (and will get added to
+   * this instance's set of targets).
    *
    * @param {ProxiedObject} proxiedObject Object to proxy.
    * @returns {Remote} Corresponding remote representation.
@@ -266,19 +247,6 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
-  }
-
-  /**
-   * Removes the key that controls the target with the given ID. It is an error
-   * to try to operate on a nonexistent or uncontrolled target. This replaces
-   * the `target` with a newly-constructed one that has no auth control; it
-   * does _not_ modify the original `target` object (which is immutable).
-   *
-   * @param {string} id The ID of the target whose key is to be removed.
-   */
-  async removeControl(id) {
-    const target = await this.getControlled(id);
-    this._map.set(id, target.withoutKey());
   }
 
   /**

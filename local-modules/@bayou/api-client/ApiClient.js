@@ -91,23 +91,10 @@ export default class ApiClient extends CommonBase {
     this._pendingMessages = null;
 
     /**
-     * {Map<string, BaseKey>} Map of IDs to keys, for keys which have been
-     * added via {@link #authorizeTarget}.
-     */
-    this._keys = new Map();
-
-    /**
      * {TargetMap} Map of names/IDs to target proxies. See {@link
      * TargetMap#constructor} for details about the argument.
      */
     this._targets = new TargetMap(this._send.bind(this));
-
-    /**
-     * {Map<string, Promise<Proxy>>} Map from target IDs to promises of their
-     * proxy, for each ID currently in the middle of being authorized. Used to
-     * avoid re-issuing authorization requests.
-     */
-    this._pendingAuths = new Map();
 
     // Initialize the active connection fields (described above).
     this._resetConnection();
@@ -138,72 +125,6 @@ export default class ApiClient extends CommonBase {
    */
   get meta() {
     return this._targets.get('meta');
-  }
-
-  /**
-   * Performs a challenge-response authorization for a given key. When the
-   * returned promise resolves successfully, that means that the corresponding
-   * target can be accessed without further authorization.
-   *
-   * If `key.id` is already mapped as a target, it is returned directly, without
-   * further authorization. If it is in the middle of being authorized, the
-   * existing pending promise for the target is returned. (That is, this method
-   * is idempotent.)
-   *
-   * @param {BaseKey} key Key to authorize with.
-   * @returns {Promise<Proxy>} Promise which resolves to the proxy that
-   *   represents the foreign target which is controlled by `key`, once
-   *   authorization is complete.
-   */
-  authorizeTarget(key) {
-    BaseKey.check(key);
-
-    const id   = key.id;
-    const meta = this.meta;
-    let result;
-
-    result = this._targets.getOrNull(id);
-    if (result !== null) {
-      // The target is already authorized and bound. Return it.
-      return result;
-    }
-
-    result = this._pendingAuths.get(id);
-    if (result) {
-      // We have already initiated authorization on this target. Return the
-      // promise from the original initiation.
-      this._log.event.concurrentAuth(id);
-      return result;
-    }
-
-    // It's not yet bound as a target, and authorization isn't currently in
-    // progress.
-
-    this._keys.set(id, key);
-
-    result = (async () => {
-      try {
-        const challenge = await meta.makeChallenge(id);
-        const response  = key.challengeResponseFor(challenge);
-
-        this._log.event.gotChallenge(id, challenge);
-        await meta.authWithChallengeResponse(challenge, response);
-
-        // Successful auth.
-        this._log.event.authed(id);
-        this._pendingAuths.delete(id); // It's no longer pending.
-        return this._targets.add(id);
-      } catch (error) {
-        // Trouble along the way. Clean out the pending auth, and propagate the
-        // error.
-        this._log.event.authFailed(id);
-        this._pendingAuths.delete(id);
-        throw error;
-      }
-    })();
-
-    this._pendingAuths.set(id, result); // It's now pending.
-    return result;
   }
 
   /**
@@ -513,21 +434,9 @@ export default class ApiClient extends CommonBase {
     }
 
     if (this._targets.getOrNull(target) === null) {
-      // `target` isn't in the map of same. It's probably the case that it
-      // represents a key that was authed in an earlier since-closed websocket
-      // connection.
-      const key = this._keys.get(target);
-      if (key === undefined) {
-        // Nope! Totally unknown ID. Most likely indicates a bug in a higher
-        // layer of the system.
-        return Promise.reject(ConnectionError.unknownTargetId(this._connectionId, target));
-      } else {
-        // Yep! We found the original key. Reauthorize it and then let the call
-        // proceed.
-        this._log.event.reauthorizing(target);
-        await this.authorizeTarget(key);
-        this._log.event.reauthed(target);
-      }
+      // `target` isn't in the map of same; that is it's a totally unknown ID.
+      // Most likely indicates a bug in a higher layer of the system.
+      return Promise.reject(ConnectionError.unknownTargetId(this._connectionId, target));
     }
 
     const id = this._nextId;

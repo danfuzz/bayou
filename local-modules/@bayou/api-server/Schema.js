@@ -9,24 +9,20 @@ import { PropertyIterable } from '@bayou/util-common';
  * Schema for an object. Represents what actions are available. More
  * specifically:
  *
- * * Methods whose names start with an underscore (`_`) are excluded from
- *   schemas.
- * * Methods whose names are symbols (e.g. `Symbol('foo')`) are excluded from
- *   schemas.
- * * Constructor methods are excluded from schemas.
- * * Methods inherited from the base `Object` prototype are excluded from
- *   schemas.
- * * All other public methods are included in schemas.
- * * Static methods are excluded from schemas. (This may change in the future.)
- * * Non-method properties are excluded from schemas. (This may change in the
- *   future.)
+ * * Non-method properties are excluded. (This may change in the future.)
+ * * Static methods are excluded. (This may change in the future.)
+ * * Methods whose names start with an underscore (`_`) are excluded.
+ * * Methods whose names are symbols (e.g. `Symbol('foo')`) are excluded.
+ * * Constructor methods are excluded.
+ * * Methods inherited from the base `Object` prototype are excluded.
+ * * All other public methods are included.
  */
 export default class Schema {
   /**
    * Constructs an instance based on the given object.
    *
    * **Note:** The resulting instance doesn't remember (keep a reference to) the
-   * target object. (The `Target` class does that.)
+   * target object. (The class {@link Target} does that.)
    *
    * @param {object} target Object from which to derive the schema.
    */
