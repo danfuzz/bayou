@@ -59,7 +59,7 @@ export default class AppAuthorizer extends TokenAuthorizer {
       }
 
       case Auth.TYPE_author: {
-        return new AuthorAccess(authority.authorId, this._application.context);
+        return new AuthorAccess(authority.authorId);
       }
 
       default: {

@@ -24,10 +24,8 @@ export default class AuthorAccess extends CommonBase {
    *
    * @param {string} authorId ID of the author on whose behalf this instance
    *  acts.
-   * @param {Context} context_unused The API context that is managed by this
-   *   instance, that is, where auth-controlled resources end up getting bound.
    */
-  constructor(authorId, context_unused) {
+  constructor(authorId) {
     super();
 
     /**

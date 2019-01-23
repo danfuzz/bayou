@@ -49,7 +49,7 @@ export default class Application extends CommonBase {
      * {RootAccess} The "root access" object. This is the object which tokens
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
-    this._rootAccess = new RootAccess(this._context);
+    this._rootAccess = new RootAccess();
 
     /**
      * {function} The top-level "Express application" run by this instance. It
@@ -79,13 +79,6 @@ export default class Application extends CommonBase {
     }
 
     Object.freeze(this);
-  }
-
-  /**
-   * {Context} The top-level ID / token binding context.
-   */
-  get context() {
-    return this._context;
   }
 
   /**
