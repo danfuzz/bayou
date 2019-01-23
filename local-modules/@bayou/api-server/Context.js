@@ -209,24 +209,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Gets the target associated with the indicated ID, but only if it is
-   * controlled (that is, it requires auth). This will throw an error if the
-   * so-identified target does not exist.
-   *
-   * @param {string} id The target ID.
-   * @returns {Target} The so-identified target.
-   */
-  async getControlled(id) {
-    const result = this._getOrNull(id);
-
-    if ((result === null) || (result.key === null)) {
-      throw this._targetError(id, 'Not a controlled target');
-    }
-
-    return result;
-  }
-
-  /**
    * Gets a {@link Remote} which can be used with this instance to refer to
    * the given {@link ProxiedObject}. If `obj` has been encountered before, the
    * result will be a pre-existing instance; otherwise, it will be a
@@ -266,19 +248,6 @@ export default class Context extends CommonBase {
    */
   hasId(id) {
     return this._getOrNull(id) !== null;
-  }
-
-  /**
-   * Removes the key that controls the target with the given ID. It is an error
-   * to try to operate on a nonexistent or uncontrolled target. This replaces
-   * the `target` with a newly-constructed one that has no auth control; it
-   * does _not_ modify the original `target` object (which is immutable).
-   *
-   * @param {string} id The ID of the target whose key is to be removed.
-   */
-  async removeControl(id) {
-    const target = await this.getControlled(id);
-    this._map.set(id, target.withoutKey());
   }
 
   /**
