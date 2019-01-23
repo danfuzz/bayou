@@ -115,7 +115,7 @@ export default class BaseKey extends CommonBase {
    *
    * @param {string} challenge The challenge. This must be a string which was
    *   previously returned as the `challenge` binding from a call to
-   *   {@link #makeChallenge} (either in this process or any other).
+   *   {@link #makeChallengePair} (either in this process or any other).
    * @returns {string} The challenge response. It is guaranteed to be at least
    *   16 characters long.
    */
