@@ -209,10 +209,10 @@ export default class Context extends CommonBase {
 
   /**
    * Gets a {@link Remote} which can be used with this instance to refer to
-   * the given {@link ProxiedObject}. If `obj` has been encountered before, the
-   * result will be a pre-existing instance; otherwise, it will be a
-   * newly-constructed instance (and will get added to this instance's set of
-   * targets).
+   * the given {@link ProxiedObject}. If `proxiedObject` has been encountered
+   * before, the result will be a pre-existing instance of {@link Remote};
+   * otherwise, it will be a newly-constructed instance (and will get added to
+   * this instance's set of targets).
    *
    * @param {ProxiedObject} proxiedObject Object to proxy.
    * @returns {Remote} Corresponding remote representation.
