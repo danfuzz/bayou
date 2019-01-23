@@ -93,8 +93,10 @@ export default class BodyClient extends StateMachine {
    * @param {DocSession} docSession Server session control / manager.
    * @param {boolean} [editingEnabled = true] Flag that determines whether
    *   the document body should be editable.
+   * @param {int} [pollingDelayMsec = 0] Delay in msecs to wait before
+   *   transitioning from `wantInputAfterDelay` to `wantInput`.
    */
-  constructor(quill, docSession, editingEnabled = true) {
+  constructor(quill, docSession, editingEnabled = true, pollingDelayMsec = 0) {
     super('detached', docSession.log);
 
     /** {Quill} Editor object. */
@@ -105,6 +107,9 @@ export default class BodyClient extends StateMachine {
 
     /** {boolean} Editing enabled flag, true by default. */
     this._editingEnabled = editingEnabled;
+
+    /** {int} Delay between polling for changes, 0 by default. */
+    this._pollingDelayMsec = pollingDelayMsec;
 
     /**
      * {Proxy|null} Local proxy for accessing the server session. Becomes
@@ -485,10 +490,11 @@ export default class BodyClient extends StateMachine {
         } catch (e) {
           this._pendingChangeAfter = false;
           if (Errors.is_timedOut(e)) {
-            // Emit `wantInput` in response to a timeout. If we're idling, this
-            // will end up retrying the `getChangeAfter()`. In any other state,
-            // it will (correctly) get ignored.
-            this.q_wantInput();
+            // Emit `wantInputAfterDelay` in response to a timeout. If we're
+            // idling, this will end up retrying the `getChangeAfter()` after
+            // a configured delay. In any other state, it will (correctly)
+            // get ignored.
+            this.q_wantInputAfterDelay(this._pollingDelayMsec);
           } else {
             // Any other thrown error is a bona fide problem.
             this.q_apiError('body_getChangeAfter', e);
@@ -526,11 +532,9 @@ export default class BodyClient extends StateMachine {
 
     // Fire off the next iteration of requesting server changes, after a short
     // delay. The delay is just to keep network traffic at a stately pace
-    // despite any particularly active editing by other clients.
-    (async () => {
-      await Delay.resolve(PULL_DELAY_MSEC);
-      this.q_wantInput();
-    })();
+    // despite any particularly active editing by other clients. Use delay
+    // at least as long as `PULL_DELAY_MSEC`.
+    this.q_wantInputAfterDelay(this._pollingDelayMsec < PULL_DELAY_MSEC ? PULL_DELAY_MSEC : this._pollingDelayMsec);
   }
 
   /**
@@ -830,6 +834,41 @@ export default class BodyClient extends StateMachine {
    */
   _becomeIdle() {
     this.s_idle();
+    this.q_wantInputAfterDelay(this._pollingDelayMsec);
+  }
+
+  /**
+   * In any state but `idle`, handles event `wantInputAfterDelay`. We ignore
+   * the event, because the client is in the middle of doing something else.
+   * When it's done with whatever it may be, it will send a new
+   * `wantInputAfterDelay` event.
+   */
+  _handle_any_wantInputAfterDelay() {
+    // Nothing to do.
+  }
+
+  /**
+   * Validates a `wantInputAfterDelay` event.
+   *
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   */
+  _check_wantInputAfterDelay(delayMsec) {
+    TInt.nonNegative(delayMsec);
+  }
+
+  /**
+   * In state `idle`, handles event `wantInputAfterDelay`. Will fire `wantInput`
+   * after a configured delay, which will make requests both to the server and
+   * to the local Quill instance.
+   *
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   */
+  async _handle_idle_wantInputAfterDelay(delayMsec) {
+    // Fire off the next iteration of requesting server changes, after a delay.
+    if (delayMsec !== 0) {
+      await Delay.resolve(delayMsec);
+    }
+
     this.q_wantInput();
   }
 
