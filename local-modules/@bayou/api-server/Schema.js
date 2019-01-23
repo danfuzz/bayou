@@ -22,7 +22,7 @@ export default class Schema {
    * Constructs an instance based on the given object.
    *
    * **Note:** The resulting instance doesn't remember (keep a reference to) the
-   * target object. (The `Target` class does that.)
+   * target object. (The class {@link Target} does that.)
    *
    * @param {object} target Object from which to derive the schema.
    */
