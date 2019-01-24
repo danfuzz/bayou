@@ -32,14 +32,45 @@ class MockAuth extends TokenAuthorizer {
 
 describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
-    it('should accept valid arguments', () => {
+    it('accepts valid arguments and produce a sealed instance', () => {
+      const info   = new ContextInfo(new Codec(), new MockAuth());
+      const result = new Context(info, 'some-tag');
+
+      assert.isSealed(result);
+    });
+  });
+
+  describe('.codec', () => {
+    it('is the `codec` from the `info` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      assert.doesNotThrow(() => new Context(info, 'some-tag'));
+      const ctx  = new Context(info, 'some-tag');
+
+      assert.strictEqual(ctx.codec, info.codec);
+    });
+  });
+
+  describe('.log', () => {
+    it('includes the `logTag` passed in on construction', () => {
+      const info = new ContextInfo(new Codec(), new MockAuth());
+      const tag  = 'yowzers';
+      const ctx  = new Context(info, tag);
+
+      const logContext = ctx.log.tag.context;
+      assert.strictEqual(logContext[logContext.length - 1], tag);
+    });
+  });
+
+  describe('.tokenAuthorizer', () => {
+    it('is the `tokenAuthorizer` from the `info` passed in on construction', () => {
+      const info = new ContextInfo(new Codec(), new MockAuth());
+      const ctx  = new Context(info, 'some-tag');
+
+      assert.strictEqual(ctx.tokenAuthorizer, info.tokenAuthorizer);
     });
   });
 
   describe('getRemoteFor', () => {
-    it('should return a `Remote` given a `ProxiedObject`', () => {
+    it('returns a `Remote` given a `ProxiedObject`', () => {
       const info   = new ContextInfo(new Codec());
       const ctx    = new Context(info, 'tag');
       const obj    = { some: 'object' };
@@ -49,7 +80,7 @@ describe('@bayou/api-server/Context', () => {
       assert.instanceOf(result, Remote);
     });
 
-    it('should return a `Remote` whose `id` maps back to the underlying object', async () => {
+    it('returns a `Remote` whose `id` maps back to the underlying object', async () => {
       const info   = new ContextInfo(new Codec());
       const ctx    = new Context(info, 'tag');
       const obj    = { some: 'object' };
@@ -63,7 +94,7 @@ describe('@bayou/api-server/Context', () => {
       assert.strictEqual(target.directObject, obj);
     });
 
-    it('should return the same `Remote` when given the same `ProxiedObject`', () => {
+    it('returns the same `Remote` when given the same `ProxiedObject`', () => {
       const info    = new ContextInfo(new Codec());
       const ctx     = new Context(info, 'tag');
       const obj     = { some: 'object' };
@@ -74,7 +105,7 @@ describe('@bayou/api-server/Context', () => {
       assert.strictEqual(result1, result2);
     });
 
-    it('should return the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
+    it('returns the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
       const info    = new ContextInfo(new Codec());
       const ctx     = new Context(info, 'tag');
       const obj     = { some: 'object' };
