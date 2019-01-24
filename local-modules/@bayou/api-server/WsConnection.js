@@ -16,10 +16,11 @@ export default class WsConnection extends Connection {
    *
    * @param {WebSocket} ws A websocket instance corresponding to the connection.
    * @param {object} req The HTTP request.
-   * @param {Context} context The binding context to provide access to.
+   * @param {ContextInfo} contextInfo Construction info for the {@link Context}
+   *   to use.
    */
-  constructor(ws, req, context) {
-    super(context);
+  constructor(ws, req, contextInfo) {
+    super(contextInfo);
 
     this._log.event.websocketOrigin(req.headers.origin);
 

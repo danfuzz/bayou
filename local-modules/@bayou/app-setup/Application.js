@@ -7,7 +7,7 @@ import http from 'http';
 import path from 'path';
 import ws from 'ws';
 
-import { Context, ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
+import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
@@ -43,12 +43,6 @@ export default class Application extends CommonBase {
      * instances.
      */
     this._contextInfo = new ContextInfo(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
-
-    /**
-     * {Context} All of the objects we provide access to via the API, along with
-     * other objects of use to the server.
-     */
-    this._context = new Context(this._contextInfo, 'top-context');
 
     /**
      * {RootAccess} The "root access" object. This is the object which tokens
@@ -157,7 +151,7 @@ export default class Application extends CommonBase {
 
     const postHandler = (req, res) => {
       try {
-        new PostConnection(req, res, this._context);
+        new PostConnection(req, res, this._contextInfo);
       } catch (e) {
         log.error('Trouble with API request:', e);
       }
@@ -199,7 +193,7 @@ export default class Application extends CommonBase {
 
     wsServer.on('connection', (wsSocket, req) => {
       try {
-        new WsConnection(wsSocket, req, this._context);
+        new WsConnection(wsSocket, req, this._contextInfo);
       } catch (e) {
         log.error('Trouble with API websocket connection:', e);
       }

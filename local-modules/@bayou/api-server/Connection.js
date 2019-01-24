@@ -3,17 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
-import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
-import Context from './Context';
+import ContextInfo from './ContextInfo';
 import MetaHandler from './MetaHandler';
 import ProxiedObject from './ProxiedObject';
 import Target from './Target';
-
-/** {Logger} Logger. */
-const log = new Logger('api');
 
 /**
  * Base class for connections. Each `Connection` represents a single connection
@@ -35,11 +31,10 @@ export default class Connection extends CommonBase {
    * Constructs an instance. Each instance corresponds to a separate client
    * connection.
    *
-   * @param {Context} context The binding context to provide access to. This
-   *   value gets cloned, so that changes to the `this.context` do not affect
-   *   the originally passed value.
+   * @param {ContextInfo} contextInfo Construction info for the {@link Context}
+   *   to use.
    */
-  constructor(context) {
+  constructor(contextInfo) {
     super();
 
     /**
@@ -49,16 +44,18 @@ export default class Connection extends CommonBase {
     this._connectionId = Random.shortLabel('conn');
 
     /** {Context} The binding context to provide access to. */
-    this._context = Context.check(context).clone(this._connectionId);
+    this._context = ContextInfo.check(contextInfo).makeContext(this._connectionId);
 
     /** {Codec} The codec to use. */
-    this._codec = context.codec;
+    this._codec = this._context.codec;
 
-    /** {Logger} Logger which includes the connection ID as a prefix. */
-    this._log = log.withAddedContext(this._connectionId);
+    /**
+     * {Logger} Logger which includes the connection ID in the logging context.
+     */
+    this._log = this._context.log;
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLog(this._log, context.tokenAuthorizer);
+    this._apiLog = new ApiLog(this._log, this._context.tokenAuthorizer);
 
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
