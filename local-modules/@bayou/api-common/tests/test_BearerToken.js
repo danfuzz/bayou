@@ -41,14 +41,6 @@ describe('@bayou/api-common/BearerToken', () => {
     });
   });
 
-  describe('.url', () => {
-    it('is always `*`', () => {
-      const token = new BearerToken('some-id', 'some-secret');
-
-      assert.strictEqual(token.url, '*');
-    });
-  });
-
   describe('sameToken()', () => {
     it('returns `false` when passed `null`', () => {
       const token = new BearerToken('x', 'y');
