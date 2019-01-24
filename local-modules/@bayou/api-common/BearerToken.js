@@ -43,7 +43,7 @@ export default class BearerToken extends BaseKey {
    * @param {string} secretToken Complete token.
    */
   constructor(id, secretToken) {
-    super('*', id);
+    super(id);
     TString.check(secretToken);
 
     /** {string} Secret token. */

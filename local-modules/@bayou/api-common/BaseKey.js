@@ -55,23 +55,10 @@ export default class BaseKey extends CommonBase {
    * Constructs an instance with the indicated parts. Subclasses should override
    * methods as described in the documentation.
    *
-   * @param {string} url Absolute URL at which the resource may be accessed.
-   *   This is expected to be an API endpoint. Alternatively, if this instance
-   *   will only ever be used in a context where the URL is implied or
-   *   superfluous, this can be passed as `*` (a literal asterisk). This is
-   *   _not_ allowed to have URL-level "auth" info (e.g.,
-   *   `http://user:pass@example.com/`).
    * @param {string} id Key / resource identifier. This must be a `TargetId`.
    */
-  constructor(url, id) {
+  constructor(id) {
     super();
-
-    if (url !== '*') {
-      TString.urlAbsolute(url);
-    }
-
-    /** {string} URL at which the resource may be accessed, or `*`. */
-    this._url = url;
 
     /** {string} Key / resource identifier. */
     this._id = TargetId.check(id);
@@ -132,7 +119,7 @@ export default class BaseKey extends CommonBase {
 
     return (opts.depth < 0)
       ? `${name} {...}`
-      : `${name} { ${this._url} ${this.id} }`;
+      : `${name} { ${this.id} }`;
   }
 
   /**
