@@ -69,7 +69,9 @@ export default class ServerEnv extends Singleton {
     }
 
     if (!is_running(pid)) {
-      log.warn(`Stale PID file indicates non-existent process: ${pid}`);
+      // Indicates that the last incarnation of the server crashed instead of
+      // shutting down cleanly.
+      log.event.stalePidFile({ pid });
       return false;
     }
 
