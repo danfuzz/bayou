@@ -44,9 +44,6 @@ export default class Context extends CommonBase {
      */
     this._info = ContextInfo.check(info);
 
-    /** {string} Tag to use as part of the logging prefix. */
-    this._logTag = TString.check(logTag);
-
     /** {Logger} Logger for this instance. */
     this._log = log.withAddedContext(logTag);
 
@@ -121,28 +118,6 @@ export default class Context extends CommonBase {
     this._remoteMap.set(obj, remote);
 
     return remote;
-  }
-
-  /**
-   * Clones this instance. The resulting clone has a separate underlying map.
-   * That is, adding targets to the clone does not affect its progenitor.
-   *
-   * @param {string|null} [logTag = null] New tag to use for logging, or `null`
-   *   to use the original from this instance.
-   * @returns {Context} The newly-cloned instance.
-   */
-  clone(logTag = null) {
-    if (logTag === null) {
-      logTag = this._logTag;
-    }
-
-    const result = new Context(this._info, logTag);
-
-    for (const t of this._map.values()) {
-      result.addTarget(t);
-    }
-
-    return result;
   }
 
   /**
