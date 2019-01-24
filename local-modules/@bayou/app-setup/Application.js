@@ -7,7 +7,7 @@ import http from 'http';
 import path from 'path';
 import ws from 'ws';
 
-import { Context, PostConnection, WsConnection } from '@bayou/api-server';
+import { Context, ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
@@ -39,11 +39,16 @@ export default class Application extends CommonBase {
     super();
 
     /**
+     * {ContextInfo} The common info used to construct {@link Context}
+     * instances.
+     */
+    this._contextInfo = new ContextInfo(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
+
+    /**
      * {Context} All of the objects we provide access to via the API, along with
      * other objects of use to the server.
      */
-    this._context =
-      new Context(appCommon_TheModule.fullCodec, 'top-context', new AppAuthorizer(this));
+    this._context = new Context(this._contextInfo, 'top-context');
 
     /**
      * {RootAccess} The "root access" object. This is the object which tokens
