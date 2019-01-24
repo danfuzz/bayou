@@ -44,7 +44,7 @@ export default class LocalFileStore extends BaseFileStore {
      */
     this._ensuredDir = false;
 
-    log.info('File storage directory:', this._dir);
+    log.event.storageDirectory(this._dir);
   }
 
   /**
@@ -107,11 +107,9 @@ export default class LocalFileStore extends BaseFileStore {
       return;
     }
 
-    if (await fse.pathExists(this._dir)) {
-      log.detail('File storage directory already exists.');
-    } else {
+    if (!(await fse.pathExists(this._dir))) {
       await fse.mkdir(this._dir);
-      log.info('Created file storage directory.');
+      log.event.createdStorageDirectory();
     }
 
     this._ensuredDir = true;

@@ -30,7 +30,7 @@ export default class PidFile extends Singleton {
     /** {string} Path for the PID file. */
     this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
 
-    log.info('PID:', process.pid);
+    log.event.pid(process.pid);
 
     Object.freeze(this);
   }
@@ -49,7 +49,7 @@ export default class PidFile extends Singleton {
     // Write the PID file.
     fs.writeFileSync(this._pidPath, `${process.pid}\n`);
 
-    log.info('PID file initialized.');
+    log.event.pidInitialized();
   }
 
   /**
@@ -71,7 +71,7 @@ export default class PidFile extends Singleton {
       // `TInt.check()` ensures it's a "safe" integer.
       const result = TInt.check(parseInt(match));
 
-      log.info(`Server already running: PID ${result}`);
+      log.event.serverAlreadyRunning({ pid: result });
 
       return result;
     } catch (e) {
@@ -90,7 +90,7 @@ export default class PidFile extends Singleton {
    * @param {string} id Signal ID.
    */
   _handleSignal(id) {
-    log.info('Received signal:', id);
+    log.event.receivedSignal(id);
     this._erasePid();
     process.kill(process.pid, id);
   }
@@ -101,7 +101,7 @@ export default class PidFile extends Singleton {
   _erasePid() {
     try {
       fs.unlinkSync(this._pidPath);
-      log.info('Removed PID file.');
+      log.event.removedPidFile();
     } catch (e) {
       // Ignore errors. We're about to exit anyway.
     }
