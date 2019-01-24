@@ -98,34 +98,6 @@ describe('@bayou/api-common/BaseKey', () => {
     });
   });
 
-  describe('.baseUrl', () => {
-    it('throws if `.url` is `*`', () => {
-      assert.throws(() => new BaseKey('*', VALID_ID).baseUrl);
-    });
-
-    it('is the base URL of the originally-passed URL', () => {
-      // This uses a regex to chop up the URL. The actual implementation uses
-      // the URL class. To the extent that they differ, the regex is probably
-      // wrong.
-      let which = 0;
-      function test(orig) {
-        const key = new BaseKey(orig, VALID_ID);
-        const expected = orig.match(/^[^:]+:[/][/][^/]+/)[0];
-
-        which++;
-        assert.strictEqual(key.baseUrl, expected, `#${which}`);
-      }
-
-      test('https://x/');
-      test('https://x.y/');
-      test('https://x.y/a');
-      test('https://x.y/a/b/c');
-      test('https://x.y:37/');
-      test('https://x.y:123/b');
-      test('https://x.y.z/aa/bb/cc/');
-    });
-  });
-
   describe('.id', () => {
     it('is the ID passed to the constructor', () => {
       const id  = 'this_is_an_id';

@@ -9,7 +9,7 @@ import crypto from 'crypto';
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors, Random, URL } from '@bayou/util-common';
+import { CommonBase, Random } from '@bayou/util-common';
 
 import TargetId from './TargetId';
 
@@ -75,18 +75,6 @@ export default class BaseKey extends CommonBase {
 
     /** {string} Key / resource identifier. */
     this._id = TargetId.check(id);
-  }
-
-  /**
-   * {string} Base of `url` (that is, the origin without any path). This throws
-   * an error if `url` is `*`.
-   */
-  get baseUrl() {
-    if (this._url === '*') {
-      throw Errors.badUse('Cannot get base of wildcard URL.');
-    }
-
-    return new URL(this._url).origin;
   }
 
   /** {string} Key / resource identifier. */
