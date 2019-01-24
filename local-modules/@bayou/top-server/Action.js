@@ -165,7 +165,7 @@ export default class Action extends CommonBase {
   async _run_dev() {
     await Action._startServer(false, true, true);
 
-    log.info('Now running in the development configuration.');
+    log.event.runningConfiguration('dev');
 
     // Start the system that live-syncs the client source and arranges to exit
     // if / when the server needs to be rebuilt.
@@ -204,7 +204,7 @@ export default class Action extends CommonBase {
   async _run_production() {
     await Action._startServer(false, true, false);
 
-    log.info('Now running in the production configuration.');
+    log.event.runningConfiguration('production');
     return null;
   }
 
@@ -257,17 +257,18 @@ export default class Action extends CommonBase {
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
-    // A little spew to identify us.
-    const info = ProductInfo.theOne.INFO;
-    for (const k of Object.keys(info)) {
-      log.info(k, '=', info[k]);
-    }
+    // A little spew to identify the build.
+    log.event.buildInfo(ProductInfo.theOne.INFO);
+    //const info = ProductInfo.theOne.INFO;
+    //for (const k of Object.keys(info)) {
+    //  log.event(k, '=', info[k]);
+    //}
 
     // A little spew to indicate where in the filesystem we live.
-    log.info(
-      'Directories:\n' +
-      `  product: ${Dirs.theOne.BASE_DIR}\n` +
-      `  var:     ${Dirs.theOne.VAR_DIR}`);
+    log.event.directories({
+      product: Dirs.theOne.BASE_DIR,
+      var:     Dirs.theOne.VAR_DIR
+    });
 
     /** The main app server. */
     const theApp = new Application(devRoutes);
