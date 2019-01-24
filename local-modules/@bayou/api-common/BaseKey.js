@@ -9,7 +9,7 @@ import crypto from 'crypto';
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors, Random, URL } from '@bayou/util-common';
+import { CommonBase, Random } from '@bayou/util-common';
 
 import TargetId from './TargetId';
 
@@ -55,38 +55,13 @@ export default class BaseKey extends CommonBase {
    * Constructs an instance with the indicated parts. Subclasses should override
    * methods as described in the documentation.
    *
-   * @param {string} url Absolute URL at which the resource may be accessed.
-   *   This is expected to be an API endpoint. Alternatively, if this instance
-   *   will only ever be used in a context where the URL is implied or
-   *   superfluous, this can be passed as `*` (a literal asterisk). This is
-   *   _not_ allowed to have URL-level "auth" info (e.g.,
-   *   `http://user:pass@example.com/`).
    * @param {string} id Key / resource identifier. This must be a `TargetId`.
    */
-  constructor(url, id) {
+  constructor(id) {
     super();
-
-    if (url !== '*') {
-      TString.urlAbsolute(url);
-    }
-
-    /** {string} URL at which the resource may be accessed, or `*`. */
-    this._url = url;
 
     /** {string} Key / resource identifier. */
     this._id = TargetId.check(id);
-  }
-
-  /**
-   * {string} Base of `url` (that is, the origin without any path). This throws
-   * an error if `url` is `*`.
-   */
-  get baseUrl() {
-    if (this._url === '*') {
-      throw Errors.badUse('Cannot get base of wildcard URL.');
-    }
-
-    return new URL(this._url).origin;
   }
 
   /** {string} Key / resource identifier. */
@@ -101,11 +76,6 @@ export default class BaseKey extends CommonBase {
    */
   get safeString() {
     return TString.check(this._impl_safeString());
-  }
-
-  /** {string} URL at which the resource may be accessed, or `*`. */
-  get url() {
-    return this._url;
   }
 
   /**
@@ -149,7 +119,7 @@ export default class BaseKey extends CommonBase {
 
     return (opts.depth < 0)
       ? `${name} {...}`
-      : `${name} { ${this._url} ${this.id} }`;
+      : `${name} { ${this.id} }`;
   }
 
   /**

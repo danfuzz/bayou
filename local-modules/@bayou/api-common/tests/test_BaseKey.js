@@ -41,95 +41,18 @@ describe('@bayou/api-common/BaseKey', () => {
   });
 
   describe('constructor', () => {
-    it('accepts `*` as the URL', () => {
-      assert.doesNotThrow(() => new BaseKey('*', VALID_ID));
-    });
-
-    it('accepts an absoulute URL', () => {
-      assert.doesNotThrow(() => new BaseKey('http://foo.com/', VALID_ID));
-      assert.doesNotThrow(() => new BaseKey('https://foo.com/', VALID_ID));
-      assert.doesNotThrow(() => new BaseKey('https://bar.org/x', VALID_ID));
-      assert.doesNotThrow(() => new BaseKey('https://bar.org/x/', VALID_ID));
-      assert.doesNotThrow(() => new BaseKey('https://bar.org/x/a%20b', VALID_ID));
-    });
-
-    it('rejects a non-absolute URL', () => {
-      function test(value) {
-        assert.throws(() => new BaseKey(value, VALID_ID));
-      }
-
-      test('http://foo@example.com/');
-      test('http://foo:blort@example.com/');
-      test('https://example.com/?a');
-      test('https://example.com/?a=10');
-      test('https://example.com/x?a');
-      test('https://example.com/florp?a=10');
-      test('https://example.com/bip/bop/?a');
-      test('https://example.com/florp/like/?a=10');
-      test('https://example.com/#');
-      test('https://example.com/#hashie');
-      test('https://example.com/a#hashie');
-      test('https://example.com/a/#hashie');
-      test('https://example.com/a/nother/#hashie');
-    });
-
-    it('rejects an invalid absolute URL', () => {
-      assert.throws(() => new BaseKey('http:foo.com/', VALID_ID));
-      assert.throws(() => new BaseKey('https://blort.com', VALID_ID)); // Needs a final slash.
-    });
-
     it('rejects an invalid ID', () => {
-      assert.throws(() => new BaseKey('http://foo.com/', ''), /badValue/);
-      assert.throws(() => new BaseKey('http://foo.com/', '!'), /badValue/);
-      assert.throws(() => new BaseKey('http://foo.com/', null), /badValue/);
-      assert.throws(() => new BaseKey('http://foo.com/', 123), /badValue/);
-    });
-  });
-
-  describe('.url', () => {
-    it('is the URL passed to the constructor', () => {
-      function test(url) {
-        assert.strictEqual(new BaseKey(url, VALID_ID).url, url, url);
-      }
-
-      test('*');
-      test('http://foo.bar/');
-      test('http://florp.example.com/api');
-    });
-  });
-
-  describe('.baseUrl', () => {
-    it('throws if `.url` is `*`', () => {
-      assert.throws(() => new BaseKey('*', VALID_ID).baseUrl);
-    });
-
-    it('is the base URL of the originally-passed URL', () => {
-      // This uses a regex to chop up the URL. The actual implementation uses
-      // the URL class. To the extent that they differ, the regex is probably
-      // wrong.
-      let which = 0;
-      function test(orig) {
-        const key = new BaseKey(orig, VALID_ID);
-        const expected = orig.match(/^[^:]+:[/][/][^/]+/)[0];
-
-        which++;
-        assert.strictEqual(key.baseUrl, expected, `#${which}`);
-      }
-
-      test('https://x/');
-      test('https://x.y/');
-      test('https://x.y/a');
-      test('https://x.y/a/b/c');
-      test('https://x.y:37/');
-      test('https://x.y:123/b');
-      test('https://x.y.z/aa/bb/cc/');
+      assert.throws(() => new BaseKey(''), /badValue/);
+      assert.throws(() => new BaseKey('!'), /badValue/);
+      assert.throws(() => new BaseKey(null), /badValue/);
+      assert.throws(() => new BaseKey(123), /badValue/);
     });
   });
 
   describe('.id', () => {
     it('is the ID passed to the constructor', () => {
       const id  = 'this_is_an_id';
-      const key = new BaseKey('*', id);
+      const key = new BaseKey(id);
 
       assert.strictEqual(key.id, id);
     });
@@ -143,7 +66,7 @@ describe('@bayou/api-common/BaseKey', () => {
         }
       }
 
-      const result = new SomeKey('*', VALID_ID).safeString;
+      const result = new SomeKey(VALID_ID).safeString;
       assert.strictEqual(result, 'hello!');
     });
 
@@ -154,7 +77,7 @@ describe('@bayou/api-common/BaseKey', () => {
         }
       }
 
-      const key = new SomeKey('*', VALID_ID);
+      const key = new SomeKey(VALID_ID);
 
       assert.throws(() => key.safeString, /badValue/);
     });
@@ -162,24 +85,23 @@ describe('@bayou/api-common/BaseKey', () => {
 
   describe('toString()', () => {
     it('returns a string', () => {
-      const key = new BaseKey('*', VALID_ID);
+      const key = new BaseKey(VALID_ID);
 
       assert.isString(key.toString());
     });
 
-    it('returns a string that contains the URL and the ID', () => {
-      function test(url, id) {
-        const key    = new BaseKey(url, id);
+    it('returns a string that contains the ID', () => {
+      function test(id) {
+        const key    = new BaseKey(id);
         const result = key.toString();
 
-        assert.isTrue(result.indexOf(url) >= 0, url);
         assert.isTrue(result.indexOf(id) >= 0, id);
       }
 
-      test('*', 'x');
-      test('*', '123-florp');
-      test('http://milk.com/', 'a');
-      test('https://milk.com/florp', 'like');
+      test('x');
+      test('123-florp');
+      test('a');
+      test('like');
     });
   });
 
@@ -191,7 +113,7 @@ describe('@bayou/api-common/BaseKey', () => {
         }
       }
 
-      const key  = new FakeKey('*', VALID_ID);
+      const key  = new FakeKey(VALID_ID);
       const pair = key.makeChallengePair();
 
       assert.isObject(pair);
