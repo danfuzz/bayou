@@ -103,11 +103,6 @@ export default class Connection extends CommonBase {
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a JSON string response.
    *
-   * Notably, messages only succeed in getting acted upon when addressed to
-   * _uncontrolled_ targets. In order to act on a controlled target, that target
-   * first needs to be authorized via the meta-control system so as to become
-   * uncontrolled on a specific connection.
-   *
    * **Note:** Subclasses are expected to call this method.
    *
    * @param {string} msg Incoming message, in JSON string form.
