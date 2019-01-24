@@ -75,7 +75,7 @@ export default class Application extends CommonBase {
 
     if (devMode) {
       this._addDevModeRoutes();
-      log.info('Enabled development / debugging endpoints.');
+      log.event.addedDebugEndpoints();
     }
 
     Object.freeze(this);
@@ -113,7 +113,7 @@ export default class Application extends CommonBase {
     const port       = pickPort ? 0 : Network.listenPort;
     const resultPort = await ServerUtil.listen(server, port);
 
-    log.info(`Application server port: ${resultPort}`);
+    log.event.applicationPort(resultPort);
 
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);

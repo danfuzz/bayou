@@ -61,7 +61,7 @@ export default class Monitor extends CommonBase {
     const port       = this._port;
     const resultPort = await ServerUtil.listen(server, port);
 
-    log.info(`Monitor server port: ${resultPort}`);
+    log.event.monitorPort(resultPort);
 
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);
