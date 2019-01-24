@@ -91,11 +91,6 @@ export default class BaseKey extends CommonBase {
     return TString.check(this._impl_safeString());
   }
 
-  /** {string} URL at which the resource may be accessed, or `*`. */
-  get url() {
-    return this._url;
-  }
-
   /**
    * Gets a challenge response. This is used as a tactic for two sides of a
    * connection to authenticate each other without ever having to provide a

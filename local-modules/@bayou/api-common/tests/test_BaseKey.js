@@ -86,18 +86,6 @@ describe('@bayou/api-common/BaseKey', () => {
     });
   });
 
-  describe('.url', () => {
-    it('is the URL passed to the constructor', () => {
-      function test(url) {
-        assert.strictEqual(new BaseKey(url, VALID_ID).url, url, url);
-      }
-
-      test('*');
-      test('http://foo.bar/');
-      test('http://florp.example.com/api');
-    });
-  });
-
   describe('.id', () => {
     it('is the ID passed to the constructor', () => {
       const id  = 'this_is_an_id';
