@@ -259,16 +259,10 @@ export default class Action extends CommonBase {
 
     // A little spew to identify the build.
     log.event.buildInfo(ProductInfo.theOne.INFO);
-    //const info = ProductInfo.theOne.INFO;
-    //for (const k of Object.keys(info)) {
-    //  log.event(k, '=', info[k]);
-    //}
 
     // A little spew to indicate where in the filesystem we live.
-    log.event.directories({
-      product: Dirs.theOne.BASE_DIR,
-      var:     Dirs.theOne.VAR_DIR
-    });
+    log.event.productDirectory(Dirs.theOne.BASE_DIR);
+    log.event.varDirectory(Dirs.theOne.VAR_DIR);
 
     /** The main app server. */
     const theApp = new Application(devRoutes);
