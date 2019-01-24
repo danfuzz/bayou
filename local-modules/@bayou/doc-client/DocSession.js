@@ -125,16 +125,24 @@ export default class DocSession extends CommonBase {
       this._log.event.initialSessionSetup();
     } else {
       this._log.event.checkingSessionValidity();
-      const proxy = await this._sessionProxyPromise;
 
-      if (api.handles(proxy)) {
-        // The session proxy we already had is still apparently valid, so it's
-        // safe to return it.
-        this._log.event.sessionStillValid();
-        return proxy;
+      try {
+        const proxy = await this._sessionProxyPromise;
+        if (api.handles(proxy)) {
+          // The session proxy we already had is still apparently valid, so it's
+          // safe to return it.
+          this._log.event.sessionStillValid();
+          return proxy;
+        }
+      } catch (e) {
+        // A previous attempt to set up the session failed in the call to
+        // `_fetchSessionProxy()` below.
+        this._log.event.previousSessionSetupFailed(e);
       }
 
-      // Fall through to re-set-up the session.
+      // Either the proxy never got set up or it used to be valid but on a
+      // different API session/connection. Fall through to re-set-up the
+      // session.
       this._log.event.mustReestablishSession();
     }
 
