@@ -211,7 +211,7 @@ export default class CaretOverlay {
         // snapshot ideally wouldn't actually represent the caret controlled by
         // this editor. The code that pushes the snapshot into the store should
         // be updated accordingly.
-        if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
+        if (this._editorComplex.docSession.controlsCaret(caretId)) {
           continue;
         }
 
@@ -494,7 +494,7 @@ export default class CaretOverlay {
         case CaretOp.CODE_setField: {
           const caretId = props.caretId;
 
-          if (this._editorComplex.docSession.caretTracker.isControlledHere(caretId)) {
+          if (this._editorComplex.docSession.controlsCaret(caretId)) {
             continue;
           }
 
