@@ -226,11 +226,6 @@ export default class WsServerConnection extends BaseServerConnection {
     // or `https`.
     url.protocol = url.protocol.replace(/^http/, 'ws');
 
-    // Drop the original path, and replace it with just `/api`. **TODO:** We
-    // should instead assume that the path is valid, instead of forcing one
-    // particular value.
-    url.pathname = '/api';
-
     return url.href;
   }
 }
