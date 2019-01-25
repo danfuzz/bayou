@@ -37,10 +37,8 @@ export default class CaretTracker extends CommonBase {
     this._docSession = DocSession.check(docSession);
 
     /**
-     * {boolean} Whether there is a caret update in progress. Starts out `true`
-     * while the session proxy is getting set up (which is a lie, but one which
-     * prevents failing server calls to be made), and then it is `false` in
-     * steady state. It is set temporarily to `true` in `update()`.
+     * {boolean} Whether the caret update loop is running. Used to prevent the
+     * method from running more than once concurrently.
      */
     this._updating = false;
 
