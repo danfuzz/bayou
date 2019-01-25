@@ -31,19 +31,12 @@ export default class CaretTracker extends CommonBase {
     this._docSession = DocSession.check(docSession);
 
     /**
-     * {Proxy|null} Proxy for the server-side session object. Becomes non-`null`
-     * when the promise for same resolves, as arranged for in this constructor,
-     * below.
-     */
-    this._sessionProxy = null;
-
-    /**
      * {boolean} Whether there is a caret update in progress. Starts out `true`
      * while the session proxy is getting set up (which is a lie, but one which
      * prevents failing server calls to be made), and then it is `false` in
      * steady state. It is set temporarily to `true` in `update()`.
      */
-    this._updating = true;
+    this._updating = false;
 
     /**
      * {array|null} The latest caret update that was supplied, as an array of
@@ -53,15 +46,7 @@ export default class CaretTracker extends CommonBase {
      */
     this._latestCaret = null;
 
-    // Arrange for `_sessionProxy` to get set.
-    (async () => {
-      this._sessionProxy = await docSession.getSessionProxy();
-      this._updating     = false;
-
-      // Give the update loop a chance to send caret updates that happened
-      // during initialization (if any).
-      this._runUpdateLoop();
-    })();
+    Object.seal(this);
   }
 
   /**
@@ -98,6 +83,10 @@ export default class CaretTracker extends CommonBase {
     // **TODO:** If anything in this `async` block throws, there's nothing to
     // catch the exception.
     (async () => {
+      // We get this every time we run the method, because it's possible that
+      // the proxy gets replaced during a reconnect.
+      const sessionProxy = await this._docSession.getSessionProxy();
+
       for (;;) {
         const info = this._latestCaret;
         if (info === null) {
@@ -106,7 +95,7 @@ export default class CaretTracker extends CommonBase {
 
         this._latestCaret = null;
         await Promise.all([
-          this._sessionProxy.caret_update(...info),
+          sessionProxy.caret_update(...info),
           Delay.resolve(UPDATE_DELAY_MSEC)]);
       }
 
