@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretId } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Delay } from '@bayou/promise-util';
 import { TInt, TObject } from '@bayou/typecheck';
@@ -39,12 +38,6 @@ export default class CaretTracker extends CommonBase {
     this._sessionProxy = null;
 
     /**
-     * {string|null} The ID of the caret that this instance controls, if known.
-     * Becomes non-`null` during resolution of {@link #_sessionProxy}.
-     */
-    this._caretId = null;
-
-    /**
      * {boolean} Whether there is a caret update in progress. Starts out `true`
      * while the session proxy is getting set up (which is a lie, but one which
      * prevents failing server calls to be made), and then it is `false` in
@@ -63,14 +56,7 @@ export default class CaretTracker extends CommonBase {
     // Arrange for `_sessionProxy` to get set.
     (async () => {
       this._sessionProxy = await docSession.getSessionProxy();
-
-      // **TODO:** Once `SessionInfo` is always used, the `caretId` can be found
-      // from it.
-      this._caretId = await this._sessionProxy.getCaretId();
-
-      this._updating = false;
-
-      this._docSession.log.event.nowManagingCaret(this._caretId);
+      this._updating     = false;
 
       // Give the update loop a chance to send caret updates that happened
       // during initialization (if any).
