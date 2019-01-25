@@ -109,8 +109,8 @@ export default class CaretTracker extends CommonBase {
         let info = this._latestCaret;
         if (info === null) {
           await Promise.race([
-            Delay.resolve(MAX_IDLE_TIME_MSEC),
-            this._needUpdate.whenTrue()]);
+            this._needUpdate.whenTrue(),
+            Delay.resolve(MAX_IDLE_TIME_MSEC)]);
           info = this._latestCaret;
           if (info === null) {
             break;
@@ -122,8 +122,8 @@ export default class CaretTracker extends CommonBase {
         this._updateCount++;
 
         await Promise.all([
-          Delay.resolve(UPDATE_DELAY_MSEC),
-          sessionProxy.caret_update(...info)]);
+          sessionProxy.caret_update(...info),
+          Delay.resolve(UPDATE_DELAY_MSEC)]);
 
         if ((this._updateCount % 25) === 0) {
           this._docSession.log.event.caretUpdates(this._updateCount);
