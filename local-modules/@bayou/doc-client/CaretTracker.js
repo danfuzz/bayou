@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretId } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
-import { Delay } from '@bayou/promise-util';
+import { Condition, Delay } from '@bayou/promise-util';
 import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -15,6 +14,12 @@ import DocSession from './DocSession';
  * next one.
  */
 const UPDATE_DELAY_MSEC = 250;
+
+/**
+ * How long to be idle in {@link #_runUpdateLoop} before the loop / method
+ * terminates.
+ */
+const MAX_IDLE_TIME_MSEC = 60 * 1000; // One minute.
 
 /**
  * Handler for the upload of caret info from a client.
@@ -32,25 +37,10 @@ export default class CaretTracker extends CommonBase {
     this._docSession = DocSession.check(docSession);
 
     /**
-     * {Proxy|null} Proxy for the server-side session object. Becomes non-`null`
-     * when the promise for same resolves, as arranged for in this constructor,
-     * below.
+     * {boolean} Whether the caret update loop is running. Used to prevent the
+     * method from running more than once concurrently.
      */
-    this._sessionProxy = null;
-
-    /**
-     * {string|null} The ID of the caret that this instance controls, if known.
-     * Becomes non-`null` during resolution of {@link #_sessionProxy}.
-     */
-    this._caretId = null;
-
-    /**
-     * {boolean} Whether there is a caret update in progress. Starts out `true`
-     * while the session proxy is getting set up (which is a lie, but one which
-     * prevents failing server calls to be made), and then it is `false` in
-     * steady state. It is set temporarily to `true` in `update()`.
-     */
-    this._updating = true;
+    this._updating = false;
 
     /**
      * {array|null} The latest caret update that was supplied, as an array of
@@ -60,40 +50,18 @@ export default class CaretTracker extends CommonBase {
      */
     this._latestCaret = null;
 
-    // Arrange for `_sessionProxy` to get set.
-    (async () => {
-      this._sessionProxy = await docSession.getSessionProxy();
+    /**
+     * {Condition} Condition that becomes `true` when there is a pending update.
+     */
+    this._needUpdate = new Condition();
 
-      // **TODO:** Once `SessionInfo` is always used, the `caretId` can be found
-      // from it.
-      this._caretId = await this._sessionProxy.getCaretId();
+    /**
+     * {Int} Count of how many updates have been sent. Used for occasional
+     * logging.
+     */
+    this._updateCount = 0;
 
-      this._updating = false;
-
-      this._docSession.log.event.nowManagingCaret(this._caretId);
-
-      // Give the update loop a chance to send caret updates that happened
-      // during initialization (if any).
-      this._runUpdateLoop();
-    })();
-  }
-
-  /**
-   * Indicates whether the given caret ID identifies the caret controlled by
-   * this instance.
-   *
-   * **Note:** It is possible for this to return a false negative when the
-   * session is in the process of being established (because we don't yet know
-   * the ID we control).
-   *
-   * @param {string} caretId The caret ID in question.
-   * @returns {boolean} `true` if `caretId` is the ID that this instance
-   *   controls, or `false` if not.
-   */
-  isControlledHere(caretId) {
-    CaretId.check(caretId);
-
-    return (caretId === this._caretId);
+    Object.seal(this);
   }
 
   /**
@@ -109,6 +77,7 @@ export default class CaretTracker extends CommonBase {
     TInt.nonNegative(range.length);
 
     this._latestCaret = [docRevNum, range.index, range.length];
+    this._needUpdate.value = true;
     this._runUpdateLoop();
   }
 
@@ -130,19 +99,40 @@ export default class CaretTracker extends CommonBase {
     // **TODO:** If anything in this `async` block throws, there's nothing to
     // catch the exception.
     (async () => {
+      // We get this every time we run the method, because it's possible that
+      // the proxy gets replaced during a reconnect.
+      const sessionProxy = await this._docSession.getSessionProxy();
+
+      this._docSession.log.event.caretTrackerRunning();
+
       for (;;) {
-        const info = this._latestCaret;
+        let info = this._latestCaret;
         if (info === null) {
-          break;
+          await Promise.race([
+            this._needUpdate.whenTrue(),
+            Delay.resolve(MAX_IDLE_TIME_MSEC)]);
+          info = this._latestCaret;
+          if (info === null) {
+            break;
+          }
         }
 
+        this._needUpdate.value = false;
         this._latestCaret = null;
+        this._updateCount++;
+
         await Promise.all([
-          this._sessionProxy.caret_update(...info),
+          sessionProxy.caret_update(...info),
           Delay.resolve(UPDATE_DELAY_MSEC)]);
+
+        if ((this._updateCount % 25) === 0) {
+          this._docSession.log.event.caretUpdates(this._updateCount);
+        }
       }
 
       this._updating = false;
+
+      this._docSession.log.event.caretTrackerStopped();
     })();
   }
 }

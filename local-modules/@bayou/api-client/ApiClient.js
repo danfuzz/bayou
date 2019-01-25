@@ -245,18 +245,6 @@ export default class ApiClient extends CommonBase {
     // or `https`.
     url.protocol = url.protocol.replace(/^http/, 'ws');
 
-    // Drop the original path, and replace it with just `/api`. **TODO:** We
-    // should instead assume that the path is valid, instead of forcing one
-    // particular value.
-    url.pathname = '/api';
-
-    if (url.pathname !== '/api') {
-      // Per the **TODO** above, note when we get what (today) is an unexpected
-      // path. If we never see this, it means we can address the **TODO** by
-      // removing the statement it's commenting on.
-      this._log.event.unusualUrlPath(url.pathname);
-    }
-
     return url.href;
   }
 

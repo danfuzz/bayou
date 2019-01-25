@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Auth, Network, Storage } from '@bayou/config-server';
-import { BodyChange, CaretId, PropertyChange, SessionInfo } from '@bayou/doc-common';
+import { Storage } from '@bayou/config-server';
+import { BodyChange, CaretId, PropertyChange } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { CommonBase } from '@bayou/util-common';
 
@@ -333,25 +333,5 @@ export default class DocSession extends CommonBase {
    */
   getFileId() {
     return this._fileComplex.fileAccess.file.id;
-  }
-
-  /**
-   * Gets an instance of {@link SessionInfo} which when used will authorize the
-   * use of an instance of _this_ class which is equivalent (but not likely
-   * identical to) this instance.
-   *
-   * **TODO:** Remove this method once the transition to new-style sessions is
-   * complete.
-   *
-   * @returns {SessionInfo} Session info for constructing an instance like this
-   *   one.
-   */
-  async getSessionInfo() {
-    const url         = `${Network.baseUrl}/api`;
-    const authorToken = await Auth.getAuthorToken(this.getAuthorId());
-    const documentId  = this.getDocumentId();
-    const caretId     = this.getCaretId();
-
-    return new SessionInfo(url, authorToken, documentId, caretId);
   }
 }

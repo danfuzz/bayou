@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from '@bayou/api-client';
+import { CaretId } from '@bayou/doc-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
@@ -105,6 +106,24 @@ export default class DocSession extends CommonBase {
    */
   get sessionInfo() {
     return this._sessionInfo;
+  }
+
+  /**
+   * Indicates whether the given caret ID identifies the caret controlled by
+   * this instance.
+   *
+   * **Note:** It is possible for this to return a false negative when the
+   * session is in the process of being established (because we don't yet know
+   * which caret the instance will ultimately control).
+   *
+   * @param {string} caretId The caret ID in question.
+   * @returns {boolean} `true` if `caretId` is the ID of the caret that this
+   *   instance controls, or `false` if not.
+   */
+  controlsCaret(caretId) {
+    CaretId.check(caretId);
+
+    return (caretId === this._sessionInfo.caretId);
   }
 
   /**
