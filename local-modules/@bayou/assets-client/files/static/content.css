@@ -13,9 +13,6 @@
  * to the main body text size. **Note:** If a Bayou editor is being embedded in
  * another page, it is possible that this rule will end up interacting with the
  * enclosing CSS in undesired ways.
- *
- * TODO: Make this particular bit configurable via a hook, should it turn out to
- * be useful.
  */
 html.bayou-page {
   font-size: 100%;
