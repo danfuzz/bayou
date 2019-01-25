@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { RevisionNumber } from '@bayou/ot-common';
-import { Delay } from '@bayou/promise-util';
+import { Condition, Delay } from '@bayou/promise-util';
 import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -51,6 +51,11 @@ export default class CaretTracker extends CommonBase {
     this._latestCaret = null;
 
     /**
+     * {Condition} Condition that becomes `true` when there is a pending update.
+     */
+    this._needUpdate = new Condition();
+
+    /**
      * {Int} Count of how many updates have been sent. Used for occasional
      * logging.
      */
@@ -72,6 +77,7 @@ export default class CaretTracker extends CommonBase {
     TInt.nonNegative(range.length);
 
     this._latestCaret = [docRevNum, range.index, range.length];
+    this._needUpdate.value = true;
     this._runUpdateLoop();
   }
 
@@ -97,31 +103,30 @@ export default class CaretTracker extends CommonBase {
       // the proxy gets replaced during a reconnect.
       const sessionProxy = await this._docSession.getSessionProxy();
 
-      let lastUpdateTime = Date.now();
-
       this._docSession.log.event.caretTrackerRunning();
 
       for (;;) {
-        const info      = this._latestCaret;
-        const now       = Date.now();
-        const loopDelay = Delay.resolve(UPDATE_DELAY_MSEC);
-
+        let info = this._latestCaret;
         if (info === null) {
-          if (now >= (lastUpdateTime + MAX_IDLE_TIME_MSEC)) {
+          await Promise.race([
+            Delay.resolve(MAX_IDLE_TIME_MSEC),
+            this._needUpdate.whenTrue()]);
+          info = this._latestCaret;
+          if (info === null) {
             break;
           }
+        }
 
-          await loopDelay;
-        } else {
-          lastUpdateTime = now;
-          this._latestCaret = null;
-          this._updateCount++;
+        this._needUpdate.value = false;
+        this._latestCaret = null;
+        this._updateCount++;
 
-          await Promise.all([loopDelay, sessionProxy.caret_update(...info)]);
+        await Promise.all([
+          Delay.resolve(UPDATE_DELAY_MSEC),
+          sessionProxy.caret_update(...info)]);
 
-          if ((this._updateCount % 25) === 0) {
-            this._docSession.log.event.caretUpdates(this._updateCount);
-          }
+        if ((this._updateCount % 25) === 0) {
+          this._docSession.log.event.caretUpdates(this._updateCount);
         }
       }
 
