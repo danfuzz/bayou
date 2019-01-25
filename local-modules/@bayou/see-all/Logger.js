@@ -39,6 +39,11 @@ export default class Logger extends BaseLogger {
     Object.freeze(this);
   }
 
+  /** {LogTag} The tag(s) used by this instance when logging. */
+  get tag() {
+    return this._tag;
+  }
+
   /**
    * Actual logging implementation for structured events, as specified by the
    * superclass.

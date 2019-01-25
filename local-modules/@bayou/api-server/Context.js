@@ -3,14 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Remote } from '@bayou/api-common';
-import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
+import ContextInfo from './ContextInfo';
 import ProxiedObject from './ProxiedObject';
 import Target from './Target';
-import TokenAuthorizer from './TokenAuthorizer';
 
 /** {Logger} Logger. */
 const log = new Logger('api');
@@ -32,29 +31,21 @@ export default class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
    *
-   * @param {Codec} codec Codec to use for all connections / sessions.
+   * @param {ContextInfo} info The typically-fixed parameters used to construct
+   *   instances.
    * @param {string} logTag Tag to use as part of the logging prefix.
-   * @param {TokenAuthorizer|null} [tokenAuth = null] Optional authorizer for
-   *   bearer tokens. If non-`null`, this is used to map bearer tokens into
-   *   usable target objects.
    */
-  constructor(codec, logTag, tokenAuth = null) {
+  constructor(info, logTag) {
     super();
 
-    /** {Codec} The codec to use for connections / sessions. */
-    this._codec = Codec.check(codec);
-
-    /** {string} Tag to use as part of the logging prefix. */
-    this._logTag = TString.check(logTag);
+    /**
+     * {ContextInfo} The typically-fixed parameters used to construct this
+     * instance.
+     */
+    this._info = ContextInfo.check(info);
 
     /** {Logger} Logger for this instance. */
     this._log = log.withAddedContext(logTag);
-
-    /**
-     * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
-     * translate bearer tokens to target objects.
-     */
-    this._tokenAuth = (tokenAuth === null) ? null : TokenAuthorizer.check(tokenAuth);
 
     /** {Map<string, Target>} The underlying map from IDs to targets. */
     this._map = new Map();
@@ -77,12 +68,20 @@ export default class Context extends CommonBase {
 
   /** {Codec} The codec to use for connections / sessions. */
   get codec() {
-    return this._codec;
+    return this._info.codec;
   }
 
-  /** {TokenAuthorizer} The token authorizer to use. */
+  /**
+   * {Logger} The logger used by this instance, and for use by interrelated
+   * code.
+   */
+  get log() {
+    return this._log;
+  }
+
+  /** {TokenAuthorizer|null} The token authorizer to use. */
   get tokenAuthorizer() {
-    return this._tokenAuth;
+    return this._info.tokenAuthorizer;
   }
 
   /**
@@ -122,28 +121,6 @@ export default class Context extends CommonBase {
   }
 
   /**
-   * Clones this instance. The resulting clone has a separate underlying map.
-   * That is, adding targets to the clone does not affect its progenitor.
-   *
-   * @param {string|null} [logTag = null] New tag to use for logging, or `null`
-   *   to use the original from this instance.
-   * @returns {Context} The newly-cloned instance.
-   */
-  clone(logTag = null) {
-    if (logTag === null) {
-      logTag = this._logTag;
-    }
-
-    const result = new Context(this._codec, logTag, this._tokenAuth);
-
-    for (const t of this._map.values()) {
-      result.addTarget(t);
-    }
-
-    return result;
-  }
-
-  /**
    * Gets an authorized target. This will find targets that were previously
    * added via {@link #addTarget} as well as those authorized by virtue of this
    * method being passed a valid authority-bearing token (in string form).
@@ -155,7 +132,7 @@ export default class Context extends CommonBase {
    *   target.
    */
   async getAuthorizedTarget(idOrToken) {
-    const tokenAuth = this._tokenAuth;
+    const tokenAuth = this.tokenAuthorizer;
 
     if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
       const token   = tokenAuth.tokenFromString(idOrToken);
@@ -312,7 +289,7 @@ export default class Context extends CommonBase {
    * @returns {string} A random unused target ID.
    */
   _randomId() {
-    const tokenAuth = this._tokenAuth;
+    const tokenAuth = this.tokenAuthorizer;
     const prefix    = (tokenAuth === null) ? 'local-' : tokenAuth.nonTokenPrefix;
 
     for (;;) {
@@ -336,7 +313,7 @@ export default class Context extends CommonBase {
    * @returns {Error} An appropriately-constructed error.
    */
   _targetError(idOrToken, msg = 'Unknown target') {
-    const tokenAuth = this._tokenAuth;
+    const tokenAuth = this.tokenAuthorizer;
     const idToReport = ((tokenAuth !== null) && tokenAuth.isToken(idOrToken))
       ? tokenAuth.tokenFromString(idOrToken).safeString
       : idOrToken;

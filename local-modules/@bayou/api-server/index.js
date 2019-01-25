@@ -4,6 +4,7 @@
 
 import Connection from './Connection';
 import Context from './Context';
+import ContextInfo from './ContextInfo';
 import PostConnection from './PostConnection';
 import ProxiedObject from './ProxiedObject';
 import Schema from './Schema';
@@ -15,6 +16,7 @@ import WsConnection from './WsConnection';
 export {
   Connection,
   Context,
+  ContextInfo,
   PostConnection,
   ProxiedObject,
   Schema,

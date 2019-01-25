@@ -17,10 +17,11 @@ export default class PostConnection extends Connection {
    *
    * @param {object} req The HTTP request.
    * @param {object} res The HTTP response handler.
-   * @param {Context} context The binding context to provide access to.
+   * @param {ContextInfo} contextInfo Construction info for the {@link Context}
+   *   to use.
    */
-  constructor(req, res, context) {
-    super(context);
+  constructor(req, res, contextInfo) {
+    super(contextInfo);
 
     // **TODO:** Remove this once we're a bit more sure about what to expect.
     this._log.info(`POST host: ${req.headers.host}`);

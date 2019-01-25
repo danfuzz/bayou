@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken, Remote } from '@bayou/api-common';
-import { Context, ProxiedObject, TokenAuthorizer } from '@bayou/api-server';
+import { Context, ContextInfo, ProxiedObject, TokenAuthorizer } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 
 /**
@@ -32,18 +32,47 @@ class MockAuth extends TokenAuthorizer {
 
 describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
-    it('should accept two valid arguments', () => {
-      assert.doesNotThrow(() => new Context(new Codec(), 'some-tag'));
-    });
+    it('accepts valid arguments and produce a sealed instance', () => {
+      const info   = new ContextInfo(new Codec(), new MockAuth());
+      const result = new Context(info, 'some-tag');
 
-    it('should accept three valid arguments', () => {
-      assert.doesNotThrow(() => new Context(new Codec(), 'some-other-tag', new MockAuth()));
+      assert.isSealed(result);
+    });
+  });
+
+  describe('.codec', () => {
+    it('is the `codec` from the `info` passed in on construction', () => {
+      const info = new ContextInfo(new Codec(), new MockAuth());
+      const ctx  = new Context(info, 'some-tag');
+
+      assert.strictEqual(ctx.codec, info.codec);
+    });
+  });
+
+  describe('.log', () => {
+    it('includes the `logTag` passed in on construction', () => {
+      const info = new ContextInfo(new Codec(), new MockAuth());
+      const tag  = 'yowzers';
+      const ctx  = new Context(info, tag);
+
+      const logContext = ctx.log.tag.context;
+      assert.strictEqual(logContext[logContext.length - 1], tag);
+    });
+  });
+
+  describe('.tokenAuthorizer', () => {
+    it('is the `tokenAuthorizer` from the `info` passed in on construction', () => {
+      const info = new ContextInfo(new Codec(), new MockAuth());
+      const ctx  = new Context(info, 'some-tag');
+
+      assert.strictEqual(ctx.tokenAuthorizer, info.tokenAuthorizer);
     });
   });
 
   describe('getRemoteFor', () => {
-    it('should return a `Remote` given a `ProxiedObject`', () => {
-      const ctx    = new Context(new Codec(), 'tag');
+    it('returns a `Remote` given a `ProxiedObject`', () => {
+      const info   = new ContextInfo(new Codec());
+      const ctx    = new Context(info, 'tag');
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -51,8 +80,9 @@ describe('@bayou/api-server/Context', () => {
       assert.instanceOf(result, Remote);
     });
 
-    it('should return a `Remote` whose `id` maps back to the underlying object', async () => {
-      const ctx    = new Context(new Codec(), 'tag');
+    it('returns a `Remote` whose `id` maps back to the underlying object', async () => {
+      const info   = new ContextInfo(new Codec());
+      const ctx    = new Context(info, 'tag');
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -64,8 +94,9 @@ describe('@bayou/api-server/Context', () => {
       assert.strictEqual(target.directObject, obj);
     });
 
-    it('should return the same `Remote` when given the same `ProxiedObject`', () => {
-      const ctx     = new Context(new Codec(), 'tag');
+    it('returns the same `Remote` when given the same `ProxiedObject`', () => {
+      const info    = new ContextInfo(new Codec());
+      const ctx     = new Context(info, 'tag');
       const obj     = { some: 'object' };
       const po      = new ProxiedObject(obj);
       const result1 = ctx.getRemoteFor(po);
@@ -74,8 +105,9 @@ describe('@bayou/api-server/Context', () => {
       assert.strictEqual(result1, result2);
     });
 
-    it('should return the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
-      const ctx     = new Context(new Codec(), 'tag');
+    it('returns the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
+      const info    = new ContextInfo(new Codec());
+      const ctx     = new Context(info, 'tag');
       const obj     = { some: 'object' };
       const result1 = ctx.getRemoteFor(new ProxiedObject(obj));
       const result2 = ctx.getRemoteFor(new ProxiedObject(obj));
