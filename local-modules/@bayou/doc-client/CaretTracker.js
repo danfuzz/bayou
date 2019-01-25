@@ -16,6 +16,12 @@ import DocSession from './DocSession';
 const UPDATE_DELAY_MSEC = 250;
 
 /**
+ * How long to be idle in {@link #_runUpdateLoop} before the loop / method
+ * terminates.
+ */
+const MAX_IDLE_TIME_MSEC = 60 * 1000; // One minute.
+
+/**
  * Handler for the upload of caret info from a client.
  */
 export default class CaretTracker extends CommonBase {
@@ -87,19 +93,30 @@ export default class CaretTracker extends CommonBase {
       // the proxy gets replaced during a reconnect.
       const sessionProxy = await this._docSession.getSessionProxy();
 
-      for (;;) {
-        const info = this._latestCaret;
-        if (info === null) {
-          break;
-        }
+      let lastUpdateTime = Date.now();
 
-        this._latestCaret = null;
-        await Promise.all([
-          sessionProxy.caret_update(...info),
-          Delay.resolve(UPDATE_DELAY_MSEC)]);
+      this._docSession.log.event.caretTrackerRunning();
+
+      for (;;) {
+        const info      = this._latestCaret;
+        const now       = Date.now();
+        const loopDelay = Delay.resolve(UPDATE_DELAY_MSEC);
+
+        if (info === null) {
+          if (now >= (lastUpdateTime + MAX_IDLE_TIME_MSEC)) {
+            break;
+          }
+          await loopDelay;
+        } else {
+          lastUpdateTime = now;
+          this._latestCaret = null;
+          await Promise.all([loopDelay, sessionProxy.caret_update(...info)]);
+        }
       }
 
       this._updating = false;
+
+      this._docSession.log.event.caretTrackerStopped();
     })();
   }
 }
