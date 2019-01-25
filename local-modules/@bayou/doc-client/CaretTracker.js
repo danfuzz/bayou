@@ -50,6 +50,12 @@ export default class CaretTracker extends CommonBase {
      */
     this._latestCaret = null;
 
+    /**
+     * {Int} Count of how many updates have been sent. Used for occasional
+     * logging.
+     */
+    this._updateCount = 0;
+
     Object.seal(this);
   }
 
@@ -104,11 +110,18 @@ export default class CaretTracker extends CommonBase {
           if (now >= (lastUpdateTime + MAX_IDLE_TIME_MSEC)) {
             break;
           }
+
           await loopDelay;
         } else {
           lastUpdateTime = now;
           this._latestCaret = null;
+          this._updateCount++;
+
           await Promise.all([loopDelay, sessionProxy.caret_update(...info)]);
+
+          if ((this._updateCount % 25) === 0) {
+            this._docSession.log.event.caretUpdates(this._updateCount);
+          }
         }
       }
 
