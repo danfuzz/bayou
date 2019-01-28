@@ -23,8 +23,7 @@ import Target from './Target';
  */
 export default class Connection extends CommonBase {
   /**
-   * Constructs an instance. Each instance corresponds to a separate client
-   * connection.
+   * Constructs an instance.
    *
    * @param {ContextInfo} contextInfo Construction info for the {@link Context}
    *   to use.
