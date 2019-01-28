@@ -51,12 +51,6 @@ export default class Context extends CommonBase {
      */
     this._remoteMap = new Map();
 
-    /**
-     * {Int} Msec timestamp indicating the most recent time that idle cleanup
-     * was performed.
-     */
-    this._lastIdleCleanup = Date.now();
-
     Object.seal(this);
   }
 
