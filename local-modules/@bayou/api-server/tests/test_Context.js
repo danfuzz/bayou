@@ -35,7 +35,7 @@ describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
     it('accepts valid arguments and produce a frozen instance', () => {
       const info   = new ContextInfo(new Codec(), new MockAuth());
-      const result = new Context(info, 'some-tag');
+      const result = new Context(info, new Logger('some-tag'));
 
       assert.isFrozen(result);
     });
@@ -44,7 +44,7 @@ describe('@bayou/api-server/Context', () => {
   describe('.codec', () => {
     it('is the `codec` from the `info` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const ctx  = new Context(info, 'some-tag');
+      const ctx  = new Context(info, new Logger('some-tag'));
 
       assert.strictEqual(ctx.codec, info.codec);
     });
@@ -63,7 +63,7 @@ describe('@bayou/api-server/Context', () => {
   describe('.tokenAuthorizer', () => {
     it('is the `tokenAuthorizer` from the `info` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const ctx  = new Context(info, 'some-tag');
+      const ctx  = new Context(info, new Logger('some-tag'));
 
       assert.strictEqual(ctx.tokenAuthorizer, info.tokenAuthorizer);
     });
@@ -72,7 +72,7 @@ describe('@bayou/api-server/Context', () => {
   describe('getRemoteFor', () => {
     it('returns a `Remote` given a `ProxiedObject`', () => {
       const info   = new ContextInfo(new Codec());
-      const ctx    = new Context(info, 'tag');
+      const ctx    = new Context(info, new Logger('some-tag'));
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -82,7 +82,7 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns a `Remote` whose `id` maps back to the underlying object', async () => {
       const info   = new ContextInfo(new Codec());
-      const ctx    = new Context(info, 'tag');
+      const ctx    = new Context(info, new Logger('some-tag'));
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -107,7 +107,7 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
       const info    = new ContextInfo(new Codec());
-      const ctx     = new Context(info, 'tag');
+      const ctx     = new Context(info, new Logger('some-tag'));
       const obj     = { some: 'object' };
       const result1 = ctx.getRemoteFor(new ProxiedObject(obj));
       const result2 = ctx.getRemoteFor(new ProxiedObject(obj));
