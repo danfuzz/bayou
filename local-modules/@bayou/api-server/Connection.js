@@ -33,7 +33,7 @@ export default class Connection extends CommonBase {
 
     /**
      * {string} Short label string used to identify this connection in logs.
-     * _Probably_ but not _guaranteed_ to be unique.
+     * _Probably_ but not _guaranteed to be_ unique.
      */
     this._connectionId = Random.shortLabel('conn');
 
