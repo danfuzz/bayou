@@ -29,42 +29,46 @@ const INVALID_DIRECTS = [
 
 describe('@bayou/api-server/Target', () => {
   describe('constructor()', () => {
-    it('should accept a key as the first argument', () => {
+    it('accepts a key as the first argument', () => {
       assert.doesNotThrow(() => new Target(new BearerToken('x', 'y'), {}));
     });
 
-    it('should accept a valid ID string as the first argument', () => {
+    it('accepts a valid ID string as the first argument', () => {
       assert.doesNotThrow(() => new Target('x', {}));
     });
 
-    it('should reject a non-key object as the first argument', () => {
+    it('rejects a non-key object as the first argument', () => {
       assert.throws(() => new Target(new Set('bad'), {}), /badValue/);
     });
 
-    it('should reject an invalid ID string as the first argument', () => {
+    it('rejects an invalid ID string as the first argument', () => {
       assert.throws(() => new Target('***bad***', {}), /badValue/);
     });
 
-    it('should accept arbitrary objects as the second argument', () => {
+    it('accepts arbitrary objects as the second argument', () => {
       for (const d of VALID_DIRECTS) {
         assert.doesNotThrow(() => new Target('x', d), inspect(d));
       }
     });
 
-    it('should reject non-objects as the second argument', () => {
+    it('rejects non-objects as the second argument', () => {
       for (const d of INVALID_DIRECTS) {
         assert.throws(() => new Target('x', d), /badValue/, inspect(d));
       }
     });
 
-    it('should accept a `Schema` as the third argument', () => {
+    it('accepts a `Schema` as the third argument', () => {
       const schema = new Schema({});
       assert.doesNotThrow(() => new Target('x', {}, schema));
+    });
+
+    it('accepts `null` as the third argument', () => {
+      assert.doesNotThrow(() => new Target('x', {}, null));
     });
   });
 
   describe('.directObject', () => {
-    it('should be the same as the `directObject` passed to the constructor', () => {
+    it('is the same as the `directObject` passed to the constructor', () => {
       for (const obj of VALID_DIRECTS) {
         const str = inspect(obj);
         const t   = new Target('x', obj);
@@ -74,13 +78,13 @@ describe('@bayou/api-server/Target', () => {
   });
 
   describe('.id', () => {
-    it('should be the same as a string `idOrKey` passed to the constructor', () => {
+    it('is the same as a string `idOrKey` passed to the constructor', () => {
       const id = 'some-id';
       const t  = new Target(id, {});
       assert.strictEqual(t.id, id);
     });
 
-    it('should be the same as the key\'s `id` when a key is passed as `idOrKey` to the constructor', () => {
+    it('is the same as the key\'s `id` when a key is passed as `idOrKey` to the constructor', () => {
       const id  = 'some-key-id';
       const key = new BearerToken(id, 'this-is-secret');
       const t   = new Target(key, {});
@@ -89,14 +93,14 @@ describe('@bayou/api-server/Target', () => {
   });
 
   describe('.key', () => {
-    it('should be the same as a key `idOrKey` passed to the constructor', () => {
+    it('is the same as a key `idOrKey` passed to the constructor', () => {
       const id  = 'some-key-id';
       const key = new BearerToken(id, 'this-is-secret');
       const t  = new Target(key, {});
       assert.strictEqual(t.key, key);
     });
 
-    it('should be `null` when a string is passed as `idOrKey` to the constructor', () => {
+    it('is `null` when a string is passed as `idOrKey` to the constructor', () => {
       const id  = 'some-id';
       const t   = new Target(id, {});
       assert.isNull(t.key);
@@ -104,16 +108,32 @@ describe('@bayou/api-server/Target', () => {
   });
 
   describe('.schema', () => {
-    it('should be the same as the `schema` passed to the constructor', () => {
+    it('is the same as the non-`null` `schema` passed to the constructor', () => {
       const schema = new Schema({});
       const t      = new Target('x', {}, schema);
 
       assert.strictEqual(t.schema, schema);
     });
+
+    it('is a reasonably-constructed instance when `schema` was omitted from the constructor', () => {
+      class Florp {
+        blort() { /*empty*/ }
+        zorch() { /*empty*/ }
+      }
+
+      const t      = new Target('x', new Florp());
+      const result = t.schema;
+
+      assert.instanceOf(result, Schema);
+
+      const props = result.propertiesObject;
+
+      assert.deepEqual(props, { blort: 'method', zorch: 'method' });
+    });
   });
 
   describe('call()', () => {
-    it('should call through to the `directObject`', () => {
+    it('calls through to the `directObject`', () => {
       const obj = {
         florp(x, y) {
           return `<${x} ${y}>`;
@@ -126,7 +146,7 @@ describe('@bayou/api-server/Target', () => {
       assert.strictEqual(result, '<hey buddy>');
     });
 
-    it('should be transparent with respect to thrown errors', () => {
+    it('is transparent with respect to thrown errors', () => {
       const err = new Error('eek!');
       const obj = {
         blort() {
