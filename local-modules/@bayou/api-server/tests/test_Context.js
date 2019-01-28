@@ -6,14 +6,14 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken, Remote } from '@bayou/api-common';
-import { Context, ContextInfo, ProxiedObject, TokenAuthorizer } from '@bayou/api-server';
+import { BaseTokenAuthorizer, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 
 /**
- * Mock `TokenAuthorizer` for testing.
+ * Mock `BaseTokenAuthorizer` for testing.
  */
-class MockAuth extends TokenAuthorizer {
+class MockAuth extends BaseTokenAuthorizer {
   get _impl_nonTokenPrefix() {
     return 'nontoken-';
   }

@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Context, ContextInfo, TokenAuthorizer } from '@bayou/api-server';
+import { BaseTokenAuthorizer, Context, ContextInfo } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 
@@ -17,7 +17,7 @@ describe('@bayou/api-server/ContextInfo', () => {
     });
 
     it('accepts two valid arguments and produces a frozen instance', () => {
-      const result = new ContextInfo(new Codec(), new TokenAuthorizer());
+      const result = new ContextInfo(new Codec(), new BaseTokenAuthorizer());
       assert.isFrozen(result);
     });
 
@@ -38,7 +38,7 @@ describe('@bayou/api-server/ContextInfo', () => {
 
   describe('.tokenAuthorizer', () => {
     it('is the non-`null` value passed into the constructor', () => {
-      const ta = new TokenAuthorizer();
+      const ta = new BaseTokenAuthorizer();
       const ci = new ContextInfo(new Codec(), ta);
 
       assert.strictEqual(ci.tokenAuthorizer, ta);
@@ -59,7 +59,7 @@ describe('@bayou/api-server/ContextInfo', () => {
 
   describe('makeContext()', () => {
     it('makes an instance of `Context` with this instance as the `info` and with the given logger', () => {
-      const ci     = new ContextInfo(new Codec(), new TokenAuthorizer());
+      const ci     = new ContextInfo(new Codec(), new BaseTokenAuthorizer());
       const log    = new Logger('florp');
       const result = ci.makeContext(log);
 

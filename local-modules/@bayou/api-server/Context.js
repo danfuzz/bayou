@@ -61,7 +61,7 @@ export default class Context extends CommonBase {
     return this._log;
   }
 
-  /** {TokenAuthorizer|null} The token authorizer to use. */
+  /** {BaseTokenAuthorizer|null} The token authorizer to use. */
   get tokenAuthorizer() {
     return this._info.tokenAuthorizer;
   }

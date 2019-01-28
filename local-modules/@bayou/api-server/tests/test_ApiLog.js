@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken, Message } from '@bayou/api-common';
-import { TokenAuthorizer } from '@bayou/api-server';
+import { BaseTokenAuthorizer } from '@bayou/api-server';
 import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 
@@ -14,10 +14,10 @@ import { Functor } from '@bayou/util-common';
 import ApiLog from '../ApiLog';
 
 /**
- * Partial and simple implementation of {@link TokenAuthorizer}. Only includes
- * what's required for testing.
+ * Partial and simple implementation of {@link BaseTokenAuthorizer}. Only
+ * includes what's required for testing.
  */
-class MockTokenAuthorizer extends TokenAuthorizer {
+class MockTokenAuthorizer extends BaseTokenAuthorizer {
   isToken(string) {
     return /^token-/.test(string);
   }

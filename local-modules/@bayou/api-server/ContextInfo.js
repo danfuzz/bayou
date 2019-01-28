@@ -5,8 +5,8 @@
 import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
+import BaseTokenAuthorizer from './BaseTokenAuthorizer';
 import Context from './Context';
-import TokenAuthorizer from './TokenAuthorizer';
 
 /**
  * All the info needed to construct instances of {@link Context}, except for
@@ -17,9 +17,9 @@ export default class ContextInfo extends CommonBase {
    * Constructs an instance.
    *
    * @param {Codec} codec Codec to use for all connections / sessions.
-   * @param {TokenAuthorizer|null} [tokenAuthorizer = null] Optional authorizer
-   *   for bearer tokens. If non-`null`, this is used to map bearer tokens into
-   *   usable target objects.
+   * @param {BaseTokenAuthorizer|null} [tokenAuthorizer = null] Optional
+   *   authorizer for bearer tokens. If non-`null`, this is used to map bearer
+   *   tokens into usable target objects.
    */
   constructor(codec, tokenAuthorizer = null) {
     super();
@@ -28,11 +28,11 @@ export default class ContextInfo extends CommonBase {
     this._codec = Codec.check(codec);
 
     /**
-     * {TokenAuthorizer|null} If non-`null`, authorizer to use in order to
+     * {BaseTokenAuthorizer|null} If non-`null`, authorizer to use in order to
      * translate bearer tokens to target objects.
      */
     this._tokenAuthorizer =
-      (tokenAuthorizer === null) ? null : TokenAuthorizer.check(tokenAuthorizer);
+      (tokenAuthorizer === null) ? null : BaseTokenAuthorizer.check(tokenAuthorizer);
 
     Object.freeze(this);
   }
@@ -42,7 +42,7 @@ export default class ContextInfo extends CommonBase {
     return this._codec;
   }
 
-  /** {TokenAuthorizer|null} The token authorizer to use. */
+  /** {BaseTokenAuthorizer|null} The token authorizer to use. */
   get tokenAuthorizer() {
     return this._tokenAuthorizer;
   }
