@@ -96,7 +96,7 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns the same `Remote` when given the same `ProxiedObject`', () => {
       const info    = new ContextInfo(new Codec());
-      const ctx     = new Context(info, 'tag');
+      const ctx     = new Context(info, new Logger('some-tag'));
       const obj     = { some: 'object' };
       const po      = new ProxiedObject(obj);
       const result1 = ctx.getRemoteFor(po);
