@@ -46,7 +46,7 @@ export default class Target extends CommonBase {
     /** {Schema} Schema for {@link #_directObject}. */
     this._schema = schema || new Schema(directObject);
 
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
