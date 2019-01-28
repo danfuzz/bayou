@@ -15,12 +15,6 @@ import Target from './Target';
 const log = new Logger('api');
 
 /**
- * {Int} The amount of time in msec a target must be idle and unaccessed before
- * it is considered sufficiently idle to warrant automated cleanup.
- */
-const IDLE_TIME_MSEC = 4 * 60 * 60 * 1000; // Four hours.
-
-/**
  * Binding context for an API server or session therein. Instances of this class
  * are used to map from IDs to `Target` instances, including targets which are
  * ephemerally bound to the session as well as ones that are authorized via
@@ -229,7 +223,7 @@ export default class Context extends CommonBase {
   /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist. This only checks this instance's
-   * `_map`; it does _not_ try to do token authorization.
+   * {@link #_map}; it does _not_ try to do token authorization.
    *
    * @param {string} id The target ID.
    * @returns {Target|null} The so-identified target, or `null` if unbound.
@@ -237,45 +231,8 @@ export default class Context extends CommonBase {
   _getOrNull(id) {
     TString.check(id);
 
-    this._idleCleanupIfNecessary();
-
     const result = this._map.get(id);
     return (result === undefined) ? null : result;
-  }
-
-  /**
-   * Performs idle target cleanup, but only if it's been long enough since the
-   * last time this was done. "Long enough" is defined to be 1/4 of the
-   * {@link #IDLE_TIME_MSEC}, that is to say, we allow 25% slop on idle time
-   * checks, erring on the side of _keeping_ a "stale" target.
-   */
-  _idleCleanupIfNecessary() {
-    const now       = Date.now();
-    const idleLimit = now - IDLE_TIME_MSEC;
-    const map       = this._map;
-    const remoteMap = this._remoteMap;
-
-    if (now < (this._lastIdleCleanup + (IDLE_TIME_MSEC / 4))) {
-      // Cleaning already happened recently.
-      return;
-    }
-
-    this._lastIdleCleanup = now;
-
-    this._log.event.idleCleanup('start');
-
-    // Note: The ECMAScript spec guarantees that it is safe to delete keys from
-    // a map while iterating over it. See
-    // <https://tc39.github.io/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind>.
-    for (const [id, target] of map) {
-      if (target.wasIdleAsOf(idleLimit)) {
-        this._log.event.idleCleanupRemoved(id);
-        map.delete(id);
-        remoteMap.delete(target.directObject);
-      }
-    }
-
-    this._log.event.idleCleanup('done');
   }
 
   /**
