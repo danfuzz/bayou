@@ -135,14 +135,6 @@ export default class Target extends CommonBase {
   }
 
   /**
-   * Sets this instance to be "evergreen," that is, to never be considered
-   * idle.
-   */
-  setEvergreen() {
-    this._lastAccess = EVERGREEN;
-  }
-
-  /**
    * Takes a timestamp (standard Unix-ish msec) and indicates whether this
    * instance was considered idle as of that time.
    *

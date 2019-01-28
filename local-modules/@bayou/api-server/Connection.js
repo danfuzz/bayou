@@ -60,7 +60,6 @@ export default class Connection extends CommonBase {
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
     const metaTarget = new Target('meta', new MetaHandler(this));
-    metaTarget.setEvergreen();
     this._context.addTarget(metaTarget);
 
     this._log.event.open();
