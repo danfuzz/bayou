@@ -46,15 +46,6 @@ export default class Target extends CommonBase {
     /** {Schema} Schema for {@link #_directObject}. */
     this._schema = schema || new Schema(directObject);
 
-    /**
-     * {Int|'evergreen'} Timestamp (msec) when the {@link #directObject} was
-     * last accessed or called, or the string constant `evergreen` to indicate
-     * that this instance should never be considered idle. This is used to drive
-     * automated cleanup of idle targets mapped by instances of
-     * {@link api-server.Context}.
-     */
-    this._lastAccess = Date.now();
-
     Object.seal(this);
   }
 
