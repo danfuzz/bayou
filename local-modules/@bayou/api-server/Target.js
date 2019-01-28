@@ -9,12 +9,6 @@ import { CommonBase, Errors, Functor } from '@bayou/util-common';
 import Schema from './Schema';
 
 /**
- * {string} Constant that indicates an "evergreen" (never idle / immortal)
- * instance.
- */
-const EVERGREEN = 'evergreen';
-
-/**
  * Wrapper for an object which is callable through the API. A target can be
  * either "controlled" by a key (that is, have access restricted by a key) or be
  * "uncontrolled" (that is, be generally available without additional permission
@@ -70,7 +64,6 @@ export default class Target extends CommonBase {
   * _not_ currently idle.
   */
   get directObject() {
-    this.refresh();
     return this._directObject;
   }
 
@@ -114,23 +107,9 @@ export default class Target extends CommonBase {
     // Listed in the schema as a method. So it exists, is public, is in
     // fact bound to a function, etc.
 
-    this.refresh();
-
     const obj  = this._directObject;
     const impl = obj[name];
 
     return impl.apply(obj, payload.args);
-  }
-
-  /**
-   * "Refreshes" this instance in terms of access time. This is no different
-   * than just saying `this.directObject` (and ignoring the result). It exists
-   * as an explicitly different method so as to provide a solid way to convey
-   * intent at call sites.
-   */
-  refresh() {
-    if (this._lastAccess !== EVERGREEN) {
-      this._lastAccess = Date.now();
-    }
   }
 }
