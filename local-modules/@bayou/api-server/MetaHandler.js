@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import BaseConnection from './BaseConnection';
+
 /**
  * Class to handle meta-requests.
  */
@@ -9,14 +11,11 @@ export default class MetaHandler {
   /**
    * Constructs an instance.
    *
-   * @param {Connection} connection The connection.
+   * @param {BaseConnection} connection The connection.
    */
   constructor(connection) {
-    /** {Connection} The connection. */
-    this._connection = connection;
-
-    /** {Logger} The connection-specific logger. */
-    this._log = connection.log;
+    /** {BaseConnection} The connection. */
+    this._connection = BaseConnection.check(connection);
 
     Object.freeze(this);
   }

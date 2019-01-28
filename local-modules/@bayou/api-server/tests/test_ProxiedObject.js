@@ -27,13 +27,13 @@ const INVALID_TARGETS = [
 
 describe('@bayou/api-server/ProxiedObject', () => {
   describe('constructor()', () => {
-    it('should accept arbitrary objects', () => {
+    it('accepts arbitrary objects', () => {
       for (const t of VALID_TARGETS) {
         assert.doesNotThrow(() => new ProxiedObject(t), inspect(t));
       }
     });
 
-    it('should reject non-objects', () => {
+    it('rejects non-objects', () => {
       for (const t of INVALID_TARGETS) {
         assert.throws(() => new ProxiedObject(t), /badValue/, inspect(t));
       }
@@ -41,7 +41,7 @@ describe('@bayou/api-server/ProxiedObject', () => {
   });
 
   describe('.target', () => {
-    it('should be the same as the `target` passed to the constructor', () => {
+    it('is the same as the `target` passed to the constructor', () => {
       for (const t of VALID_TARGETS) {
         const str = inspect(t);
         const po  = new ProxiedObject(t);
@@ -51,7 +51,7 @@ describe('@bayou/api-server/ProxiedObject', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should be a single-element array with the same contents as the `target` passed to the constructor', () => {
+    it('is a single-element array with the same contents as the `target` passed to the constructor', () => {
       for (const t of VALID_TARGETS) {
         const str = inspect(t);
         const po  = new ProxiedObject(t);

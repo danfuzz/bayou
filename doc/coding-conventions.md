@@ -116,6 +116,8 @@ taking into account recent additions to the language.
 
 #### Class definitions
 
+* Base Classes &mdash; Base classes are typically named with the prefix `Base`.
+
 * Private fields and methods &mdash; This project is coded as if JavaScript
   will grow the ability to have private fields and methods on classes. As such,
   an underscore (`_`) prefix is used on names that are supposed to be treated as

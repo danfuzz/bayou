@@ -6,12 +6,12 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken } from '@bayou/api-common';
-import { TokenAuthorizer } from '@bayou/api-server';
+import { BaseTokenAuthorizer } from '@bayou/api-server';
 
-describe('@bayou/api-server/TokenAuthorizer', () => {
+describe('@bayou/api-server/BaseTokenAuthorizer', () => {
   describe('.nonTokenPrefix', () => {
-    it('should call through to the `_impl`', () => {
-      class Authie extends TokenAuthorizer {
+    it('calls through to the `_impl`', () => {
+      class Authie extends BaseTokenAuthorizer {
         get _impl_nonTokenPrefix() {
           return 'foomp';
         }
@@ -20,8 +20,8 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
       assert.strictEqual(new Authie().nonTokenPrefix, 'foomp');
     });
 
-    it('should reject a bad subclass implementation', () => {
-      class Authie extends TokenAuthorizer {
+    it('rejects a bad subclass implementation', () => {
+      class Authie extends BaseTokenAuthorizer {
         get _impl_nonTokenPrefix() {
           return ['not just a string'];
         }
@@ -32,8 +32,8 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
   });
 
   describe('isToken()', () => {
-    it('should call through to the `_impl` given a string', () => {
-      class Authie extends TokenAuthorizer {
+    it('calls through to the `_impl` given a string', () => {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value) {
           return value.startsWith('token-');
         }
@@ -45,8 +45,8 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
       assert.isFalse(au.isToken('not-a-token'));
     });
 
-    it('should reject a non-string without calling through to the `_impl`', () => {
-      class Authie extends TokenAuthorizer {
+    it('rejects a non-string without calling through to the `_impl`', () => {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           throw new Error('Should not have been called.');
         }
@@ -59,8 +59,8 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
       assert.throws(() => au.isToken(['x']), /badValue/);
     });
 
-    it('should reject a bad subclass implementation', () => {
-      class Authie extends TokenAuthorizer {
+    it('rejects a bad subclass implementation', () => {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           return 'this is not a boolean';
         }
@@ -72,7 +72,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
 
   describe('targetFromToken()', () => {
     it('should call through to the `_impl` given a `BearerToken`', async () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value) {
           return { got: value };
         }
@@ -86,7 +86,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should convert a string to a `BearerToken` then through to the `_impl`', async () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value) {
           return { got: value };
         }
@@ -107,7 +107,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should reject a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         _impl_targetFromToken(value_unused) {
           throw new Error('Should not have been called.');
         }
@@ -123,7 +123,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should accept `null` from the `_impl`', async () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value_unused) {
           return null;
         }
@@ -136,7 +136,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should reject a bad subclass implementation', () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         _impl_targetFromToken(value_unused) {
           // Supposed to be an object or `null`.
           return 123;
@@ -151,7 +151,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
 
   describe('tokenFromString()', () => {
     it('should validate via `isToken()` given a string, and call through to the `_impl`', () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value) {
           return value.startsWith('token-');
         }
@@ -169,7 +169,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should reject a non-string without calling through to any `_impl`', () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           throw new Error('Should not have been called.');
         }
@@ -187,7 +187,7 @@ describe('@bayou/api-server/TokenAuthorizer', () => {
     });
 
     it('should reject a bad subclass implementation', () => {
-      class Authie extends TokenAuthorizer {
+      class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           return true;
         }

@@ -2,16 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TokenAuthorizer } from '@bayou/api-server';
+import { BaseTokenAuthorizer } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server';
 
 import Application from './Application';
 import AuthorAccess from './AuthorAccess';
 
 /**
- * Application-specific implementation of {@link TokenAuthorizer}.
+ * Application-specific implementation of {@link BaseTokenAuthorizer}.
  */
-export default class AppAuthorizer extends TokenAuthorizer {
+export default class AppAuthorizer extends BaseTokenAuthorizer {
   /**
    * Constructs an instance.
    *

@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
@@ -11,17 +12,20 @@ import MetaHandler from './MetaHandler';
 import ProxiedObject from './ProxiedObject';
 import Target from './Target';
 
+/** {Logger} Logger for this module. */
+const log = new Logger('api');
+
 /**
- * Base class for connections. Each `Connection` represents a single connection
- * over some mode of transport. Subclasses define the specifics of any given
- * mode of transport.
+ * Base class for connections. Each instance (of a concrete subclass) represents
+ * a single connection over some mode of transport. Subclasses define the
+ * specifics of any given mode of transport.
  *
  * This (base) class is directly responsible for interpreting and responding to
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
  */
-export default class Connection extends CommonBase {
+export default class BaseConnection extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -37,16 +41,16 @@ export default class Connection extends CommonBase {
      */
     this._connectionId = Random.shortLabel('conn');
 
-    /** {Context} The binding context to provide access to. */
-    this._context = ContextInfo.check(contextInfo).makeContext(this._connectionId);
-
-    /** {Codec} The codec to use. */
-    this._codec = this._context.codec;
-
     /**
      * {Logger} Logger which includes the connection ID in the logging context.
      */
-    this._log = this._context.log;
+    this._log = log.withAddedContext(this._connectionId);
+
+    /** {Context} The binding context to provide access to. */
+    this._context = ContextInfo.check(contextInfo).makeContext(this._log);
+
+    /** {Codec} The codec to use. */
+    this._codec = this._context.codec;
 
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, this._context.tokenAuthorizer);
