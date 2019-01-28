@@ -133,22 +133,4 @@ export default class Target extends CommonBase {
       this._lastAccess = Date.now();
     }
   }
-
-  /**
-   * Takes a timestamp (standard Unix-ish msec) and indicates whether this
-   * instance was considered idle as of that time.
-   *
-   * @param {Int} whenMsec Timestamp which the questions is with respect to.
-   * @returns {boolean} `true` iff this instance has been idle since `whenMsec`
-   *   or earlier.
-   */
-  wasIdleAsOf(whenMsec) {
-    const lastAccess = this._lastAccess;
-
-    if (lastAccess === EVERGREEN) {
-      return false;
-    } else {
-      return (lastAccess <= whenMsec);
-    }
-  }
 }
