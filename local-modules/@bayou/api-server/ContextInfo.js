@@ -49,12 +49,12 @@ export default class ContextInfo extends CommonBase {
 
   /**
    * Makes a new instance of {@link Context}, with this instance as the `info`
-   * and with the given log tag.
+   * and with the given logger.
    *
-   * @param {string} logTag The log tag to use.
+   * @param {BaseLogger} log The logger to use.
    * @returns {Context} An appropriately-constructed instance.
    */
-  makeContext(logTag) {
-    return new Context(this, logTag);
+  makeContext(log) {
+    return new Context(this, log);
   }
 }

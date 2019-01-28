@@ -3,16 +3,13 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Remote } from '@bayou/api-common';
-import { Logger } from '@bayou/see-all';
+import { BaseLogger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ContextInfo from './ContextInfo';
 import ProxiedObject from './ProxiedObject';
 import Target from './Target';
-
-/** {Logger} Logger. */
-const log = new Logger('api');
 
 /**
  * Binding context for an API server or session therein. Instances of this class
@@ -27,9 +24,9 @@ export default class Context extends CommonBase {
    *
    * @param {ContextInfo} info The typically-fixed parameters used to construct
    *   instances.
-   * @param {string} logTag Tag to use as part of the logging prefix.
+   * @param {BaseLogger} log Logger to use for this instance.
    */
-  constructor(info, logTag) {
+  constructor(info, log) {
     super();
 
     /**
@@ -38,8 +35,8 @@ export default class Context extends CommonBase {
      */
     this._info = ContextInfo.check(info);
 
-    /** {Logger} Logger for this instance. */
-    this._log = log.withAddedContext(logTag);
+    /** {BaseLogger} Logger for this instance. */
+    this._log = BaseLogger.check(log);
 
     /** {Map<string, Target>} The underlying map from IDs to targets. */
     this._map = new Map();
@@ -59,10 +56,7 @@ export default class Context extends CommonBase {
     return this._info.codec;
   }
 
-  /**
-   * {Logger} The logger used by this instance, and for use by interrelated
-   * code.
-   */
+  /** {Logger} The logger used by this instance. */
   get log() {
     return this._log;
   }

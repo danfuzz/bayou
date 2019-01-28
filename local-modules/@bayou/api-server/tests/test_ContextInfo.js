@@ -7,6 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Context, ContextInfo, TokenAuthorizer } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
+import { Logger } from '@bayou/see-all';
 
 describe('@bayou/api-server/ContextInfo', () => {
   describe('constructor()', () => {
@@ -57,17 +58,16 @@ describe('@bayou/api-server/ContextInfo', () => {
   });
 
   describe('makeContext()', () => {
-    it('makes an instance of `Context` with this instance as the `info` and with the given tag', () => {
+    it('makes an instance of `Context` with this instance as the `info` and with the given logger', () => {
       const ci     = new ContextInfo(new Codec(), new TokenAuthorizer());
-      const tag    = 'florp';
-      const result = ci.makeContext(tag);
+      const log    = new Logger('florp');
+      const result = ci.makeContext(log);
 
       assert.instanceOf(result, Context);
       assert.strictEqual(result.codec, ci.codec);
       assert.strictEqual(result.tokenAuthorizer, ci.tokenAuthorizer);
 
-      const logContext = result.log.tag.context;
-      assert.strictEqual(logContext[logContext.length - 1], tag);
+      assert.strictEqual(result.log, log);
     });
   });
 });

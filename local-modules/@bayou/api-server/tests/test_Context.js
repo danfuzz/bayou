@@ -8,6 +8,7 @@ import { describe, it } from 'mocha';
 import { BearerToken, Remote } from '@bayou/api-common';
 import { Context, ContextInfo, ProxiedObject, TokenAuthorizer } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
+import { Logger } from '@bayou/see-all';
 
 /**
  * Mock `TokenAuthorizer` for testing.
@@ -50,13 +51,12 @@ describe('@bayou/api-server/Context', () => {
   });
 
   describe('.log', () => {
-    it('includes the `logTag` passed in on construction', () => {
+    it('is the `log` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const tag  = 'yowzers';
-      const ctx  = new Context(info, tag);
+      const log  = new Logger('yowzers');
+      const ctx  = new Context(info, log);
 
-      const logContext = ctx.log.tag.context;
-      assert.strictEqual(logContext[logContext.length - 1], tag);
+      assert.strictEqual(ctx.log, log);
     });
   });
 
