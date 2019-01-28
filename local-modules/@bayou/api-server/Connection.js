@@ -20,11 +20,6 @@ import Target from './Target';
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
- *
- * **Note:** The `context` used for the connection is set up as a separate
- * instance (effectively cloned) from the one passed into the constructor and
- * always has an extra binding of `meta` to a meta-control object that is
- * specific to the connection.
  */
 export default class Connection extends CommonBase {
   /**
