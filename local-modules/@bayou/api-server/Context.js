@@ -51,7 +51,7 @@ export default class Context extends CommonBase {
      */
     this._remoteMap = new Map();
 
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /** {Codec} The codec to use for connections / sessions. */
