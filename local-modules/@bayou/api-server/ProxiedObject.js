@@ -9,7 +9,7 @@ import { CommonBase } from '@bayou/util-common';
  * Wrapper for an object which is to be proxied over an API connection.
  * Instances of this class can be returned by methods of other proxied objects
  * to indicate that those return values should be proxied rather than returned
- * as encoded values. When a {@link Connection} encounters one of these as a
+ * as encoded values. When a {@link BaseConnection} encounters one of these as a
  * return value, it automatically registers its {@link #target} as a target in
  * the connection's associated context if not already present. If the target
  * _is_ already present, then the pre-existing target is used. In either case,

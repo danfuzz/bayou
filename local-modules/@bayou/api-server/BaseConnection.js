@@ -16,16 +16,16 @@ import Target from './Target';
 const log = new Logger('api');
 
 /**
- * Base class for connections. Each `Connection` represents a single connection
- * over some mode of transport. Subclasses define the specifics of any given
- * mode of transport.
+ * Base class for connections. Each instance (of a concrete subclass) represents
+ * a single connection over some mode of transport. Subclasses define the
+ * specifics of any given mode of transport.
  *
  * This (base) class is directly responsible for interpreting and responding to
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
  */
-export default class Connection extends CommonBase {
+export default class BaseConnection extends CommonBase {
   /**
    * Constructs an instance.
    *

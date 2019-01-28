@@ -4,12 +4,12 @@
 
 import { WebsocketCodes } from '@bayou/util-common';
 
-import Connection from './Connection';
+import BaseConnection from './BaseConnection';
 
 /**
  * Direct handler for API requests over a websocket connection.
  */
-export default class WsConnection extends Connection {
+export default class WsConnection extends BaseConnection {
   /**
    * Constructs an instance. As a side effect, the contructor attaches the
    * constructed instance to the websocket (as an event listener).
