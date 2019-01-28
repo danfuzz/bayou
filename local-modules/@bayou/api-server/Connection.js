@@ -20,16 +20,10 @@ import Target from './Target';
  * incoming message data, but without the actual transport of bytes over a
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
- *
- * **Note:** The `context` used for the connection is set up as a separate
- * instance (effectively cloned) from the one passed into the constructor and
- * always has an extra binding of `meta` to a meta-control object that is
- * specific to the connection.
  */
 export default class Connection extends CommonBase {
   /**
-   * Constructs an instance. Each instance corresponds to a separate client
-   * connection.
+   * Constructs an instance.
    *
    * @param {ContextInfo} contextInfo Construction info for the {@link Context}
    *   to use.
@@ -39,7 +33,7 @@ export default class Connection extends CommonBase {
 
     /**
      * {string} Short label string used to identify this connection in logs.
-     * _Probably_ but not _guaranteed_ to be unique.
+     * _Probably_ but not _guaranteed to be_ unique.
      */
     this._connectionId = Random.shortLabel('conn');
 
@@ -60,7 +54,6 @@ export default class Connection extends CommonBase {
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
     const metaTarget = new Target('meta', new MetaHandler(this));
-    metaTarget.setEvergreen();
     this._context.addTarget(metaTarget);
 
     this._log.event.open();

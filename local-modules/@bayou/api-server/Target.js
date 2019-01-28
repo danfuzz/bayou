@@ -9,12 +9,6 @@ import { CommonBase, Errors, Functor } from '@bayou/util-common';
 import Schema from './Schema';
 
 /**
- * {string} Constant that indicates an "evergreen" (never idle / immortal)
- * instance.
- */
-const EVERGREEN = 'evergreen';
-
-/**
  * Wrapper for an object which is callable through the API. A target can be
  * either "controlled" by a key (that is, have access restricted by a key) or be
  * "uncontrolled" (that is, be generally available without additional permission
@@ -52,16 +46,7 @@ export default class Target extends CommonBase {
     /** {Schema} Schema for {@link #_directObject}. */
     this._schema = schema || new Schema(directObject);
 
-    /**
-     * {Int|'evergreen'} Timestamp (msec) when the {@link #directObject} was
-     * last accessed or called, or the string constant `evergreen` to indicate
-     * that this instance should never be considered idle. This is used to drive
-     * automated cleanup of idle targets mapped by instances of
-     * {@link api-server.Context}.
-     */
-    this._lastAccess = Date.now();
-
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
@@ -70,7 +55,6 @@ export default class Target extends CommonBase {
   * _not_ currently idle.
   */
   get directObject() {
-    this.refresh();
     return this._directObject;
   }
 
@@ -114,49 +98,9 @@ export default class Target extends CommonBase {
     // Listed in the schema as a method. So it exists, is public, is in
     // fact bound to a function, etc.
 
-    this.refresh();
-
     const obj  = this._directObject;
     const impl = obj[name];
 
     return impl.apply(obj, payload.args);
-  }
-
-  /**
-   * "Refreshes" this instance in terms of access time. This is no different
-   * than just saying `this.directObject` (and ignoring the result). It exists
-   * as an explicitly different method so as to provide a solid way to convey
-   * intent at call sites.
-   */
-  refresh() {
-    if (this._lastAccess !== EVERGREEN) {
-      this._lastAccess = Date.now();
-    }
-  }
-
-  /**
-   * Sets this instance to be "evergreen," that is, to never be considered
-   * idle.
-   */
-  setEvergreen() {
-    this._lastAccess = EVERGREEN;
-  }
-
-  /**
-   * Takes a timestamp (standard Unix-ish msec) and indicates whether this
-   * instance was considered idle as of that time.
-   *
-   * @param {Int} whenMsec Timestamp which the questions is with respect to.
-   * @returns {boolean} `true` iff this instance has been idle since `whenMsec`
-   *   or earlier.
-   */
-  wasIdleAsOf(whenMsec) {
-    const lastAccess = this._lastAccess;
-
-    if (lastAccess === EVERGREEN) {
-      return false;
-    } else {
-      return (lastAccess <= whenMsec);
-    }
   }
 }
