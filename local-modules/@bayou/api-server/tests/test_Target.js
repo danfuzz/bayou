@@ -65,6 +65,11 @@ describe('@bayou/api-server/Target', () => {
     it('accepts `null` as the third argument', () => {
       assert.doesNotThrow(() => new Target('x', {}, null));
     });
+
+    it('produces frozen instances', () => {
+      const t = new Target('x', {});
+      assert.isFrozen(t);
+    });
   });
 
   describe('.directObject', () => {
