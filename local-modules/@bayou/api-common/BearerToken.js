@@ -14,6 +14,25 @@ import BaseKey from './BaseKey';
  */
 export default class BearerToken extends BaseKey {
   /**
+   * Redacts a string for use in error messages and logging. This is generally
+   * done in logging and error-handling code which expects that its string
+   * argument _might_ be security-sensitive.
+   *
+   * @param {string} origString The original string.
+   * @returns {string} The redacted form.
+   */
+  static redactString(origString) {
+    TString.check(origString);
+    if (origString.length >= 24) {
+      return `${origString.slice(0, 16)}...`;
+    } else if (origString.length >= 12) {
+      return `${origString.slice(0, 8)}...`;
+    } else {
+      return '...';
+    }
+  }
+
+  /**
    * Compares two arrays of `BearerToken`s for equality.
    *
    * @param {array<BearerToken>} array1 One array.
