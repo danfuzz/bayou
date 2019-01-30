@@ -10,9 +10,9 @@ import Schema from './Schema';
 
 /**
  * Wrapper for an object which is callable through the API. A target can be
- * either "controlled" by a key (that is, have access restricted by a key) or be
- * "uncontrolled" (that is, be generally available without additional permission
- * checks).
+ * either "controlled" by a token (that is, have access restricted to only those
+ * who prove knowledge of a token's secret) or be "uncontrolled" (that is, be
+ * generally available without additional authorization checks).
  */
 export default class Target extends CommonBase {
   /**

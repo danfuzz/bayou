@@ -127,7 +127,7 @@ export default class Context extends CommonBase {
           return already;
         } else {
           // The secrets don't match. This will happen, for example, when a
-          // malicious actor tries to probe for a key.
+          // malicious actor tries to probe for a token.
           throw this._targetError(idOrToken);
         }
       }
