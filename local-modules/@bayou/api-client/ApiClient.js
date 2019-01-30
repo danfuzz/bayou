@@ -134,14 +134,14 @@ export default class ApiClient extends CommonBase {
    * about the so-identified target (or if it does, whether it allows access to
    * it without further authorization).
    *
-   * @param {string|BearerToken} idOrKey ID or token for the target.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} Proxy which locally represents the so-identified
    *   server-side target.
    */
-  getProxy(idOrKey) {
-    const id = (idOrKey instanceof BearerToken)
-      ? idOrKey.id
-      : TString.check(idOrKey);
+  getProxy(idOrToken) {
+    const id = (idOrToken instanceof BearerToken)
+      ? idOrToken.id
+      : TString.check(idOrToken);
 
     return this._targets.addOrGet(id);
   }

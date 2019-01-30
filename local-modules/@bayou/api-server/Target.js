@@ -18,24 +18,24 @@ export default class Target extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
-   * @param {string|BearerToken} idOrKey Either the ID of the target (if
+   * @param {string|BearerToken} idOrToken Either the ID of the target (if
    *   uncontrolled) _or_ the token which authorizes access to the target. In
    *   the latter case, the target's `id` is considered to be the same as the
    *   token's `id`.
    * @param {object} directObject Object to be represented by this instance.
    * @param {Schema|null} schema `directObject`'s schema, if already known.
    */
-  constructor(idOrKey, directObject, schema = null) {
+  constructor(idOrToken, directObject, schema = null) {
     super();
 
     /**
      * {BearerToken|null} Token which authorizes access to the target, or `null`
      * if this is an uncontrolled instance.
      */
-    this._token = (idOrKey instanceof BearerToken) ? idOrKey : null;
+    this._token = (idOrToken instanceof BearerToken) ? idOrToken : null;
 
     /** {string} The target ID. */
-    this._id = TargetId.check((this._token === null) ? idOrKey : this._token.id);
+    this._id = TargetId.check((this._token === null) ? idOrToken : this._token.id);
 
     /**
      * {object} The object which this instance represents, wraps, and generally
