@@ -97,21 +97,6 @@ describe('@bayou/api-server/Target', () => {
     });
   });
 
-  describe('.key', () => {
-    it('is the same as a key `idOrKey` passed to the constructor', () => {
-      const id  = 'some-key-id';
-      const key = new BearerToken(id, 'this-is-secret');
-      const t  = new Target(key, {});
-      assert.strictEqual(t.key, key);
-    });
-
-    it('is `null` when a string is passed as `idOrKey` to the constructor', () => {
-      const id  = 'some-id';
-      const t   = new Target(id, {});
-      assert.isNull(t.key);
-    });
-  });
-
   describe('.schema', () => {
     it('is the same as the non-`null` `schema` passed to the constructor', () => {
       const schema = new Schema({});
@@ -134,6 +119,21 @@ describe('@bayou/api-server/Target', () => {
       const props = result.propertiesObject;
 
       assert.deepEqual(props, { blort: 'method', zorch: 'method' });
+    });
+  });
+
+  describe('.token', () => {
+    it('is the same as a key `idOrKey` passed to the constructor', () => {
+      const id  = 'some-key-id';
+      const key = new BearerToken(id, 'this-is-secret');
+      const t  = new Target(key, {});
+      assert.strictEqual(t.token, key);
+    });
+
+    it('is `null` when a string is passed as `idOrKey` to the constructor', () => {
+      const id  = 'some-id';
+      const t   = new Target(id, {});
+      assert.isNull(t.token);
     });
   });
 

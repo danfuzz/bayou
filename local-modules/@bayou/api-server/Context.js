@@ -122,7 +122,7 @@ export default class Context extends CommonBase {
 
       if (already !== null) {
         // We've seen this token ID previously in this context / session.
-        if (token.sameToken(already.key)) {
+        if (token.sameToken(already.token)) {
           // The corresponding secrets match. All's well!
           return already;
         } else {
@@ -155,7 +155,7 @@ export default class Context extends CommonBase {
 
     const result = this._getOrNull(idOrToken);
 
-    if ((result === null) || (result.key !== null)) {
+    if ((result === null) || (result.token !== null)) {
       // This uses the default error message ("unknown target") even when it's
       // due to a target existing but being controlled, so as not to reveal that
       // the ID corresponds to an existing token (which is arguably a security

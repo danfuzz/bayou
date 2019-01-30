@@ -63,17 +63,17 @@ export default class Target extends CommonBase {
     return this._id;
   }
 
+  /** {Schema} The schema of {@link #directObject}. */
+  get schema() {
+    return this._schema;
+  }
+
   /**
    * {BearerToken|null} Token which authorizes access to the target, or `null`
    * if this is an uncontrolled instance.
    */
-  get key() {
+  get token() {
     return this._token;
-  }
-
-  /** {Schema} The schema of {@link #directObject}. */
-  get schema() {
-    return this._schema;
   }
 
   /**
