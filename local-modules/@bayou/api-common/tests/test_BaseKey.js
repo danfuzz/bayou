@@ -6,7 +6,6 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BaseKey } from '@bayou/api-common';
-import { TString } from '@bayou/typecheck';
 
 const VALID_ID = '12345678';
 
@@ -73,26 +72,6 @@ describe('@bayou/api-common/BaseKey', () => {
       test('123-florp');
       test('a');
       test('like');
-    });
-  });
-
-  describe('makeChallengePair()', () => {
-    it('returns a challenge/response pair in an object', () => {
-      class FakeKey extends BaseKey {
-        _impl_challengeSecret() {
-          return '0123456789abcdef';
-        }
-      }
-
-      const key  = new FakeKey(VALID_ID);
-      const pair = key.makeChallengePair();
-
-      assert.isObject(pair);
-      assert.hasAllKeys(pair, ['challenge', 'response']);
-      assert.isString(pair.challenge);
-      assert.isString(pair.response);
-      assert.doesNotThrow(() => TString.hexBytes(pair.challenge, 8, 8));
-      assert.doesNotThrow(() => TString.hexBytes(pair.response, 32, 32));
     });
   });
 });

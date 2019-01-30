@@ -2,10 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-// **Note:** Babel's browser polyfill includes a Node-compatible `crypto`
-// module, which is why this is possible to import regardless of environment.
-import crypto from 'crypto';
-
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
@@ -59,29 +55,6 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
-   * Gets a challenge response. This is used as a tactic for two sides of a
-   * connection to authenticate each other without ever having to provide a
-   * shared secret directly over a connection.
-   *
-   * @param {string} challenge The challenge. This must be a string which was
-   *   previously returned as the `challenge` binding from a call to
-   *   {@link #makeChallengePair} (either in this process or any other).
-   * @returns {string} The challenge response. It is guaranteed to be at least
-   *   16 characters long.
-   */
-  challengeResponseFor(challenge) {
-    TString.hexBytes(challenge, 8, 8);
-
-    const secret = TString.nonEmpty(this._impl_challengeSecret());
-    const hash   = crypto.createHash('sha256');
-
-    hash.update(Buffer.from(challenge, 'hex'));
-    hash.update(Buffer.from(secret, 'hex'));
-
-    return hash.digest('hex');
-  }
-
-  /**
    * Custom inspector function, as called by `util.inspect()`, which returns a
    * string that identifies the class and includes just the URL and ID
    * properties. The main point of this implementation is to make it so that
@@ -100,20 +73,6 @@ export default class BaseKey extends CommonBase {
     return (opts.depth < 0)
       ? `${name} {...}`
       : `${name} { ${this.id} }`;
-  }
-
-  /**
-   * Creates a random challenge, to be used for authenticating a peer, and
-   * provides both it and the expected response.
-   *
-   * @returns {object} An object which maps `challenge` to a random challenge
-   *   string and `response` to the expected response.
-   */
-  makeChallengePair() {
-    const challenge = BaseKey._randomChallengeString();
-    const response  = this.challengeResponseFor(challenge);
-
-    return { challenge, response };
   }
 
   /**
