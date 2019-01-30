@@ -139,4 +139,40 @@ describe('@bayou/api-common/BearerToken', () => {
       assert.isTrue(BearerToken.sameArrays(array1, array2));
     });
   });
+
+  describe('toString()', () => {
+    it('returns a string', () => {
+      const t = new BearerToken('zorch', 'splat');
+
+      assert.isString(t.toString());
+    });
+
+    it('returns a string that contains the ID', () => {
+      function test(id) {
+        const t      = new BearerToken(id, 'boop');
+        const result = t.toString();
+
+        assert.isTrue(result.indexOf(id) >= 0, id);
+      }
+
+      test('x');
+      test('123-florp');
+      test('a');
+      test('like');
+    });
+
+    it('returns a string that does not contain the secret', () => {
+      function test(secret) {
+        const t      = new BearerToken('xyz', secret);
+        const result = t.toString();
+
+        assert.isTrue(result.indexOf(secret) < 0);
+      }
+
+      test('hello');
+      test('123-florp');
+      test('yoyoyoyoyo');
+      test('like');
+    });
+  });
 });
