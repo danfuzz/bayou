@@ -32,26 +32,6 @@ import TargetId from './TargetId';
  */
 export default class BaseKey extends CommonBase {
   /**
-   * Redacts a string for use in error messages and logging. This is generally
-   * done in logging and error-handling code which expects that its string
-   * argument _might_ be security-sensitive.
-   *
-   * @param {string} origString The original string.
-   * @returns {string} The redacted form.
-   */
-  static redactString(origString) {
-    TString.check(origString);
-
-    if (origString.length >= 24) {
-      return `${origString.slice(0, 16)}...`;
-    } else if (origString.length >= 12) {
-      return `${origString.slice(0, 8)}...`;
-    } else {
-      return '...';
-    }
-  }
-
-  /**
    * Constructs an instance with the indicated parts. Subclasses should override
    * methods as described in the documentation.
    *

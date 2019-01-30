@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, BearerToken } from '@bayou/api-common';
+import { BearerToken } from '@bayou/api-common';
 import { TBoolean, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
@@ -76,7 +76,7 @@ export default class BaseTokenAuthorizer extends CommonBase {
     if (!this.isToken(tokenString)) {
       // Redact the token string in the error to avoid leaking
       // security-sensitive information.
-      throw Errors.badValue(BaseKey.redactString(tokenString), 'bearer token');
+      throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
     }
 
     const result = this._impl_tokenFromString(tokenString);

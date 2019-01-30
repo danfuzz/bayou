@@ -11,35 +11,6 @@ import { TString } from '@bayou/typecheck';
 const VALID_ID = '12345678';
 
 describe('@bayou/api-common/BaseKey', () => {
-  describe('redactString()', () => {
-    it('fully redacts strings of length 11 or shorter', () => {
-      const FULL_STRING   = '1234567890x';
-      const EXPECT_STRING = '...';
-
-      for (let i = 0; i < FULL_STRING.length; i++) {
-        assert.strictEqual(BaseKey.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
-      }
-    });
-
-    it('drops all but the first 8 characters of strings of length 12 through 23', () => {
-      const FULL_STRING   = '1234567890abcdefghijklm';
-      const EXPECT_STRING = '12345678...';
-
-      for (let i = 12; i < FULL_STRING.length; i++) {
-        assert.strictEqual(BaseKey.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
-      }
-    });
-
-    it('drops all but the first 16 characters of strings of length 24 or greater', () => {
-      const FULL_STRING   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz';
-      const EXPECT_STRING = 'ABCDEFGHIJKLMNOP...';
-
-      for (let i = 24; i < FULL_STRING.length; i++) {
-        assert.strictEqual(BaseKey.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
-      }
-    });
-  });
-
   describe('constructor', () => {
     it('rejects an invalid ID', () => {
       assert.throws(() => new BaseKey(''), /badValue/);
