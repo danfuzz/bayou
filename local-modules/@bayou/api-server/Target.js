@@ -32,10 +32,10 @@ export default class Target extends CommonBase {
      * {BearerToken|null} Token which authorizes access to the target, or `null`
      * if this is an uncontrolled instance.
      */
-    this._key = (idOrKey instanceof BearerToken) ? idOrKey : null;
+    this._token = (idOrKey instanceof BearerToken) ? idOrKey : null;
 
     /** {string} The target ID. */
-    this._id = TargetId.check((this._key === null) ? idOrKey : this._key.id);
+    this._id = TargetId.check((this._token === null) ? idOrKey : this._token.id);
 
     /**
      * {object} The object which this instance represents, wraps, and generally
@@ -68,7 +68,7 @@ export default class Target extends CommonBase {
    * if this is an uncontrolled instance.
    */
   get key() {
-    return this._key;
+    return this._token;
   }
 
   /** {Schema} The schema of {@link #directObject}. */
