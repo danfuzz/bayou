@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, TargetId } from '@bayou/api-common';
+import { BearerToken, TargetId } from '@bayou/api-common';
 import { TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
@@ -18,10 +18,10 @@ export default class Target extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
-   * @param {string|BaseKey} idOrKey Either the ID of the target (if
-   *   uncontrolled) _or_ the key which controls access to the target. In the
-   *   latter case, the target's `id` is considered to be the same as the key's
-   *   `id`.
+   * @param {string|BearerToken} idOrKey Either the ID of the target (if
+   *   uncontrolled) _or_ the token which authorizes access to the target. In
+   *   the latter case, the target's `id` is considered to be the same as the
+   *   token's `id`.
    * @param {object} directObject Object to be represented by this instance.
    * @param {Schema|null} schema `directObject`'s schema, if already known.
    */
@@ -29,10 +29,10 @@ export default class Target extends CommonBase {
     super();
 
     /**
-     * {BaseKey|null} The access key, or `null` if this is an uncontrolled
-     * target.
+     * {BearerToken|null} Token which authorizes access to the target, or `null`
+     * if this is an uncontrolled instance.
      */
-    this._key = (idOrKey instanceof BaseKey) ? idOrKey : null;
+    this._key = (idOrKey instanceof BearerToken) ? idOrKey : null;
 
     /** {string} The target ID. */
     this._id = TargetId.check((this._key === null) ? idOrKey : this._key.id);
@@ -64,8 +64,8 @@ export default class Target extends CommonBase {
   }
 
   /**
-   * {BaseKey|null} The access control key or `null` if this is an
-   * uncontrolled target.
+   * {BearerToken|null} Token which authorizes access to the target, or `null`
+   * if this is an uncontrolled instance.
    */
   get key() {
     return this._key;
