@@ -29,7 +29,7 @@ const INVALID_DIRECTS = [
 
 describe('@bayou/api-server/Target', () => {
   describe('constructor()', () => {
-    it('accepts a key as the first argument', () => {
+    it('accepts a `BearerToken` as the first argument', () => {
       assert.doesNotThrow(() => new Target(new BearerToken('x', 'y'), {}));
     });
 
@@ -37,7 +37,7 @@ describe('@bayou/api-server/Target', () => {
       assert.doesNotThrow(() => new Target('x', {}));
     });
 
-    it('rejects a non-key object as the first argument', () => {
+    it('rejects a non-`BearerToken` object as the first argument', () => {
       assert.throws(() => new Target(new Set('bad'), {}), /badValue/);
     });
 
@@ -83,32 +83,17 @@ describe('@bayou/api-server/Target', () => {
   });
 
   describe('.id', () => {
-    it('is the same as a string `idOrKey` passed to the constructor', () => {
+    it('is the same as a string `idOrToken` passed to the constructor', () => {
       const id = 'some-id';
       const t  = new Target(id, {});
       assert.strictEqual(t.id, id);
     });
 
-    it('is the same as the key\'s `id` when a key is passed as `idOrKey` to the constructor', () => {
-      const id  = 'some-key-id';
-      const key = new BearerToken(id, 'this-is-secret');
-      const t   = new Target(key, {});
+    it('is the same as the token\'s `id` when a `BearerToken` is passed as `idOrToken` to the constructor', () => {
+      const id    = 'some-token-id';
+      const token = new BearerToken(id, 'this-is-secret');
+      const t     = new Target(token, {});
       assert.strictEqual(t.id, id);
-    });
-  });
-
-  describe('.key', () => {
-    it('is the same as a key `idOrKey` passed to the constructor', () => {
-      const id  = 'some-key-id';
-      const key = new BearerToken(id, 'this-is-secret');
-      const t  = new Target(key, {});
-      assert.strictEqual(t.key, key);
-    });
-
-    it('is `null` when a string is passed as `idOrKey` to the constructor', () => {
-      const id  = 'some-id';
-      const t   = new Target(id, {});
-      assert.isNull(t.key);
     });
   });
 
@@ -134,6 +119,21 @@ describe('@bayou/api-server/Target', () => {
       const props = result.propertiesObject;
 
       assert.deepEqual(props, { blort: 'method', zorch: 'method' });
+    });
+  });
+
+  describe('.token', () => {
+    it('is the same as a `BearerToken` `idOrToken` passed to the constructor', () => {
+      const id    = 'some-token-id';
+      const token = new BearerToken(id, 'this-is-secret');
+      const t     = new Target(token, {});
+      assert.strictEqual(t.token, token);
+    });
+
+    it('is `null` when a string is passed as `idOrToken` to the constructor', () => {
+      const id  = 'some-id';
+      const t   = new Target(id, {});
+      assert.isNull(t.token);
     });
   });
 

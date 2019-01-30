@@ -8,6 +8,35 @@ import { describe, it } from 'mocha';
 import { BearerToken } from '@bayou/api-common';
 
 describe('@bayou/api-common/BearerToken', () => {
+  describe('redactString()', () => {
+    it('fully redacts strings of length 11 or shorter', () => {
+      const FULL_STRING   = '1234567890x';
+      const EXPECT_STRING = '...';
+
+      for (let i = 0; i < FULL_STRING.length; i++) {
+        assert.strictEqual(BearerToken.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
+      }
+    });
+
+    it('drops all but the first 8 characters of strings of length 12 through 23', () => {
+      const FULL_STRING   = '1234567890abcdefghijklm';
+      const EXPECT_STRING = '12345678...';
+
+      for (let i = 12; i < FULL_STRING.length; i++) {
+        assert.strictEqual(BearerToken.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
+      }
+    });
+
+    it('drops all but the first 16 characters of strings of length 24 or greater', () => {
+      const FULL_STRING   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz';
+      const EXPECT_STRING = 'ABCDEFGHIJKLMNOP...';
+
+      for (let i = 24; i < FULL_STRING.length; i++) {
+        assert.strictEqual(BearerToken.redactString(FULL_STRING.slice(0, i)), EXPECT_STRING, `length ${i}`);
+      }
+    });
+  });
+
   describe('constructor()', () => {
     it('returns a frozen instance', () => {
       const token = new BearerToken('x', 'y');
@@ -108,6 +137,42 @@ describe('@bayou/api-common/BearerToken', () => {
       const array2 = [token1, token2, token3, token4];
 
       assert.isTrue(BearerToken.sameArrays(array1, array2));
+    });
+  });
+
+  describe('toString()', () => {
+    it('returns a string', () => {
+      const t = new BearerToken('zorch', 'splat');
+
+      assert.isString(t.toString());
+    });
+
+    it('returns a string that contains the ID', () => {
+      function test(id) {
+        const t      = new BearerToken(id, 'boop');
+        const result = t.toString();
+
+        assert.isTrue(result.indexOf(id) >= 0, id);
+      }
+
+      test('x');
+      test('123-florp');
+      test('a');
+      test('like');
+    });
+
+    it('returns a string that does not contain the secret', () => {
+      function test(secret) {
+        const t      = new BearerToken('xyz', secret);
+        const result = t.toString();
+
+        assert.isTrue(result.indexOf(secret) < 0);
+      }
+
+      test('hello');
+      test('123-florp');
+      test('yoyoyoyoyo');
+      test('like');
     });
   });
 });

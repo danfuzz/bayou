@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, BearerToken } from '@bayou/api-common';
+import { BearerToken } from '@bayou/api-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -91,7 +91,7 @@ export default class SessionInfo extends CommonBase {
     const token         = this._authorToken;
     const redactedToken = (token instanceof BearerToken)
       ? token.safeString
-      : BaseKey.redactString(token);
+      : BearerToken.redactString(token);
 
     const result = {
       serverUrl:   this._serverUrl,

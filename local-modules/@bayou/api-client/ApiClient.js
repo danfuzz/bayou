@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseKey, CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
+import { BearerToken, CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -129,19 +129,19 @@ export default class ApiClient extends CommonBase {
 
   /**
    * Gets a proxy for the target with the given ID or which is controlled by the
-   * given key. This will create the proxy if it did not previously exist. This
-   * method does _not_ check to see if the far side of the connection knows
+   * given token. This will create the proxy if it did not previously exist.
+   * This method does _not_ check to see if the far side of the connection knows
    * about the so-identified target (or if it does, whether it allows access to
    * it without further authorization).
    *
-   * @param {string|BaseKey} idOrKey ID or key for the target.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} Proxy which locally represents the so-identified
    *   server-side target.
    */
-  getProxy(idOrKey) {
-    const id = (idOrKey instanceof BaseKey)
-      ? idOrKey.id
-      : TString.check(idOrKey);
+  getProxy(idOrToken) {
+    const id = (idOrToken instanceof BearerToken)
+      ? idOrToken.id
+      : TString.check(idOrToken);
 
     return this._targets.addOrGet(id);
   }

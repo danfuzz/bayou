@@ -2,17 +2,45 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TString } from '@bayou/typecheck';
+import { inspect } from 'util';
 
-import BaseKey from './BaseKey';
+import { TString } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
+
+import TargetId from './TargetId';
 
 /**
- * Bearer token, which is a kind of key where the secret portion is sent
- * directly to a counterparty (as opposed to merely proving that one knows the
- * secret). In this implementation, a bearer token explicitly has a portion
- * which is considered its non-secret ID.
+ * Bearer token, which is a kind of authentication / authorization key wherein
+ * a secret portion is commonly sent directly to a counterparty (as opposed to
+ * merely proving that one knows the secret). In this implementation, a bearer
+ * token explicitly has a portion which is considered its non-secret ID.
+ *
+ * This implementation does not assume any particular syntax for a full
+ * secret-containing token. It merely accepts two constructor arguments, one
+ * which is taken to be the non-secret ID, and the other which is the complete
+ * token (which should have within it, somehow, both an ID portion and a secret
+ * portion).
  */
-export default class BearerToken extends BaseKey {
+export default class BearerToken extends CommonBase {
+  /**
+   * Redacts a string for use in error messages and logging. This is generally
+   * done in logging and error-handling code which expects that its string
+   * argument _might_ be security-sensitive.
+   *
+   * @param {string} origString The original string.
+   * @returns {string} The redacted form.
+   */
+  static redactString(origString) {
+    TString.check(origString);
+    if (origString.length >= 24) {
+      return `${origString.slice(0, 16)}...`;
+    } else if (origString.length >= 12) {
+      return `${origString.slice(0, 8)}...`;
+    } else {
+      return '...';
+    }
+  }
+
   /**
    * Compares two arrays of `BearerToken`s for equality.
    *
@@ -39,31 +67,66 @@ export default class BearerToken extends BaseKey {
   /**
    * Constructs an instance with the indicated parts.
    *
-   * @param {string} id Key / resource identifier. This must be a `TargetId`.
-   * @param {string} secretToken Complete token.
+   * @param {string} id Resource identifier. This must be a `TargetId`.
+   * @param {string} secretToken Complete token, which contains a secret.
    */
   constructor(id, secretToken) {
-    super(id);
-    TString.check(secretToken);
+    super();
 
-    /** {string} Secret token. */
-    this._secretToken = secretToken;
+    /** {string} Resource identifier. */
+    this._id = TargetId.check(id);
+
+    /** {string} Complete token, which contains a secret. */
+    this._secretToken = TString.check(secretToken);
 
     Object.freeze(this);
   }
 
+  /** {string} Resource identifier. */
+  get id() {
+    return this._id;
+  }
+
   /**
-   * {string} Full secret token. **Note:** It is important to _never_ reveal
-   * this value across an unencrypted API boundary or to log it.
+   * {string} Printable and security-safe (i.e. redacted) form of the token. It
+   * includes an "ASCII ellipsis" (`...`) suffix to indicate that it is not the
+   * full token value.
+   */
+  get safeString() {
+    return `${this.id}-...`;
+  }
+
+  /**
+   * {string} Complete token, which contains a secret. **Note:** It is important
+   * to _never_ reveal this value across an unencrypted API boundary, nor to log
+   * it.
    */
   get secretToken() {
     return this._secretToken;
   }
 
   /**
+   * Custom inspector function, as called by `util.inspect()`, which returns a
+   * string that identifies the class and includes just the ID. The main point
+   * of this is so that casual stringification of instances (which e.g. might
+   * get logged) won't leak the secret portion of the instance.
+   *
+   * @param {Int} depth_unused Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth_unused, opts) {
+    const name = this.constructor.name;
+
+    return (opts.depth < 0)
+      ? `${name} {...}`
+      : `${name} { id: ${this.id} }`;
+  }
+
+  /**
    * Compares this instance to another.
    *
-   * @param {BaseKey|undefined|null} other Instance to compare to.
+   * @param {BearerToken|undefined|null} other Instance to compare to.
    * @returns {boolean} `true` iff the two instances are both of this class and
    *   contain the same full secret token value.
    */
@@ -72,33 +135,8 @@ export default class BearerToken extends BaseKey {
       return false;
     }
 
-    // It's an error if `other` is not a key, but it's merely a `false` return
-    // if `other` isn't an instance of this class.
-    BaseKey.check(other);
-    if (!(other instanceof BearerToken)) {
-      return false;
-    }
+    BearerToken.check(other);
 
     return (this.id === other.id) && (this._secretToken === other._secretToken);
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @returns {string} The secret to use for challenges, as a hex string.
-   */
-  _impl_challengeSecret() {
-    const buf = Buffer.from(this._secretToken, 'utf-8');
-
-    return buf.toString('hex');
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * @returns {string} The safe string form of this instance.
-   */
-  _impl_safeString() {
-    return `${this.id}-...`;
   }
 }

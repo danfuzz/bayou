@@ -270,8 +270,9 @@ export default class DebugTools extends CommonBase {
   }
 
   /**
-   * Produces an authorization key for editing a document, and responds with
-   * HTML which uses it. The result is an HTML page that includes the editor.
+   * Produces identification and authorization info for editing a document, and
+   * responds with HTML which uses it. The result is an HTML page that includes
+   * the editor.
    *
    * @param {object} req HTTP request.
    * @param {object} res HTTP response handler.
