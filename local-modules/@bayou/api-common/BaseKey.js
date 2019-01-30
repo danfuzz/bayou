@@ -5,7 +5,7 @@
 import { inspect } from 'util';
 
 import { TString } from '@bayou/typecheck';
-import { CommonBase, Random } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import TargetId from './TargetId';
 
@@ -76,19 +76,6 @@ export default class BaseKey extends CommonBase {
   }
 
   /**
-   * Value which should be used as the secret for this instance, when
-   * constructing a challenge-response pair. Subclasses wishing to support
-   * challenges must override this.
-   *
-   * @abstract
-   * @returns {string} The secret to use for challenges. Must be a non-empty
-   *   string of hexadecimal digits.
-   */
-  _impl_challengeSecret() {
-    return this._mustOverride();
-  }
-
-  /**
    * Main implementation of {@link #safeString}. Subclasses must provide an
    * implementation of this.
    *
@@ -97,15 +84,5 @@ export default class BaseKey extends CommonBase {
    */
   _impl_safeString() {
     return this._mustOverride();
-  }
-
-  /**
-   * Creates and returns a random challenge string, as a sequence of hexadecimal
-   * digits.
-   *
-   * @returns {string} A random challenge string.
-   */
-  static _randomChallengeString() {
-    return Random.hexByteString(8);
   }
 }

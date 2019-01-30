@@ -85,17 +85,6 @@ export default class BearerToken extends BaseKey {
   /**
    * Implementation as required by the superclass.
    *
-   * @returns {string} The secret to use for challenges, as a hex string.
-   */
-  _impl_challengeSecret() {
-    const buf = Buffer.from(this._secretToken, 'utf-8');
-
-    return buf.toString('hex');
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
    * @returns {string} The safe string form of this instance.
    */
   _impl_safeString() {
