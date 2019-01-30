@@ -9,10 +9,10 @@ import { TString } from '@bayou/typecheck';
 import BaseKey from './BaseKey';
 
 /**
- * Bearer token, which is a kind of key where the secret portion is sent
- * directly to a counterparty (as opposed to merely proving that one knows the
- * secret). In this implementation, a bearer token explicitly has a portion
- * which is considered its non-secret ID.
+ * Bearer token, which is a kind of authentication / authorization key wherein
+ * a secret portion is commonly sent directly to a counterparty (as opposed to
+ * merely proving that one knows the secret). In this implementation, a bearer
+ * token explicitly has a portion which is considered its non-secret ID.
  */
 export default class BearerToken extends BaseKey {
   /**
