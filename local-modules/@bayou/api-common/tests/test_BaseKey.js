@@ -52,26 +52,4 @@ describe('@bayou/api-common/BaseKey', () => {
       assert.throws(() => key.safeString, /badValue/);
     });
   });
-
-  describe('toString()', () => {
-    it('returns a string', () => {
-      const key = new BaseKey(VALID_ID);
-
-      assert.isString(key.toString());
-    });
-
-    it('returns a string that contains the ID', () => {
-      function test(id) {
-        const key    = new BaseKey(id);
-        const result = key.toString();
-
-        assert.isTrue(result.indexOf(id) >= 0, id);
-      }
-
-      test('x');
-      test('123-florp');
-      test('a');
-      test('like');
-    });
-  });
 });

@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { inspect } from 'util';
+
 import { TString } from '@bayou/typecheck';
 
 import BaseKey from './BaseKey';
@@ -77,6 +79,24 @@ export default class BearerToken extends BaseKey {
    */
   get secretToken() {
     return this._secretToken;
+  }
+
+  /**
+   * Custom inspector function, as called by `util.inspect()`, which returns a
+   * string that identifies the class and includes just the ID. The main point
+   * of this is so that casual stringification of instances (which e.g. might
+   * get logged) won't leak the secret portion of the instance.
+   *
+   * @param {Int} depth_unused Current inspection depth.
+   * @param {object} opts Inspection options.
+   * @returns {string} The inspection string form of this instance.
+   */
+  [inspect.custom](depth_unused, opts) {
+    const name = this.constructor.name;
+
+    return (opts.depth < 0)
+      ? `${name} {...}`
+      : `${name} { id: ${this.id} }`;
   }
 
   /**

@@ -2,8 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { inspect } from 'util';
-
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -52,27 +50,6 @@ export default class BaseKey extends CommonBase {
    */
   get safeString() {
     return TString.check(this._impl_safeString());
-  }
-
-  /**
-   * Custom inspector function, as called by `util.inspect()`, which returns a
-   * string that identifies the class and includes just the ID. The main point
-   * of this implementation is to make it so that subclasses can define
-   * additional properties which are security-sensitive without worrying about
-   * those properties ending up in the `inspect()` output. (That is, subclasses
-   * don't have to override this method in order to ensure good security hygiene
-   * with respect to stringification.)
-   *
-   * @param {Int} depth_unused Current inspection depth.
-   * @param {object} opts Inspection options.
-   * @returns {string} The inspection string form of this instance.
-   */
-  [inspect.custom](depth_unused, opts) {
-    const name = this.constructor.name;
-
-    return (opts.depth < 0)
-      ? `${name} {...}`
-      : `${name} { ${this.id} }`;
   }
 
   /**
