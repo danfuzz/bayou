@@ -154,12 +154,16 @@ export default class CaretControl extends EphemeralControl {
     // of the expected result to get the final result. We diff from the final
     // result to get the actual change to append.
 
+    this.log.event.rebasingCaret(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum, currentSnapshot.revNum);
+
     const finalContents = await this.getComposedChanges(
       expectedSnapshot.contents, baseSnapshot.revNum + 1, currentSnapshot.revNum + 1, true);
     const finalSnapshot = new CaretSnapshot(currentSnapshot.revNum + 1, finalContents);
     const finalChange = currentSnapshot.diff(finalSnapshot)
       .withTimestamp(change.timestamp)
       .withAuthorId(change.authorId);
+
+    this.log.event.rebasedCaret(finalChange.revNum);
 
     return finalChange;
   }
