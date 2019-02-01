@@ -183,4 +183,41 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       rejectNonNumbers('min', 10);
     });
   });
+
+  describe('orNeg1()', () => {
+    it('should accept non-negative integers', () => {
+      function test(value) {
+        assert.strictEqual(RevisionNumber.orNeg1(value), value);
+      }
+
+      test(0);
+      test(1);
+      test(2);
+      test(37);
+      test(242);
+      test(914);
+      test(900090009);
+    });
+
+    it('should accept `-1`', () => {
+      assert.strictEqual(RevisionNumber.orNeg1(-1), -1);
+    });
+
+    it('should reject other numbers', () => {
+      function test(value) {
+        assert.throws(() => RevisionNumber.orNeg1(value), /^badValue/);
+      }
+
+      test(-2);
+      test(-0.0001);
+      test(0.5);
+      test(10000000.123);
+      test(Infinity);
+      test(NaN);
+    });
+
+    it('should reject non-numbers', () => {
+      rejectNonNumbers('orNeg1');
+    });
+  });
 });

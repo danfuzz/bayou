@@ -75,4 +75,21 @@ export default class RevisionNumber extends UtilityClass {
       throw Errors.badValue(value, RevisionNumber, `value >= ${minInc}`);
     }
   }
+
+  /**
+   * Checks a value which must be of type `RevisionNumber` or be the value `-1`.
+   * The latter is used as an indicator in certain contexts that a file has no
+   * revisions.
+   *
+   * @param {*} value Value to check.
+   * @returns {Int} `value`.
+   */
+  static orNeg1(value) {
+    try {
+      return TInt.min(value, -1);
+    } catch (e) {
+      // More appropriate error.
+      throw Errors.badValue(value, 'RevisionNumber | -1');
+    }
+  }
 }
