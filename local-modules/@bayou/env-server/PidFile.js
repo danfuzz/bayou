@@ -30,8 +30,6 @@ export default class PidFile extends Singleton {
     /** {string} Path for the PID file. */
     this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
 
-    log.event.pid(process.pid);
-
     Object.freeze(this);
   }
 
@@ -49,7 +47,7 @@ export default class PidFile extends Singleton {
     // Write the PID file.
     fs.writeFileSync(this._pidPath, `${process.pid}\n`);
 
-    log.event.pidInitialized();
+    log.event.pidInitialized({ pid: process.pid });
   }
 
   /**

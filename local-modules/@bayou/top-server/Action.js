@@ -4,7 +4,6 @@
 
 import { camelCase, kebabCase } from 'lodash';
 import path from 'path';
-import process from 'process';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
@@ -263,7 +262,9 @@ export default class Action extends CommonBase {
     log.event.runtimeInfo({
       nodeVersion: process.version.replace(/^v/, ''),
       platform:    process.platform,
-      arch:        process.arch
+      arch:        process.arch,
+      pid:         process.pid,
+      ppid:        process.ppid
     });
 
     // A little spew to indicate where in the filesystem we live.
