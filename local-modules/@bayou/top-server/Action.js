@@ -258,7 +258,13 @@ export default class Action extends CommonBase {
     await ServerEnv.theOne.init();
 
     // A little spew to identify the build and our environment.
-    log.event.buildInfo(ProductInfo.theOne.INFO);
+
+    const buildInfo = {};
+    for (const [key, value] of Object.entries(ProductInfo.theOne.INFO)) {
+      buildInfo[camelCase(key)] = value;
+    }
+
+    log.event.buildInfo(buildInfo);
     log.event.runtimeInfo({
       nodeVersion: process.version.replace(/^v/, ''),
       platform:    process.platform,
