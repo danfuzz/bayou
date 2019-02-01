@@ -54,10 +54,18 @@ describe('@bayou/api-common/BearerToken', () => {
   });
 
   describe('.safeString', () => {
-    it('is the `id` with the expected suffix', () => {
-      const token = new BearerToken('foo', 'bar');
+    it('is the `id` with the expected prefix and/or suffix', () => {
+      function test(id, secret, expect) {
+        const token = new BearerToken(id, secret);
+        assert.strictEqual(token.safeString, expect);
+      }
 
-      assert.strictEqual(token.safeString, 'foo-...');
+      test('foo', 'foo-bar', 'foo-...');
+      test('bar', 'foo-bar', '...-bar');
+      test('bar', 'foo-bar-baz', '...-bar-...');
+
+      // Fallback case: The ID doesn't actually appear within the full token.
+      test('blortch', 'splorp', 'blortch-...');
     });
   });
 

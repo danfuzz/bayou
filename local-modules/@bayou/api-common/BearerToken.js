@@ -79,6 +79,9 @@ export default class BearerToken extends CommonBase {
     /** {string} Complete token, which contains a secret. */
     this._secretToken = TString.check(secretToken);
 
+    /** {string} Logging-safe (redacted) form of the token. */
+    this._safeString = BearerToken._redactToken(secretToken, id);
+
     Object.freeze(this);
   }
 
@@ -93,7 +96,7 @@ export default class BearerToken extends CommonBase {
    * full token value.
    */
   get safeString() {
-    return `${this.id}-...`;
+    return this._safeString;
   }
 
   /**
@@ -138,5 +141,22 @@ export default class BearerToken extends CommonBase {
     BearerToken.check(other);
 
     return (this.id === other.id) && (this._secretToken === other._secretToken);
+  }
+
+  /**
+   * Produces the redacted form of the given token, by finding the `id` within
+   * it and putting `...-` and/or `-...` around it as appropriate, along with
+   * reasonable fallback behavior.
+   *
+   * @param {string} secretToken Complete secret-bearing token.
+   * @param {string} id The token ID.
+   * @returns {string} The redacted form.
+   */
+  static _redactToken(secretToken, id) {
+    const idAt      = secretToken.indexOf(id);
+    const startDots = (idAt > 0);
+    const endDots   = (idAt < 0) || ((idAt + id.length) < secretToken.length);
+
+    return `${startDots ? '...-' : ''}${id}${endDots ? '-...' : ''}`;
   }
 }
