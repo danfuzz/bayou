@@ -265,18 +265,7 @@ export default class Action extends CommonBase {
     }
 
     log.event.buildInfo(buildInfo);
-    log.event.runtimeInfo({
-      nodeVersion: process.version.replace(/^v/, ''),
-      platform:    process.platform,
-      arch:        process.arch,
-      pid:         process.pid,
-      ppid:        process.ppid,
-      directories: {
-        product: Dirs.theOne.BASE_DIR,
-        var:     Dirs.theOne.VAR_DIR,
-        cwd:     process.cwd()
-      }
-    });
+    log.event.runtimeInfo(ServerEnv.theOne.info);
 
     /** The main app server. */
     const theApp = new Application(devRoutes);
