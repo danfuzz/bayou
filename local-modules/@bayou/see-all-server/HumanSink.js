@@ -36,7 +36,7 @@ const PREFIX_ADJUST_INCREMENT = 4;
  * {Int} Maximum allowed length of an untruncated structured event string, in
  * characters.
  */
-const MAX_EVENT_STRING_LENGTH = 200;
+const MAX_EVENT_STRING_LENGTH = 500;
 
 /**
  * Implementation of the `@bayou/see-all` logging sink protocol which writes
