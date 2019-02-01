@@ -4,6 +4,7 @@
 
 import { camelCase, kebabCase } from 'lodash';
 import path from 'path';
+import process from 'process';
 
 import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
@@ -257,8 +258,13 @@ export default class Action extends CommonBase {
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
-    // A little spew to identify the build.
+    // A little spew to identify the build and our environment.
     log.event.buildInfo(ProductInfo.theOne.INFO);
+    log.event.runtimeInfo({
+      nodeVersion: process.version.replace(/^v/, ''),
+      platform:    process.platform,
+      arch:        process.arch
+    });
 
     // A little spew to indicate where in the filesystem we live.
     log.event.productDirectory(Dirs.theOne.BASE_DIR);
