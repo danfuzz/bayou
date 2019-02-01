@@ -21,6 +21,29 @@ const log = new Logger('env-server');
  */
 export default class ServerEnv extends Singleton {
   /**
+   * {object} Ad-hoc object with generally-useful runtime info, intended for
+   * logging / debugging.
+   *
+   * **Note:** This isn't all-caps `INFO` because it's not a constant value,
+   * due to the fact that `process.cwd()` and `process.ppid` could possibly
+   * change.
+   */
+  get info() {
+    return {
+      nodeVersion: process.version.replace(/^v/, ''),
+      platform:    process.platform,
+      arch:        process.arch,
+      pid:         process.pid,
+      ppid:        process.ppid,
+      directories: {
+        product: Dirs.theOne.BASE_DIR,
+        var:     Dirs.theOne.VAR_DIR,
+        cwd:     process.cwd()
+      }
+    };
+  }
+
+  /**
    * {string} The base URL to use for loopback requests from this machine. This
    * is always an `http://localhost/` URL.
    */

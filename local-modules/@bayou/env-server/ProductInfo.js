@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { camelCase } from 'lodash';
 import path from 'path';
 
 import { Proppy } from '@bayou/proppy';
@@ -20,9 +21,17 @@ export default class ProductInfo extends Singleton {
   constructor() {
     super();
 
+    // Parse the info file and convert keys to `camelCase` for consistency with
+    // how other things tend to be named in this system.
+    const origInfo = Proppy.parseFile(path.resolve(Dirs.theOne.BASE_DIR, 'product-info.txt'));
+    const info     = {};
+
+    for (const [key, value] of Object.entries(origInfo)) {
+      info[camelCase(key)] = value;
+    }
+
     /** {object} Product info object. */
-    this._productInfo = Proppy.parseFile(
-      path.resolve(Dirs.theOne.BASE_DIR, 'product-info.txt'));
+    this._productInfo = Object.freeze(info);
   }
 
   /**

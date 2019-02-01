@@ -257,14 +257,12 @@ export default class Action extends CommonBase {
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
-    // A little spew to identify the build.
+    // A little spew to identify the build and our environment.
+
     log.event.buildInfo(ProductInfo.theOne.INFO);
+    log.event.runtimeInfo(ServerEnv.theOne.info);
 
-    // A little spew to indicate where in the filesystem we live.
-    log.event.productDirectory(Dirs.theOne.BASE_DIR);
-    log.event.varDirectory(Dirs.theOne.VAR_DIR);
-
-    /** The main app server. */
+    /** {Application} The main app server. */
     const theApp = new Application(devRoutes);
 
     // Start the app! The result is the port that it ends up listening on.
