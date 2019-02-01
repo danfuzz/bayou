@@ -259,15 +259,10 @@ export default class Action extends CommonBase {
 
     // A little spew to identify the build and our environment.
 
-    const buildInfo = {};
-    for (const [key, value] of Object.entries(ProductInfo.theOne.INFO)) {
-      buildInfo[camelCase(key)] = value;
-    }
-
-    log.event.buildInfo(buildInfo);
+    log.event.buildInfo(ProductInfo.theOne.INFO);
     log.event.runtimeInfo(ServerEnv.theOne.info);
 
-    /** The main app server. */
+    /** {Application} The main app server. */
     const theApp = new Application(devRoutes);
 
     // Start the app! The result is the port that it ends up listening on.

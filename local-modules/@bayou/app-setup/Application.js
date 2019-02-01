@@ -240,10 +240,10 @@ export default class Application extends CommonBase {
    * @returns {string} The server ID string.
    */
   static _makeIdString() {
-    const { name, version, commit_id } = ProductInfo.theOne.INFO;
+    const { name, version, commitId } = ProductInfo.theOne.INFO;
 
-    const id = ((typeof commit_id === 'string') && commit_id !== '')
-      ? `-${commit_id.slice(0, 8)}`
+    const id = ((typeof commitId === 'string') && commitId !== '')
+      ? `-${commitId.slice(0, 8)}`
       : '';
 
     return `${name}-${version}${id}`;

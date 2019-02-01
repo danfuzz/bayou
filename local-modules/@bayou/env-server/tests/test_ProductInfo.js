@@ -10,10 +10,16 @@ import { TObject } from '@bayou/typecheck';
 
 describe('@bayou/env-server/ProductInfo', () => {
   describe('.INFO', () => {
-    it('should return an object full of product info', () => {
+    it('is a frozen value', () => {
+      const info = ProductInfo.theOne.INFO;
+
+      assert.isFrozen(info);
+    });
+
+    it('is an object full of the expected product info', () => {
       const info = ProductInfo.theOne.INFO;
       const productKeys = [
-        'name', 'version', 'commit_id', 'commit_date', 'build_date', 'node_version'
+        'name', 'version', 'commitId', 'commitDate', 'buildDate', 'nodeVersion'
       ];
 
       assert.doesNotThrow(() => TObject.withExactKeys(info, productKeys));
