@@ -270,12 +270,13 @@ export default class Action extends CommonBase {
       platform:    process.platform,
       arch:        process.arch,
       pid:         process.pid,
-      ppid:        process.ppid
+      ppid:        process.ppid,
+      directories: {
+        product: Dirs.theOne.BASE_DIR,
+        var:     Dirs.theOne.VAR_DIR,
+        cwd:     process.cwd()
+      }
     });
-
-    // A little spew to indicate where in the filesystem we live.
-    log.event.productDirectory(Dirs.theOne.BASE_DIR);
-    log.event.varDirectory(Dirs.theOne.VAR_DIR);
 
     /** The main app server. */
     const theApp = new Application(devRoutes);
