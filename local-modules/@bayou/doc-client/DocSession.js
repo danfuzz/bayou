@@ -3,9 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from '@bayou/api-client';
-import { CaretId } from '@bayou/doc-common';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
-import { SessionInfo } from '@bayou/doc-common';
+import { CaretId, SessionInfo } from '@bayou/doc-common';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
