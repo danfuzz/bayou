@@ -23,6 +23,10 @@ export default class ServerEnv extends Singleton {
   /**
    * {object} Ad-hoc object with generally-useful runtime info, intended for
    * logging / debugging.
+   *
+   * **Note:** This isn't all-caps `INFO` because it's not a constant value,
+   * due to the fact that `process.cwd()` and `process.ppid` could possibly
+   * change.
    */
   get info() {
     return {
