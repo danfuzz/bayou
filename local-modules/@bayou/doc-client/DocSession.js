@@ -237,6 +237,21 @@ export default class DocSession extends CommonBase {
   }
 
   /**
+   * Reports trouble. This call can be used by associated objects to indicate to
+   * this one that there is a higher-level error of some sort. This instance in
+   * turn emits that fact as an event, which downstream client code can use to
+   * inform its own behavior.
+   *
+   * @param {Error|null} [error = null] Salient `Error` instance, if any.
+   */
+  reportError(error) {
+    const eventArgs = (error === null) ? [] : [error];
+
+    this._eventSource.emit(new Functor('error', ...eventArgs));
+    this._log.event.errorReported(...eventArgs);
+  }
+
+  /**
    * Gets the API client instance to use. The client will have been successfully
    * opened before this method returns (if it returns normally instead of
    * throwing an error), but there is no guarantee that it won't have gotten

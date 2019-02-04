@@ -292,10 +292,12 @@ export default class BodyClient extends StateMachine {
     }
 
     // Note the time of the error, and determine if we've hit the point of
-    // unrecoverability. If so, transition into the `unrecoverableError` state.
-    // When this happens, higher-level logic can notice and take further action.
+    // unrecoverability. If so, inform the session and transition into the
+    // `unrecoverableError` state. When this happens, higher-level logic can
+    // notice and take further action.
     this._addErrorStamp();
     if (this._isUnrecoverablyErrored()) {
+      this._docSession.reportError(reason);
       this.log.event.cannotRecover();
       this.s_unrecoverableError();
       return;
