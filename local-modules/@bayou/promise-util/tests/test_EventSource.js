@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { assert } from 'chai';
+import { EventEmitter } from 'events';
 import { describe, it } from 'mocha';
 
 import { Delay, EventSource } from '@bayou/promise-util';
@@ -10,13 +11,13 @@ import { Functor } from '@bayou/util-common';
 
 describe('@bayou/promise-util/EventSource', () => {
   describe('constructor()', () => {
-    it('should work', async () => {
-      new EventSource();
+    it('trivially appears to work', async () => {
+      assert.doesNotThrow(() => new EventSource());
     });
   });
 
   describe('.currentEvent', () => {
-    it('should be an unresolved promise if no events have ever been emitted', async () => {
+    it('is an unresolved promise if no events have ever been emitted', async () => {
       const source = new EventSource();
       const currentEvent = source.currentEvent;
 
@@ -24,7 +25,7 @@ describe('@bayou/promise-util/EventSource', () => {
       assert.strictEqual(race, 123);
     });
 
-    it('should eventually resolve to the first emitted event if no events have ever been emitted', async () => {
+    it('resolves to the first emitted event if no events have ever been emitted', async () => {
       const source = new EventSource();
       const currentEvent = source.currentEvent;
 
@@ -34,7 +35,7 @@ describe('@bayou/promise-util/EventSource', () => {
       assert.strictEqual(got.payload.name, 'blort');
     });
 
-    it('should resolve to the most recently emitted event', async () => {
+    it('resolves to the most recently emitted event', async () => {
       const source = new EventSource();
       source.emit(new Functor('blort'));
       source.emit(new Functor('florp'));
@@ -50,12 +51,12 @@ describe('@bayou/promise-util/EventSource', () => {
   });
 
   describe('.currentEventNow', () => {
-    it('should be `null` if no events have ever been emitted', () => {
+    it('is `null` if no events have ever been emitted', () => {
       const source = new EventSource();
       assert.isNull(source.currentEventNow);
     });
 
-    it('should be the most recently emitted event if there were ever any emitted events', () => {
+    it('is the most recently emitted event if there were ever any emitted events', () => {
       const source = new EventSource();
 
       source.emit(new Functor('blort'));
@@ -66,10 +67,42 @@ describe('@bayou/promise-util/EventSource', () => {
     });
   });
 
-  describe('emit()', () => {
-    it('should work', () => {
+  describe('.emitter', () => {
+    it('is an instance of `EventEmitter`', () => {
       const source = new EventSource();
-      source.emit(new Functor('blort'));
+      assert.instanceOf(source.emitter, EventEmitter);
+    });
+
+    it('can be listened to and receive an emitted event', () => {
+      const source   = new EventSource();
+      const emitter  = source.emitter;
+      let   listened = 0;
+      let   gotArgs  = null;
+
+      function listener(...args) {
+        listened++;
+        gotArgs = args;
+      }
+
+      emitter.addListener('blort', listener);
+      source.emit(new Functor('blort', 1, 2, 3));
+
+      assert.strictEqual(listened, 1);
+      assert.deepEqual(gotArgs, [1, 2, 3]);
+    });
+
+    it('cannot be used directly to emit events', () => {
+      const source   = new EventSource();
+      const emitter  = source.emitter;
+
+      assert.throws(() => emitter.emit('blort', 1, 2, 3), /badUse/);
+    });
+  });
+
+  describe('emit()', () => {
+    it('trivially appears to work', () => {
+      const source = new EventSource();
+      assert.doesNotThrow(() => { source.emit(new Functor('blort')); });
     });
   });
 });
