@@ -405,7 +405,12 @@ export default class BodyClient extends StateMachine {
     }
 
     // Save the result as the current (latest known) revision of the document,
-    // and tell Quill about it.
+    // and tell Quill about it. **TODO:** In the case where we are recovering
+    // from network trouble, it's possible that `_quill`'s content contains
+    // changes that were never successfully reported to the server. In such
+    // cases, instead of calling `_updateWithSnapshot()` -- which will lose
+    // whatever work hadn't been reported -- we should reproduce the change
+    // request that was in progress.
     const firstEvent = this._quill.currentEvent;
     this._updateWithSnapshot(snapshot);
 
