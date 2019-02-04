@@ -112,7 +112,7 @@ export default class EventSource extends CommonBase {
   }
 
   /**
-   * {Promise<ChainedEvent>} Promise for the current (Latest / most recent)
+   * {Promise<ChainedEvent>} Promise for the current (latest / most recent)
    * event emitted by this instance. This is an immediately-resolved promise in
    * all cases _except_ when this instance has never emitted an event. In the
    * latter case, it becomes resolved as soon as the first event is emitted.
