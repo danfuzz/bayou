@@ -17,6 +17,18 @@ const log = new Logger('doc');
 
 /**
  * Manager of the API connection(s) needed to maintain a server session.
+ *
+ * Instances of this class emit events which indicate the instantaneous state of
+ * of their network connections along with any higher-level errors (which get
+ * reported to the instance). Events are as follows:
+ *
+ * * `closed()` &mdash; The network connection has been closed.
+ * * `error(e)` &mdash; There was an error either in establishing a connection
+ *   or at a higher layer (e.g. an unexpected failure in an API call). `e` is
+ *   an `Error` instance if there is a salient error, or `null` if not.
+ * * `opening()` &mdash; The instance is trying to establish a network
+ *   connection with a server.
+ * * `open()` &mdash; The network connection has been established.
  */
 export default class DocSession extends CommonBase {
   /**
