@@ -23,9 +23,10 @@ const log = new Logger('doc');
  * reported to the instance). Events are as follows:
  *
  * * `closed()` &mdash; The network connection has been closed.
- * * `error(e)` &mdash; There was an error either in establishing a connection
- *   or at a higher layer (e.g. an unexpected failure in an API call). `e` is
- *   an `Error` instance if there is a salient error, or `null` if not.
+ * * `error(?e)` &mdash; There was an error either in establishing a connection
+ *   or at a higher layer (e.g. an unexpected failure in an API call). If there
+ *   is a salient error which is associated with the problem, it is passed as an
+ *   argument to the event.
  * * `opening()` &mdash; The instance is trying to establish a network
  *   connection with a server.
  * * `open()` &mdash; The network connection has been established.
