@@ -5,8 +5,9 @@
 import { ApiClient } from '@bayou/api-client';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { CaretId, SessionInfo } from '@bayou/doc-common';
+import { EventSource } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Functor } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';
 import PropertyClient from './PropertyClient';
@@ -16,6 +17,19 @@ const log = new Logger('doc');
 
 /**
  * Manager of the API connection(s) needed to maintain a server session.
+ *
+ * Instances of this class emit events which indicate the instantaneous state of
+ * of their network connections along with any higher-level errors (which get
+ * reported to the instance). Events are as follows:
+ *
+ * * `closed()` &mdash; The network connection has been closed.
+ * * `error(?e)` &mdash; There was an error either in establishing a connection
+ *   or at a higher layer (e.g. an unexpected failure in an API call). If there
+ *   is a salient error which is associated with the problem, it is passed as an
+ *   argument to the event.
+ * * `opening()` &mdash; The instance is trying to establish a network
+ *   connection with a server.
+ * * `open()` &mdash; The network connection has been established.
  */
 export default class DocSession extends CommonBase {
   /**
@@ -43,6 +57,12 @@ export default class DocSession extends CommonBase {
      * parallel with {@link #_sessionInfo}, in {@link #_updateSessionInfo}.
      */
     this._log = null;
+
+    /**
+     * {EventSource} Emitter of events, by and large related to this instance's
+     * understanding of the current network status.
+     */
+    this._eventSource = new EventSource();
 
     /**
      * {ApiClient|null} API client instance. Set to non-`null` in
@@ -89,6 +109,27 @@ export default class DocSession extends CommonBase {
     }
 
     return this._caretTracker;
+  }
+
+  /**
+   * {Promise<ChainedEvent>} Promise for the current (latest / most recent)
+   * event emitted by this instance. This is an immediately-resolved promise in
+   * all cases _except_ when this instance has never emitted an event. In the
+   * latter case, it becomes resolved as soon as the first event is emitted.
+   *
+   * **Note:** Because of the chained nature of events, this property provides
+   * access to all subsequent events emitted by this source.
+   */
+  get currentEvent() {
+    return this._eventSource.currentEvent;
+  }
+
+  /**
+   * {EventEmitter} Event emitter which can be attached to in order to receive
+   * events from this instance.
+   */
+  get eventEmitter() {
+    return this._eventSource.emitter;
   }
 
   /** {PropertyClient} Property accessor this session. */
@@ -170,11 +211,18 @@ export default class DocSession extends CommonBase {
     const proxyPromise = this._fetchSessionProxy(api);
     this._sessionProxyPromise = proxyPromise;
 
-    this._log.event.gettingSessionProxy();
-    const proxy = await proxyPromise;
-    this._log.event.gotSessionProxy();
+    try {
+      this._log.event.gettingSessionProxy();
+      const proxy = await proxyPromise;
+      this._log.event.gotSessionProxy();
 
-    return proxy;
+      return proxy;
+    } catch (e) {
+      // Emit an event for and log the problem, and rethrow.
+      this._eventSource.emit(new Functor('closed'));
+      this._log.event.sessionSetupFailed(e);
+      throw e;
+    }
   }
 
   /**
@@ -202,6 +250,21 @@ export default class DocSession extends CommonBase {
   }
 
   /**
+   * Reports trouble. This call can be used by associated objects to indicate to
+   * this one that there is a higher-level error of some sort. This instance in
+   * turn emits that fact as an event, which downstream client code can use to
+   * inform its own behavior.
+   *
+   * @param {Error|null} [error = null] Salient `Error` instance, if any.
+   */
+  reportError(error) {
+    const eventArgs = (error === null) ? [] : [error];
+
+    this._eventSource.emit(new Functor('error', ...eventArgs));
+    this._log.event.errorReported(...eventArgs);
+  }
+
+  /**
    * Gets the API client instance to use. The client will have been successfully
    * opened before this method returns (if it returns normally instead of
    * throwing an error), but there is no guarantee that it won't have gotten
@@ -217,16 +280,19 @@ export default class DocSession extends CommonBase {
 
     const url = this._sessionInfo.serverUrl;
 
+    this._eventSource.emit(new Functor('opening'));
     this._log.event.apiAboutToOpen(url);
     this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
     try {
       this._log.event.apiOpening();
       await this._apiClient.open();
+      this._eventSource.emit(new Functor('open'));
       this._log.event.apiOpened();
     } catch (e) {
-      // Log the problem, and rethrow. **TODO:** Consider this as a spot to
-      // add retry logic.
+      // Emit an event for and log the problem, and rethrow. **TODO:** Consider
+      // this as a spot to add retry logic.
+      this._eventSource.emit(new Functor('closed'));
       this._log.event.apiOpenFailed(e);
       throw e;
     }

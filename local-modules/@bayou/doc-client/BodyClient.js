@@ -91,12 +91,14 @@ export default class BodyClient extends StateMachine {
    *
    * @param {QuillProm} quill Quill editor instance for the body.
    * @param {DocSession} docSession Server session control / manager.
-   * @param {boolean} [editingEnabled = true] Flag that determines whether
-   *   the document body should be editable.
+   * @param {boolean} [manageEnabledState = true] Flag that determines whether
+   *   (`true`) or not (`false`) this instance should automatically manage the
+   *   "enabled" state of `quill`. If `false`, it is up to clients of this class
+   *   to use `quill.enable()` and `quill.disable()`.
    * @param {int} [pollingDelayMsec = 0] Delay in msecs to wait before
    *   transitioning from `wantInputAfterDelay` to `wantInput`.
    */
-  constructor(quill, docSession, editingEnabled = true, pollingDelayMsec = 0) {
+  constructor(quill, docSession, manageEnabledState = true, pollingDelayMsec = 0) {
     super('detached', docSession.log);
 
     /** {Quill} Editor object. */
@@ -105,8 +107,11 @@ export default class BodyClient extends StateMachine {
     /** {DocSession} Server session control / manager. */
     this._docSession = DocSession.check(docSession);
 
-    /** {boolean} Editing enabled flag, true by default. */
-    this._editingEnabled = editingEnabled;
+    /**
+     * {boolean} Whether this instance should manage {@link #_quill}'s enabled /
+     * disabled state.
+     */
+    this._manageEnabledState = manageEnabledState;
 
     /** {int} Delay between polling for changes, 0 by default. */
     this._pollingDelayMsec = pollingDelayMsec;
@@ -153,9 +158,11 @@ export default class BodyClient extends StateMachine {
      */
     this._errorStamps = [];
 
-    // The Quill instance should already be in read-only mode. We explicitly
-    // set that here, though, to be safe and resilient.
-    quill.disable();
+    if (this._manageEnabledState) {
+      // The Quill instance should already be in read-only mode. We explicitly
+      // set that here, though, to be safe and resilient.
+      quill.disable();
+    }
   }
 
   /**
@@ -271,8 +278,10 @@ export default class BodyClient extends StateMachine {
    * @param {InfoError} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
-    // Stop the user from trying to do more edits, as they'd get lost.
-    this._quill.disable();
+    if (this._manageEnabledState) {
+      // Stop the user from trying to do more edits, as they'd get lost.
+      this._quill.disable();
+    }
 
     if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
@@ -283,10 +292,12 @@ export default class BodyClient extends StateMachine {
     }
 
     // Note the time of the error, and determine if we've hit the point of
-    // unrecoverability. If so, transition into the `unrecoverableError` state.
-    // When this happens, higher-level logic can notice and take further action.
+    // unrecoverability. If so, inform the session and transition into the
+    // `unrecoverableError` state. When this happens, higher-level logic can
+    // notice and take further action.
     this._addErrorStamp();
     if (this._isUnrecoverablyErrored()) {
+      this._docSession.reportError(reason);
       this.log.event.cannotRecover();
       this.s_unrecoverableError();
       return;
@@ -394,7 +405,12 @@ export default class BodyClient extends StateMachine {
     }
 
     // Save the result as the current (latest known) revision of the document,
-    // and tell Quill about it.
+    // and tell Quill about it. **TODO:** In the case where we are recovering
+    // from network trouble, it's possible that `_quill`'s content contains
+    // changes that were never successfully reported to the server. In such
+    // cases, instead of calling `_updateWithSnapshot()` -- which will lose
+    // whatever work hadn't been reported -- we should reproduce the change
+    // request that was in progress.
     const firstEvent = this._quill.currentEvent;
     this._updateWithSnapshot(snapshot);
 
@@ -425,7 +441,7 @@ export default class BodyClient extends StateMachine {
 
     // And with that, it's now safe to enable Quill so that it will accept user
     // input, if editing is enabled.
-    if (this._editingEnabled) {
+    if (this._manageEnabledState) {
       this._quill.enable();
 
       // Focus the editor area so the user can start typing right away
