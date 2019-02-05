@@ -54,14 +54,16 @@ export default class PromSubclasser extends UtilityClass {
         // constructor.
         const origEmitter = this.emitter;
 
-        /** {EventSource} Event source (emitter) for this instance. */
-        this._emitter = new EventSource();
+        /**
+         * {EventSource} Event source (modern-style emitter) for this instance.
+         */
+        this._eventSource = new EventSource();
 
         /**
          * {ChainableEvent} The most recent resolved event. It is initialized as
          * defined by the documentation for `currentEvent`.
          */
-        this._currentEvent = this._emitter.emit(QuillEvents.EMPTY_TEXT_CHANGE_PAYLOAD);
+        this._currentEvent = this._eventSource.emit(QuillEvents.EMPTY_TEXT_CHANGE_PAYLOAD);
 
         // We override `emitter.emit()` to _synchronously_ emit an event to the
         // promise chain. We do it this way instead of relying on an event
@@ -95,7 +97,7 @@ export default class PromSubclasser extends UtilityClass {
             // server state will tragically diverge).
 
             this._currentEvent =
-              QuillEvents.emitQuillPayload(this._emitter, new Functor(...rest));
+              QuillEvents.emitQuillPayload(this._eventSource, new Functor(...rest));
           }
 
           // This is the moral equivalent of `super.emit(...)`.
