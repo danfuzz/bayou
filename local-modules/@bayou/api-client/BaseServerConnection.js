@@ -59,7 +59,7 @@ export default class BaseServerConnection extends CommonBase {
 
     /** {EventSource} Emitter used for the events of this instance. */
     this._events = new EventSource();
-    this._events.emit[BaseServerConnection.EVENT_start]();
+    this._events.emit(BaseServerConnection.EVENT_start);
 
     /**
      * {ChainedEvent} The "head" of the event chain after which any `receive`
@@ -148,7 +148,7 @@ export default class BaseServerConnection extends CommonBase {
    */
   async enqueue(message) {
     TString.check(message);
-    this._events.emit[BaseServerConnection.EVENT_send](message);
+    this._events.emit(BaseServerConnection.EVENT_send, message);
   }
 
   /**
@@ -181,7 +181,7 @@ export default class BaseServerConnection extends CommonBase {
    */
   async received(message) {
     TString.check(message);
-    this._events.emit[BaseServerConnection.EVENT_receive](message);
+    this._events.emit(BaseServerConnection.EVENT_receive, message);
   }
 
   /**
