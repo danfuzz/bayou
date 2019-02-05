@@ -58,4 +58,19 @@ export default class TargetId extends UtilityClass {
       throw Errors.badValue(value, 'TargetId|BearerToken');
     }
   }
+
+  /**
+   * Gets the string to use as an ID across an API boundary for the given value
+   * which must be either a target ID string or a {@link BearerToken}.
+   *
+   * @param {string|BearerToken} idOrToken The ID or token which identifies the
+   *   target.
+   * @returns {string} The string to use to refer to `idOrToken` across an API
+   *   boundary.
+   */
+  static targetString(idOrToken) {
+    TargetId.orToken(idOrToken);
+
+    return (idOrToken instanceof BearerToken) ? idOrToken.secretToken : idOrToken;
+  }
 }
