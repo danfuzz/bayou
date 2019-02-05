@@ -21,8 +21,8 @@ class MessageCollector {
   }
 
   get sendMessage() {
-    return (targetId, payload, ...rest) => {
-      this.messages.push({ targetId, payload, rest });
+    return (target, payload, ...rest) => {
+      this.messages.push({ target, payload, rest });
     };
   }
 }
@@ -40,9 +40,9 @@ class MessageCollector {
  *
  * @param {*} proxy (Alleged) target proxy.
  * @param {MessageCollector} mc Expected object to receive messages.
- * @param {string} targetId Expected target ID.
+ * @param {string|BearerToken} target Expected target.
  */
-function checkProxy(proxy, mc, targetId) {
+function checkProxy(proxy, mc, target) {
   function test(payload) {
     const inspectPayload = inspect(payload);
 
@@ -56,7 +56,7 @@ function checkProxy(proxy, mc, targetId) {
 
     const msg = got[0];
 
-    assert.strictEqual(msg.targetId, targetId, inspectPayload);
+    assert.strictEqual(msg.target, target, inspectPayload);
     assert.deepEqual(msg.payload, payload, inspectPayload);
     assert.deepEqual(msg.rest, [], inspectPayload);
   }
