@@ -10,67 +10,67 @@ import { Functor } from '@bayou/util-common';
 
 describe('@bayou/promise-util/ChainedEvent', () => {
   describe('constructor()', () => {
-    it('should work', async () => {
+    it('constructs an instance', async () => {
       const source = new EventSource();
-      new ChainedEvent(source, new Functor('blort'));
+      assert.doesNotThrow(() => new ChainedEvent(source, new Functor('blort')));
     });
   });
 
   describe('.next', () => {
-    it('should be an unresolved promise if there is no next event', async () => {
+    it('is an unresolved promise if there is no next event', async () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
 
       const race = await Promise.race([event.next, Delay.resolve(10, 123)]);
       assert.strictEqual(race, 123);
     });
 
-    it('should eventually resolve to the chained event', async () => {
+    it('eventually resolves to the chained event', async () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
 
       const next = event.next;
       await Delay.resolve(10);
-      source.emit(new Functor('florp'));
+      source.emit.florp();
       const got = await next;
       assert.strictEqual(got.payload.name, 'florp');
     });
   });
 
   describe('.nextNow', () => {
-    it('should be `null` if there is no next events', () => {
+    it('is `null` if there is no next event', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
 
       assert.isNull(event.nextNow);
     });
 
-    it('should be the next event once emitted', () => {
+    it('is the next event once emitted', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
 
-      source.emit(new Functor('florp'));
+      source.emit.florp();
       assert.strictEqual(event.nextNow.payload.name, 'florp');
     });
   });
 
   describe('withNewPayload()', () => {
-    it('should produce an instance with the indicated payload', () => {
+    it('produces an instance with the indicated payload', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
       const expect = new Functor('florp');
 
       const result = event.withNewPayload(expect);
       assert.strictEqual(result.payload, expect);
     });
 
-    it('should produce an instance whose `nextNow` tracks the original', async () => {
+    it('produces an instance whose `nextNow` tracks the original', async () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
       const result = event.withNewPayload(new Functor('florp'));
 
       assert.isNull(result.nextNow);
-      source.emit(new Functor('like'));
+      source.emit.like();
       assert.strictEqual(event.nextNow.payload.name, 'like');
 
       // The result is allowed to (and expected to) asynchronously update
@@ -80,15 +80,15 @@ describe('@bayou/promise-util/ChainedEvent', () => {
       assert.strictEqual(result.nextNow.payload.name, 'like');
     });
 
-    it('should produce an instance whose `next` tracks the original', async () => {
+    it('produces an instance whose `next` tracks the original', async () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort'));
+      const event  = source.emit.blort();
       const result = event.withNewPayload(new Functor('florp'));
 
       const race = await Promise.race([result.next, Delay.resolve(10, 123)]);
       assert.strictEqual(race, 123);
 
-      source.emit(new Functor('like'));
+      source.emit.like();
       const eventNext  = await event.next;
       const resultNext = await result.next;
       assert.strictEqual(eventNext.payload.name, 'like');
@@ -97,9 +97,9 @@ describe('@bayou/promise-util/ChainedEvent', () => {
   });
 
   describe('withPushedHead()', () => {
-    it('should produce a result with the default payload', () => {
+    it('produces an instance with the default payload', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort', 1, 2, 3));
+      const event  = source.emit.blort(1, 2, 3);
       const result = event.withPushedHead();
 
       assert.strictEqual(result.payload.name, 'none');
@@ -108,27 +108,27 @@ describe('@bayou/promise-util/ChainedEvent', () => {
   });
 
   describe('withPushedHead(payload)', () => {
-    it('should produce a result with the indicated payload', () => {
+    it('produces an instance with the indicated payload', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort', 1, 2, 3));
+      const event  = source.emit.blort(1, 2, 3);
       const expect = new Functor('florp', 'x');
       const result = event.withPushedHead(expect);
 
       assert.strictEqual(result.payload, expect);
     });
 
-    it('should produce a result with `next` bound a promise to the original event', async () => {
+    it('produces an instance with `next` bound a promise to the original event', async () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort', 1, 2, 3));
+      const event  = source.emit.blort(1, 2, 3);
       const result = event.withPushedHead(new Functor('florp'));
 
       const next = await result.next;
       assert.strictEqual(next, event);
     });
 
-    it('should produce a result with `nextNow` bound to the original event', () => {
+    it('produces an instance with `nextNow` bound to the original event', () => {
       const source = new EventSource();
-      const event  = source.emit(new Functor('blort', 1, 2, 3));
+      const event  = source.emit.blort(1, 2, 3);
       const result = event.withPushedHead(new Functor('florp'));
 
       assert.strictEqual(result.nextNow, event);
