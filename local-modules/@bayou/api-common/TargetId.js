@@ -5,6 +5,8 @@
 import { TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
+import BearerToken from './BearerToken';
+
 /** {RegExp} Regular expression which matches valid target IDs. */
 const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,256}$/;
 
@@ -25,7 +27,7 @@ export default class TargetId extends UtilityClass {
    * Checks a value of type `TargetId`.
    *
    * @param {*} value Value to check.
-   * @returns {string} `value`.
+   * @returns {string} `value` if it is in fact a valid target ID.
    */
   static check(value) {
     try {
@@ -33,6 +35,27 @@ export default class TargetId extends UtilityClass {
     } catch (e) {
       // Throw a higher-fidelity error.
       throw Errors.badValue(value, TargetId);
+    }
+  }
+
+  /**
+   * Checks a value which must either be a `TargetId` per se or an instance of
+   * {@link BearerToken}.
+   *
+   * @param {*} value The value in question.
+   * @returns {string|BearerToken} `value` if it is either valid target ID
+   *   string or is an instance of {@link BearerToken}.
+   */
+  static orToken(value) {
+    if (value instanceof BearerToken) {
+      return value;
+    }
+
+    try {
+      return TargetId.check(value);
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      throw Errors.badValue(value, 'TargetId|BearerToken');
     }
   }
 }

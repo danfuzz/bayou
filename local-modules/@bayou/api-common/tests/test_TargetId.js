@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TargetId } from '@bayou/api-common';
+import { BearerToken, TargetId } from '@bayou/api-common';
 
 describe('@bayou/api-common/TargetId', () => {
   describe('check()', () => {
-    it('should accept valid ids', () => {
+    it('accepts valid IDs', () => {
       function test(value) {
         assert.strictEqual(TargetId.check(value), value);
       }
@@ -33,7 +33,7 @@ describe('@bayou/api-common/TargetId', () => {
       }
     });
 
-    it('should reject strings with invalid characters', () => {
+    it('rejects strings with invalid characters', () => {
       function test(value) {
         assert.throws(() => TargetId.check(value), /badValue/);
       }
@@ -44,19 +44,52 @@ describe('@bayou/api-common/TargetId', () => {
       test('what is happening?');
     });
 
-    it('should reject the empty string', () => {
+    it('rejects the empty string', () => {
       assert.throws(() => TargetId.check(''), /badValue/);
     });
 
-    it('should reject too-long strings', () => {
+    it('rejects too-long strings', () => {
       for (let i = 257; i < 500; i++) {
         assert.throws(() => TargetId.check('x'.repeat(i)), /badValue/, `length ${i}`);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       function test(value) {
         assert.throws(() => TargetId.check(value), /badValue/);
+      }
+
+      test(null);
+      test(undefined);
+      test(true);
+      test(123);
+      test(new Map());
+      test(new BearerToken('x', 'xy'));
+    });
+  });
+
+  describe('orToken()', () => {
+    it('accepts valid ID strings', () => {
+      function test(value) {
+        assert.strictEqual(TargetId.orToken(value), value);
+      }
+
+      test('abc_123');
+      test('0123.456-789');
+    });
+
+    it('accepts `BearerToken` instances', () => {
+      const token = new BearerToken('abc', 'abc-xyz');
+      assert.strictEqual(TargetId.orToken(token), token);
+    });
+
+    it('rejects invalid strings', () => {
+      assert.throws(() => TargetId.orToken('!?%'), /badValue/);
+    });
+
+    it('should reject non-`BearerToken` non-strings', () => {
+      function test(value) {
+        assert.throws(() => TargetId.orToken(value), /badValue/);
       }
 
       test(null);
