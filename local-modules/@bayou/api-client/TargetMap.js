@@ -58,7 +58,7 @@ export default class TargetMap extends CommonBase {
    */
   add(idOrToken) {
     if (this.getOrNull(idOrToken) !== null) {
-      throw Errors.badUse(`Already bound: ${TargetId.targetString(idOrToken)}`);
+      throw Errors.badUse(`Already bound: ${TargetId.safeString(idOrToken)}`);
     }
 
     const targetId = TargetId.targetString(idOrToken);
@@ -102,7 +102,7 @@ export default class TargetMap extends CommonBase {
     const result = this.getOrNull(idOrToken);
 
     if (result === null) {
-      throw Errors.badUse(`No such target: ${TargetId.targetString(idOrToken)}`);
+      throw Errors.badUse(`No such target: ${TargetId.safeString(idOrToken)}`);
     }
 
     return result;
