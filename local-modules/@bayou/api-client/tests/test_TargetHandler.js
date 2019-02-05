@@ -5,27 +5,28 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
+import { BearerToken } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
 import TargetHandler from '@bayou/api-client/TargetHandler';
 
 describe('@bayou/api-client/TargetHandler', () => {
   describe('makeProxy()', () => {
-    it('should make a proxy that wraps an appropriately-contructed instance of this class', () => {
-      let gotTargetId;
+    it('makes a proxy that wraps an appropriately-contructed instance of this class', () => {
+      let gotTarget;
       let gotFunctor;
-      function sendMessage(targetId, functor) {
-        gotTargetId = targetId;
+      function sendMessage(target, functor) {
+        gotTarget  = target;
         gotFunctor = functor;
-        return `WOO ${targetId}+${functor.name}`;
+        return `WOO ${target}+${functor.name}`;
       }
 
-      function test(targetId, name, ...args) {
-        const proxy = TargetHandler.makeProxy(sendMessage, targetId);
+      function test(target, name, ...args) {
+        const proxy = TargetHandler.makeProxy(sendMessage, target);
 
         const callResult = proxy[name](...args);
-        assert.strictEqual(callResult, `WOO ${targetId}+${name}`);
-        assert.strictEqual(gotTargetId, targetId);
+        assert.strictEqual(callResult, `WOO ${target}+${name}`);
+        assert.strictEqual(gotTarget, target);
         assert.isTrue(gotFunctor.equals(new Functor(name, ...args)));
       }
 
@@ -35,12 +36,13 @@ describe('@bayou/api-client/TargetHandler', () => {
   });
 
   describe('constructor', () => {
-    it('should accept valid arguments', () => {
+    it('accepts valid arguments', () => {
       const func = () => { /*empty*/ };
       assert.doesNotThrow(() => new TargetHandler(func, 'some-target-id'));
+      assert.doesNotThrow(() => new TargetHandler(func, new BearerToken('xyz', 'xyz-pdq')));
     });
 
-    it('should reject a non-callable `sendMessage` argument', () => {
+    it('rejects a non-callable `sendMessage` argument', () => {
       function test(value) {
         assert.throws(() => new TargetHandler(value, 'some-target-id'), /badValue/);
       }
@@ -57,7 +59,7 @@ describe('@bayou/api-client/TargetHandler', () => {
       test(new Map());
     });
 
-    it('should reject a non-id `targetId` argument', () => {
+    it('rejects a non-id non-`BearerToken` `idOrTarget` argument', () => {
       function test(value) {
         const func = () => { /*empty*/ };
         assert.throws(() => new TargetHandler(func, value), /badValue/);
@@ -77,7 +79,7 @@ describe('@bayou/api-client/TargetHandler', () => {
   });
 
   describe('get()', () => {
-    it('should return `undefined` for verboten property names', () => {
+    it('returns `undefined` for verboten property names', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new TargetHandler(func, 'some-target-id');
 
@@ -88,32 +90,33 @@ describe('@bayou/api-client/TargetHandler', () => {
       assert.isUndefined(th.get(prom, 'catch'));
     });
 
-    it('should return a function which calls through to `sendMessage` for any allowed property name', () => {
-      let gotTargetId;
+    it('returns a function which calls through to `sendMessage` for any allowed property name', () => {
+      let gotTarget;
       let gotFunctor;
-      function sendMessage(targetId, functor) {
-        gotTargetId = targetId;
+      function sendMessage(target, functor) {
+        gotTarget = target;
         gotFunctor = functor;
-        return `HEY ${targetId}+${functor.name}`;
+        return `HEY ${target}+${functor.name}`;
       }
 
-      function test(targetId, name, ...args) {
-        const th = new TargetHandler(sendMessage, targetId);
+      function test(target, name, ...args) {
+        const th = new TargetHandler(sendMessage, target);
         const proxy = new Proxy({}, th);
         const result = th.get({}, name, proxy);
 
         assert.isFunction(result);
         const callResult = result(...args);
-        assert.strictEqual(callResult, `HEY ${targetId}+${name}`);
-        assert.strictEqual(gotTargetId, targetId);
+        assert.strictEqual(callResult, `HEY ${target}+${name}`);
+        assert.strictEqual(gotTarget, target);
         assert.isTrue(gotFunctor.equals(new Functor(name, ...args)));
       }
 
       test('foo', 'bar', 1, 2, 3);
       test('hey', 'there', ['muffin']);
+      test(new BearerToken('florp', 'florp-like'), 'boop', ['dee', 'doop']);
     });
 
-    it('should return the same function upon a second-or-more call with the same name', () => {
+    it('returns the same function upon a second-or-more call with the same name', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new TargetHandler(func, 'some-target-id');
       const proxy = new Proxy({}, th);
