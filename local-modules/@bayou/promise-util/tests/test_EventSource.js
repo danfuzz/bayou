@@ -30,17 +30,17 @@ describe('@bayou/promise-util/EventSource', () => {
       const currentEvent = source.currentEvent;
 
       await Delay.resolve(100);
-      source.emit(new Functor('blort'));
+      source.emit.blort();
       const got = await currentEvent;
       assert.strictEqual(got.payload.name, 'blort');
     });
 
     it('resolves to the most recently emitted event', async () => {
       const source = new EventSource();
-      source.emit(new Functor('blort'));
-      source.emit(new Functor('florp'));
+      source.emit.blort();
+      source.emit.florp();
       const ce1 = source.currentEvent;
-      source.emit(new Functor('like'));
+      source.emit.like();
       const ce2 = source.currentEvent;
 
       const got1 = await ce1;
@@ -59,10 +59,10 @@ describe('@bayou/promise-util/EventSource', () => {
     it('is the most recently emitted event if there were ever any emitted events', () => {
       const source = new EventSource();
 
-      source.emit(new Functor('blort'));
-      source.emit(new Functor('florp'));
+      source.emit.blort();
+      source.emit.florp();
       assert.strictEqual(source.currentEventNow.payload.name, 'florp');
-      source.emit(new Functor('like'));
+      source.emit.like();
       assert.strictEqual(source.currentEventNow.payload.name, 'like');
     });
   });
@@ -85,7 +85,7 @@ describe('@bayou/promise-util/EventSource', () => {
       }
 
       emitter.addListener('blort', listener);
-      source.emit(new Functor('blort', 1, 2, 3));
+      source.emit.blort(1, 2, 3);
 
       assert.strictEqual(listened, 1);
       assert.deepEqual(gotArgs, [1, 2, 3]);
@@ -100,9 +100,35 @@ describe('@bayou/promise-util/EventSource', () => {
   });
 
   describe('emit()', () => {
-    it('trivially appears to work', () => {
+    it('works when called as a function', () => {
       const source = new EventSource();
-      assert.doesNotThrow(() => { source.emit(new Functor('blort')); });
+
+      function test(name, ...args) {
+        const f = new Functor(name, ...args);
+        source.emit(f);
+        assert.strictEqual(source.currentEventNow.payload, f);
+      }
+
+      test('blort');
+      test('florp', 1, 2, 3);
+      test('zorch', { x: 'splat' });
+    });
+
+    it('works when properties it offers are called', () => {
+      const source = new EventSource();
+
+      function test(name, ...args) {
+        const expect = new Functor(name, ...args);
+        source.emit[name](...args);
+
+        const payload = source.currentEventNow.payload;
+        assert.instanceOf(payload, Functor);
+        assert.deepEqual(payload, expect);
+      }
+
+      test('blort');
+      test('florp', 1, 2, 3);
+      test('zorch', { x: 'splat' });
     });
   });
 });
