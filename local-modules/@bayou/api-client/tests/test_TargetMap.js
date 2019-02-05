@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BearerToken, TargetId } from '@bayou/api-common';
+import { BearerToken } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
 import TargetMap from '@bayou/api-client/TargetMap';
@@ -112,7 +112,7 @@ describe('@bayou/api-client/TargetMap', () => {
 
       const proxy = tm.add(t);
 
-      checkProxy(proxy, mc, TargetId.targetString(t));
+      checkProxy(proxy, mc, t);
     });
 
     it('refuses to add the same string ID twice', () => {
@@ -161,7 +161,7 @@ describe('@bayou/api-client/TargetMap', () => {
 
       const proxy = tm.addOrGet(t);
 
-      checkProxy(proxy, mc, TargetId.targetString(t));
+      checkProxy(proxy, mc, t);
     });
 
     it('returns the same proxy when given the same string ID twice', () => {
@@ -277,7 +277,7 @@ describe('@bayou/api-client/TargetMap', () => {
 
       assert.isTrue(got === added);
 
-      checkProxy(got, mc, token.secretToken);
+      checkProxy(got, mc, token);
     });
 
     it('finds a string target added with `addOrGet()`', () => {
