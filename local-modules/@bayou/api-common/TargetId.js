@@ -5,6 +5,8 @@
 import { TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
+import BearerToken from './BearerToken';
+
 /** {RegExp} Regular expression which matches valid target IDs. */
 const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,256}$/;
 
@@ -25,7 +27,7 @@ export default class TargetId extends UtilityClass {
    * Checks a value of type `TargetId`.
    *
    * @param {*} value Value to check.
-   * @returns {string} `value`.
+   * @returns {string} `value` if it is in fact a valid target ID.
    */
   static check(value) {
     try {
@@ -34,5 +36,56 @@ export default class TargetId extends UtilityClass {
       // Throw a higher-fidelity error.
       throw Errors.badValue(value, TargetId);
     }
+  }
+
+  /**
+   * Checks a value which must either be a `TargetId` per se or an instance of
+   * {@link BearerToken}.
+   *
+   * @param {*} value The value in question.
+   * @returns {string|BearerToken} `value` if it is either valid target ID
+   *   string or is an instance of {@link BearerToken}.
+   */
+  static orToken(value) {
+    if (value instanceof BearerToken) {
+      return value;
+    }
+
+    try {
+      return TargetId.check(value);
+    } catch (e) {
+      // Throw a higher-fidelity error.
+      throw Errors.badValue(value, 'TargetId|BearerToken');
+    }
+  }
+
+  /**
+   * Gets the string to use when logging an ID or token. Plain IDs are returned
+   * as-is, and {@link BearerToken} instances are converted into their "safe
+   * string" (redacted) forms.
+   *
+   * @param {string|BearerToken} idOrToken The ID or token which identifies the
+   *   target.
+   * @returns {string} The string to use to refer to `idOrToken` in logs.
+   */
+  static safeString(idOrToken) {
+    TargetId.orToken(idOrToken);
+
+    return (idOrToken instanceof BearerToken) ? idOrToken.safeString : idOrToken;
+  }
+
+  /**
+   * Gets the string to use as an ID across an API boundary for the given value
+   * which must be either a target ID string or a {@link BearerToken}.
+   *
+   * @param {string|BearerToken} idOrToken The ID or token which identifies the
+   *   target.
+   * @returns {string} The string to use to refer to `idOrToken` across an API
+   *   boundary.
+   */
+  static targetString(idOrToken) {
+    TargetId.orToken(idOrToken);
+
+    return (idOrToken instanceof BearerToken) ? idOrToken.secretToken : idOrToken;
   }
 }

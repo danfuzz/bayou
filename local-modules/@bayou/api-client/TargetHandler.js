@@ -19,16 +19,17 @@ export default class TargetHandler extends MethodCacheProxyHandler {
    *
    * @param {function} sendMessage Function to call to send a message. See
    *   {@link TargetMap#constructor} for an explanation.
-   * @param {string} targetId The ID of the target to call on.
+   * @param {string|BearerToken} idOrToken The ID or token for the target to
+   *   call on.
    */
-  constructor(sendMessage, targetId) {
+  constructor(sendMessage, idOrToken) {
     super();
 
     /** {function} Function to call to send a message. */
     this._sendMessage = TFunction.checkCallable(sendMessage);
 
-    /** {string} The ID of the target. */
-    this._targetId = TargetId.check(targetId);
+    /** {string|BearerToken} The ID or token for the target to call on. */
+    this._idOrToken = TargetId.orToken(idOrToken);
 
     Object.freeze(this);
   }
@@ -41,10 +42,10 @@ export default class TargetHandler extends MethodCacheProxyHandler {
    */
   _impl_methodFor(name) {
     const sendMessage = this._sendMessage;  // Avoid re-(re-)lookup on every call.
-    const targetId    = this._targetId;     // Likewise.
+    const idOrToken   = this._idOrToken;     // Likewise.
 
     return (...args) => {
-      return sendMessage(targetId, new Functor(name, ...args));
+      return sendMessage(idOrToken, new Functor(name, ...args));
     };
   }
 }
