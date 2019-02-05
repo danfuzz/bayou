@@ -87,9 +87,47 @@ describe('@bayou/api-common/TargetId', () => {
       assert.throws(() => TargetId.orToken('!?%'), /badValue/);
     });
 
-    it('should reject non-`BearerToken` non-strings', () => {
+    it('rejects non-`BearerToken` non-strings', () => {
       function test(value) {
         assert.throws(() => TargetId.orToken(value), /badValue/);
+      }
+
+      test(null);
+      test(undefined);
+      test(true);
+      test(123);
+      test(new Map());
+    });
+  });
+
+  describe('safeString()', () => {
+    it('returns the argument if is is a valid ID string', () => {
+      function test(s) {
+        assert.strictEqual(TargetId.safeString(s), s);
+      }
+
+      test('abc_123');
+      test('0123.456-789');
+    });
+
+    it('returns the safe version of a given `BearerToken`', () => {
+      function test(id, secret) {
+        const token = new BearerToken(id, `${id}-${secret}`);
+        assert.strictEqual(TargetId.safeString(token), token.safeString);
+      }
+
+      test('foo',   '123123-8999');
+      test('x',     'abc_def');
+      test('b.c.d', 'zorch');
+    });
+
+    it('rejects invalid strings', () => {
+      assert.throws(() => TargetId.safeString('!?%'), /badValue/);
+    });
+
+    it('rejects non-`BearerToken` non-strings', () => {
+      function test(value) {
+        assert.throws(() => TargetId.safeString(value), /badValue/);
       }
 
       test(null);
