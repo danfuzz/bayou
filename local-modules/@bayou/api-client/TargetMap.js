@@ -50,8 +50,15 @@ export default class TargetMap extends CommonBase {
 
   /**
    * Creates and binds a proxy for the target with the given ID. Returns the
-   * so-created proxy. It is an error to try to add the same `id` more than
-   * once (except if {@link #clear} is called in the mean time).
+   * so-created proxy. It is an error to try to add the same `idOrToken` more
+   * than once (except if {@link #clear} is called in the mean time).
+   *
+   * **Note:** This class doesn't care (or notice) if multiple `BearerToken`s
+   * with the same _token_ ID get added, nor if a `BearerToken` gets added whose
+   * _token_ ID matches a plain string ID that was previously added. From this
+   * class's perspective, these are all separate bindings. However, in these
+   * cases the far side of the API connection very well might notice and report
+   * an error in various related circumstances.
    *
    * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} The newly-bound proxy.
@@ -61,8 +68,7 @@ export default class TargetMap extends CommonBase {
       throw Errors.badUse(`Already bound: ${TargetId.safeString(idOrToken)}`);
     }
 
-    const targetId = TargetId.targetString(idOrToken);
-    const result   = TargetHandler.makeProxy(this._sendMessage, targetId);
+    const result = TargetHandler.makeProxy(this._sendMessage, idOrToken);
 
     this._targets.set(idOrToken, result);
     this._proxies.add(result);
