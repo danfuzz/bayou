@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BearerToken, CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
+import { CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
-import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from '@bayou/util-common';
 
 import BaseServerConnection from './BaseServerConnection';
@@ -102,11 +101,7 @@ export default class ApiClientNew extends CommonBase {
    *   server-side target.
    */
   getProxy(idOrToken) {
-    const id = (idOrToken instanceof BearerToken)
-      ? idOrToken.id
-      : TString.check(idOrToken);
-
-    return this._targets.addOrGet(id);
+    return this._targets.addOrGet(idOrToken);
   }
 
   /**
