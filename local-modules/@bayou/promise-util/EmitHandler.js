@@ -15,8 +15,9 @@ export default class EmitHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *
-   * @param {function} emit Function to call to actually emit an event. Takes
-   *   a single {@link Functor} argument.
+   * @param {function} emit Function to call to actually emit an event. Called
+   *   with a single {@link Functor} argument and is expected to return a
+   *   {@link ChainedEvent} instance.
    */
   constructor(emit) {
     super();
@@ -47,7 +48,7 @@ export default class EmitHandler extends MethodCacheProxyHandler {
    */
   _impl_methodFor(name) {
     return (...args) => {
-      this._emit(new Functor(name, ...args));
+      return this._emit(new Functor(name, ...args));
     };
   }
 }

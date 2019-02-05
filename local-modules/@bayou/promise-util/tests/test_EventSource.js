@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { EventEmitter } from 'events';
 import { describe, it } from 'mocha';
 
-import { Delay, EventSource } from '@bayou/promise-util';
+import { ChainedEvent, Delay, EventSource } from '@bayou/promise-util';
 import { Functor } from '@bayou/util-common';
 
 describe('@bayou/promise-util/EventSource', () => {
@@ -18,7 +18,7 @@ describe('@bayou/promise-util/EventSource', () => {
 
   describe('.currentEvent', () => {
     it('is an unresolved promise if no events have ever been emitted', async () => {
-      const source = new EventSource();
+      const source       = new EventSource();
       const currentEvent = source.currentEvent;
 
       const race = await Promise.race([currentEvent, Delay.resolve(10, 123)]);
@@ -26,7 +26,7 @@ describe('@bayou/promise-util/EventSource', () => {
     });
 
     it('resolves to the first emitted event if no events have ever been emitted', async () => {
-      const source = new EventSource();
+      const source       = new EventSource();
       const currentEvent = source.currentEvent;
 
       await Delay.resolve(100);
@@ -104,9 +104,12 @@ describe('@bayou/promise-util/EventSource', () => {
       const source = new EventSource();
 
       function test(name, ...args) {
-        const f = new Functor(name, ...args);
-        source.emit(f);
-        assert.strictEqual(source.currentEventNow.payload, f);
+        const f     = new Functor(name, ...args);
+        const event = source.emit(f);
+
+        assert.instanceOf(event, ChainedEvent);
+        assert.strictEqual(source.currentEventNow, event);
+        assert.strictEqual(event.payload, f);
       }
 
       test('blort');
@@ -119,9 +122,12 @@ describe('@bayou/promise-util/EventSource', () => {
 
       function test(name, ...args) {
         const expect = new Functor(name, ...args);
-        source.emit[name](...args);
+        const event  = source.emit[name](...args);
 
-        const payload = source.currentEventNow.payload;
+        assert.instanceOf(event, ChainedEvent);
+        assert.strictEqual(source.currentEventNow, event);
+
+        const payload = event.payload;
         assert.instanceOf(payload, Functor);
         assert.deepEqual(payload, expect);
       }
