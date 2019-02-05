@@ -5,7 +5,7 @@
 import { EventSource, CallPiler } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
-import { CommonBase, Functor } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 /** {string} Value used for an unknown connection ID. */
 const UNKNOWN_CONNECTION_ID = 'id_unknown';
@@ -59,7 +59,7 @@ export default class BaseServerConnection extends CommonBase {
 
     /** {EventSource} Emitter used for the events of this instance. */
     this._events = new EventSource();
-    this._events.emit(new Functor(BaseServerConnection.EVENT_start));
+    this._events.emit[BaseServerConnection.EVENT_start]();
 
     /**
      * {ChainedEvent} The "head" of the event chain after which any `receive`
@@ -148,7 +148,7 @@ export default class BaseServerConnection extends CommonBase {
    */
   async enqueue(message) {
     TString.check(message);
-    this._events.emit(new Functor(BaseServerConnection.EVENT_send, message));
+    this._events.emit[BaseServerConnection.EVENT_send](message);
   }
 
   /**
@@ -181,7 +181,7 @@ export default class BaseServerConnection extends CommonBase {
    */
   async received(message) {
     TString.check(message);
-    this._events.emit(new Functor(BaseServerConnection.EVENT_receive, message));
+    this._events.emit[BaseServerConnection.EVENT_receive](message);
   }
 
   /**
