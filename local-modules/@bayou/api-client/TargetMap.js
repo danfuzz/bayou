@@ -53,17 +53,18 @@ export default class TargetMap extends CommonBase {
    * so-created proxy. It is an error to try to add the same `id` more than
    * once (except if {@link #clear} is called in the mean time).
    *
-   * @param {string} id Target ID.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} The newly-bound proxy.
    */
-  add(id) {
-    if (this.getOrNull(id) !== null) {
-      throw Errors.badUse(`Already bound: ${id}`);
+  add(idOrToken) {
+    if (this.getOrNull(idOrToken) !== null) {
+      throw Errors.badUse(`Already bound: ${TargetId.targetString(idOrToken)}`);
     }
 
-    const result = TargetHandler.makeProxy(this._sendMessage, id);
+    const targetId = TargetId.targetString(idOrToken);
+    const result   = TargetHandler.makeProxy(this._sendMessage, targetId);
 
-    this._targets.set(id, result);
+    this._targets.set(idOrToken, result);
     this._proxies.add(result);
 
     return result;
@@ -73,13 +74,13 @@ export default class TargetMap extends CommonBase {
    * Adds the target as if by {@link #add} if not already bound, or returns the
    * pre-existing binding as if by {@link #get}.
    *
-   * @param {string} id Target ID.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} The corresponding proxy.
    */
-  addOrGet(id) {
-    const already = this.getOrNull(id);
+  addOrGet(idOrToken) {
+    const already = this.getOrNull(idOrToken);
 
-    return (already === null) ? this.add(id) : already;
+    return (already === null) ? this.add(idOrToken) : already;
   }
 
   /**
@@ -94,14 +95,14 @@ export default class TargetMap extends CommonBase {
    * Gets the proxy for the target with the given ID. It is an error to pass an
    * `id` that is not bound.
    *
-   * @param {string} id The target ID.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy} The corresponding proxy.
    */
-  get(id) {
-    const result = this.getOrNull(id);
+  get(idOrToken) {
+    const result = this.getOrNull(idOrToken);
 
     if (result === null) {
-      throw Errors.badUse(`No such target: ${id}`);
+      throw Errors.badUse(`No such target: ${TargetId.targetString(idOrToken)}`);
     }
 
     return result;
@@ -111,13 +112,13 @@ export default class TargetMap extends CommonBase {
    * Gets the proxy for the target with the given ID, or `null` if there is no
    * such target.
    *
-   * @param {string} id The target ID.
+   * @param {string|BearerToken} idOrToken ID or token for the target.
    * @returns {Proxy|null} The corresponding proxy, or `null` if `id` isn't
    *   bound to a target.
    */
-  getOrNull(id) {
-    TargetId.check(id);
-    return this._targets.get(id) || null;
+  getOrNull(idOrToken) {
+    TargetId.orToken(idOrToken);
+    return this._targets.get(idOrToken) || null;
   }
 
   /**

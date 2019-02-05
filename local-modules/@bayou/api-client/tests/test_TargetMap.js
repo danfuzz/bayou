@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
+import { BearerToken, TargetId } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
 import TargetMap from '@bayou/api-client/TargetMap';
@@ -67,12 +68,12 @@ function checkProxy(proxy, mc, targetId) {
 
 describe('@bayou/api-client/TargetMap', () => {
   describe('constructor', () => {
-    it('should accept a valid callable function argument', () => {
+    it('accepts a valid callable function argument', () => {
       const func = () => { /*empty*/ };
       assert.doesNotThrow(() => new TargetMap(func));
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(value) {
         assert.throws(() => new TargetMap(value), /badValue/);
       }
@@ -91,7 +92,7 @@ describe('@bayou/api-client/TargetMap', () => {
   });
 
   describe('add()', () => {
-    it('should add a previously-unbound ID', () => {
+    it('adds a previously-unbound string ID', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -102,7 +103,19 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(proxy, mc, 'xyz');
     });
 
-    it('should refuse to add the same ID twice', () => {
+    it('adds a previously-unbound `BearerToken`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+      const t  = new BearerToken('foo', 'foo-bar');
+
+      assert.isNull(tm.getOrNull(t)); // Base assumption.
+
+      const proxy = tm.add(t);
+
+      checkProxy(proxy, mc, TargetId.targetString(t));
+    });
+
+    it('refuses to add the same string ID twice', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -114,7 +127,7 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.throws(() => tm.add('xyz'), /badUse/);
     });
 
-    it('should refuse to add the same ID twice when originally added with `addOrGet()`', () => {
+    it('refuses to add the same string ID twice when originally added with `addOrGet()`', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -128,7 +141,7 @@ describe('@bayou/api-client/TargetMap', () => {
   });
 
   describe('addOrGet()', () => {
-    it('should add a previously-unbound ID', () => {
+    it('adds a previously-unbound string ID', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -139,7 +152,19 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(proxy, mc, 'pdq');
     });
 
-    it('should return the same proxy when given the same ID twice', () => {
+    it('adds a previously-unbound `BearerToken`', () => {
+      const mc = new MessageCollector();
+      const tm = new TargetMap(mc.sendMessage);
+      const t  = new BearerToken('foo', 'foo-bar');
+
+      assert.isNull(tm.getOrNull(t)); // Base assumption.
+
+      const proxy = tm.addOrGet(t);
+
+      checkProxy(proxy, mc, TargetId.targetString(t));
+    });
+
+    it('returns the same proxy when given the same string ID twice', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -158,7 +183,7 @@ describe('@bayou/api-client/TargetMap', () => {
       assert.isTrue(proxy1 === proxy2);
     });
 
-    it('should return the same proxy when given the same ID as a previous `add()`', () => {
+    it('returns the same proxy when given the same string ID as a previous `add()`', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -176,24 +201,27 @@ describe('@bayou/api-client/TargetMap', () => {
   });
 
   describe('clear()', () => {
-    it('should remove all targets', () => {
-      const mc = new MessageCollector();
-      const tm = new TargetMap(mc.sendMessage);
+    it('removes all targets', () => {
+      const mc    = new MessageCollector();
+      const tm    = new TargetMap(mc.sendMessage);
+      const token = new BearerToken('foo', 'foo-bar');
 
       tm.add('foo');
       tm.add('bar');
       tm.add('baz');
+      tm.add(token);
 
       tm.clear();
 
       assert.isNull(tm.getOrNull('foo'));
       assert.isNull(tm.getOrNull('bar'));
       assert.isNull(tm.getOrNull('baz'));
+      assert.isNull(tm.getOrNull(token));
     });
   });
 
   describe('get()', () => {
-    it('should find a target added with `add()`', () => {
+    it('finds a string target added with `add()`', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -206,7 +234,7 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(got, mc, 'zorch');
     });
 
-    it('should find a target added with `addOrGet()`', () => {
+    it('finds a string target added with `addOrGet()`', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
@@ -219,16 +247,17 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(got, mc, 'zorch');
     });
 
-    it('should throw given an unbound ID', () => {
+    it('throws when given an unbound ID', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
       assert.throws(() => tm.get('zorch'), /badUse/);
+      assert.throws(() => tm.get(new BearerToken('x', 'x-zorch'), /badUse/));
     });
   });
 
   describe('getOrNull()', () => {
-    it('should find a target added with `add()`', () => {
+    it('finds a string target added with `add()`', () => {
       const mc    = new MessageCollector();
       const tm    = new TargetMap(mc.sendMessage);
       const added = tm.add('splort');
@@ -239,7 +268,19 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(got, mc, 'splort');
     });
 
-    it('should find a target added with `addOrGet()`', () => {
+    it('finds a `BearerToken` target added with `add()`', () => {
+      const mc    = new MessageCollector();
+      const tm    = new TargetMap(mc.sendMessage);
+      const token = new BearerToken('zorch', 'zorch-splat');
+      const added = tm.add(token);
+      const got   = tm.getOrNull(token);
+
+      assert.isTrue(got === added);
+
+      checkProxy(got, mc, token.secretToken);
+    });
+
+    it('finds a string target added with `addOrGet()`', () => {
       const mc    = new MessageCollector();
       const tm    = new TargetMap(mc.sendMessage);
       const added = tm.addOrGet('splort');
@@ -250,11 +291,12 @@ describe('@bayou/api-client/TargetMap', () => {
       checkProxy(got, mc, 'splort');
     });
 
-    it('should return `null` given an unbound ID', () => {
+    it('returns `null` when given an unbound ID', () => {
       const mc = new MessageCollector();
       const tm = new TargetMap(mc.sendMessage);
 
       assert.isNull(tm.getOrNull('splort'));
+      assert.isNull(tm.getOrNull(new BearerToken('x', 'x-zorch')));
     });
   });
 });
