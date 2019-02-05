@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CodableError, ConnectionError, Message, Remote, Response } from '@bayou/api-common';
+import { CodableError, ConnectionError, Message, Remote, Response, TargetId } from '@bayou/api-common';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
@@ -390,14 +390,15 @@ export default class ApiClient extends CommonBase {
    * in turn called by a proxy object representing an object on the far side of
    * the connection.
    *
-   * @param {string} target Name/ID of the target object.
+   * @param {string} idOrTarget ID or token which identifies the target object
+   *   on the other side of the API connection.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
    * @returns {*} Result or error returned by the remote call. In the case of an
    *   error, the rejection reason will always be an instance of
    *  {@link ConnectionError} (see which for details).
    */
-  async _send(target, payload) {
+  async _send(idOrTarget, payload) {
     const wsState = (this._ws === null)
       ? WebSocket.CLOSED
       : this._ws.readyState;
@@ -417,16 +418,16 @@ export default class ApiClient extends CommonBase {
       }
     }
 
-    if (this._targets.getOrNull(target) === null) {
-      // `target` isn't in the map of same; that is it's a totally unknown ID.
+    if (this._targets.getOrNull(idOrTarget) === null) {
+      // `idOrTarget` isn't in the map of same; that is it's totally unknown.
       // Most likely indicates a bug in a higher layer of the system.
-      return Promise.reject(ConnectionError.unknownTargetId(this._connectionId, target));
+      return Promise.reject(ConnectionError.unknownTarget(this._connectionId, idOrTarget));
     }
 
     const id = this._nextId;
     this._nextId++;
 
-    const message = new Message(id, target, payload);
+    const message = new Message(id, TargetId.targetString(idOrTarget), payload);
     const msgJson = this._codec.encodeJson(message);
 
     switch (wsState) {

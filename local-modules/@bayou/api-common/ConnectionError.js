@@ -7,6 +7,8 @@ import { inspect } from 'util';
 import { TString } from '@bayou/typecheck';
 import { InfoError } from '@bayou/util-common';
 
+import TargetId from './TargetId';
+
 /**
  * Error class for reporting errors coming from `ApiClient` related to the
  * connection or transport (as opposed to, e.g., being errors being relayed from
@@ -86,15 +88,16 @@ export default class ConnectionError extends InfoError {
 
   /**
    * Constructs an error indicating that the _local_ side of the API received a
-   * target ID that it didn't already know about.
+   * target (ID or token) that it didn't already know about.
    *
    * @param {string} connectionId Connection ID string.
-   * @param {string} targetId ID of the target in question.
+   * @param {string|BearerToken} idOrTarget ID or token that identifies the
+   *   target in question.
    * @returns {ConnectionError} An appropriately-constructed error.
    */
-  static unknownTargetId(connectionId, targetId) {
+  static unknownTarget(connectionId, idOrTarget) {
     TString.check(connectionId);
-    TString.check(targetId);
-    return new ConnectionError('unknownTargetId', connectionId, targetId);
+    TargetId.orToken(idOrTarget);
+    return new ConnectionError('unknownTarget', connectionId, TargetId.safeString(idOrTarget));
   }
 }
