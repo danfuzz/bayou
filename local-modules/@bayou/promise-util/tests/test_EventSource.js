@@ -100,16 +100,36 @@ describe('@bayou/promise-util/EventSource', () => {
   });
 
   describe('emit()', () => {
-    it('works when called as a function', () => {
+    it('works when called as a function and passed a `Functor`', () => {
       const source = new EventSource();
 
-      function test(name, ...args) {
-        const f     = new Functor(name, ...args);
+      function test(...args) {
+        const f     = new Functor(...args);
         const event = source.emit(f);
 
         assert.instanceOf(event, ChainedEvent);
         assert.strictEqual(source.currentEventNow, event);
         assert.strictEqual(event.payload, f);
+      }
+
+      test('blort');
+      test('florp', 1, 2, 3);
+      test('zorch', { x: 'splat' });
+    });
+
+    it('works when called as a function and passed `Functor` construction arguments', () => {
+      const source = new EventSource();
+
+      function test(...args) {
+        const expect = new Functor(...args);
+        const event  = source.emit(...args);
+
+        assert.instanceOf(event, ChainedEvent);
+        assert.strictEqual(source.currentEventNow, event);
+
+        const payload = event.payload;
+        assert.instanceOf(payload, Functor);
+        assert.deepEqual(payload, expect);
       }
 
       test('blort');

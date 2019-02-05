@@ -167,7 +167,8 @@ export default class EventSource extends CommonBase {
 
   /**
    * {function} When called as a regular method, emits an event with the given
-   * payload which must be a {@link Functor}. When accessed as an object, will
+   * payload which must either be a single {@link Functor} argument or a name
+   * followed by event payload arguments. When accessed as an object, will
    * return any named property as a function of arbitrary arguments which emits
    * an event of the same name as the property.
    */
@@ -178,10 +179,16 @@ export default class EventSource extends CommonBase {
   /**
    * Emits an event with the given payload.
    *
-   * @param {Functor} payload The event payload.
+   * @param {Functor|string} payloadOrName The event payload _or_ the name of
+   *   the event.
+   * @param {...*} args If `payloadOrName` is a string, the arguments to include
+   *   with the event.
    * @returns {ChainedEvent} The emitted event.
    */
-  _emit(payload) {
+  _emit(payloadOrName, ...args) {
+    const payload = (payloadOrName instanceof Functor)
+      ? payloadOrName
+      : new Functor(payloadOrName, ...args);
     const event = new ChainedEvent(this, payload);
 
     this._currentEvent._resolveNext(event);
