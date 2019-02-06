@@ -7,7 +7,7 @@ import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { CaretId, SessionInfo } from '@bayou/doc-common';
 import { EventSource } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { CommonBase, Functor } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import CaretTracker from './CaretTracker';
 import PropertyClient from './PropertyClient';
@@ -219,7 +219,7 @@ export default class DocSession extends CommonBase {
       return proxy;
     } catch (e) {
       // Emit an event for and log the problem, and rethrow.
-      this._eventSource.emit(new Functor('closed'));
+      this._eventSource.emit.closed();
       this._log.event.sessionSetupFailed(e);
       throw e;
     }
@@ -260,7 +260,7 @@ export default class DocSession extends CommonBase {
   reportError(error) {
     const eventArgs = (error === null) ? [] : [error];
 
-    this._eventSource.emit(new Functor('error', ...eventArgs));
+    this._eventSource.emit.error(...eventArgs);
     this._log.event.errorReported(...eventArgs);
   }
 
@@ -280,19 +280,19 @@ export default class DocSession extends CommonBase {
 
     const url = this._sessionInfo.serverUrl;
 
-    this._eventSource.emit(new Functor('opening'));
+    this._eventSource.emit.opening();
     this._log.event.apiAboutToOpen(url);
     this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
 
     try {
       this._log.event.apiOpening();
       await this._apiClient.open();
-      this._eventSource.emit(new Functor('open'));
+      this._eventSource.emit.open();
       this._log.event.apiOpened();
     } catch (e) {
       // Emit an event for and log the problem, and rethrow. **TODO:** Consider
       // this as a spot to add retry logic.
-      this._eventSource.emit(new Functor('closed'));
+      this._eventSource.emit.closed();
       this._log.event.apiOpenFailed(e);
       throw e;
     }

@@ -20,6 +20,23 @@ import { CommonBase, Errors } from '@bayou/util-core';
 export default class BaseProxyHandler extends CommonBase {
   /**
    * Constructs and returns a proxy which wraps an instance of this class,
+   * and with a frozen no-op function as the target. The instance of this class
+   * is constructed with whatever arguments get passed to this method.
+   *
+   * @param {...*} args Construction arguments to pass to this class's
+   *   constructor.
+   * @returns {Proxy} Proxy instance which uses an instance of this class as its
+   *   handler and which adopts a baseline identity as a function.
+   */
+  static makeFunctionProxy(...args) {
+    // **Note:** `this` in the context of a static method is the class.
+    const handler = new this(...args);
+
+    return new Proxy(Object.freeze(() => undefined), handler);
+  }
+
+  /**
+   * Constructs and returns a proxy which wraps an instance of this class,
    * and with a frozen empty object as the target. The instance of this class
    * is constructed with whatever arguments get passed to this method.
    *

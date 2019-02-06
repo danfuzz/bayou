@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import ChainedEvent from './ChainedEvent';
+import EmitHandler from './EmitHandler';
 
 /**
  * Subclass of `EventEmitter` used by {@link EventSource}. This is set up to
@@ -89,18 +90,24 @@ export default class EventSource extends CommonBase {
     super();
 
     /**
-     * {ChainedEvent} Current (Latest / most recent) event emitted by this
-     * instance. If this instance has never emitted, this is an initial "stub"
-     * which is suitable for `await`ing in {@link #currentEvent}. (This
-     * arrangement makes the logic in {@link #emit} particularly simple.)
+     * {Proxy} Proxy which handles calls and accesses to the public property
+     * {@link #emit}.
      */
-    this._currentEvent = new ChainedEvent(this, new Functor('chain_head'));
+    this._emitProxy = EmitHandler.makeFunctionProxy((...args) => this._emit(...args));
 
     /**
      * {AssociatedEventEmitter|null} Standard event emitter instance, or `null`
      * if {@link #emitter} has not yet been accessed.
      */
     this._emitter = null;
+
+    /**
+     * {ChainedEvent} Current (Latest / most recent) event emitted by this
+     * instance. If this instance has never emitted, this is an initial "stub"
+     * which is suitable for `await`ing in {@link #currentEvent}. (This
+     * arrangement makes the logic in {@link #emit} particularly simple.)
+     */
+    this._currentEvent = new ChainedEvent(this, new Functor('chain_head'));
 
     /**
      * {boolean} Whether or not this instance has ever emitted an event. Used
@@ -159,12 +166,29 @@ export default class EventSource extends CommonBase {
   }
 
   /**
+   * {function} When called as a regular method, emits an event with the given
+   * payload which must either be a single {@link Functor} argument or a name
+   * followed by event payload arguments. When accessed as an object, will
+   * return any named property as a function of arbitrary arguments which emits
+   * an event of the same name as the property.
+   */
+  get emit() {
+    return this._emitProxy;
+  }
+
+  /**
    * Emits an event with the given payload.
    *
-   * @param {Functor} payload The event payload.
+   * @param {Functor|string} payloadOrName The event payload _or_ the name of
+   *   the event.
+   * @param {...*} args If `payloadOrName` is a string, the arguments to include
+   *   with the event.
    * @returns {ChainedEvent} The emitted event.
    */
-  emit(payload) {
+  _emit(payloadOrName, ...args) {
+    const payload = (payloadOrName instanceof Functor)
+      ? payloadOrName
+      : new Functor(payloadOrName, ...args);
     const event = new ChainedEvent(this, payload);
 
     this._currentEvent._resolveNext(event);
