@@ -160,6 +160,40 @@ export default class BaseDataStore extends CommonBase {
   }
 
   /**
+   * Gets permission information about the indicated author's access to the
+   * indicated document. Given valid IDs, returns an object with mappings from
+   * keys to `boolean`s as follows:
+   *
+   * * `canEdit` &mdash; Whether the author can perform edits on the document.
+   *   **Note:** If this is `true` then `canView` will also always be `true` as
+   *   well.
+   * * `canView` &mdash; Whether the author can view the document.
+   *
+   * It is an error if either of the given IDs is not a syntactically valid.
+   *
+   * @param {string} authorId The ID of the author.
+   * @param {string} documentId The ID of the document.
+   * @returns {object} Object with bindings as indicated above.
+   */
+  async getPermissions(authorId, documentId) {
+    this.checkAuthorIdSyntax(authorId);
+    this.checkDocumentIdSyntax(documentId);
+
+    const result = await this._impl_getPermissions(authorId, documentId);
+
+    TObject.withExactKeys(result, ['canEdit', 'canView']);
+    TBoolean.check(result.canEdit);
+    TBoolean.check(result.canView);
+
+    // Check the stated invariant.
+    if (result.canEdit && !result.canView) {
+      throw Errors.badUse('Incorrect subclass implementation.');
+    }
+
+    return result;
+  }
+
+  /**
    * Checks a given value to see if it's a syntactically valid author ID. To be
    * an author ID, the value must pass a syntax check defined by the concrete
    * subclass.
@@ -211,6 +245,19 @@ export default class BaseDataStore extends CommonBase {
    */
   async _impl_getDocumentInfo(documentId) {
     this._mustOverride(documentId);
+  }
+
+  /**
+   * Main implementation of {@link #getPermissions}. Only ever called with
+   * syntactically valid IDs.
+   *
+   * @abstract
+   * @param {string} authorId The ID of the author.
+   * @param {string} documentId The ID of the document.
+   * @returns {object} Permission information.
+   */
+  async _impl_getPermissions(authorId, documentId) {
+    this._mustOverride(authorId, documentId);
   }
 
   /**

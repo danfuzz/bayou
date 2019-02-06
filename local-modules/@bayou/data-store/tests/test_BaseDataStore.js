@@ -337,4 +337,112 @@ describe('@bayou/data-store/BaseDataStore', () => {
       });
     });
   });
+
+  describe('getPermissions()', () => {
+    it('rejects non-strings without calling through to the impl', async () => {
+      class Throws extends BaseDataStore {
+        _impl_isAuthorId(id_unused) {
+          return true;
+        }
+
+        _impl_isDocumentId(id_unused) {
+          return true;
+        }
+
+        async _impl_getPermissions(authorId_unused, documentId_unused) {
+          throw new Error('should-not-be-called');
+        }
+      }
+
+      const obj = new Throws();
+      for (const value of NON_STRINGS) {
+        await assert.isRejected(obj.getPermissions(value, 'x'), /badValue/, inspect(value));
+        await assert.isRejected(obj.getPermissions('x', value), /badValue/, inspect(value));
+        await assert.isRejected(obj.getPermissions(value, value), /badValue/, inspect(value));
+      }
+    });
+
+    it('rejects syntactically invalid strings without calling through to the impl', async () => {
+      let gotAuthorId   = null;
+      let gotDocumentId = null;
+
+      class Throws extends BaseDataStore {
+        _impl_isAuthorId(id) {
+          gotAuthorId = id;
+          return id === 'good';
+        }
+
+        _impl_isDocumentId(id) {
+          gotDocumentId = id;
+          return id === 'good';
+        }
+
+        async _impl_getPermissions(authorId_unused, documentId_unused) {
+          throw new Error('should-not-be-called');
+        }
+      }
+
+      const obj = new Throws();
+
+      await assert.isRejected(obj.getPermissions('bad', 'good'), /badValue/);
+      assert.strictEqual(gotAuthorId, 'bad');
+
+      await assert.isRejected(obj.getPermissions('good', 'bad'), /badValue/);
+      assert.strictEqual(gotDocumentId, 'bad');
+    });
+
+    it('calls through to the impl when given valid IDs', async () => {
+      let gotAuthorId   = null;
+      let gotDocumentId = null;
+
+      class AcceptsAll extends BaseDataStore {
+        _impl_isAuthorId(id) {
+          gotAuthorId = id;
+          return true;
+        }
+
+        _impl_isDocumentId(id) {
+          gotDocumentId = id;
+          return true;
+        }
+
+        async _impl_getPermissions(authorId, documentId) {
+          if (authorId !== gotAuthorId) {
+            throw new Error('unexpected `authorId` mismatch');
+          }
+
+          if (documentId !== gotDocumentId) {
+            throw new Error('unexpected `documentId` mismatch');
+          }
+
+          const canEdit = /edit/.test(documentId);
+          const canView = /view/.test(documentId);
+          return { canEdit, canView };
+        }
+      }
+
+      const obj = new AcceptsAll();
+
+      const result1 = await obj.getPermissions('x', 'edit-view');
+      assert.deepEqual(result1, { canEdit: true, canView: true });
+      assert.strictEqual(gotAuthorId, 'x');
+      assert.strictEqual(gotDocumentId, 'edit-view');
+
+      const result2 = await obj.getPermissions('y', 'view');
+      assert.deepEqual(result2, { canEdit: false, canView: true });
+      assert.strictEqual(gotAuthorId, 'y');
+      assert.strictEqual(gotDocumentId, 'view');
+
+      const result3 = await obj.getPermissions('z', 'nope');
+      assert.deepEqual(result3, { canEdit: false, canView: false });
+      assert.strictEqual(gotAuthorId, 'z');
+      assert.strictEqual(gotDocumentId, 'nope');
+
+      // This test makes the `_impl` violate the superclass contract and checks
+      // for the expected error.
+      await assert.isRejected(obj.getPermissions('x', 'edit'), /badUse/);
+      assert.strictEqual(gotAuthorId, 'x');
+      assert.strictEqual(gotDocumentId, 'edit');
+    });
+  });
 });
