@@ -33,6 +33,17 @@ export default class LocalDataStore extends BaseDataStore {
   /**
    * Implementation as required by the superclass.
    *
+   * @param {string} authorId_unused The ID of the author.
+   * @param {string} documentId_unused The ID of the document.
+   * @returns {object} Permission information.
+   */
+  async _impl_getPermissions(authorId_unused, documentId_unused) {
+    return { canEdit: true, canView: true };
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
    * @param {string} authorId The alleged author ID.
    * @returns {boolean} `true` if `authorId` is a syntactically valid author ID,
    *   or `false` if not.
