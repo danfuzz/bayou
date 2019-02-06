@@ -79,11 +79,9 @@ export default class AuthorAccess extends CommonBase {
       }
     }
 
-    log.info(
-      'Bound session for pre-existing caret.\n',
-      `  document: ${documentId}\n`,
-      `  author:   ${this._authorId}\n`,
-      `  caret:    ${caretId}`);
+    const authorId = this._authorId;
+
+    log.event.foundSession({ authorId, documentId, caretId });
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
@@ -102,21 +100,32 @@ export default class AuthorAccess extends CommonBase {
    */
   async makeNewSession(documentId) {
     // We only check the document ID syntax here, because we can count on the
-    // call to `getFileComplex()` to do a full validity check as part of its
+    // call to `getPermissions()` to do a full validity check as part of its
     // work.
     Storage.dataStore.checkDocumentIdSyntax(documentId);
 
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-
     // **Note:** This call includes data store back-end validation of the author
-    // ID.
-    const session = await fileComplex.makeNewSession(this._authorId);
+    // and document IDs.
+    const { canEdit, canView } = await Storage.dataStore.getPermissions(this._authorId, documentId);
 
-    log.info(
-      'Created session for new caret.\n',
-      `  document: ${documentId}\n`,
-      `  author:   ${this._authorId}\n`,
-      `  caret:    ${session.getCaretId()}`);
+    if (!(canEdit || canView)) {
+      // Though technically you could say that the file is "found," we report it
+      // as a `fileNotFound` to avoid leaking the fact of the file's existence
+      // to a user who shouldn't even be able to figure that out.
+      throw Errors.fileNotFound(documentId);
+    }
+
+    if (!canEdit) {
+      // **TODO:** Support view-only session creation.
+      throw Errors.wtf('View-only sessions not yet supported.');
+    }
+
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
+    const session     = await fileComplex.makeNewSession(this._authorId);
+    const authorId    = this._authorId;
+    const caretId     = session.getCaretId();
+
+    log.event.madeSession({ authorId, documentId, caretId });
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
