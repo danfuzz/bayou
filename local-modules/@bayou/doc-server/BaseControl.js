@@ -228,6 +228,14 @@ export default class BaseControl extends BaseDataManager {
         // One of these will get thrown if and when we lose an append race. This
         // regularly occurs when there are simultaneous editors.
         this.log.info(`Lost document append race for revision with ${errorName} for revNum ${revNum}`);
+
+        if (fileStoreOt_Errors.is_pathNotAbsent(e)) {
+          const resultFromPath = snapshot.getOrNull(changePath);
+          const decodedResultFromPath =
+            resultFromPath !== null ? codec.decodeJsonBuffer(resultFromPath) : resultFromPath;
+          this.log.info('Path not absent when it should be:', decodedResultFromPath);
+        }
+
         return false;
       } else {
         // No other errors are expected, so just rethrow.
@@ -1009,6 +1017,8 @@ export default class BaseControl extends BaseDataManager {
     const changeClass = this.constructor.changeClass;
     const deltaClass  = this.constructor.deltaClass;
 
+    this.log.event.attemptUpdate(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
+
     // **TODO:** Consider whether we should make this call have an explicit
     // timeout. (It would require adding an argument to the method.)
     const currentSnapshot = await this.getSnapshot();
@@ -1036,9 +1046,14 @@ export default class BaseControl extends BaseDataManager {
       } else {
         const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
         const correction     = expectedSnapshot.diff(resultSnapshot);
+
+        this.log.event.updateSucceeded(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
+
         return correction;
       }
     }
+
+    this.log.event.updateFailed(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
 
     // A `false` result from the above call means that we lost an update race
     // (that is, there was revision skew that occurred during the update
@@ -1146,6 +1161,8 @@ export default class BaseControl extends BaseDataManager {
     }
 
     try {
+      this.log.event.writingStoredSnapshot(revNum);
+
       const snapshot = await this.getSnapshot(revNum);
       await this._writeStoredSnapshot(snapshot);
     } catch (e) {
@@ -1158,6 +1175,8 @@ export default class BaseControl extends BaseDataManager {
       // slated to become one.)
       this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
     }
+
+    this.log.event.wroteStoredSnapshot(revNum);
   }
 
   /**

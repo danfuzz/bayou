@@ -31,6 +31,11 @@ export default class MockSnapshot extends BaseSnapshot {
     return true;
   }
 
+  // TODO: Fill in for testing purposes
+  getOrNull() {
+    return null;
+  }
+
   _impl_diffAsDelta(newerSnapshot) {
     return [new MockOp('diffDelta'), newerSnapshot.contents.ops[0]];
   }
