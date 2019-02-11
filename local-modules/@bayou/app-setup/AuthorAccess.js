@@ -99,12 +99,20 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeNewSession(documentId) {
-    // We only check the document ID syntax here, because we can count on the
-    // call to `getPermissions()` to do a full validity check as part of its
-    // work.
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
+    const authorId = this._authorId;
 
-    const { canEdit, canView } = await Storage.dataStore.getPermissions(this._authorId, documentId);
+    // Ensure (to the extent possible) that both salient IDs are valid the
+    // moment before we ask for a permission check. (There is a chance that one
+    // or the other could become invalid in the mean time. In those cases, the
+    // permission call will properly fail, but nonetheless we're better off
+    // trying to get a probably-less-obscure error to happen up front in the
+    // usual case.)
+    await Promise.all([
+      Storage.dataStore.checkExistingAuthorId(authorId),
+      Storage.dataStore.checkExistingDocumentId(documentId)
+    ]);
+
+    const { canEdit, canView } = await Storage.dataStore.getPermissions(authorId, documentId);
 
     if (!(canEdit || canView)) {
       // Though technically you could say that the file is "found," we report it
@@ -119,8 +127,7 @@ export default class AuthorAccess extends CommonBase {
     }
 
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const session     = await fileComplex.makeNewSession(this._authorId);
-    const authorId    = this._authorId;
+    const session     = await fileComplex.makeNewSession(authorId);
     const caretId     = session.getCaretId();
 
     log.event.madeSession({ authorId, documentId, caretId });
