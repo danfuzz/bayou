@@ -220,7 +220,7 @@ export default class FileComplex extends BaseComplexMember {
   _sessionReaper(caretId) {
     return () => {
       this._sessions.delete(caretId);
-      this.log.info(`Reaped idle session; caret ${caretId}.`);
+      this.log.event.reapedIdleSession(caretId);
     };
   }
 }
