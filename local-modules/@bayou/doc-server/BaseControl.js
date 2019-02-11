@@ -221,7 +221,7 @@ export default class BaseControl extends BaseDataManager {
       // Run prerequisites on snapshot
       snapshot.checkPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
       snapshot.checkPathAbsent(changePath);
-      await this._appendChangeWithRetry(fileChange, clampedTimeoutMsec);
+      await file.appendChange(fileChange, clampedTimeoutMsec);
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
         const errorName = fileStoreOt_Errors.is_pathNotAbsent(e) ? 'pathNotAbsent' : 'pathHashMismatch';
@@ -237,6 +237,9 @@ export default class BaseControl extends BaseDataManager {
         }
 
         return false;
+      } else if (Errors.is_timedOut(e)) {
+        this.log.info(`\`appendChange()\` timed out: ${timeoutMsec}msec`);
+        throw Errors.timedOut(timeoutMsec);
       } else {
         // No other errors are expected, so just rethrow.
         throw e;
@@ -249,48 +252,6 @@ export default class BaseControl extends BaseDataManager {
     this._maybeWriteStoredSnapshot(change.revNum);
 
     return true;
-  }
-
-  async _appendChangeWithRetry(initialFileChange, timeoutMsec) {
-    const file = this.fileCodec.file;
-    const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
-    const timeoutTime = Date.now() + clampedTimeoutMsec;
-    let fileChange = initialFileChange;
-
-    // Loop until the overall timeout.
-    for (;;) {
-      const now = Date.now();
-      const revNum = fileChange.revNum;
-
-      if (now >= timeoutTime) {
-        this.log.info(`\`_appendChangeWithRetry()\` timed out: ${timeoutMsec}msec`);
-        throw Errors.timedOut(timeoutMsec);
-      }
-
-      // If this returns normally (doesn't throw), then we know it wasn't due
-      // to hitting the timeout.
-      try {
-        const appendSuccess = await file.appendChange(fileChange, timeoutTime - now);
-
-        if (appendSuccess) {
-          return;
-        } else {
-          const currentRevNum = file.currentSnapshot.revNum;
-          const newRevNum = currentRevNum + 1;
-          fileChange = fileChange.withRevNum(newRevNum);
-
-          this.log.info(`Lost file append race for revision ${revNum}. Trying again with ${newRevNum}`);
-        }
-      } catch (e) {
-        // For a timeout, we log and report the original timeout value. For
-        // everything else, we just transparently re-throw.
-        if (Errors.is_timedOut(e)) {
-          this.log.info(`\`_appendChangeWithRetry()\` timed out: ${timeoutMsec}msec`);
-          throw Errors.timedOut(timeoutMsec);
-        }
-        throw e;
-      }
-    }
   }
 
   /**
