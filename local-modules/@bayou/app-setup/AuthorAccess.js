@@ -104,8 +104,6 @@ export default class AuthorAccess extends CommonBase {
     // work.
     Storage.dataStore.checkDocumentIdSyntax(documentId);
 
-    // **Note:** This call includes data store back-end validation of the author
-    // and document IDs.
     const { canEdit, canView } = await Storage.dataStore.getPermissions(this._authorId, documentId);
 
     if (!(canEdit || canView)) {
