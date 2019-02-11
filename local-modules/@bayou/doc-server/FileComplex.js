@@ -197,7 +197,7 @@ export default class FileComplex extends BaseComplexMember {
 
     this._sessions.set(caretId, weak(result, reaper));
 
-    this.log.sessionNowActive({ fileId, authorId, caretId });
+    this.log.event.sessionNowActive({ fileId, authorId, caretId });
 
     return result;
   }
