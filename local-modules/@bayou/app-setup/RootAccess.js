@@ -37,13 +37,19 @@ export default class RootAccess extends CommonBase {
    * author editing a specific document, on the server (or server cluster)
    * running this method.
    *
+   * **Note:** This method checks the validity of the IDs via back-end requests
+   * but does _not_ check to see if the author actually has permission to access
+   * the identified document. That permission check will end up getting done
+   * when the client comes back in through the "front door" and lands in a call
+   * to {@link AuthorAccess#makeNewSession}.
+   *
    * @param {string} authorId ID of the author (user) who will be driving the
    *   session.
    * @param {string} documentId ID of the document to be accessed.
    * @returns {SessionInfo} Corresponding info struct.
    */
   async makeSessionInfo(authorId, documentId) {
-    log.event.sessionRequested(authorId, documentId);
+    log.event.sessionInfoRequested(authorId, documentId);
 
     // These checks round-trip with the back-end to do full (not just syntactic)
     // validation.
@@ -58,22 +64,18 @@ export default class RootAccess extends CommonBase {
     // caller.
     await DocServer.theOne.getFileComplex(documentId);
 
-    log.event.sessionInfoValid(authorId, documentId);
-
     const url         = `${Network.baseUrl}/api`;
     const authorToken = await this._getAuthorToken(authorId);
+    const result      = new SessionInfo(url, authorToken, documentId);
 
-    // As a bit of extra visibility / validation as we transition to new-style
-    // sessions, get and log the "authority" granted to `authorToken`. This had
-    // better turn out to be that it grants edit access to the author in
-    // question! **Note:** Only log the safe (redacted) form of the token.
-    const authority = await Auth.tokenAuthority(authorToken);
-    log.event.gotAuthorToken({ where: 'makeSessionInfo', token: authorToken.safeString, authority });
+    // Log using `logInfo` to avoid leaking the unredacted token to the logs.
+    log.event.madeSessionInfo(result.logInfo);
 
-    // Return the full token string to the caller, as it (the client) will
-    // ultimately need to pass it back in full. (Usually it's a bad idea to
-    // return unredacted tokens; this (kind of) case is the main exception.)
-    return new SessionInfo(url, authorToken, documentId);
+    // **Note:** This returns the full token string to the caller, as it (the
+    // client) will ultimately need to pass it back in full. (Usually it's a bad
+    // idea to return unredacted tokens; this (kind of) case is the main
+    // exception.)
+    return result;
   }
 
   /**

@@ -169,7 +169,8 @@ export default class BaseDataStore extends CommonBase {
    *   well.
    * * `canView` &mdash; Whether the author can view the document.
    *
-   * It is an error if either of the given IDs is not a syntactically valid.
+   * It is an error if either of the given IDs is invalid, as reported by the
+   * back end (not just surface syntax).
    *
    * @param {string} authorId The ID of the author.
    * @param {string} documentId The ID of the document.

@@ -193,14 +193,11 @@ export default class FileComplex extends BaseComplexMember {
   _activateSession(authorId, caretId) {
     const result = new DocSession(this, authorId, caretId);
     const reaper = this._sessionReaper(caretId);
+    const fileId = this.file.id;
 
     this._sessions.set(caretId, weak(result, reaper));
 
-    this.log.info(
-      `Session now active.\n`,
-      `  file:    ${this.file.id}\n`,
-      `  author:  ${authorId}\n`,
-      `  caret:   ${caretId}`);
+    this.log.event.sessionNowActive({ fileId, authorId, caretId });
 
     return result;
   }
@@ -223,7 +220,7 @@ export default class FileComplex extends BaseComplexMember {
   _sessionReaper(caretId) {
     return () => {
       this._sessions.delete(caretId);
-      this.log.info(`Reaped idle session; caret ${caretId}.`);
+      this.log.event.reapedIdleSession(caretId);
     };
   }
 }
