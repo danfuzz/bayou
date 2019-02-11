@@ -285,15 +285,15 @@ export default class DocSession extends CommonBase {
    */
   getLogInfo() {
     const result = {
-      author:   this.getAuthorId(),
-      caret:    this.getCaretId(),
-      document: this.getDocumentId(),
-      file:     this.getFileId()
+      authorId:   this.getAuthorId(),
+      caretId:    this.getCaretId(),
+      documentId: this.getDocumentId(),
+      fileId:     this.getFileId()
     };
 
     // Only include the file ID if it's not the same as the document ID.
-    if (result.file === result.document) {
-      delete result.file;
+    if (result.fileId === result.documentId) {
+      delete result.fileId;
     }
 
     return result;
