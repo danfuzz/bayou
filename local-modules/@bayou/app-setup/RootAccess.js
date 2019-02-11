@@ -68,7 +68,8 @@ export default class RootAccess extends CommonBase {
     const authorToken = await this._getAuthorToken(authorId);
     const result      = new SessionInfo(url, authorToken, documentId);
 
-    log.event.madeSessionInfo(result);
+    // Log using `logInfo` to avoid leaking the unredacted token to the logs.
+    log.event.madeSessionInfo(result.logInfo);
 
     // **Note:** This returns the full token string to the caller, as it (the
     // client) will ultimately need to pass it back in full. (Usually it's a bad
