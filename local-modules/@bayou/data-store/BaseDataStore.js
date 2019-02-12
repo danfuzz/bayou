@@ -97,11 +97,11 @@ export default class BaseDataStore extends CommonBase {
    * is, a string for which {@link #isAuthorId} returns `true` &mdash; this
    * returns an object with the following bindings:
    *
-   * `valid` &mdash; A boolean indicating whether the ID is truly valid with
+   * * `valid` &mdash; A boolean indicating whether the ID is truly valid with
    *   regard to the storage system. That is, it is possible for `isAuthorId()`
    *   to return `true` yet this be `false`, because it might only be in the
    *   underlying storage layer that full validity can be determined.
-   * `exists` &mdash; A boolean indicating whether or not the author currently
+   * * `exists` &mdash; A boolean indicating whether or not the author currently
    *   exists in the system.
    *
    * It is an error if the given `authorId` is not a syntactically valid ID, as
@@ -128,14 +128,14 @@ export default class BaseDataStore extends CommonBase {
    * that is, a string for which {@link #isDocumentId} returns `true` &mdash;
    * this returns an object with the following bindings:
    *
-   * `valid` &mdash; A boolean indicating whether the ID is truly valid with
+   * * `valid` &mdash; A boolean indicating whether the ID is truly valid with
    *   regard to the storage system. That is, it is possible for
    *   `isDocumentId()` to return `true` yet this be `false`, because it might
    *   only be in the underlying storage layer that full validity can be
    *   determined.
-   * `exists` &mdash; A boolean indicating whether or not the document currently
-   *   exists in the system.
-   * `fileId` &mdash; If the document exists, the corresponding file ID string
+   * * `exists` &mdash; A boolean indicating whether or not the document
+   *   currently exists in the system.
+   * * `fileId` &mdash; If the document exists, the corresponding file ID string
    *   to use when interacting with {@link @bayou/file-store}, or `null` when
    *   `exists === false`.
    *
