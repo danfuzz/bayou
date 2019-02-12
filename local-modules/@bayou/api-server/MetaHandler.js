@@ -40,4 +40,16 @@ export default class MetaHandler {
   ping() {
     return true;
   }
+
+  /**
+   * API meta-method `serverInfo`: Returns safe-for-publication
+   * (non-security-sensitive) information about the server that is servicing
+   * this connection.
+   *
+   * @returns {object} Ad-hoc information about the server.
+   */
+  serverInfo() {
+    // **TODO:** Fill this in.
+    return { server: 'yes' };
+  }
 }
