@@ -64,7 +64,7 @@ export default class Application extends CommonBase {
      * {string} Public ID of this server as reported through HTTP response
      * headers.
      */
-    this._serverId = Application._makeIdString();
+    this._serverId = ProductInfo.theOne.INFO.buildId;
 
     /** {RequestLogger} HTTP request / response logger. */
     this._requestLogger = new RequestLogger(log);
@@ -232,20 +232,5 @@ export default class Application extends CommonBase {
     for (const dir of Deployment.ASSET_DIRS) {
       app.use('/', express.static(dir));
     }
-  }
-
-  /**
-   * Makes the server ID string to report in HTTP responses.
-   *
-   * @returns {string} The server ID string.
-   */
-  static _makeIdString() {
-    const { name, version, commitId } = ProductInfo.theOne.INFO;
-
-    const id = ((typeof commitId === 'string') && commitId !== '')
-      ? `-${commitId.slice(0, 8)}`
-      : '';
-
-    return `${name}-${version}${id}`;
   }
 }
