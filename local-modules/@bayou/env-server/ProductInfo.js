@@ -30,6 +30,8 @@ export default class ProductInfo extends Singleton {
       info[camelCase(key)] = value;
     }
 
+    info.buildId = ProductInfo._makeBuildIdString(info);
+
     /** {object} Product info object. */
     this._productInfo = Object.freeze(info);
   }
@@ -39,5 +41,22 @@ export default class ProductInfo extends Singleton {
    */
   get INFO() {
     return this._productInfo;
+  }
+
+  /**
+   * Makes the build ID string to include in the info (and which, for example,
+   * gets reported in HTTP response headers).
+   *
+   * @param {object} info The basic product info.
+   * @returns {string} The build ID string.
+   */
+  static _makeBuildIdString(info) {
+    const { name, version, commitId } = info;
+
+    const id = ((typeof commitId === 'string') && commitId !== '')
+      ? `-${commitId.slice(0, 8)}`
+      : '';
+
+    return `${name}-${version}${id}`;
   }
 }
