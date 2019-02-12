@@ -7,6 +7,8 @@ import path from 'path';
 import { Assets } from '@bayou/assets-client';
 import { UtilityClass } from '@bayou/util-common';
 
+import Network from './Network';
+
 /**
  * Utility functionality regarding the deployment configuration of a server.
  */
@@ -55,6 +57,15 @@ export default class Deployment extends UtilityClass {
    */
   static isRunningInDevelopment() {
     return true;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * @returns {object} Ad-hoc information about the server.
+   */
+  static serverInfo() {
+    return { baseUrl: Network.baseUrl };
   }
 
   /**

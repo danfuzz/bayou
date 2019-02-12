@@ -70,6 +70,16 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
+   * Gets arbitrary server-identifying information, which gets returned to
+   * clients via {@link MetaHandler#serverInfo}.
+   *
+   * @returns {object} Ad-hoc information about the server.
+   */
+  static serverInfo() {
+    return use.Deployment.serverInfo();
+  }
+
+  /**
    * Checks to see if this server should serve code assets (most notably client
    * JavaScript bundles). It is typical (but not necessary) for this to be
    * `true` in development environments and `false` in production environments.
