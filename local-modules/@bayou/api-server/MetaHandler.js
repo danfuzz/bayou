@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Deployment } from '@bayou/config-server';
+
 import BaseConnection from './BaseConnection';
 
 /**
@@ -49,7 +51,6 @@ export default class MetaHandler {
    * @returns {object} Ad-hoc information about the server.
    */
   serverInfo() {
-    // **TODO:** Fill this in.
-    return { server: 'yes' };
+    return Deployment.serverInfo();
   }
 }
