@@ -156,10 +156,12 @@ export default class ApiClientNew extends CommonBase {
 
     this.log.event.opening();
 
-    const id = await this.meta.connectionId();
+    const [id, serverInfo] = await Promise.all([
+      this.meta.connectionId(),
+      this.meta.serverInfo()]);
 
     this.connectionId = id;
-    this.log.event.open();
+    this.log.event.open(serverInfo);
   }
 
   /**
