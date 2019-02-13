@@ -19,7 +19,7 @@ describe('@bayou/env-server/ProductInfo', () => {
     it('is an object full of the expected product info', () => {
       const info = ProductInfo.theOne.INFO;
       const productKeys = [
-        'buildData', 'buildId', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
+        'buildDate', 'buildId', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
 
       assert.doesNotThrow(() => TObject.withExactKeys(info, productKeys));
