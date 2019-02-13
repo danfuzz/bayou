@@ -60,12 +60,6 @@ export default class Application extends CommonBase {
     /** {http.Server} The server that directly answers HTTP requests. */
     this._server = http.createServer(this._app);
 
-    /**
-     * {string} Public ID of this server as reported through HTTP response
-     * headers.
-     */
-    this._serverId = ProductInfo.theOne.INFO.buildId;
-
     /** {RequestLogger} HTTP request / response logger. */
     this._requestLogger = new RequestLogger(log);
 
@@ -142,7 +136,7 @@ export default class Application extends CommonBase {
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', this._serverId);
+      res.setHeader('X-Powered-By', ProductInfo.theOne.INFO.buildId);
       next();
     });
 
