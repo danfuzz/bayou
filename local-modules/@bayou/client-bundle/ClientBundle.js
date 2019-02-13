@@ -104,7 +104,7 @@ export default class ClientBundle extends Singleton {
       // The `test()` skips `.` and `..`.
       if (/^[a-z]/.test(name)) {
         const fullPath = `/${name}`;
-        log.info('Bundle updated:', name);
+        log.event.bundleUpdated(name);
         this._currentBundles.set(name, this._fs.readFileSync(fullPath));
         this._fs.unlinkSync(fullPath);
         any = true;

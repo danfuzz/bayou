@@ -81,7 +81,7 @@ export default class ProgressMessage {
 
     this._lastTime = now;
     this._lastFrac = frac;
-    this._log.info(`${Math.floor(frac * 100)}% -- ${msg}`);
+    this._log.event.buildingBundles(`${Math.floor(frac * 100)}%`, msg);
   }
 
   /**
