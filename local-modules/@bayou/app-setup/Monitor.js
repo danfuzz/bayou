@@ -77,6 +77,13 @@ export default class Monitor extends CommonBase {
     // Logging.
     app.use(this._requestLogger.expressMiddleware);
 
+    // Thwack the `X-Powered-By` header that Express provides by default,
+    // replacing it with something that identifies this product.
+    app.use((req_unused, res, next) => {
+      res.setHeader('X-Powered-By', ProductInfo.theOne.INFO.buildId);
+      next();
+    });
+
     app.get('/health', async (req_unused, res) => {
       const [status, text] = await this._mainApplication.isHealthy()
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
