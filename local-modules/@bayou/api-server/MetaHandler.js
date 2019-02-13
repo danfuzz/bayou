@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Deployment } from '@bayou/config-server';
+
 import BaseConnection from './BaseConnection';
 
 /**
@@ -39,5 +41,16 @@ export default class MetaHandler {
    */
   ping() {
     return true;
+  }
+
+  /**
+   * API meta-method `serverInfo`: Returns safe-for-publication
+   * (non-security-sensitive) information about the server that is servicing
+   * this connection.
+   *
+   * @returns {object} Ad-hoc information about the server.
+   */
+  serverInfo() {
+    return Deployment.serverInfo();
   }
 }
