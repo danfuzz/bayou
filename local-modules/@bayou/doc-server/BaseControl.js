@@ -489,6 +489,11 @@ export default class BaseControl extends BaseDataManager {
    */
   async getSnapshot(revNum = null) {
     const currentRevNum = await this.currentRevNum();
+
+    if (revNum === null) {
+      this.log.info(`Getting most recent snapshot with revNum ${currentRevNum}`);
+    }
+
     revNum = (revNum === null)
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
@@ -1079,6 +1084,8 @@ export default class BaseControl extends BaseDataManager {
     const data = file.currentSnapshot.getPathRange(
       this.constructor.changePathPrefix, startInclusive, endExclusive);
 
+    this.log.event.gettingChangeRange(startInclusive, endExclusive);
+
     for (let i = startInclusive; i < endExclusive; i++) {
       const path = clazz.pathForChange(i);
 
@@ -1093,6 +1100,8 @@ export default class BaseControl extends BaseDataManager {
         throw Errors.badUse(`Missing change in requested range: r${i}`);
       }
     }
+
+    this.log.event.gotChangeRange(startInclusive, endExclusive);
 
     return result;
   }
