@@ -13,8 +13,8 @@ import { CommonBase } from '@bayou/util-common';
 const log = new Logger('root-access');
 
 /**
- * "Root access" object. This is the object which is protected by the root
- * bearer token(s).
+ * "Root access" object. An instance of this class (or a subclass of it) is
+ * what the root bearer token(s) grant access to.
  */
 export default class RootAccess extends CommonBase {
   /**

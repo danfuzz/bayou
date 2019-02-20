@@ -4,5 +4,6 @@
 
 import Application from './Application';
 import Monitor from './Monitor';
+import RootAccess from './RootAccess';
 
-export { Application, Monitor };
+export { Application, Monitor, RootAccess };
