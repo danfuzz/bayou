@@ -27,10 +27,10 @@ export default class PropertyIterable extends CommonBase {
   constructor(object, filter = null) {
     super();
 
-    /** The object to iterate over. */
+    /** {object} The object to iterate over. */
     this._object = object;
 
-    /** The filter. */
+    /** {function|null} The filter. */
     this._filter = filter;
   }
 
