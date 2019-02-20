@@ -140,6 +140,38 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
+  describe('skipNames()', () => {
+    it('omits names that match', () => {
+      const obj = {
+        foo_no_1: 'x',
+        _no_2() { /*empty*/ },
+        get x_no_y() { return 10; },
+        yes1: 'yes',
+        yes2() { /*empty*/ },
+        set yes3(value_unused) { /*empty*/ }
+      };
+      const iter = new PropertyIterable(obj).skipNames(/_no_/);
+      const expectedProperties = ['yes1', 'yes2', 'yes3'];
+
+      testIteratable(iter, expectedProperties);
+    });
+
+    it('does not touch symbol-named properties', () => {
+      const sym1 = Symbol('_no_');
+      const sym2 = Symbol('_no_2');
+      const obj = {
+        [sym1]: 'x',
+        [sym2]() { /*empty*/ },
+        x_no_y() { return 10; },
+        yes: 'yes'
+      };
+      const iter = new PropertyIterable(obj).skipNames(/_no_/);
+      const expectedProperties = [sym1, sym2, 'yes'];
+
+      testIteratable(iter, expectedProperties);
+    });
+  });
+
   describe('skipPrivate()', () => {
     it('omits private properties', () => {
       const obj = {

@@ -89,6 +89,25 @@ export default class PropertyIterable extends CommonBase {
   }
 
   /**
+   * Gets an instance that is like this one but with an additional filter which
+   * only passes names that do _not_ match the given expression. The test only
+   * applies to string names; symbol-named properties all pass this filter.
+   *
+   * @param {RegExp} regex Expression to use to test names.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipNames(regex) {
+    TObject.check(regex, RegExp);
+
+    function filterFunc(desc) {
+      const name = desc.name;
+      return !((typeof name === 'string') && regex.test(name));
+    }
+
+    return this.filter(filterFunc);
+  }
+
+  /**
    * Gets an instance that is like this one but with an additional filter that
    * skips properties defined on the root `Object` prototype.
    *
@@ -105,7 +124,7 @@ export default class PropertyIterable extends CommonBase {
    * @returns {PropertyIterable} The new iterator.
    */
   skipPrivate() {
-    return this.filter(desc => !/^_/.test(desc.name));
+    return this.skipNames(/^_/);
   }
 
   /**
