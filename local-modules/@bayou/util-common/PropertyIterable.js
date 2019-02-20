@@ -64,14 +64,25 @@ export default class PropertyIterable extends CommonBase {
 
   /**
    * Gets an instance that is like this one but with an additional filter that
-   * only passes public methods (non-synthetic function-valued properties whose
-   * names are strings (not symbols) which _don't_ start with `_` and are also
-   * not the special name `constructor`).
+   * only passes public properties (non-synthetic properties whose names are
+   * strings (not symbols) which _don't_ start with `_` and are also not the
+   * special name `constructor`).
+   *
+   * @returns {PropertyIterable} The new iterator.
+   */
+  onlyPublic() {
+    return this.onlyStringNames().skipNames(/^(_|constructor$)/);
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * only passes public methods (same as the intersection of {@link #onlyPublic}
+   * and {@link #onlyMethods}).
    *
    * @returns {PropertyIterable} The new iterator.
    */
   onlyPublicMethods() {
-    return this.skipSynthetic().onlyMethods().onlyStringNames().skipNames(/^(_|constructor$)/);
+    return this.onlyPublic().onlyMethods();
   }
 
   /**

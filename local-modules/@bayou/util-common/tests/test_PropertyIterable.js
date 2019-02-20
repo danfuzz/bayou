@@ -83,9 +83,40 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
+  describe('onlyPublic()', () => {
+    it('returns just the public properties of the object', () => {
+      const sym1 = Symbol('x123');
+      const sym2 = Symbol('x234');
+      class Blort {
+        [sym1]() { /*empty*/ }
+        constructor() { /*empty*/ }
+        foo() { /*empty*/ }
+        _bar() { /*empty*/ }
+        get blort() { return 10; }
+      }
+
+      Blort.prototype.x = 123;
+
+      const instance = new Blort();
+      instance.y     = 123;
+      instance.baz   = () => { /*empty*/ };
+      instance[sym2] = 123;
+
+      const iter = new PropertyIterable(instance);
+      const methodIter = iter.onlyPublic();
+      const expectedProperties = ['foo', 'baz', 'blort', 'x', 'y'];
+      const unexpectedProperties = ['constructor', '_bar', sym1, sym2];
+
+      testIteratable(methodIter, expectedProperties, unexpectedProperties);
+    });
+  });
+
   describe('onlyPublicMethods()', () => {
     it('returns just the public methods of the object', () => {
+      const sym1 = Symbol('x123');
+      const sym2 = Symbol('x234');
       class Blort {
+        [sym1]() { /*empty*/ }
         constructor() { /*empty*/ }
         foo() { /*empty*/ }
         _bar() { /*empty*/ }
@@ -95,13 +126,14 @@ describe('@bayou/util-common/PropertyIterable', () => {
       Blort.prototype.x = 123;
 
       const instance = new Blort();
-      instance.y   = 123;
-      instance.baz = () => { /*empty*/ };
+      instance.y     = 123;
+      instance.baz   = () => { /*empty*/ };
+      instance[sym2] = () => { /*empty*/ };
 
       const iter = new PropertyIterable(instance);
       const methodIter = iter.onlyPublicMethods();
       const expectedProperties = ['foo', 'baz'];
-      const unexpectedProperties = ['constructor', '_bar', 'blort', 'x', 'y'];
+      const unexpectedProperties = ['constructor', '_bar', 'blort', 'x', 'y', sym1, sym2];
 
       testIteratable(methodIter, expectedProperties, unexpectedProperties);
     });
