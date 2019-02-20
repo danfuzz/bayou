@@ -87,12 +87,23 @@ export default class PropertyIterable extends CommonBase {
 
   /**
    * Gets an instance that is like this one but with an additional filter which
-   * only passes names that are strings (not symbols).
+   * only passes names that are strings (not symbols) and that must additionally
+   * match the given regular expression (if given).
    *
+   * @param {RegExp|null} [regex = null] Expression to use to test names.
    * @returns {PropertyIterable} The new iterator.
    */
-  onlyStringNames() {
-    return this.filter(desc => typeof desc.name === 'string');
+  onlyStringNames(regex = null) {
+    TObject.orNull(regex, RegExp);
+
+    function filterFunc(desc) {
+      const name = desc.name;
+
+      return (typeof name === 'string')
+        && ((regex === null) || regex.test(name));
+    }
+
+    return this.filter(filterFunc);
   }
 
   /**

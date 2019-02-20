@@ -157,6 +157,28 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
+  describe('onlyStringNames(regex)', () => {
+    it('omits symbol names and names that do not match `regex`', () => {
+      const sym1 = Symbol('abc_x_abc');
+      const sym2 = Symbol('zxy');
+      const obj = {
+        a: 'no',
+        [sym1]: 'no',
+        [sym2]() { /*empty*/ },
+        x1() { return 10; },
+        x2: 123,
+        zxv: 456,
+        b: 'no',
+        c: 'no'
+      };
+      const iter = new PropertyIterable(obj).onlyStringNames(/x/);
+      const expectedProperties = ['x1', 'x2', 'zxv'];
+      const unexpectedProperties = [sym1, sym2, 'a', 'b', 'c'];
+
+      testIteratable(iter, expectedProperties, unexpectedProperties);
+    });
+  });
+
   describe('skipClass()', () => {
     it('returns just properties that are "below" the given class', () => {
       const instance = new Bottom();
