@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from '@bayou/typecheck';
-import { PropertyIterable } from '@bayou/util-common';
+import { CommonBase, PropertyIterable } from '@bayou/util-common';
 
 /**
  * Set<string> Set of method names that are _not_ to be offered across an API
@@ -96,8 +96,9 @@ export default class Schema {
    */
   static _makeSchemaFor(target) {
     const result = new Map();
+    const iter   = new PropertyIterable(target).skipClass(CommonBase).onlyMethods();
 
-    for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
+    for (const desc of iter) {
       const name = desc.name;
 
       if ((typeof name !== 'string') || name.match(/^_/) || VERBOTEN_METHODS.has(name)) {
