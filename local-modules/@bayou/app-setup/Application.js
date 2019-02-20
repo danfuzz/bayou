@@ -45,7 +45,7 @@ export default class Application extends CommonBase {
     this._contextInfo = new ContextInfo(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
 
     /**
-     * {RootAccess} The "root access" object. This is the object which tokens
+     * {object} The "root access" object. This is the object which tokens
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = this._makeRootAccess();
@@ -75,8 +75,8 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * {RootAccess} The "root access" object. This is the object which tokens
-   * bearing {@link Auth#TYPE_root} authority grant access to.
+   * {object} The "root access" object. This is the object which tokens bearing
+   * {@link Auth#TYPE_root} authority grant access to.
    */
   get rootAccess() {
     return this._rootAccess;
