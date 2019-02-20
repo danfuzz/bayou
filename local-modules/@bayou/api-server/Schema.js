@@ -6,20 +6,12 @@ import { TObject, TString } from '@bayou/typecheck';
 import { CommonBase, PropertyIterable } from '@bayou/util-common';
 
 /**
- * Set<string> Set of method names that are _not_ to be offered across an API
- * boundary.
+ * {RegExp} Expression that matches method names that are _not_ to be offered
+ * across an API boundary. Specifically, we don't support directly promise-like
+ * behavior across an API boundary. (Though note, on the client side all exposed
+ * methods return promises that are implemented locally.)
  */
-const VERBOTEN_METHODS = new Set([
-  // We don't support directly promise-like behavior across an API boundary.
-  // (Though note, on the client side all exposed methods return promises that
-  // are implemented locally.)
-  'then',
-  'catch',
-
-  // It'd be weird (and generally wrong) to call an instance's constructor
-  // directly.
-  'constructor'
-]);
+const VERBOTEN_NAMES = /^(then|catch)$/;
 
 /**
  * Schema for an object. Represents what actions are available. More
@@ -98,20 +90,11 @@ export default class Schema extends CommonBase {
    */
   static _makeSchemaFor(target) {
     const result = new Map();
-    const iter   = new PropertyIterable(target).skipClass(CommonBase).onlyMethods();
+    const iter =
+      new PropertyIterable(target).skipClass(CommonBase).onlyPublicMethods().skipNames(VERBOTEN_NAMES);
 
     for (const desc of iter) {
-      const name = desc.name;
-
-      if ((typeof name !== 'string') || name.match(/^_/) || VERBOTEN_METHODS.has(name)) {
-        // Because we don't want properties whose names aren't strings (that is,
-        // are symbols), are prefixed with `_`, or are constructor functions. In
-        // all cases these are effectively private with respect to the API
-        // boundary.
-        continue;
-      }
-
-      result.set(name, 'method');
+      result.set(desc.name, 'method');
     }
 
     return result;
