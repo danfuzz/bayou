@@ -20,9 +20,9 @@ export default class PropertyIterable extends CommonBase {
    * @param {object} object What to iterate over.
    * @param {function|null} [filter = null] Filter to select which properties
    *   are of interest. Gets called with a single argument, namely the
-   *   `name`-augmented property descriptor as described in the class header.
-   *   Expected to return `true` (or truthy) for properties that are to be
-   *   selected.
+   *   `name`- and `target`-augmented property descriptor as described in the
+   *   class header. Expected to return `true` (or truthy) for properties that
+   *   are to be selected.
    */
   constructor(object, filter = null) {
     super();
