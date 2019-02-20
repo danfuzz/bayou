@@ -3,19 +3,22 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Deployment } from '@bayou/config-server';
+import { CommonBase } from '@bayou/util-common';
 
 import BaseConnection from './BaseConnection';
 
 /**
  * Class to handle meta-requests.
  */
-export default class MetaHandler {
+export default class MetaHandler extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {BaseConnection} connection The connection.
    */
   constructor(connection) {
+    super();
+
     /** {BaseConnection} The connection. */
     this._connection = BaseConnection.check(connection);
 

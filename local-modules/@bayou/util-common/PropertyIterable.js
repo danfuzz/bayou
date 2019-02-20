@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TFunction } from '@bayou/typecheck';
+import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-core';
 
 /**
@@ -20,17 +20,17 @@ export default class PropertyIterable extends CommonBase {
    * @param {object} object What to iterate over.
    * @param {function|null} [filter = null] Filter to select which properties
    *   are of interest. Gets called with a single argument, namely the
-   *   `name`-augmented property descriptor as described in the class header.
-   *   Expected to return `true` (or truthy) for properties that are to be
-   *   selected.
+   *   `name`- and `target`-augmented property descriptor as described in the
+   *   class header. Expected to return `true` (or truthy) for properties that
+   *   are to be selected.
    */
   constructor(object, filter = null) {
     super();
 
-    /** The object to iterate over. */
+    /** {object} The object to iterate over. */
     this._object = object;
 
-    /** The filter. */
+    /** {function|null} The filter. */
     this._filter = filter;
   }
 
@@ -63,6 +63,64 @@ export default class PropertyIterable extends CommonBase {
   }
 
   /**
+   * Gets an instance that is like this one but with an additional filter which
+   * only passes names that are strings (not symbols) and that must additionally
+   * match the given regular expression (if given).
+   *
+   * @param {RegExp|null} [regex = null] Expression to use to test names.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  onlyNames(regex = null) {
+    TObject.orNull(regex, RegExp);
+
+    function filterFunc(desc) {
+      const name = desc.name;
+
+      return (typeof name === 'string')
+        && ((regex === null) || regex.test(name));
+    }
+
+    return this.filter(filterFunc);
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * only passes public properties (non-synthetic properties whose names are
+   * strings (not symbols) which _don't_ start with `_` and are also not the
+   * special name `constructor`).
+   *
+   * @returns {PropertyIterable} The new iterator.
+   */
+  onlyPublic() {
+    return this.onlyNames().skipNames(/^(_|constructor$)/);
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * only passes public methods (same as the intersection of {@link #onlyPublic}
+   * and {@link #onlyMethods}).
+   *
+   * @returns {PropertyIterable} The new iterator.
+   */
+  onlyPublicMethods() {
+    return this.onlyPublic().onlyMethods();
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * skips the instance properties of the indicated class and any of its
+   * superclasses.
+   *
+   * @param {class} clazz The class whose instance properties are to be skipped.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipClass(clazz) {
+    TFunction.checkClass(clazz);
+
+    return this.skipTarget(clazz.prototype);
+  }
+
+  /**
    * Gets an instance that is like this one but with an additional filter that
    * skips methods (non-synthetic function-valued properties).
    *
@@ -75,23 +133,32 @@ export default class PropertyIterable extends CommonBase {
   }
 
   /**
+   * Gets an instance that is like this one but with an additional filter which
+   * only passes names that do _not_ match the given expression. The test only
+   * applies to string names; symbol-named properties all pass this filter.
+   *
+   * @param {RegExp} regex Expression to use to test names.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipNames(regex) {
+    TObject.check(regex, RegExp);
+
+    function filterFunc(desc) {
+      const name = desc.name;
+      return !((typeof name === 'string') && regex.test(name));
+    }
+
+    return this.filter(filterFunc);
+  }
+
+  /**
    * Gets an instance that is like this one but with an additional filter that
    * skips properties defined on the root `Object` prototype.
    *
    * @returns {PropertyIterable} The new iterator.
    */
   skipObject() {
-    return this.filter(desc => (desc.target !== Object.prototype));
-  }
-
-  /**
-   * Gets an instance that is like this one but with an additional filter that
-   * skips properties in "private" form (that is, prefixed with `_`).
-   *
-   * @returns {PropertyIterable} The new iterator.
-   */
-  skipPrivate() {
-    return this.filter(desc => !/^_/.test(desc.name));
+    return this.skipClass(Object);
   }
 
   /**
@@ -102,6 +169,26 @@ export default class PropertyIterable extends CommonBase {
    */
   skipSynthetic() {
     return this.filter(desc => !(desc.get || desc.set));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * skips the properties of the indicated target and of all the object in its
+   * prototype chain.
+   *
+   * @param {object} target The target to skip.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipTarget(target) {
+    TObject.check(target);
+
+    const targets = new Set();
+    while (target !== null) {
+      targets.add(target);
+      target = Object.getPrototypeOf(target);
+    }
+
+    return this.filter(desc => !targets.has(desc.target));
   }
 
   /**

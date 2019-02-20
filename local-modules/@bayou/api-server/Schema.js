@@ -3,7 +3,15 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TObject, TString } from '@bayou/typecheck';
-import { PropertyIterable } from '@bayou/util-common';
+import { CommonBase, PropertyIterable } from '@bayou/util-common';
+
+/**
+ * {RegExp} Expression that matches method names that are _not_ to be offered
+ * across an API boundary. Specifically, we don't support directly promise-like
+ * behavior across an API boundary. (Though note, on the client side all exposed
+ * methods return promises that are implemented locally.)
+ */
+const VERBOTEN_NAMES = /^(then|catch)$/;
 
 /**
  * Schema for an object. Represents what actions are available. More
@@ -17,7 +25,7 @@ import { PropertyIterable } from '@bayou/util-common';
  * * Methods inherited from the base `Object` prototype are excluded.
  * * All other public methods are included.
  */
-export default class Schema {
+export default class Schema extends CommonBase {
   /**
    * Constructs an instance based on the given object.
    *
@@ -28,6 +36,8 @@ export default class Schema {
    */
   constructor(target) {
     TObject.check(target);
+
+    super();
 
     /**
      * {Map<string, string>} Map from each name to a property descriptor
@@ -80,19 +90,11 @@ export default class Schema {
    */
   static _makeSchemaFor(target) {
     const result = new Map();
+    const iter =
+      new PropertyIterable(target).skipClass(CommonBase).onlyPublicMethods().skipNames(VERBOTEN_NAMES);
 
-    for (const desc of new PropertyIterable(target).skipObject().onlyMethods()) {
-      const name = desc.name;
-
-      if ((typeof name !== 'string') || name.match(/^_/) || (name === 'constructor')) {
-        // Because we don't want properties whose names aren't strings (that is,
-        // are symbols), are prefixed with `_`, or are constructor functions. In
-        // all cases these are effectively private with respect to the API
-        // boundary.
-        continue;
-      }
-
-      result.set(name, 'method');
+    for (const desc of iter) {
+      result.set(desc.name, 'method');
     }
 
     return result;

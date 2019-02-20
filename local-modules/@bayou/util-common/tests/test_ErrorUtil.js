@@ -9,7 +9,7 @@ import { ErrorUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/ErrorUtil', () => {
   describe('stackLines(error)', () => {
-    it('should return an array of strings', () => {
+    it('returns an array of strings', () => {
       const result = ErrorUtil.stackLines(new Error('oy'));
 
       assert.isArray(result);
@@ -20,7 +20,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
   });
 
   describe('stackLines(error, indent)', () => {
-    it('should return an array of strings, each with the specified indentation', () => {
+    it('returns an array of strings, each with the specified indentation', () => {
       const result = ErrorUtil.stackLines(new Error('oy\nyo'), '123');
 
       assert.isArray(result);
@@ -32,7 +32,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
   });
 
   describe('fullTraceLines(error)', () => {
-    it('should return an array of strings', () => {
+    it('returns an array of strings', () => {
       const result = ErrorUtil.fullTraceLines(new Error('oy'));
 
       assert.isArray(result);
@@ -41,7 +41,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
       }
     });
 
-    it('should have a first line that indicates the name and message', () => {
+    it('has a first line that indicates the name and message', () => {
       function test(value, expect) {
         const result = ErrorUtil.fullTraceLines(value);
         assert.strictEqual(result[0], expect);
@@ -59,7 +59,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
       test(error3, 'Foo: bar');
     });
 
-    it('should split a multi-line name and/or message into separate result elements', () => {
+    it('splits a multi-line name and/or message into separate result elements', () => {
       const error = new Error('what\nis\nhappening?');
       error.name = 'Who\nWhat';
 
@@ -71,7 +71,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
       }
     });
 
-    it('should have lines that indicate extra properties', () => {
+    it('has lines that indicate extra properties', () => {
       function test(value, expect) {
         const result = ErrorUtil.fullTraceLines(value);
         let   found  = false;
@@ -89,10 +89,20 @@ describe('@bayou/util-common/ErrorUtil', () => {
       const error = new Error('x');
       error.a = 10;
       error.b = 'twenty';
+
+      // Shouldn't be present (method).
+      error.c = () => 123;
+
+      // Shouldn't be present (private).
+      error._d = 123;
+
+      // Shouldn't be present (synthetic).
+      Object.defineProperty(error, 'e', { get: () => 123 });
+
       test(error, '  { a: 10, b: \'twenty\' }');
     });
 
-    it('should represent the cause if present', () => {
+    it('represents the cause if present', () => {
       function test(value, ...expect) {
         const result = ErrorUtil.fullTraceLines(value);
         let at = 0;
@@ -141,7 +151,7 @@ describe('@bayou/util-common/ErrorUtil', () => {
   });
 
   describe('fullTraceLines(error, indent)', () => {
-    it('should return an array of strings, each with the specified indentation', () => {
+    it('returns an array of strings, each with the specified indentation', () => {
       const error = new Error('oy');
       error.florp = 'like';
       error.cause = new Error('oy_cause');
