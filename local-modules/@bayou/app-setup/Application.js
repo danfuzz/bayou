@@ -13,7 +13,7 @@ import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import AppAuthorizer from './AppAuthorizer';
 import DebugTools from './DebugTools';
@@ -45,10 +45,10 @@ export default class Application extends CommonBase {
     this._contextInfo = new ContextInfo(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
 
     /**
-     * {RootAccess} The "root access" object. This is the object which tokens
+     * {object} The "root access" object. This is the object which tokens
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
-    this._rootAccess = new RootAccess();
+    this._rootAccess = this._makeRootAccess();
 
     /**
      * {function} The top-level "Express application" run by this instance. It
@@ -75,8 +75,8 @@ export default class Application extends CommonBase {
   }
 
   /**
-   * {RootAccess} The "root access" object. This is the object which tokens
-   * bearing {@link Auth#TYPE_root} authority grant access to.
+   * {object} The "root access" object. This is the object which tokens bearing
+   * {@link Auth#TYPE_root} authority grant access to.
    */
   get rootAccess() {
     return this._rootAccess;
@@ -226,5 +226,40 @@ export default class Application extends CommonBase {
     for (const dir of Deployment.ASSET_DIRS) {
       app.use('/', express.static(dir));
     }
+  }
+
+  /**
+   * Makes and returns the root access object, that is, the thing that gets
+   * called to answer API calls on the root token(s).
+   *
+   * @returns {object} The root access object.
+   */
+  _makeRootAccess() {
+    const basicRoot = new RootAccess();
+    const extraRoot = Deployment.rootAccess();
+
+    if (extraRoot === null) {
+      return basicRoot;
+    }
+
+    // Smoosh the instance methods of `basicRoot` and `extraRoot` into an ad-hoc
+    // plain object, with each method bound to the appropriate receiver.
+
+    const result = {};
+
+    for (const obj of [basicRoot, extraRoot]) {
+      const skip = (obj instanceof CommonBase) ? CommonBase : Object;
+      for (const desc of new PropertyIterable(obj).skipClass(skip).onlyPublicMethods()) {
+        const name = desc.name;
+
+        if (result[name] !== undefined) {
+          throw Errors.badUse(`Duplicate root method: ${name}`);
+        }
+
+        result[name] = desc.value.bind(obj);
+      }
+    }
+
+    return Object.freeze(result);
   }
 }
