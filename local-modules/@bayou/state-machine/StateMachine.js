@@ -307,8 +307,8 @@ export default class StateMachine {
   }
 
   /**
-   * Constructs a two-level map from state-event pairs to the methods which
-   * handle those pairs.
+   * Constructs a two-level map from each state-event pair to the method which
+   * handles that pair.
    *
    * @returns {object<string,object<string,function>>} The handler map.
    */
@@ -318,13 +318,10 @@ export default class StateMachine {
 
     // First pass: Find all methods with the right name form, including those
     // with `any` (wildcard) names.
-    for (const desc of new PropertyIterable(this).onlyMethods()) {
-      const match = desc.name.match(/^_handle_([a-zA-Z0-9]+)_([a-zA-Z0-9]+)$/);
-      if (!match) {
-        // Not the right name format.
-        continue;
-      }
-
+    const matcher = /^_handle_([a-zA-Z0-9]+)_([a-zA-Z0-9]+)$/;
+    const iter    = new PropertyIterable(this).onlyMethods().onlyNames(matcher);
+    for (const desc of iter) {
+      const match     = desc.name.match(matcher); // **TODO:** Ideally we'd avoid re-running the regex.
       const stateName = match[1];
       const eventName = match[2];
 
@@ -383,7 +380,7 @@ export default class StateMachine {
   }
 
   /**
-   * Constructs a map from each valid event names to its respective event
+   * Constructs a map from each valid event name to its respective event
    * validator method.
    *
    * @returns {object} The event validator map.
@@ -391,14 +388,12 @@ export default class StateMachine {
   _makeValidatorMap() {
     const result = {}; // Built-up result.
 
-    for (const desc of new PropertyIterable(this).onlyMethods()) {
-      const match = desc.name.match(/^_check_([a-zA-Z0-9]+)$/);
-      if (!match) {
-        // Not the right name format.
-        continue;
-      }
-
+    const matcher = /^_check_([a-zA-Z0-9]+)$/;
+    const iter    = new PropertyIterable(this).onlyMethods().onlyNames(matcher);
+    for (const desc of iter) {
+      const match     = desc.name.match(matcher); // **TODO:** Ideally we'd avoid re-running the regex.
       const eventName = match[1];
+
       result[eventName] = desc.value;
     }
 
