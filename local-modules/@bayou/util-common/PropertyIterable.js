@@ -63,6 +63,27 @@ export default class PropertyIterable extends CommonBase {
   }
 
   /**
+   * Gets an instance that is like this one but with an additional filter which
+   * only passes names that are strings (not symbols) and that must additionally
+   * match the given regular expression (if given).
+   *
+   * @param {RegExp|null} [regex = null] Expression to use to test names.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  onlyNames(regex = null) {
+    TObject.orNull(regex, RegExp);
+
+    function filterFunc(desc) {
+      const name = desc.name;
+
+      return (typeof name === 'string')
+        && ((regex === null) || regex.test(name));
+    }
+
+    return this.filter(filterFunc);
+  }
+
+  /**
    * Gets an instance that is like this one but with an additional filter that
    * only passes public properties (non-synthetic properties whose names are
    * strings (not symbols) which _don't_ start with `_` and are also not the
@@ -71,7 +92,7 @@ export default class PropertyIterable extends CommonBase {
    * @returns {PropertyIterable} The new iterator.
    */
   onlyPublic() {
-    return this.onlyStringNames().skipNames(/^(_|constructor$)/);
+    return this.onlyNames().skipNames(/^(_|constructor$)/);
   }
 
   /**
@@ -83,27 +104,6 @@ export default class PropertyIterable extends CommonBase {
    */
   onlyPublicMethods() {
     return this.onlyPublic().onlyMethods();
-  }
-
-  /**
-   * Gets an instance that is like this one but with an additional filter which
-   * only passes names that are strings (not symbols) and that must additionally
-   * match the given regular expression (if given).
-   *
-   * @param {RegExp|null} [regex = null] Expression to use to test names.
-   * @returns {PropertyIterable} The new iterator.
-   */
-  onlyStringNames(regex = null) {
-    TObject.orNull(regex, RegExp);
-
-    function filterFunc(desc) {
-      const name = desc.name;
-
-      return (typeof name === 'string')
-        && ((regex === null) || regex.test(name));
-    }
-
-    return this.filter(filterFunc);
   }
 
   /**

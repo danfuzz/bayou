@@ -139,7 +139,7 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
-  describe('onlyStringNames()', () => {
+  describe('onlyNames()', () => {
     it('omits symbol names', () => {
       const sym1 = Symbol('a');
       const sym2 = Symbol('b');
@@ -149,7 +149,7 @@ describe('@bayou/util-common/PropertyIterable', () => {
         c() { return 10; },
         d: 'yes'
       };
-      const iter = new PropertyIterable(obj).onlyStringNames();
+      const iter = new PropertyIterable(obj).onlyNames();
       const expectedProperties = ['c', 'd'];
       const unexpectedProperties = [sym1, sym2];
 
@@ -157,7 +157,7 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
-  describe('onlyStringNames(regex)', () => {
+  describe('onlyNames(regex)', () => {
     it('omits symbol names and names that do not match `regex`', () => {
       const sym1 = Symbol('abc_x_abc');
       const sym2 = Symbol('zxy');
@@ -171,7 +171,7 @@ describe('@bayou/util-common/PropertyIterable', () => {
         b: 'no',
         c: 'no'
       };
-      const iter = new PropertyIterable(obj).onlyStringNames(/x/);
+      const iter = new PropertyIterable(obj).onlyNames(/x/);
       const expectedProperties = ['x1', 'x2', 'zxv'];
       const unexpectedProperties = [sym1, sym2, 'a', 'b', 'c'];
 
