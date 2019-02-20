@@ -90,8 +90,9 @@ export default class Schema extends CommonBase {
    */
   static _makeSchemaFor(target) {
     const result = new Map();
+    const skip = (target instanceof CommonBase) ? CommonBase : Object;
     const iter =
-      new PropertyIterable(target).skipClass(CommonBase).onlyPublicMethods().skipNames(VERBOTEN_NAMES);
+      new PropertyIterable(target).skipClass(skip).onlyPublicMethods().skipNames(VERBOTEN_NAMES);
 
     for (const desc of iter) {
       result.set(desc.name, 'method');
