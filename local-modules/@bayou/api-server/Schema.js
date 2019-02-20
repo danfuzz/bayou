@@ -33,7 +33,7 @@ const VERBOTEN_METHODS = new Set([
  * * Methods inherited from the base `Object` prototype are excluded.
  * * All other public methods are included.
  */
-export default class Schema {
+export default class Schema extends CommonBase {
   /**
    * Constructs an instance based on the given object.
    *
@@ -44,6 +44,8 @@ export default class Schema {
    */
   constructor(target) {
     TObject.check(target);
+
+    super();
 
     /**
      * {Map<string, string>} Map from each name to a property descriptor
