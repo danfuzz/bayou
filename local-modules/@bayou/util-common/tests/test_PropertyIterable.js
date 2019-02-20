@@ -250,23 +250,6 @@ describe('@bayou/util-common/PropertyIterable', () => {
     });
   });
 
-  describe('skipPrivate()', () => {
-    it('omits private properties', () => {
-      const obj = {
-        yes1: 'x',
-        yes2() { /*empty*/ },
-        get yes3() { return 10; },
-        _: 'no',
-        _no2: 'no',
-        get _no3() { return 10; }
-      };
-      const iter = new PropertyIterable(obj).skipPrivate();
-      const expectedProperties = ['yes1', 'yes2', 'yes3'];
-
-      testIteratable(iter, expectedProperties);
-    });
-  });
-
   describe('skipSynthetic()', () => {
     it('iterates solely over non-synthetic properties', () => {
       const obj = {

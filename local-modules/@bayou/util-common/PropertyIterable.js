@@ -152,16 +152,6 @@ export default class PropertyIterable extends CommonBase {
 
   /**
    * Gets an instance that is like this one but with an additional filter that
-   * skips properties in "private" form (that is, prefixed with `_`).
-   *
-   * @returns {PropertyIterable} The new iterator.
-   */
-  skipPrivate() {
-    return this.skipNames(/^_/);
-  }
-
-  /**
-   * Gets an instance that is like this one but with an additional filter that
    * only passes regular non-synthetic properties.
    *
    * @returns {PropertyIterable} The new iterator.
