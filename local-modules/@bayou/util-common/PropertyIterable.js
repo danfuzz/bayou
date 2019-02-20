@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TFunction } from '@bayou/typecheck';
+import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-core';
 
 /**
@@ -64,6 +64,20 @@ export default class PropertyIterable extends CommonBase {
 
   /**
    * Gets an instance that is like this one but with an additional filter that
+   * skips the instance properties of the indicated class and any of its
+   * superclasses.
+   *
+   * @param {class} clazz The class whose instance properties are to be skipped.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipClass(clazz) {
+    TFunction.checkClass(clazz);
+
+    return this.skipTarget(clazz.prototype);
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
    * skips methods (non-synthetic function-valued properties).
    *
    * @returns {PropertyIterable} The new iterator.
@@ -81,7 +95,7 @@ export default class PropertyIterable extends CommonBase {
    * @returns {PropertyIterable} The new iterator.
    */
   skipObject() {
-    return this.filter(desc => (desc.target !== Object.prototype));
+    return this.skipClass(Object);
   }
 
   /**
@@ -102,6 +116,26 @@ export default class PropertyIterable extends CommonBase {
    */
   skipSynthetic() {
     return this.filter(desc => !(desc.get || desc.set));
+  }
+
+  /**
+   * Gets an instance that is like this one but with an additional filter that
+   * skips the properties of the indicated target and of all the object in its
+   * prototype chain.
+   *
+   * @param {object} target The target to skip.
+   * @returns {PropertyIterable} The new iterator.
+   */
+  skipTarget(target) {
+    TObject.check(target);
+
+    const targets = new Set();
+    while (target !== null) {
+      targets.add(target);
+      target = Object.getPrototypeOf(target);
+    }
+
+    return this.filter(desc => !targets.has(desc.target));
   }
 
   /**
