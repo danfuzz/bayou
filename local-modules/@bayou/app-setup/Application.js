@@ -13,7 +13,7 @@ import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import AppAuthorizer from './AppAuthorizer';
 import DebugTools from './DebugTools';
@@ -235,6 +235,31 @@ export default class Application extends CommonBase {
    * @returns {object} The root access object.
    */
   _makeRootAccess() {
-    return new RootAccess();
+    const basicRoot = new RootAccess();
+    const extraRoot = Deployment.rootAccess();
+
+    if (extraRoot === null) {
+      return basicRoot;
+    }
+
+    // Smoosh the instance methods of `basicRoot` and `extraRoot` into an ad-hoc
+    // plain object, with each method bound to the appropriate receiver.
+
+    const result = {};
+
+    for (const obj of [basicRoot, extraRoot]) {
+      const skip = (obj instanceof CommonBase) ? CommonBase : Object;
+      for (const desc of new PropertyIterable(obj).skipClass(skip).onlyPublicMethods()) {
+        const name = desc.name;
+
+        if (result[name] !== undefined) {
+          throw Errors.badUse(`Duplicate root method: ${name}`);
+        }
+
+        result[name] = desc.value.bind(obj);
+      }
+    }
+
+    return Object.freeze(result);
   }
 }
