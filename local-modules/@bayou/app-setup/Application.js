@@ -48,7 +48,7 @@ export default class Application extends CommonBase {
      * {RootAccess} The "root access" object. This is the object which tokens
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
-    this._rootAccess = new RootAccess();
+    this._rootAccess = this._makeRootAccess();
 
     /**
      * {function} The top-level "Express application" run by this instance. It
@@ -226,5 +226,15 @@ export default class Application extends CommonBase {
     for (const dir of Deployment.ASSET_DIRS) {
       app.use('/', express.static(dir));
     }
+  }
+
+  /**
+   * Makes and returns the root access object, that is, the thing that gets
+   * called to answer API calls on the root token(s).
+   *
+   * @returns {object} The root access object.
+   */
+  _makeRootAccess() {
+    return new RootAccess();
   }
 }
