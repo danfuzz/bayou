@@ -70,6 +70,20 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
+   * Gets an object whose instance methods are to be provided via the API as
+   * part of the root authority. The methods are provided in addition to what is
+   * provided by default by {@link app-setup.RootAccess}. If no additional
+   * methods are required by this configuration, this method should return
+   * `null`.
+   *
+   * @returns {object|null} Object with additional methods to be provided as
+   *   part of root access, or `null` if there are none.
+   */
+  static rootAccess() {
+    return use.Deployment.rootAccess();
+  }
+
+  /**
    * Gets arbitrary server-identifying information, which gets returned to
    * clients via {@link MetaHandler#serverInfo}.
    *

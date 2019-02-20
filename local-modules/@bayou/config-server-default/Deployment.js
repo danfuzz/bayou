@@ -63,6 +63,17 @@ export default class Deployment extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation always returns `null`.
+   *
+   * @returns {null} `null`, always.
+   */
+  static rootAccess() {
+    return null;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * @returns {object} Ad-hoc information about the server.
    */
   static serverInfo() {
