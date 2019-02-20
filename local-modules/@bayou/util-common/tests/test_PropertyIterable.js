@@ -73,13 +73,55 @@ describe('@bayou/util-common/PropertyIterable', () => {
   });
 
   describe('onlyMethods()', () => {
-    it('returns just callable function elements of the object', () => {
+    it('returns just the callable function elements of the object', () => {
       const iter = new PropertyIterable(TEST_OBJECT);
       const methodIter = iter.onlyMethods();
       const expectedProperties = ['functionItem'];
       const unexpectedProperties = ['a', 'b', 'classItem', 'objectItem'];
 
       testIteratable(methodIter, expectedProperties, unexpectedProperties);
+    });
+  });
+
+  describe('onlyPublicMethods()', () => {
+    it('returns just the public methods of the object', () => {
+      class Blort {
+        constructor() { /*empty*/ }
+        foo() { /*empty*/ }
+        _bar() { /*empty*/ }
+        get blort() { return () => 10; } // Not a method because it's a synthetic property.
+      }
+
+      Blort.prototype.x = 123;
+
+      const instance = new Blort();
+      instance.y   = 123;
+      instance.baz = () => { /*empty*/ };
+
+      const iter = new PropertyIterable(instance);
+      const methodIter = iter.onlyPublicMethods();
+      const expectedProperties = ['foo', 'baz'];
+      const unexpectedProperties = ['constructor', '_bar', 'blort', 'x', 'y'];
+
+      testIteratable(methodIter, expectedProperties, unexpectedProperties);
+    });
+  });
+
+  describe('onlyStringNames()', () => {
+    it('omits symbol names', () => {
+      const sym1 = Symbol('a');
+      const sym2 = Symbol('b');
+      const obj = {
+        [sym1]: 'x',
+        [sym2]() { /*empty*/ },
+        c() { return 10; },
+        d: 'yes'
+      };
+      const iter = new PropertyIterable(obj).onlyStringNames();
+      const expectedProperties = ['c', 'd'];
+      const unexpectedProperties = [sym1, sym2];
+
+      testIteratable(iter, expectedProperties, unexpectedProperties);
     });
   });
 
@@ -136,7 +178,9 @@ describe('@bayou/util-common/PropertyIterable', () => {
       const iter = new PropertyIterable(obj).skipMethods();
       const expectedProperties = ['yes1', 'yes2', 'yes3'];
 
-      testIteratable(iter, expectedProperties);
+      const result = testIteratable(iter, expectedProperties);
+
+      assert.hasAllKeys(result, expectedProperties);
     });
   });
 
@@ -152,8 +196,9 @@ describe('@bayou/util-common/PropertyIterable', () => {
       };
       const iter = new PropertyIterable(obj).skipNames(/_no_/);
       const expectedProperties = ['yes1', 'yes2', 'yes3'];
+      const unexpectedProperties = ['foo_no_1', '_no_2', 'x_no_y'];
 
-      testIteratable(iter, expectedProperties);
+      testIteratable(iter, expectedProperties, unexpectedProperties);
     });
 
     it('does not touch symbol-named properties', () => {
@@ -167,8 +212,9 @@ describe('@bayou/util-common/PropertyIterable', () => {
       };
       const iter = new PropertyIterable(obj).skipNames(/_no_/);
       const expectedProperties = [sym1, sym2, 'yes'];
+      const unexpectedProperties = ['x_no_y'];
 
-      testIteratable(iter, expectedProperties);
+      testIteratable(iter, expectedProperties, unexpectedProperties);
     });
   });
 
