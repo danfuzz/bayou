@@ -15,7 +15,7 @@ import Dirs from './Dirs';
  * {Int} How long (in msec) to wait between iterations in the shutdown-file
  * polling loop.
  */
-const SHUTDOWN_POLL_DELAY_MSEC = 10 * 1000; // Ten seconds.
+const SHUTDOWN_POLL_DELAY_MSEC = 60 * 1000; // One minute.
 
 /** {Logger} Logger for this class. */
 const log = new Logger('control');
