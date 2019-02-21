@@ -9,19 +9,25 @@ import { Network } from '@bayou/config-server-default';
 
 describe('@bayou/config-server-default/Network', () => {
   describe('.baseUrl', () => {
-    it('should be `http://localhost:8080`', () => {
+    it('is `http://localhost:8080`', () => {
       assert.strictEqual(Network.baseUrl, 'http://localhost:8080');
     });
   });
 
   describe('.listenPort', () => {
-    it('should be `8080`', () => {
+    it('is `8080`', () => {
       assert.strictEqual(Network.listenPort, 8080);
     });
   });
 
+  describe('.loopbackUrl', () => {
+    it('is the documented-suggested value', () => {
+      assert.strictEqual(Network.loopbackUrl, 'http://localhost:8080');
+    });
+  });
+
   describe('.monitorPort', () => {
-    it('should be `8888`', () => {
+    it('is `8888`', () => {
       assert.strictEqual(Network.monitorPort, 8888);
     });
   });

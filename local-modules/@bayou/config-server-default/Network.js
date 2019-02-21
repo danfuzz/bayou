@@ -27,6 +27,15 @@ export default class Network extends UtilityClass {
   }
 
   /**
+   * {string} Implementation of standard configuration point. This
+   * implementation returns the recommended value per
+   * {@link config-server.Network#loopbackUrl}.
+   */
+  static get loopbackUrl() {
+    return `http://localhost:${this.listenPort}`;
+  }
+
+  /**
    * {Int|null} Implementation of standard configuration point. This
    * implementation defines it as `8888`.
    */
