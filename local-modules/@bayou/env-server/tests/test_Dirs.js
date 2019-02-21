@@ -12,7 +12,7 @@ import { Dirs } from '@bayou/env-server';
 
 describe('@bayou/env-server/Dirs', () => {
   describe('.BASE_DIR', () => {
-    it('should return a directory path that exists', () => {
+    it('is a directory path that exists', () => {
       const baseDir = Dirs.theOne.BASE_DIR;
 
       assert.isTrue(fs.existsSync(baseDir));
@@ -20,41 +20,51 @@ describe('@bayou/env-server/Dirs', () => {
   });
 
   describe('.CLIENT_DIR', () => {
-    it('should return a known subdirectory off of `BASE_DIR`', () => {
+    it('is a known subdirectory off of `BASE_DIR`', () => {
       const baseDir = Dirs.theOne.BASE_DIR;
       const clientDir = path.join(baseDir, 'client');
 
-      assert.strictEqual(clientDir, Dirs.theOne.CLIENT_DIR);
+      assert.strictEqual(Dirs.theOne.CLIENT_DIR, clientDir);
       assert.isTrue(fs.existsSync(clientDir));
     });
   });
 
+  describe('.CONTROL_DIR', () => {
+    it('is a known subdirectory off of `VAR_DIR`', () => {
+      const varDir = Dirs.theOne.VAR_DIR;
+      const controlDir = path.join(varDir, 'control');
+
+      assert.strictEqual(Dirs.theOne.CONTROL_DIR, controlDir);
+      assert.isTrue(fs.existsSync(controlDir));
+    });
+  });
+
   describe('.LOG_DIR', () => {
-    it('should return a known subdirectory off of `VAR_DIR`', () => {
+    it('is a known subdirectory off of `VAR_DIR`', () => {
       const varDir = Dirs.theOne.VAR_DIR;
       const logDir = path.join(varDir, 'log');
 
-      assert.strictEqual(logDir, Dirs.theOne.LOG_DIR);
+      assert.strictEqual(Dirs.theOne.LOG_DIR, logDir);
       assert.isTrue(fs.existsSync(logDir));
     });
   });
 
   describe('.SERVER_DIR', () => {
-    it('should return a known subdirectory off of BASE_DIR', () => {
+    it('is a known subdirectory off of `BASE_DIR`', () => {
       const baseDir = Dirs.theOne.BASE_DIR;
       const serverDir = path.join(baseDir, 'server');
 
-      assert.strictEqual(serverDir, Dirs.theOne.SERVER_DIR);
+      assert.strictEqual(Dirs.theOne.SERVER_DIR, serverDir);
       assert.isTrue(fs.existsSync(serverDir));
     });
   });
 
   describe('.VAR_DIR', () => {
-    it('should return a known subdirectory off of BASE_DIR', () => {
+    it('should return a known subdirectory off of `BASE_DIR`', () => {
       const baseDir = Dirs.theOne.BASE_DIR;
       const varDir = path.join(baseDir, 'var');
 
-      assert.strictEqual(varDir, Dirs.theOne.VAR_DIR);
+      assert.strictEqual(Dirs.theOne.VAR_DIR, varDir);
       assert.isTrue(fs.existsSync(varDir));
     });
   });

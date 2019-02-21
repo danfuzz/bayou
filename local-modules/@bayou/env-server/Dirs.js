@@ -46,6 +46,18 @@ export default class Dirs extends Singleton {
   }
 
   /**
+   * The directory to write control files to (and read them from). Accessing
+   * this value guarantees the existence of the directory (that is, it will
+   * create the directory if necessary).
+   */
+  get CONTROL_DIR() {
+    const result = path.resolve(this.VAR_DIR, 'control');
+
+    Dirs._ensureDir(result);
+    return result;
+  }
+
+  /**
    * The directory to write log files to. Accessing this value guarantees the
    * existence of the directory (that is, it will create the directory if
    * necessary).
