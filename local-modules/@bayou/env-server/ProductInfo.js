@@ -51,12 +51,16 @@ export default class ProductInfo extends Singleton {
    * @returns {string} The build ID string.
    */
   static _makeBuildIdString(info) {
-    const { name, version, commitId } = info;
+    const { buildNumber, commitId, name, version } = info;
 
-    const id = ((typeof commitId === 'string') && commitId !== '')
+    const id = ((typeof commitId === 'string') && (commitId !== '') && (commitId !== 'unknown'))
       ? `-${commitId.slice(0, 8)}`
       : '';
 
-    return `${name}-${version}${id}`;
+    const num = ((typeof buildNumber === 'string') && /^[0-9]+$/.test(buildNumber))
+      ? `-${buildNumber}`
+      : '';
+
+    return `${name}-${version}${num}${id}`;
   }
 }
