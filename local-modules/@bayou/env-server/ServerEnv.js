@@ -21,6 +21,18 @@ const log = new Logger('env-server');
  */
 export default class ServerEnv extends Singleton {
   /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /** {PidFile} The PID file manager. */
+    this._pidFile = PidFile.theOne;
+
+    Object.freeze(this);
+  }
+
+  /**
    * {object} Ad-hoc object with generally-useful runtime info, intended for
    * logging / debugging.
    *
@@ -58,7 +70,7 @@ export default class ServerEnv extends Singleton {
       throw Errors.aborted('Another server is already running.');
     }
 
-    PidFile.theOne.init();
+    this._pidFile.init();
     ProductInfo.theOne;
   }
 
@@ -77,7 +89,7 @@ export default class ServerEnv extends Singleton {
     // to say there is no server running. And if it _does_ exist and _is_ valid,
     // then the so-identified process needs to be running.
 
-    const pid = PidFile.theOne.readFile();
+    const pid = this._pidFile.readFile();
 
     if (pid === null) {
       return false;

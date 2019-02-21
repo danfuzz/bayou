@@ -28,7 +28,7 @@ export default class PidFile extends Singleton {
     super();
 
     /** {string} Path for the PID file. */
-    this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
+    this._pidPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'pid.txt');
 
     Object.freeze(this);
   }
@@ -82,18 +82,6 @@ export default class PidFile extends Singleton {
   }
 
   /**
-   * Handles a signal by erasing the PID file (if it exists) and then
-   * re-raising the same signal.
-   *
-   * @param {string} id Signal ID.
-   */
-  _handleSignal(id) {
-    log.event.receivedSignal(id);
-    this._erasePid();
-    process.kill(process.pid, id);
-  }
-
-  /**
    * Erases the PID file if it exists.
    */
   _erasePid() {
@@ -103,5 +91,17 @@ export default class PidFile extends Singleton {
     } catch (e) {
       // Ignore errors. We're about to exit anyway.
     }
+  }
+
+  /**
+   * Handles a signal by erasing the PID file (if it exists) and then
+   * re-raising the same signal.
+   *
+   * @param {string} id Signal ID.
+   */
+  _handleSignal(id) {
+    log.event.receivedSignal(id);
+    this._erasePid();
+    process.kill(process.pid, id);
   }
 }
