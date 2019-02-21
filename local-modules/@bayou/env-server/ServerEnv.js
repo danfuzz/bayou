@@ -11,6 +11,7 @@ import { Errors, Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 import PidFile from './PidFile';
+import ProcessControl from './ProcessControl';
 import ProductInfo from './ProductInfo';
 
 /** {Logger} Logger. */
@@ -28,6 +29,9 @@ export default class ServerEnv extends Singleton {
 
     /** {PidFile} The PID file manager. */
     this._pidFile = PidFile.theOne;
+
+    /** {ProcessControl} The process control instance. */
+    this._processControl = ProcessControl.theOne;
 
     Object.freeze(this);
   }
@@ -61,6 +65,12 @@ export default class ServerEnv extends Singleton {
    */
   async init() {
     Dirs.theOne;
+
+    this._processControl.init();
+    if (this._processControl.shouldShutDown()) {
+      log.error('Server found shutdown indicator(s) during startup.');
+      throw Errors.aborted('Server told not to run.');
+    }
 
     const alreadyRunning = await this.isAlreadyRunningLocally();
     if (alreadyRunning) {
