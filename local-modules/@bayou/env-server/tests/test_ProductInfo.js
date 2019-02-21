@@ -6,7 +6,6 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { ProductInfo } from '@bayou/env-server';
-import { TObject } from '@bayou/typecheck';
 
 describe('@bayou/env-server/ProductInfo', () => {
   describe('.INFO', () => {
@@ -18,11 +17,12 @@ describe('@bayou/env-server/ProductInfo', () => {
 
     it('is an object full of the expected product info', () => {
       const info = ProductInfo.theOne.INFO;
-      const productKeys = [
-        'buildDate', 'buildId', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
+      const requiredKeys = [
+        'buildDate', 'buildId', 'buildNumber', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
 
-      assert.doesNotThrow(() => TObject.withExactKeys(info, productKeys));
+      assert.isObject(info);
+      assert.hasAllKeys(info, requiredKeys);
     });
   });
 });
