@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Condition, Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { Singleton } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 
@@ -25,7 +25,7 @@ const log = new Logger('control');
  * and heeding shutdown requests issued by virtue of the presence of a
  * signalling file.
  */
-export default class ProcessControl extends Singleton {
+export default class ProcessControl extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (such as writing the PID file); that stuff happens in

@@ -28,10 +28,10 @@ export default class ServerEnv extends Singleton {
     super();
 
     /** {PidFile} The PID file manager. */
-    this._pidFile = PidFile.theOne;
+    this._pidFile = new PidFile();
 
     /** {ProcessControl} The process control instance. */
-    this._processControl = ProcessControl.theOne;
+    this._processControl = new ProcessControl();
 
     Object.freeze(this);
   }
