@@ -44,14 +44,6 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
-   * {string} The base URL to use for loopback requests from this machine. This
-   * is always an `http://localhost/` URL.
-   */
-  get loopbackUrl() {
-    return `http://localhost:${Network.listenPort}`;
-  }
-
-  /**
    * Initializes this module. This sets up the info for the `Dirs` class, sets
    * up the PID file, and gathers the product metainfo.
    */
@@ -103,7 +95,7 @@ export default class ServerEnv extends Singleton {
     // dead.
 
     const isActive = new Promise((resolve, reject_unused) => {
-      const request = http.get(this.loopbackUrl);
+      const request = http.get(Network.loopbackUrl);
 
       request.setTimeout(10 * 1000); // Give the server 10 seconds to respond.
       request.end();
