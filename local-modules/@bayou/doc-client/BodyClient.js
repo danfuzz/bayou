@@ -440,11 +440,12 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Handler for all `stop` events.
+   * Handler for `stop` events in most states (all of them except for the ones
+   * which are active when there are in-flight changes to deal with).
    */
   _handle_any_stop() {
     if (this._running) {
-      this.log.event.stopping();
+      this.log.event.stopped();
       this._running = false;
     }
 
