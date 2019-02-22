@@ -894,11 +894,17 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Sets up the state machine to idle while waiting for input.
+   * Sets up the client to idle while waiting for input. Or, if the client has
+   * been asked to stop, this is the safe point where we can transition back
+   * into the `detached` state.
    */
   _becomeIdle() {
-    this.s_idle();
-    this.q_wantInputAfterDelay(this._pollingDelayMsec);
+    if (this._running) {
+      this.s_idle();
+      this.q_wantInputAfterDelay(this._pollingDelayMsec);
+    } else {
+      this.s_detached();
+    }
   }
 
   /**
