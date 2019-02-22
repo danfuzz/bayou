@@ -51,6 +51,12 @@ const FIRST_RESTART_DELAY_MSEC = 1000; // One second.
 const RESTART_DELAY_MSEC = 5 * 1000; // Five seconds.
 
 /**
+ * {Int} How long to wait (in msec) between attempts to `stop`, when the client
+ * finds that it's in the middle of an operation.
+ */
+const STOP_POLL_DELAY_MSEC = 500; // Half a second.
+
+/**
  * Tag used to identify this module as the source of a Quill event or action.
  */
 const CLIENT_SOURCE = 'doc-client';
@@ -117,6 +123,13 @@ export default class BodyClient extends StateMachine {
     this._pollingDelayMsec = pollingDelayMsec;
 
     /**
+     * {boolean} Whether the instance supposed to be running right now. This
+     * starts out `false`, becomes `true` in response to {@link #start}, and
+     * becomes `false` in response to {@link #stop}.
+     */
+    this._running = false;
+
+    /**
      * {Proxy|null} Local proxy for accessing the server session. Becomes
      * non-`null` during the handling of the `start` event.
      */
@@ -173,6 +186,18 @@ export default class BodyClient extends StateMachine {
   start() {
     this.q_start();
   }
+
+  /**
+   * Requests that this instance stop running. This method does nothing if the
+   * client is already stopped (or in the process of stopping).
+   */
+  stop() {
+    this.q_stop();
+  }
+
+  //
+  // Event type checkers.
+  //
 
   /**
    * Validates an `apiError` event. This indicates that an error was reported
@@ -235,6 +260,14 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Validates a `stop` event. This is the event that tells the client to stop
+   * running.
+   */
+  _check_stop() {
+    // Nothing to do.
+  }
+
+  /**
    * Validates a `wantInput` event. This indicates that it is time to solicit
    * input from the server (in the form of document deltas) and from the local
    * Quill instance (in the form of Quill events), but only if the client isn't
@@ -242,6 +275,15 @@ export default class BodyClient extends StateMachine {
    */
   _check_wantInput() {
     // Nothing to do.
+  }
+
+  /**
+   * Validates a `wantInputAfterDelay` event.
+   *
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   */
+  _check_wantInputAfterDelay(delayMsec) {
+    TInt.nonNegative(delayMsec);
   }
 
   /**
@@ -255,17 +297,39 @@ export default class BodyClient extends StateMachine {
     TInt.check(baseRevNum);
   }
 
+  //
+  // Event handlers.
+  //
+  // These are ordered from most generic to most specific. In particular,
+  // `stateName_eventName` is most specific, `any_eventName` is middle-of-the-
+  // road, and `stateName_any` is most generic (that is, the last form only gets
+  // invoked if neither other form matches).
+  //
+
   /**
-   * Handler for all `error` events (errors that were uncaught by other handlers
-   * and which would by default just cause the state machine to die). In this
-   * case, we make it turn into an "unrecoverable" error, which is the same as
-   * what happens when the instance receives too many API errors.
+   * In state `errorWait`, handles most events.
    *
-   * @param {Error} error The error.
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
    */
-  _handle_any_error(error) {
-    this.log.error('Unexpected error in handler', error);
-    this.s_unrecoverableError();
+  _handle_errorWait_any(name, ...args) {
+    // This space intentionally left blank (except for logging): We might get
+    // "zombie" events from a connection that's shuffling towards doom. But even
+    // if so, we will already have set up a timer to reset the connection.
+    this.log.event.eventWhenErrorWait(new Functor(name, ...args));
+  }
+
+  /**
+   * In state `unrecoverableError`, handles all events. Specifically, this does
+   * nothing, and no further events can be expected. Client code of this class
+   * can use the transition into this state to perform higher-level error
+   * recovery.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_unrecoverableError_any(name, ...args) {
+    this.log.event.eventWhenUnrecoverable(new Functor(name, ...args));
   }
 
   /**
@@ -278,6 +342,11 @@ export default class BodyClient extends StateMachine {
    * @param {InfoError} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
+    if (!this._running) {
+      // Avoid doing anything if the instance isn't supposed to be running.
+      return;
+    }
+
     if (this._manageEnabledState) {
       // Stop the user from trying to do more edits, as they'd get lost.
       this._quill.disable();
@@ -303,64 +372,180 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    // Wait an appropriate amount of time and then try starting again. The
-    // start event will be received in the `errorWait` state, and as such will
-    // be handled differently than a clean start from scratch.
+    // Wait an appropriate amount of time and then try starting again (unless
+    // the instance got `stop()`ed in the mean time). The `start` event will be
+    // received in the `errorWait` state, and as such will be handled
+    // differently than a clean start from scratch.
 
     (async () => {
       const delayMsec = (this._errorStamps.length === 1)
         ? FIRST_RESTART_DELAY_MSEC
         : RESTART_DELAY_MSEC;
       await Delay.resolve(delayMsec);
-      this.start();
+      if (this._running) {
+        this.q_start();
+      }
     })();
 
     this.s_errorWait();
   }
 
   /**
-   * In state `errorWait`, handles event `start`. This resets the internal
-   * state and then issues a `start` event as if from the `detached` state.
+   * Handler for all `error` events (errors that were uncaught by other handlers
+   * and which would by default just cause the state machine to die). In this
+   * case, we make it turn into an "unrecoverable" error, which is the same as
+   * what happens when the instance receives too many API errors.
    *
-   * **TODO:** Ultimately this should be able to pick up the pieces of any
-   * changes that were in-flight when the connection became problematic.
+   * @param {Error} error The error.
    */
-  _handle_errorWait_start() {
-    this._snapshot           = null;
-    this._sessionProxy       = null;
-    this._currentEvent       = null;
-    this._pendingChangeAfter = false;
-    this._pendingQuillAwait  = false;
+  _handle_any_error(error) {
+    this.log.error('Unexpected error in handler', error);
+    this.s_unrecoverableError();
+  }
 
-    // After this, it's just like starting from the `detached` state.
+  /**
+   * In most states, handles event `gotChangeAfter`. This will happen when a
+   * server change comes when we're in the middle of handling a local change. As
+   * such, it is safe to ignore, because after the local change is integrated,
+   * the system will fire off a new `body_getChangeAfter()` request.
+   *
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
+   * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
+   *   later document revision.
+   */
+  _handle_any_gotChangeAfter(baseRevNum_unused, result_unused) {
+    // Nothing to do. Stay in the same state.
+  }
+
+  /**
+   * In most states, handles event `gotQuillEvent`. This will happen when a
+   * local change comes in after we're already in the middle of handling a
+   * chain of local changes. As such, it is safe to ignore, because whatever
+   * the change was, it will get handled by that pre-existing process.
+   *
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
+   */
+  _handle_any_gotQuillEvent(baseRevNum_unused) {
+    // Nothing to do. Stay in the same state.
+  }
+
+  /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
+  }
+
+  /**
+   * Handler for `stop` events in most states (all of them except for the ones
+   * which are active when there are in-flight changes to deal with).
+   */
+  _handle_any_stop() {
+    if (this._running) {
+      this.log.event.stopped();
+      this._running = false;
+    }
+
+    if (this._manageEnabledState) {
+      // As soon as we're trying to stop, we should prevent the user from doing
+      // any editing.
+      this._quill.disable();
+    }
+
+    // Go into the `detached` state. In that state, additional incoming events
+    // will get ignored, except for `start` which will bring the client back to
+    // life.
     this.s_detached();
-    this.q_start();
   }
 
   /**
-   * In state `errorWait`, handles most events.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args The event arguments.
+   * In any state but `idle`, handles event `wantInput`. We ignore the event,
+   * because the client is in the middle of doing something else. When it's done
+   * with whatever it may be, it will send a new `wantInput` event.
    */
-  _handle_errorWait_any(name, ...args) {
-    // This space intentionally left blank (except for logging): We might get
-    // "zombie" events from a connection that's shuffling towards doom. But even
-    // if so, we will already have set up a timer to reset the connection.
-    this.log.info('While in state `errorWait`:', name, args);
+  _handle_any_wantInput() {
+    // Nothing to do. Stay in the same state.
   }
 
   /**
-   * In state `unrecoverableError`, handles all events. Specifically, this does
-   * nothing, and no further events can be expected. Client code of this class
-   * can use the transition into this state to perform higher-level error
-   * recovery.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args The event arguments.
+   * In any state but `idle`, handles event `wantInputAfterDelay`. We ignore
+   * the event, because the client is in the middle of doing something else.
+   * When it's done with whatever it may be, it will send a new
+   * `wantInputAfterDelay` event.
    */
-  _handle_unrecoverableError_any(name, ...args) {
-    this.log.info('While in state `unrecoverableError`:', name, args);
+  _handle_any_wantInputAfterDelay() {
+    // Nothing to do.
+  }
+
+  /**
+   * In state `collecting`, handles event `stop`. This one is slightly tricky,
+   * in that we already have some local changes which are in-flight and
+   * shouldn't just be dropped on the floor. See {@link #_waitThenStop} for
+   * additional flavor about what's going on.
+   */
+  _handle_collecting_stop() {
+    this._waitThenStop();
+  }
+
+  /**
+   * In state `collecting`, handles event `wantToUpdate`. This means that it
+   * is time for the collected local changes to be sent up to the server for
+   * integration.
+   *
+   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
+   *   time of the original request.
+   */
+  _handle_collecting_wantToUpdate(baseRevNum) {
+    if (this._snapshot.revNum !== baseRevNum) {
+      // As with the `gotQuillEvent` event, we ignore this event if the document
+      // has changed out from under us.
+      this._becomeIdle();
+      return;
+    }
+
+    // Build up a combined (composed) delta of all of the changes starting just
+    // after the last integrated change (the last change that was sent to the
+    // server) through the current (latest) change. This _excludes_
+    // internally-sourced changes, because we will handle those on the next
+    // iteration (from the idle state).
+    const delta = this._consumeLocalChanges(false);
+
+    if (delta.isEmpty()) {
+      // There weren't actually any net changes. This is unusual, though
+      // possible. In particular, the user probably typed something and then
+      // undid it.
+      this._becomeIdle();
+      return;
+    }
+
+    // Send the change, and handle the response. **Note:** In the section above,
+    // we established that the current snapshot, `this._snapshot`, is the same
+    // as the snapshot bundled with the event, `baseSnapshot`. In the following
+    // we use the latter and not the former because in the time between when we
+    // queue up the `async` block and when it executes, it's possible for
+    // `this._snapshot` to change, which would lead to an incorrect call to
+    // `body_update()`. `baseSnapshot`, on the other hand, is a local variable
+    // which we can see (in this function) cannot possibly be modified, and so
+    // it's arguably a safer way to reference the snapshot in question. By
+    // inspection -- today! -- it doesn't look like the sort of hazard described
+    // above could ever happen in practice, but the choice below may help avoid
+    // future bugs, in the face of possible later changes to this class.
+    (async () => {
+      try {
+        const value = await this._sessionProxy.body_update(baseRevNum, delta);
+        this.q_gotUpdate(delta, value);
+      } catch (e) {
+        // **TODO:** Remove this logging once we figure out why we're seeing
+        // this error.
+        this.log.event.badCompose(this._snapshot, delta);
+        this.q_apiError('body_update', e);
+      }
+    })();
+
+    this.s_merging();
   }
 
   /**
@@ -370,6 +555,8 @@ export default class BodyClient extends StateMachine {
    */
   async _handle_detached_start() {
     // **TODO:** This whole flow should probably be protected by a timeout.
+
+    this._running = true;
 
     // Open (or reopen) the connection to the server, and perform any necessary
     // handshaking to gain access to the document.
@@ -455,78 +642,22 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `start`.
+   * In state `errorWait`, handles event `start`. This resets the internal
+   * state and then issues a `start` event as if from the `detached` state.
+   *
+   * **TODO:** Ultimately this should be able to pick up the pieces of any
+   * changes that were in-flight when the connection became problematic.
    */
-  _handle_any_start() {
-    // This space intentionally left blank: We are already active or in the
-    // middle of starting, so there's nothing more to do.
-  }
+  _handle_errorWait_start() {
+    this._snapshot           = null;
+    this._sessionProxy       = null;
+    this._currentEvent       = null;
+    this._pendingChangeAfter = false;
+    this._pendingQuillAwait  = false;
 
-  /**
-   * In state `idle`, handles event `wantInput`. This can happen as a chained
-   * event (during startup or at the end of handling the integration of changes)
-   * or due to a delay timeout. This will make requests both to the server and
-   * to the local Quill instance.
-   */
-  _handle_idle_wantInput() {
-    // We grab the current revision number immediately, so we can refer back to
-    // it when a response comes. That is, `_snapshot` might have changed out
-    // from under us between when this event is handled and when the promises
-    // used here become resolved.
-    const baseRevNum = this._snapshot.revNum;
-
-    // Ask Quill for any changes we haven't yet observed, via the document
-    // change promise chain, but only if there isn't already a pending request
-    // for same. (Otherwise, we would unnecessarily build up redundant promise
-    // resolver functions when changes are coming in from the server while the
-    // local user is idle.)
-    if (!this._pendingQuillAwait) {
-      this._pendingQuillAwait = true;
-
-      // **Note:** As of this writing, Quill will never reject (report an error
-      // on) a document change promise.
-      (async () => {
-        await this._currentEvent.next;
-        this._pendingQuillAwait = false;
-        this.q_gotQuillEvent(baseRevNum);
-      })();
-    }
-
-    // Ask the server for any changes, but only if there isn't already a pending
-    // request for same. (Otherwise, we would flood the server for new change
-    // requests while the local user is updating the document.)
-    if (!this._pendingChangeAfter) {
-      this._pendingChangeAfter = true;
-
-      (async () => {
-        try {
-          const value = await this._sessionProxy.body_getChangeAfter(baseRevNum);
-          this._pendingChangeAfter = false;
-          this.q_gotChangeAfter(baseRevNum, value);
-        } catch (e) {
-          this._pendingChangeAfter = false;
-          if (Errors.is_timedOut(e)) {
-            // Emit `wantInputAfterDelay` in response to a timeout. If we're
-            // idling, this will end up retrying the `getChangeAfter()` after
-            // a configured delay. In any other state, it will (correctly)
-            // get ignored.
-            this.q_wantInputAfterDelay(this._pollingDelayMsec);
-          } else {
-            // Any other thrown error is a bona fide problem.
-            this.q_apiError('body_getChangeAfter', e);
-          }
-        }
-      })();
-    }
-  }
-
-  /**
-   * In any state but `idle`, handles event `wantInput`. We ignore the event,
-   * because the client is in the middle of doing something else. When it's done
-   * with whatever it may be, it will send a new `wantInput` event.
-   */
-  _handle_any_wantInput() {
-    // Nothing to do. Stay in the same state.
+    // After this, it's just like starting from the `detached` state.
+    this.s_detached();
+    this.q_start();
   }
 
   /**
@@ -551,21 +682,6 @@ export default class BodyClient extends StateMachine {
     // despite any particularly active editing by other clients. Use delay
     // at least as long as `PULL_DELAY_MSEC`.
     this.q_wantInputAfterDelay(this._pollingDelayMsec < PULL_DELAY_MSEC ? PULL_DELAY_MSEC : this._pollingDelayMsec);
-  }
-
-  /**
-   * In most states, handles event `gotChangeAfter`. This will happen when a
-   * server change comes when we're in the middle of handling a local change. As
-   * such, it is safe to ignore, because after the local change is integrated,
-   * the system will fire off a new `body_getChangeAfter()` request.
-   *
-   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
-   *   the time of the original request.
-   * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
-   *   later document revision.
-   */
-  _handle_any_gotChangeAfter(baseRevNum_unused, result_unused) {
-    // Nothing to do. Stay in the same state.
   }
 
   /**
@@ -642,74 +758,77 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotQuillEvent`. This will happen when a
-   * local change comes in after we're already in the middle of handling a
-   * chain of local changes. As such, it is safe to ignore, because whatever
-   * the change was, it will get handled by that pre-existing process.
-   *
-   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
-   *   the time of the original request.
+   * In state `idle`, handles event `wantInput`. This can happen as a chained
+   * event (during startup or at the end of handling the integration of changes)
+   * or due to a delay timeout. This will make requests both to the server and
+   * to the local Quill instance.
    */
-  _handle_any_gotQuillEvent(baseRevNum_unused) {
-    // Nothing to do. Stay in the same state.
+  _handle_idle_wantInput() {
+    // We grab the current revision number immediately, so we can refer back to
+    // it when a response comes. That is, `_snapshot` might have changed out
+    // from under us between when this event is handled and when the promises
+    // used here become resolved.
+    const baseRevNum = this._snapshot.revNum;
+
+    // Ask Quill for any changes we haven't yet observed, via the document
+    // change promise chain, but only if there isn't already a pending request
+    // for same. (Otherwise, we would unnecessarily build up redundant promise
+    // resolver functions when changes are coming in from the server while the
+    // local user is idle.)
+    if (!this._pendingQuillAwait) {
+      this._pendingQuillAwait = true;
+
+      // **Note:** As of this writing, Quill will never reject (report an error
+      // on) a document change promise.
+      (async () => {
+        await this._currentEvent.next;
+        this._pendingQuillAwait = false;
+        this.q_gotQuillEvent(baseRevNum);
+      })();
+    }
+
+    // Ask the server for any changes, but only if there isn't already a pending
+    // request for same. (Otherwise, we would flood the server for new change
+    // requests while the local user is updating the document.)
+    if (!this._pendingChangeAfter) {
+      this._pendingChangeAfter = true;
+
+      (async () => {
+        try {
+          const value = await this._sessionProxy.body_getChangeAfter(baseRevNum);
+          this._pendingChangeAfter = false;
+          this.q_gotChangeAfter(baseRevNum, value);
+        } catch (e) {
+          this._pendingChangeAfter = false;
+          if (Errors.is_timedOut(e)) {
+            // Emit `wantInputAfterDelay` in response to a timeout. If we're
+            // idling, this will end up retrying the `getChangeAfter()` after
+            // a configured delay. In any other state, it will (correctly)
+            // get ignored.
+            this.q_wantInputAfterDelay(this._pollingDelayMsec);
+          } else {
+            // Any other thrown error is a bona fide problem.
+            this.q_apiError('body_getChangeAfter', e);
+          }
+        }
+      })();
+    }
   }
 
   /**
-   * In state `collecting`, handles event `wantToUpdate`. This means that it
-   * is time for the collected local changes to be sent up to the server for
-   * integration.
+   * In state `idle`, handles event `wantInputAfterDelay`. Will fire `wantInput`
+   * after a configured delay, which will make requests both to the server and
+   * to the local Quill instance.
    *
-   * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
-   *   time of the original request.
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
    */
-  _handle_collecting_wantToUpdate(baseRevNum) {
-    if (this._snapshot.revNum !== baseRevNum) {
-      // As with the `gotQuillEvent` event, we ignore this event if the document
-      // has changed out from under us.
-      this._becomeIdle();
-      return;
+  async _handle_idle_wantInputAfterDelay(delayMsec) {
+    // Fire off the next iteration of requesting server changes, after a delay.
+    if (delayMsec !== 0) {
+      await Delay.resolve(delayMsec);
     }
 
-    // Build up a combined (composed) delta of all of the changes starting just
-    // after the last integrated change (the last change that was sent to the
-    // server) through the current (latest) change. This _excludes_
-    // internally-sourced changes, because we will handle those on the next
-    // iteration (from the idle state).
-    const delta = this._consumeLocalChanges(false);
-
-    if (delta.isEmpty()) {
-      // There weren't actually any net changes. This is unusual, though
-      // possible. In particular, the user probably typed something and then
-      // undid it.
-      this._becomeIdle();
-      return;
-    }
-
-    // Send the change, and handle the response. **Note:** In the section above,
-    // we established that the current snapshot, `this._snapshot`, is the same
-    // as the snapshot bundled with the event, `baseSnapshot`. In the following
-    // we use the latter and not the former because in the time between when we
-    // queue up the `async` block and when it executes, it's possible for
-    // `this._snapshot` to change, which would lead to an incorrect call to
-    // `body_update()`. `baseSnapshot`, on the other hand, is a local variable
-    // which we can see (in this function) cannot possibly be modified, and so
-    // it's arguably a safer way to reference the snapshot in question. By
-    // inspection -- today! -- it doesn't look like the sort of hazard described
-    // above could ever happen in practice, but the choice below may help avoid
-    // future bugs, in the face of possible later changes to this class.
-    (async () => {
-      try {
-        const value = await this._sessionProxy.body_update(baseRevNum, delta);
-        this.q_gotUpdate(delta, value);
-      } catch (e) {
-        // **TODO:** Remove this logging once we figure out why we're seeing
-        // this error.
-        this.log.event.badCompose(this._snapshot, delta);
-        this.q_apiError('body_update', e);
-      }
-    })();
-
-    this.s_merging();
+    this.q_wantInput();
   }
 
   /**
@@ -834,6 +953,18 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * In state `merging`, handles event `stop`. The situation here is the same as
+   * with {@link #_handle_collecting_stop} (see which for details).
+   */
+  _handle_merging_stop() {
+    this._waitThenStop();
+  }
+
+  //
+  // Private methods (which aren't part of the state machine definition).
+  //
+
+  /**
    * Trim the error timestamp list of any errors that have "aged out," and add
    * a new one for the current moment in time.
    */
@@ -846,46 +977,17 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Sets up the state machine to idle while waiting for input.
+   * Sets up the client to idle while waiting for input. Or, if the client has
+   * been asked to stop, this is the safe point where we can transition back
+   * into the `detached` state.
    */
   _becomeIdle() {
-    this.s_idle();
-    this.q_wantInputAfterDelay(this._pollingDelayMsec);
-  }
-
-  /**
-   * In any state but `idle`, handles event `wantInputAfterDelay`. We ignore
-   * the event, because the client is in the middle of doing something else.
-   * When it's done with whatever it may be, it will send a new
-   * `wantInputAfterDelay` event.
-   */
-  _handle_any_wantInputAfterDelay() {
-    // Nothing to do.
-  }
-
-  /**
-   * Validates a `wantInputAfterDelay` event.
-   *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
-   */
-  _check_wantInputAfterDelay(delayMsec) {
-    TInt.nonNegative(delayMsec);
-  }
-
-  /**
-   * In state `idle`, handles event `wantInputAfterDelay`. Will fire `wantInput`
-   * after a configured delay, which will make requests both to the server and
-   * to the local Quill instance.
-   *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
-   */
-  async _handle_idle_wantInputAfterDelay(delayMsec) {
-    // Fire off the next iteration of requesting server changes, after a delay.
-    if (delayMsec !== 0) {
-      await Delay.resolve(delayMsec);
+    if (this._running) {
+      this.s_idle();
+      this.q_wantInputAfterDelay(this._pollingDelayMsec);
+    } else {
+      this.s_detached();
     }
-
-    this.q_wantInput();
   }
 
   /**
@@ -1071,5 +1173,33 @@ export default class BodyClient extends StateMachine {
     }
 
     return snapshot;
+  }
+
+  /**
+   * Waits a moment and then issues a `stop` event. This is used when a `stop`
+   * event gets handled during a high-level operation that spans multiple events
+   * (most notably collecting local changes and getting them saved on the
+   * server).
+   *
+   * Rather than get too fancy trying to do some kind of unwinding of the
+   * operation, what's going on is that we let the operation complete, at which
+   * point it's safe to stop. If it turns out we didn't wait long enough before
+   * re-issuing the `stop`, we'll just end up back here for another try.
+   */
+  _waitThenStop() {
+    if (this._manageEnabledState) {
+      // As soon as we're trying to stop, we should prevent the user from doing
+      // any editing.
+      this._quill.disable();
+    }
+
+    // **Note:** We do this in an immediate-async block so as to make this
+    // method return promptly. Its callers in fact want to be able to proceed
+    // with event processing in the mean time.
+    (async () => {
+      this.log.event.waitingBeforeStopping();
+      await Delay.resolve(STOP_POLL_DELAY_MSEC);
+      this.q_stop();
+    })();
   }
 }
