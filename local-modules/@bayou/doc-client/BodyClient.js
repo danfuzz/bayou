@@ -51,6 +51,12 @@ const FIRST_RESTART_DELAY_MSEC = 1000; // One second.
 const RESTART_DELAY_MSEC = 5 * 1000; // Five seconds.
 
 /**
+ * {Int} How long to wait (in msec) between attempts to `stop`, when the client
+ * finds that it's in the middle of an operation.
+ */
+const STOP_POLL_DELAY_MSEC = 500; // Half a second.
+
+/**
  * Tag used to identify this module as the source of a Quill event or action.
  */
 const CLIENT_SOURCE = 'doc-client';
@@ -310,7 +316,7 @@ export default class BodyClient extends StateMachine {
     // This space intentionally left blank (except for logging): We might get
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
-    this.log.info('While in state `errorWait`:', name, args);
+    this.log.event.eventWhenErrorWait(new Functor(name, ...args));
   }
 
   /**
@@ -442,6 +448,12 @@ export default class BodyClient extends StateMachine {
       this._running = false;
     }
 
+    if (this._manageEnabledState) {
+      // As soon as we're trying to stop, we should prevent the user from doing
+      // any editing.
+      this._quill.disable();
+    }
+
     // Go into the `detached` state. In that state, additional incoming events
     // will get ignored, except for `start` which will bring the client back to
     // life.
@@ -465,6 +477,16 @@ export default class BodyClient extends StateMachine {
    */
   _handle_any_wantInputAfterDelay() {
     // Nothing to do.
+  }
+
+  /**
+   * In state `collecting`, handles event `stop`. This one is slightly tricky,
+   * in that we already have some local changes which are in-flight and
+   * shouldn't just be dropped on the floor. See {@link #_waitThenStop} for
+   * additional flavor about what's going on.
+   */
+  _handle_collecting_stop() {
+    this._waitThenStop();
   }
 
   /**
@@ -929,6 +951,14 @@ export default class BodyClient extends StateMachine {
     this._becomeIdle();
   }
 
+  /**
+   * In state `merging`, handles event `stop`. The situation here is the same as
+   * with {@link #_handle_collecting_stop} (see which for details).
+   */
+  _handle_merging_stop() {
+    this._waitThenStop();
+  }
+
   //
   // Private methods (which aren't part of the state machine definition).
   //
@@ -1142,5 +1172,33 @@ export default class BodyClient extends StateMachine {
     }
 
     return snapshot;
+  }
+
+  /**
+   * Waits a moment and then issues a `stop` event. This is used when a `stop`
+   * event gets handled during a high-level operation that spans multiple events
+   * (most notably collecting local changes and getting them saved on the
+   * server).
+   *
+   * Rather than get too fancy trying to do some kind of unwinding of the
+   * operation, what's going on is that we let the operation complete, at which
+   * point it's safe to stop. If it turns out we didn't wait long enough before
+   * re-issuing the `stop`, we'll just end up back here for another try.
+   */
+  _waitThenStop() {
+    if (this._manageEnabledState) {
+      // As soon as we're trying to stop, we should prevent the user from doing
+      // any editing.
+      this._quill.disable();
+    }
+
+    // **Note:** We do this in an immediate-async block so as to make this
+    // method return promptly. Its callers in fact want to be able to proceed
+    // with event processing in the mean time.
+    (async () => {
+      this.log.event.waitingBeforeStopping();
+      await Delay.resolve(STOP_POLL_DELAY_MSEC);
+      this.q_stop();
+    })();
   }
 }
