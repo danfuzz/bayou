@@ -268,6 +268,15 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Validates a `wantInputAfterDelay` event.
+   *
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   */
+  _check_wantInputAfterDelay(delayMsec) {
+    TInt.nonNegative(delayMsec);
+  }
+
+  /**
    * Validates a `wantToUpdate` event. This indicates that it is time to
    * send collected local changes up to the server.
    *
@@ -276,34 +285,6 @@ export default class BodyClient extends StateMachine {
    */
   _check_wantToUpdate(baseRevNum) {
     TInt.check(baseRevNum);
-  }
-
-  /**
-   * Handler for all `error` events (errors that were uncaught by other handlers
-   * and which would by default just cause the state machine to die). In this
-   * case, we make it turn into an "unrecoverable" error, which is the same as
-   * what happens when the instance receives too many API errors.
-   *
-   * @param {Error} error The error.
-   */
-  _handle_any_error(error) {
-    this.log.error('Unexpected error in handler', error);
-    this.s_unrecoverableError();
-  }
-
-  /**
-   * Handler for all `stop` events.
-   */
-  _handle_any_stop() {
-    if (this._running) {
-      this.log.event.stopping();
-      this._running = false;
-    }
-
-    // Go into the `detached` state. In that state, additional incoming events
-    // will get ignored, except for `start` which will bring the client back to
-    // life.
-    this.s_detached();
   }
 
   /**
@@ -362,6 +343,44 @@ export default class BodyClient extends StateMachine {
     })();
 
     this.s_errorWait();
+  }
+
+  /**
+   * Handler for all `error` events (errors that were uncaught by other handlers
+   * and which would by default just cause the state machine to die). In this
+   * case, we make it turn into an "unrecoverable" error, which is the same as
+   * what happens when the instance receives too many API errors.
+   *
+   * @param {Error} error The error.
+   */
+  _handle_any_error(error) {
+    this.log.error('Unexpected error in handler', error);
+    this.s_unrecoverableError();
+  }
+
+  /**
+   * Handler for all `stop` events.
+   */
+  _handle_any_stop() {
+    if (this._running) {
+      this.log.event.stopping();
+      this._running = false;
+    }
+
+    // Go into the `detached` state. In that state, additional incoming events
+    // will get ignored, except for `start` which will bring the client back to
+    // life.
+    this.s_detached();
+  }
+
+  /**
+   * In any state but `idle`, handles event `wantInputAfterDelay`. We ignore
+   * the event, because the client is in the middle of doing something else.
+   * When it's done with whatever it may be, it will send a new
+   * `wantInputAfterDelay` event.
+   */
+  _handle_any_wantInputAfterDelay() {
+    // Nothing to do.
   }
 
   /**
@@ -905,25 +924,6 @@ export default class BodyClient extends StateMachine {
     } else {
       this.s_detached();
     }
-  }
-
-  /**
-   * In any state but `idle`, handles event `wantInputAfterDelay`. We ignore
-   * the event, because the client is in the middle of doing something else.
-   * When it's done with whatever it may be, it will send a new
-   * `wantInputAfterDelay` event.
-   */
-  _handle_any_wantInputAfterDelay() {
-    // Nothing to do.
-  }
-
-  /**
-   * Validates a `wantInputAfterDelay` event.
-   *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
-   */
-  _check_wantInputAfterDelay(delayMsec) {
-    TInt.nonNegative(delayMsec);
   }
 
   /**
