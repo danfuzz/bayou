@@ -117,6 +117,13 @@ export default class BodyClient extends StateMachine {
     this._pollingDelayMsec = pollingDelayMsec;
 
     /**
+     * {boolean} Whether the instance supposed to be running right now. This
+     * starts out `false`, becomes `true` in response to {@link #start}, and
+     * becomes `false` in response to {@link #stop}.
+     */
+    this._running = false;
+
+    /**
      * {Proxy|null} Local proxy for accessing the server session. Becomes
      * non-`null` during the handling of the `start` event.
      */
@@ -172,6 +179,14 @@ export default class BodyClient extends StateMachine {
    */
   start() {
     this.q_start();
+  }
+
+  /**
+   * Requests that this instance stop running. This method does nothing if the
+   * client is already stopped (or in the process of stopping).
+   */
+  stop() {
+    this.q_stop();
   }
 
   /**
@@ -235,6 +250,14 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Validates a `stop` event. This is the event that tells the client to stop
+   * running.
+   */
+  _check_stop() {
+    // Nothing to do.
+  }
+
+  /**
    * Validates a `wantInput` event. This indicates that it is time to solicit
    * input from the server (in the form of document deltas) and from the local
    * Quill instance (in the form of Quill events), but only if the client isn't
@@ -269,6 +292,21 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Handler for all `stop` events.
+   */
+  _handle_any_stop() {
+    if (this._running) {
+      this.log.event.stopping();
+      this._running = false;
+    }
+
+    // Go into the `detached` state. In that state, additional incoming events
+    // will get ignored, except for `start` which will bring the client back to
+    // life.
+    this.s_detached();
+  }
+
+  /**
    * In any state, handles event `apiError`. This is a "normal" occurrence if
    * the error has to do with the network connection (e.g. the network drops),
    * but is considered unusual (and error-worthy) if it happens for some other
@@ -278,6 +316,11 @@ export default class BodyClient extends StateMachine {
    * @param {InfoError} reason Error reason.
    */
   _handle_any_apiError(method, reason) {
+    if (!this._running) {
+      // Avoid doing anything if the instance isn't supposed to be running.
+      return;
+    }
+
     if (this._manageEnabledState) {
       // Stop the user from trying to do more edits, as they'd get lost.
       this._quill.disable();
@@ -303,16 +346,19 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    // Wait an appropriate amount of time and then try starting again. The
-    // start event will be received in the `errorWait` state, and as such will
-    // be handled differently than a clean start from scratch.
+    // Wait an appropriate amount of time and then try starting again (unless
+    // the instance got `stop()`ed in the mean time). The `start` event will be
+    // received in the `errorWait` state, and as such will be handled
+    // differently than a clean start from scratch.
 
     (async () => {
       const delayMsec = (this._errorStamps.length === 1)
         ? FIRST_RESTART_DELAY_MSEC
         : RESTART_DELAY_MSEC;
       await Delay.resolve(delayMsec);
-      this.start();
+      if (this._running) {
+        this.q_start();
+      }
     })();
 
     this.s_errorWait();
@@ -360,7 +406,7 @@ export default class BodyClient extends StateMachine {
    * @param {...*} args The event arguments.
    */
   _handle_unrecoverableError_any(name, ...args) {
-    this.log.info('While in state `unrecoverableError`:', name, args);
+    this.log.event.eventWhenUnrecoverable(new Functor(name, ...args));
   }
 
   /**
@@ -370,6 +416,8 @@ export default class BodyClient extends StateMachine {
    */
   async _handle_detached_start() {
     // **TODO:** This whole flow should probably be protected by a timeout.
+
+    this._running = true;
 
     // Open (or reopen) the connection to the server, and perform any necessary
     // handshaking to gain access to the document.
