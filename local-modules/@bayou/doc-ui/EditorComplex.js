@@ -195,7 +195,7 @@ export default class EditorComplex extends CommonBase {
   }
 
   /**
-   * Initialize the session, based on the given key.
+   * Initialize the session, based on the given session connection info.
    *
    * @param {SessionInfo} info Info object that identifies the session and
    *   grants access to it.
