@@ -11,6 +11,7 @@ import { Errors, Singleton } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 import PidFile from './PidFile';
+import ProcessControl from './ProcessControl';
 import ProductInfo from './ProductInfo';
 
 /** {Logger} Logger. */
@@ -20,6 +21,21 @@ const log = new Logger('env-server');
  * Miscellaneous server-side utilities.
  */
 export default class ServerEnv extends Singleton {
+  /**
+   * Constructs an instance.
+   */
+  constructor() {
+    super();
+
+    /** {PidFile} The PID file manager. */
+    this._pidFile = new PidFile();
+
+    /** {ProcessControl} The process control instance. */
+    this._processControl = new ProcessControl();
+
+    Object.freeze(this);
+  }
+
   /**
    * {object} Ad-hoc object with generally-useful runtime info, intended for
    * logging / debugging.
@@ -44,19 +60,17 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
-   * {string} The base URL to use for loopback requests from this machine. This
-   * is always an `http://localhost/` URL.
-   */
-  get loopbackUrl() {
-    return `http://localhost:${Network.listenPort}`;
-  }
-
-  /**
    * Initializes this module. This sets up the info for the `Dirs` class, sets
    * up the PID file, and gathers the product metainfo.
    */
   async init() {
     Dirs.theOne;
+
+    this._processControl.init();
+    if (this._processControl.shouldShutDown()) {
+      log.error('Server found shutdown indicator(s) during startup.');
+      throw Errors.aborted('Server told not to run.');
+    }
 
     const alreadyRunning = await this.isAlreadyRunningLocally();
     if (alreadyRunning) {
@@ -66,7 +80,7 @@ export default class ServerEnv extends Singleton {
       throw Errors.aborted('Another server is already running.');
     }
 
-    PidFile.theOne.init();
+    this._pidFile.init();
     ProductInfo.theOne;
   }
 
@@ -85,7 +99,7 @@ export default class ServerEnv extends Singleton {
     // to say there is no server running. And if it _does_ exist and _is_ valid,
     // then the so-identified process needs to be running.
 
-    const pid = PidFile.theOne.readFile();
+    const pid = this._pidFile.readFile();
 
     if (pid === null) {
       return false;
@@ -103,7 +117,7 @@ export default class ServerEnv extends Singleton {
     // dead.
 
     const isActive = new Promise((resolve, reject_unused) => {
-      const request = http.get(this.loopbackUrl);
+      const request = http.get(Network.loopbackUrl);
 
       request.setTimeout(10 * 1000); // Give the server 10 seconds to respond.
       request.end();

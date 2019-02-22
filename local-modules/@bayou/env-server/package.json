@@ -2,6 +2,7 @@
   "dependencies": {
     "@bayou/config-server": "local",
     "@bayou/deps-util-server": "local",
+    "@bayou/promise-util": "local",
     "@bayou/proppy": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"

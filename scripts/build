@@ -451,6 +451,13 @@ function build-product-info {
     # `git log` command, above.
     local buildDate="build_date = '$(date '+%Y-%m-%d %H:%M:%S %z')'"
 
+    # The build number, if available.
+    local buildNumber="${BUILD_NUMBER}"
+    if [[ ${buildNumber} == '' ]]; then
+        buildNumber='unknown'
+    fi
+    buildNumber="build_number = ${buildNumber}"
+
     # The version of Node that was used for the build. This is important because
     # the version of Node used to _run_ the product needs to be the same major
     # version. (Most specifically, the native module API needs to be compatible,
@@ -468,6 +475,7 @@ function build-product-info {
         echo '# The following lines were added automatically by the build script.'
         echo "${commitInfo}"
         echo "${buildDate}"
+        echo "${buildNumber}"
         echo "${nodeVersion}"
     ) > "${outFile}"
 }

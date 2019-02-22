@@ -29,6 +29,16 @@ export default class Network extends UtilityClass {
   }
 
   /**
+   * {string} The URL origin to use for loopback requests to this instance from
+   * the machine it is running on. This is typically configured to be
+   * `http://localhost:${Network.listenPort}` though some configurations may
+   * need to be less trivial.
+   */
+  static get loopbackUrl() {
+    return use.Network.loopbackUrl;
+  }
+
+  /**
    * {Int|null} The local port to use for internal monitoring, or `null` to
    * not expose monitoring endpoints.
    */

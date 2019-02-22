@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
-import { Singleton } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 
@@ -15,10 +15,10 @@ import Dirs from './Dirs';
 const log = new Logger('pid');
 
 /**
- * This writes a PID file when `init()` is called, and tries to remove it when
- * the app is shutting down.
+ * This writes a PID file when {@link #init()} is called, and tries to remove it
+ * when the process is shutting down.
  */
-export default class PidFile extends Singleton {
+export default class PidFile extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (such as writing the PID file); that stuff happens in
@@ -28,7 +28,7 @@ export default class PidFile extends Singleton {
     super();
 
     /** {string} Path for the PID file. */
-    this._pidPath = path.resolve(Dirs.theOne.VAR_DIR, 'pid.txt');
+    this._pidPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'pid.txt');
 
     Object.freeze(this);
   }
@@ -82,18 +82,6 @@ export default class PidFile extends Singleton {
   }
 
   /**
-   * Handles a signal by erasing the PID file (if it exists) and then
-   * re-raising the same signal.
-   *
-   * @param {string} id Signal ID.
-   */
-  _handleSignal(id) {
-    log.event.receivedSignal(id);
-    this._erasePid();
-    process.kill(process.pid, id);
-  }
-
-  /**
    * Erases the PID file if it exists.
    */
   _erasePid() {
@@ -103,5 +91,17 @@ export default class PidFile extends Singleton {
     } catch (e) {
       // Ignore errors. We're about to exit anyway.
     }
+  }
+
+  /**
+   * Handles a signal by erasing the PID file (if it exists) and then
+   * re-raising the same signal.
+   *
+   * @param {string} id Signal ID.
+   */
+  _handleSignal(id) {
+    log.event.receivedSignal(id);
+    this._erasePid();
+    process.kill(process.pid, id);
   }
 }
