@@ -429,6 +429,51 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * In most states, handles event `gotChangeAfter`. This will happen when a
+   * server change comes when we're in the middle of handling a local change. As
+   * such, it is safe to ignore, because after the local change is integrated,
+   * the system will fire off a new `body_getChangeAfter()` request.
+   *
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
+   * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
+   *   later document revision.
+   */
+  _handle_any_gotChangeAfter(baseRevNum_unused, result_unused) {
+    // Nothing to do. Stay in the same state.
+  }
+
+  /**
+   * In most states, handles event `gotQuillEvent`. This will happen when a
+   * local change comes in after we're already in the middle of handling a
+   * chain of local changes. As such, it is safe to ignore, because whatever
+   * the change was, it will get handled by that pre-existing process.
+   *
+   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
+   *   the time of the original request.
+   */
+  _handle_any_gotQuillEvent(baseRevNum_unused) {
+    // Nothing to do. Stay in the same state.
+  }
+
+  /**
+   * In most states, handles event `start`.
+   */
+  _handle_any_start() {
+    // This space intentionally left blank: We are already active or in the
+    // middle of starting, so there's nothing more to do.
+  }
+
+  /**
+   * In any state but `idle`, handles event `wantInput`. We ignore the event,
+   * because the client is in the middle of doing something else. When it's done
+   * with whatever it may be, it will send a new `wantInput` event.
+   */
+  _handle_any_wantInput() {
+    // Nothing to do. Stay in the same state.
+  }
+
+  /**
    * In state `detached`, handles event `start`.
    *
    * This is the kickoff event.
@@ -522,14 +567,6 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `start`.
-   */
-  _handle_any_start() {
-    // This space intentionally left blank: We are already active or in the
-    // middle of starting, so there's nothing more to do.
-  }
-
-  /**
    * In state `idle`, handles event `wantInput`. This can happen as a chained
    * event (during startup or at the end of handling the integration of changes)
    * or due to a delay timeout. This will make requests both to the server and
@@ -588,15 +625,6 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In any state but `idle`, handles event `wantInput`. We ignore the event,
-   * because the client is in the middle of doing something else. When it's done
-   * with whatever it may be, it will send a new `wantInput` event.
-   */
-  _handle_any_wantInput() {
-    // Nothing to do. Stay in the same state.
-  }
-
-  /**
    * In state `idle`, handles event `gotChangeAfter`.
    *
    * @param {Int} baseRevNum The revision number of {@link #_snapshot} at the
@@ -618,21 +646,6 @@ export default class BodyClient extends StateMachine {
     // despite any particularly active editing by other clients. Use delay
     // at least as long as `PULL_DELAY_MSEC`.
     this.q_wantInputAfterDelay(this._pollingDelayMsec < PULL_DELAY_MSEC ? PULL_DELAY_MSEC : this._pollingDelayMsec);
-  }
-
-  /**
-   * In most states, handles event `gotChangeAfter`. This will happen when a
-   * server change comes when we're in the middle of handling a local change. As
-   * such, it is safe to ignore, because after the local change is integrated,
-   * the system will fire off a new `body_getChangeAfter()` request.
-   *
-   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
-   *   the time of the original request.
-   * @param {BodyChange} result_unused How to transform `baseSnapshot` to get a
-   *   later document revision.
-   */
-  _handle_any_gotChangeAfter(baseRevNum_unused, result_unused) {
-    // Nothing to do. Stay in the same state.
   }
 
   /**
@@ -709,16 +722,19 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * In most states, handles event `gotQuillEvent`. This will happen when a
-   * local change comes in after we're already in the middle of handling a
-   * chain of local changes. As such, it is safe to ignore, because whatever
-   * the change was, it will get handled by that pre-existing process.
+   * In state `idle`, handles event `wantInputAfterDelay`. Will fire `wantInput`
+   * after a configured delay, which will make requests both to the server and
+   * to the local Quill instance.
    *
-   * @param {Int} baseRevNum_unused The revision number of {@link #_snapshot} at
-   *   the time of the original request.
+   * @param {int} delayMsec Msec to wait before firing `wantInput`.
    */
-  _handle_any_gotQuillEvent(baseRevNum_unused) {
-    // Nothing to do. Stay in the same state.
+  async _handle_idle_wantInputAfterDelay(delayMsec) {
+    // Fire off the next iteration of requesting server changes, after a delay.
+    if (delayMsec !== 0) {
+      await Delay.resolve(delayMsec);
+    }
+
+    this.q_wantInput();
   }
 
   /**
@@ -924,22 +940,6 @@ export default class BodyClient extends StateMachine {
     } else {
       this.s_detached();
     }
-  }
-
-  /**
-   * In state `idle`, handles event `wantInputAfterDelay`. Will fire `wantInput`
-   * after a configured delay, which will make requests both to the server and
-   * to the local Quill instance.
-   *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
-   */
-  async _handle_idle_wantInputAfterDelay(delayMsec) {
-    // Fire off the next iteration of requesting server changes, after a delay.
-    if (delayMsec !== 0) {
-      await Delay.resolve(delayMsec);
-    }
-
-    this.q_wantInput();
   }
 
   /**
