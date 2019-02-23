@@ -184,7 +184,7 @@ export default class ProcessControl extends CommonBase {
         }
       }
 
-      const currentLength       = promises.length;
+      const currentLength      = promises.length;
       const allCurrentPromises = Promise.all(promises.slice(0));
       promises.splice(0, currentLength); // Clear it out; ready for new ones.
 

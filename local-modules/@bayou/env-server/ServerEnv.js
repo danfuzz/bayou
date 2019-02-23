@@ -59,6 +59,11 @@ export default class ServerEnv extends Singleton {
     };
   }
 
+  /** {ProcessControl} The shutdown management instance to use. */
+  get shutdownManager() {
+    return this._processControl;
+  }
+
   /**
    * Initializes this module. This sets up the info for the `Dirs` class, sets
    * up the PID file, and gathers the product metainfo.
