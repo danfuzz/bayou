@@ -28,7 +28,7 @@ const SHUTDOWN_PROMISE_POPULATION_DELAY_MSEC = 500; // Half a second.
  * {Int} The maximum amount of time (in msec) that should be spent waiting for
  * shutdown promises before giving up and just exiting.
  */
-const MAX_SHUTDOWN_TIME_MSEC = 15 * 1000; // Fifteen seconds.
+const MAX_SHUTDOWN_TIME_MSEC = 60 * 1000; // One minute.
 
 /** {Logger} Logger for this class. */
 const log = new Logger('control');
