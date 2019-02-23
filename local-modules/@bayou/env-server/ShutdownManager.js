@@ -34,11 +34,12 @@ const MAX_SHUTDOWN_TIME_MSEC = 15 * 1000; // Fifteen seconds.
 const log = new Logger('control');
 
 /**
- * Manager for the `control` directory, including writing / erasing the PID file
- * and heeding shutdown requests issued by virtue of the presence of a
- * signalling file.
+ * System shutown manager. This includes handling shutdown requests that are
+ * presented in the `control` directory, along with the mechanism which other
+ * parts of the system can use to notice when shutdown is happening and have a
+ * chance to exit cleanly.
  */
-export default class ProcessControl extends CommonBase {
+export default class ShutdownManager extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (i.e. reacting to the control files); that stuff
