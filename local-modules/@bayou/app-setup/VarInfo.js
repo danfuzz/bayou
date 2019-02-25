@@ -3,8 +3,10 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Auth } from '@bayou/config-server';
+import { ServerEnv } from '@bayou/env-server';
 import { CommonBase } from '@bayou/util-common';
 
+import Application from './Application';
 
 /**
  * "Variable" info (like, it varies and isn't just static to the system), which
@@ -13,9 +15,14 @@ import { CommonBase } from '@bayou/util-common';
 export default class VarInfo extends CommonBase {
   /**
    * Constructs an instance.
+   *
+   * @param {Application} mainApplication The main application instance.
    */
-  constructor() {
+  constructor(mainApplication) {
     super();
+
+    /** {Application} The main application instance. */
+    this._mainApplication = Application.check(mainApplication);
 
     Object.freeze(this);
   }
@@ -26,13 +33,29 @@ export default class VarInfo extends CommonBase {
    * @returns {object} A JSON-encodable object with all of the variable info.
    */
   async get() {
-    // **Note:** The "printable" form of a bearer token is redacted, such that
-    // the secret portion is not represented.
-    const tokenIds = Auth.rootTokens.map(t => t.safeString);
+    const health     = await this._mainApplication.isHealthy();
+    const mode       = this._currentMode();
+    const pid        = process.pid;
+    const rootTokens = Auth.rootTokens.map(t => t.safeString);
 
-    return {
-      pid:        process.pid,
-      rootTokens: tokenIds
-    };
+    return { health, mode, pid, rootTokens };
+  }
+
+  /**
+   * Gets the current "running mode." This is a short string indicative of
+   * whether the system is starting up, actively running, or shutting down.
+   *
+   * @returns {string} The running mode.
+   */
+  _currentMode() {
+    const shutdownManager = ServerEnv.theOne.shutdownManager;
+
+    if (shutdownManager.shouldShutDown()) {
+      return 'shuttingDown';
+    }
+
+    return this._mainApplication.isListening()
+      ? 'running'
+      : 'starting';
   }
 }

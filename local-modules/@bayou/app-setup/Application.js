@@ -94,6 +94,17 @@ export default class Application extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this instance is currently listening for
+   * connections.
+   *
+   * @returns {boolean} `true` if this instance is listening for connections, or
+   *   `false` if not.
+   */
+  isListening() {
+    return this._server.listening;
+  }
+
+  /**
    * Starts up the server.
    *
    * @param {boolean} [pickPort = false] If `true`, causes the app to pick an

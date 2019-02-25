@@ -99,7 +99,7 @@ export default class Monitor extends CommonBase {
       });
     });
 
-    const varInfo = new VarInfo();
+    const varInfo = new VarInfo(this._mainApplication);
     app.get('/var', async (req_unused, res) => {
       const info = await varInfo.get();
 
