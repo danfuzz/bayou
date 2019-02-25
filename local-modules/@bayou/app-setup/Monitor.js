@@ -13,7 +13,6 @@ import { CommonBase } from '@bayou/util-common';
 import Application from './Application';
 import RequestLogger from './RequestLogger';
 import ServerUtil from './ServerUtil';
-import VarInfo from './VarInfo';
 
 /** {Logger} Logger. */
 const log = new Logger('app-monitor');
@@ -72,7 +71,8 @@ export default class Monitor extends CommonBase {
    * Sets up the webserver routes.
    */
   _addRoutes() {
-    const app = this._app;
+    const app             = this._app;
+    const mainApplication = this._mainApplication;
 
     // Logging.
     app.use(this._requestLogger.expressMiddleware);
@@ -85,56 +85,25 @@ export default class Monitor extends CommonBase {
     });
 
     app.get('/health', async (req_unused, res) => {
-      const [status, text] = await this._mainApplication.isHealthy()
+      const [status, text] = await mainApplication.isHealthy()
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
         : [503, '😿 Sorry to say we can\'t help you right now. 😿\n'];
 
-      Monitor._sendTextResponse(res, status, 'text/plain', text);
+      ServerUtil.sendPlainTextResponse(res, text, status);
     });
 
     app.get('/info', async (req_unused, res) => {
-      Monitor._sendJsonResponse(res, {
+      ServerUtil.sendJsonResponse(res, {
         build:   ProductInfo.theOne.INFO,
         runtime: ServerEnv.theOne.info
       });
     });
 
-    const varInfo = new VarInfo();
+    const varInfo = mainApplication.varInfo;
     app.get('/var', async (req_unused, res) => {
       const info = await varInfo.get();
 
-      Monitor._sendJsonResponse(res, info);
+      ServerUtil.sendJsonResponse(res, info);
     });
-  }
-
-  /**
-   * Sends a successful JSON-bearing HTTP response.
-   *
-   * @param {http.ServerResponse} res The response object representing the
-   *   connection to send to.
-   * @param {object} body The body of the response, as a JSON-encodable object.
-   */
-  static _sendJsonResponse(res, body) {
-    const text = `${JSON.stringify(body, null, 2)}\n`;
-
-    Monitor._sendTextResponse(res, 200, 'application/json', text);
-  }
-
-  /**
-   * Sends a text-content HTTP response.
-   *
-   * @param {http.ServerResponse} res The response object representing the
-   *   connection to send to.
-   * @param {int} statusCode The response status code.
-   * @param {string} contentType The content type, _without_ a charset. (The
-   *   charset is always set to be `utf-8`.)
-   * @param {string} body The body of the response, as a string.
-   */
-  static _sendTextResponse(res, statusCode, contentType, body) {
-    res
-      .status(statusCode)
-      .type(`${contentType}; charset=utf-8`)
-      .set('Cache-Control', 'no-cache, no-store, no-transform')
-      .send(body);
   }
 }

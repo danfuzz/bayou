@@ -2,6 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import WebSocket from 'ws';
+
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseConnection from './BaseConnection';
@@ -30,6 +32,17 @@ export default class WsConnection extends BaseConnection {
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
+  }
+
+  /**
+   * Implementation of method as required by the superclass.
+   *
+   * @returns {boolean} `true` if the connection is open, or `false` if not.
+   */
+  _impl_isOpen() {
+    const readyState = this._ws.readyState;
+
+    return (readyState === WebSocket.CONNECTING) || (readyState === WebSocket.OPEN);
   }
 
   /**

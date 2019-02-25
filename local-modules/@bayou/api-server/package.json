@@ -3,6 +3,7 @@
     "@bayou/api-common": "local",
     "@bayou/codec": "local",
     "@bayou/config-server": "local",
+    "@bayou/deps-express": "local",
     "@bayou/deps-util-server": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",

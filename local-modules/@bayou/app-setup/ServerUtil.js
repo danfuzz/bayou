@@ -90,4 +90,69 @@ export default class ServerUtil extends UtilityClass {
 
     return server.address().port;
   }
+
+  /**
+   * Responds with a `text/html` result.
+   *
+   * @param {object} res The response object representing the connection to send
+   *   to.
+   * @param {string|null} head HTML head text if any, or `null` to not include
+   *   a `<head>` section.
+   * @param {string} body HTML body text.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendHtmlResponse(res, head, body, statusCode = 200) {
+    head = (head === null)
+      ? ''
+      : `<head>\n\n${head}\n</head>\n\n`;
+    body = `<body>\n\n${body}\n</body>\n`;
+
+    const html = `<!doctype html>\n<html lang="en-US">\n${head}${body}</html>\n`;
+
+    ServerUtil.sendTextResponse(res, html, 'text/html', statusCode);
+  }
+
+  /**
+   * Sends a JSON-bearing HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {object} body The body of the response, as a JSON-encodable object.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendJsonResponse(res, body, statusCode = 200) {
+    const text = `${JSON.stringify(body, null, 2)}\n`;
+
+    ServerUtil.sendTextResponse(res, text, 'application/json', statusCode);
+  }
+
+  /**
+   * Sends a plain-text HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {string} body The body of the response, as a string.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendPlainTextResponse(res, body, statusCode = 200) {
+    ServerUtil.sendTextResponse(res, body, 'text/plain', statusCode);
+  }
+
+  /**
+   * Sends a text-content HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {string} body The body of the response, as a string.
+   * @param {string} contentType The content type, _without_ a charset. (The
+   *   charset is always set to be `utf-8`.)
+   * @param {int} statusCode The response status code.
+   */
+  static sendTextResponse(res, body, contentType, statusCode) {
+    res
+      .status(statusCode)
+      .type(`${contentType}; charset=utf-8`)
+      .set('Cache-Control', 'no-cache, no-store, no-transform')
+      .send(body);
+  }
 }
