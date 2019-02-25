@@ -21,7 +21,7 @@ import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
 
-/** {Logger} Logger. */
+/** {Logger} Logger for this class. */
 const log = new Logger('app');
 
 /**
@@ -107,6 +107,10 @@ export default class Application extends CommonBase {
     const resultPort = await ServerUtil.listen(server, port);
 
     log.event.applicationPort(resultPort);
+
+    // **Note:** This is an `async` method but we don't actually want to wait
+    // for it to return, because that'd be when the system is shutting down!
+    ServerUtil.handleSystemShutdown(server);
 
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);

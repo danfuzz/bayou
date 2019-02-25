@@ -7,6 +7,7 @@ import path from 'path';
 
 import { Condition, Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
+import { TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import Dirs from './Dirs';
@@ -17,19 +18,32 @@ import Dirs from './Dirs';
  */
 const SHUTDOWN_POLL_DELAY_MSEC = 60 * 1000; // One minute.
 
+/**
+ * {Int} How long (in msec) to wait during shutdown to allow the shutdown
+ * promise list to be populated.
+ */
+const SHUTDOWN_PROMISE_POPULATION_DELAY_MSEC = 500; // Half a second.
+
+/**
+ * {Int} The maximum amount of time (in msec) that should be spent waiting for
+ * shutdown promises before giving up and just exiting.
+ */
+const MAX_SHUTDOWN_TIME_MSEC = 60 * 1000; // One minute.
+
 /** {Logger} Logger for this class. */
 const log = new Logger('control');
 
 /**
- * Manager for the `control` directory, including writing / erasing the PID file
- * and heeding shutdown requests issued by virtue of the presence of a
- * signalling file.
+ * System shutown manager. This includes handling shutdown requests that are
+ * presented in the `control` directory, along with the mechanism which other
+ * parts of the system can use to notice when shutdown is happening and have a
+ * chance to exit cleanly.
  */
-export default class ProcessControl extends CommonBase {
+export default class ShutdownManager extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
-   * action to take place (such as writing the PID file); that stuff happens in
-   * {@link #init}.
+   * action to take place (i.e. reacting to the control files); that stuff
+   * happens in {@link #init}.
    */
   constructor() {
     super();
@@ -48,6 +62,12 @@ export default class ProcessControl extends CommonBase {
      */
     this._shutdownCondition = new Condition();
 
+    /**
+     * {array<Promise>} Promises representing the completion of tasks that
+     * should be done before the system exits.
+     */
+    this._shutdownPromises = [];
+
     Object.freeze(this);
   }
 
@@ -60,6 +80,18 @@ export default class ProcessControl extends CommonBase {
    */
   shouldShutDown() {
     return this._shutdownCondition.value;
+  }
+
+  /**
+   * Indicates that the given promise should get resolved before the system
+   * exits.
+   *
+   * @param {Promise} promise Promise that the system should wait for before
+   * exiting.
+   */
+  waitFor(promise) {
+    TObject.check(promise, Promise);
+    this._shutdownPromises.push(promise);
   }
 
   /**
@@ -110,12 +142,63 @@ export default class ProcessControl extends CommonBase {
         }
       }
 
-      this._shutdownCondition.value = true;
-      log.event.shutdownRequested();
-
-      // Arrange for the `stopped` file to get written during process exit.
-      process.once('exit', () => this._writeStoppedFile());
+      this._doShutdown();
     })();
+  }
+
+  /**
+   * Perform all of the shutdown actions, and then exit the process.
+   */
+  async _doShutdown() {
+    this._shutdownCondition.value = true;
+    log.event.shutdownRequested();
+
+    // Arrange for the `stopped` file to get written during process exit.
+    process.once('exit', () => this._writeStoppedFile());
+
+    // Wait for all the registered shutdown promises, including ones that get
+    // added while waiting for earlier-registered ones. But stop after the
+    // overall timeout. That is, give things a reasonable amount of time to
+    // shutdown cleanly, but pull the plug if things just drag on too long.
+
+    const timeoutPromise = Delay.resolve(MAX_SHUTDOWN_TIME_MSEC);
+    let   timedOut       = false;
+    const promises       = this._shutdownPromises;
+
+    (async () => {
+      await timeoutPromise;
+      timedOut = true;
+    })();
+
+    while (!timedOut) {
+      if (promises.length === 0) {
+        // When there's nothing (apparently) left to do, give the system just a
+        // moment more in case just-resolved promises (or similar) trigger the
+        // addition of new shutdown promises. This notably allows the original
+        // `await`ers of the `_shutdownCondition` time to register their
+        // promises.
+        await Delay.resolve(SHUTDOWN_PROMISE_POPULATION_DELAY_MSEC);
+
+        if (promises.length === 0) {
+          // Nothing more added, so we're done!
+          break;
+        }
+      }
+
+      const currentLength      = promises.length;
+      const allCurrentPromises = Promise.all(promises.slice(0));
+      promises.splice(0, currentLength); // Clear it out; ready for new ones.
+
+      log.event.awaitingShutdownPromises(currentLength);
+      await Promise.race([allCurrentPromises, timeoutPromise]);
+    }
+
+    if (timedOut) {
+      log.event.shutdownTimedOut();
+    }
+
+    log.event.shutdownComplete();
+    process.exit(0);
   }
 
   /**
