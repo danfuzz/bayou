@@ -129,17 +129,21 @@ export default class ShutdownManager extends CommonBase {
       return;
     }
 
-    // Loop forever, waiting/polling for the shutdown file to exist, and
-    // reacting to that by flipping `_shutdownCondition` to `true`.
+    // If we receive SIGHUP, immediately check for the shutdown file.
+    process.on('SIGHUP', this._checkForShutdownRequest.bind(this));
+
+    // Loop forever, waiting/polling for the shutdown file to exist, and/or for
+    // the shutdown condition to be flipped by other means (notably, the signal
+    // handler which got setup just above here).
     (async () => {
-      for (;;) {
-        await Delay.resolve(SHUTDOWN_POLL_DELAY_MSEC);
+      const shutdownTrue = this._shutdownCondition.whenTrue();
 
-        log.event.checkingForShutdownRequest();
+      while (!this._shutdownCondition.value) {
+        await Promise.race([
+          Delay.resolve(SHUTDOWN_POLL_DELAY_MSEC),
+          shutdownTrue]);
 
-        if (fs.existsSync(this._shutdownPath)) {
-          break;
-        }
+        this._checkForShutdownRequest();
       }
 
       this._doShutdown();
@@ -147,11 +151,28 @@ export default class ShutdownManager extends CommonBase {
   }
 
   /**
+   * Performs a check for a shutdown request. If so requested, flip the
+   * {@link #_shutdownCondition} to `true`.
+   */
+  _checkForShutdownRequest() {
+    if (this._shutdownCondition.value) {
+      // Shutdown has already been requested. No need to check again.
+      return;
+    }
+
+    log.event.checkingForShutdownRequest();
+
+    if (fs.existsSync(this._shutdownPath)) {
+      this._shutdownCondition.value = true;
+      log.event.shutdownRequested();
+    }
+  }
+
+  /**
    * Perform all of the shutdown actions, and then exit the process.
    */
   async _doShutdown() {
-    this._shutdownCondition.value = true;
-    log.event.shutdownRequested();
+    log.event.shuttingDown();
 
     // Arrange for the `stopped` file to get written during process exit.
     process.once('exit', () => this._writeStoppedFile());
