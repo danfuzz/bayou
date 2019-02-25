@@ -33,6 +33,17 @@ export default class WsConnection extends BaseConnection {
   }
 
   /**
+   * Implementation of method as required by the superclass.
+   *
+   * @returns {boolean} `true` if the connection is open, or `false` if not.
+   */
+  _impl_isOpen() {
+    const readyState = this._ws.readyState;
+
+    return (readyState === WebSocket.CONNECTING) || (readyState === WebSocket.OPEN);
+  }
+
+  /**
    * Handles a `close` event coming from the underlying websocket.
    *
    * @param {number} code The reason code for why the socket was closed.

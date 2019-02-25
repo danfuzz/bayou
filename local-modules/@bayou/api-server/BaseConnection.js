@@ -4,6 +4,7 @@
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
 import { Logger } from '@bayou/see-all';
+import { TBoolean } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import ApiLog from './ApiLog';
@@ -142,6 +143,25 @@ export default class BaseConnection extends CommonBase {
     }
 
     return encodedResponse;
+  }
+
+  /**
+   * Indicates whether or not this connection is currently open (able to
+   * receive and/or send data).
+   *
+   * @returns {boolean} `true` if the connection is open, or `false` if not.
+   */
+  isOpen() {
+    return TBoolean.check(this._impl_isOpen());
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #isOpen}.
+   *
+   * @returns {boolean} `true` if the connection is open, or `false` if not.
+   */
+  _impl_isOpen() {
+    return this._mustOverride();
   }
 
   /**

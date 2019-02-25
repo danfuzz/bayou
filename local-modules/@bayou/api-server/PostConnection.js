@@ -44,6 +44,17 @@ export default class PostConnection extends BaseConnection {
   }
 
   /**
+   * Implementation of method as required by the superclass.
+   *
+   * @returns {boolean} `true` if the connection is open, or `false` if not.
+   */
+  _impl_isOpen() {
+    const response = this._res;
+
+    return (response.socket !== null) && response.finished;
+  }
+
+  /**
    * Handles a `data` event coming from the request input stream.
    *
    * @param {Buffer} chunk Incoming data chunk.
