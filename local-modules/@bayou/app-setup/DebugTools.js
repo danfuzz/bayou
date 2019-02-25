@@ -13,6 +13,8 @@ import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
 import { CommonBase, Errors } from '@bayou/util-common';
 
+import ServerUtil from './ServerUtil';
+
 /** Logger for this module. */
 const log = new Logger('app-debug');
 
@@ -226,7 +228,7 @@ export default class DebugTools extends CommonBase {
     const authorId   = this._getAuthorIdParam(req);
     const info       = await this._makeEncodedInfo(documentId, authorId);
 
-    this._jsonResponse(res, info);
+    ServerUtil.sendJsonResponse(res, info);
   }
 
   /**
@@ -241,7 +243,7 @@ export default class DebugTools extends CommonBase {
     const change = (await body).getChange(revNum);
     const result = appCommon_TheModule.modelCodec.encodeJson(await change, true);
 
-    this._textResponse(res, result);
+    ServerUtil.sendPlainTextResponse(res, result);
   }
 
   /**
@@ -280,7 +282,8 @@ export default class DebugTools extends CommonBase {
   async _handle_edit(req, res) {
     const documentId = req.params.documentId;
     const authorId   = this._getAuthorIdParam(req);
-    const info       = await this._makeEncodedInfo(documentId, authorId);
+    const infoObj    = await this._makeEncodedInfo(documentId, authorId);
+    const info       = JSON.stringify(infoObj);
 
     // These are already strings (JSON-encoded even, in the case of `info`),
     // but we still have to JSON-encode _those_ strings, so as to make them
@@ -349,7 +352,7 @@ export default class DebugTools extends CommonBase {
     const snapshot = (await body).getSnapshot(...args);
     const result = appCommon_TheModule.modelCodec.encodeJson(await snapshot, true);
 
-    this._textResponse(res, result);
+    ServerUtil.sendPlainTextResponse(res, result);
   }
 
   /**
@@ -364,7 +367,7 @@ export default class DebugTools extends CommonBase {
     const token    = req.params.token;
 
     this._rootAccess.useToken(authorId, token);
-    this._textResponse(res, 'Ok!');
+    ServerUtil.sendPlainTextResponse(res, 'Ok!');
   }
 
   /**
@@ -446,7 +449,7 @@ export default class DebugTools extends CommonBase {
    */
   async _makeEncodedInfo(documentId, authorId) {
     const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
-    return appCommon_TheModule.fullCodec.encodeJson(info);
+    return appCommon_TheModule.fullCodec.encodeData(info);
   }
 
   /**
@@ -469,31 +472,5 @@ export default class DebugTools extends CommonBase {
       .status(200)
       .type('text/html; charset=utf-8')
       .send(html);
-  }
-
-  /**
-   * Responds with an `application/json` result.
-   *
-   * @param {object} res HTTP response.
-   * @param {string} json JSON text to respond with.
-   */
-  _jsonResponse(res, json) {
-    res
-      .status(200)
-      .type('application/json; charset=utf-8')
-      .send(json);
-  }
-
-  /**
-   * Responds with a `text/plain` result.
-   *
-   * @param {object} res HTTP response.
-   * @param {string} text Text to respond with.
-   */
-  _textResponse(res, text) {
-    res
-      .status(200)
-      .type('text/plain; charset=utf-8')
-      .send(text);
   }
 }
