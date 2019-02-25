@@ -12,6 +12,7 @@ import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ProductInfo } from '@bayou/env-server';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
@@ -20,6 +21,12 @@ import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
+
+/**
+ * {Int} How long to wait (in msec) between {@link #_connections} update
+ * iterations.
+ */
+const CONNECTIONS_UPDATE_DELAY_MSEC = 60 * 1000; // One minute.
 
 /** {Logger} Logger for this class. */
 const log = new Logger('app');
@@ -51,6 +58,12 @@ export default class Application extends CommonBase {
     this._rootAccess = this._makeRootAccess();
 
     /**
+     * {Set<BaseConnection>} List of all currently active connections (or at
+     * least active as of the most recent check for same).
+     */
+    this._connections = new Set();
+
+    /**
      * {function} The top-level "Express application" run by this instance. It
      * is a request handler function which is suitable for use with Node's
      * `http` library.
@@ -70,6 +83,8 @@ export default class Application extends CommonBase {
       this._addDevModeRoutes();
       log.event.addedDebugEndpoints();
     }
+
+    this._connectionsUpdateLoop(); // This (async) method runs forever.
 
     Object.freeze(this);
   }
@@ -160,7 +175,8 @@ export default class Application extends CommonBase {
 
     const postHandler = (req, res) => {
       try {
-        new PostConnection(req, res, this._contextInfo);
+        const conn = new PostConnection(req, res, this._contextInfo);
+        this._connections.add(conn);
       } catch (e) {
         log.error('Trouble with API request:', e);
       }
@@ -202,7 +218,8 @@ export default class Application extends CommonBase {
 
     wsServer.on('connection', (wsSocket, req) => {
       try {
-        new WsConnection(wsSocket, req, this._contextInfo);
+        const conn = new WsConnection(wsSocket, req, this._contextInfo);
+        this._connections.add(conn);
       } catch (e) {
         log.error('Trouble with API websocket connection:', e);
       }
@@ -276,5 +293,25 @@ export default class Application extends CommonBase {
     }
 
     return Object.freeze(result);
+  }
+
+  /**
+   * Updates {@link #_connections} to reflect the currently-open state, running
+   * forever and waiting a reasonable amount of time between updates.
+   */
+  async _connectionsUpdateLoop() {
+    const connections = this._connections;
+
+    for (;;) {
+      await Delay.resolve(CONNECTIONS_UPDATE_DELAY_MSEC);
+
+      for (const c of connections) {
+        if (!c.isOpen()) {
+          connections.delete(c);
+        }
+      }
+
+      log.event.activeConnections(connections.size);
+    }
   }
 }
