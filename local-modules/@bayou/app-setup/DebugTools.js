@@ -268,7 +268,7 @@ export default class DebugTools extends CommonBase {
       '<h1>Client Tests</h1>\n' +
       '<p>See console output for details.</p>';
 
-    this._htmlResponse(res, head, body);
+    ServerUtil.sendHtmlResponse(res, head, body);
   }
 
   /**
@@ -304,7 +304,7 @@ export default class DebugTools extends CommonBase {
     const body =
       '<div id="debugEditor"><p>Loading&hellip;</p></div>\n';
 
-    this._htmlResponse(res, head, body);
+    ServerUtil.sendHtmlResponse(res, head, body);
   }
 
   /**
@@ -336,7 +336,7 @@ export default class DebugTools extends CommonBase {
       '});\n' +
       '</script>';
 
-    this._htmlResponse(res, head, result);
+    ServerUtil.sendHtmlResponse(res, head, result);
   }
 
   /**
@@ -450,27 +450,5 @@ export default class DebugTools extends CommonBase {
   async _makeEncodedInfo(documentId, authorId) {
     const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
     return appCommon_TheModule.fullCodec.encodeData(info);
-  }
-
-  /**
-   * Responds with a `text/html` result. The given string is used as the
-   * HTML body.
-   *
-   * @param {object} res HTTP response.
-   * @param {string|null} head HTML head text, if any.
-   * @param {string} body HTML body text.
-   */
-  _htmlResponse(res, head, body) {
-    head = (head === null)
-      ? ''
-      : `<head>\n\n${head}\n</head>\n\n`;
-    body = `<body>\n\n${body}\n</body>\n`;
-
-    const html = `<!doctype html>\n<html lang="en-US">\n${head}${body}</html>\n`;
-
-    res
-      .status(200)
-      .type('text/html; charset=utf-8')
-      .send(html);
   }
 }

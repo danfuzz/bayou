@@ -92,6 +92,27 @@ export default class ServerUtil extends UtilityClass {
   }
 
   /**
+   * Responds with a `text/html` result.
+   *
+   * @param {object} res The response object representing the connection to send
+   *   to.
+   * @param {string|null} head HTML head text if any, or `null` to not include
+   *   a `<head>` section.
+   * @param {string} body HTML body text.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendHtmlResponse(res, head, body, statusCode = 200) {
+    head = (head === null)
+      ? ''
+      : `<head>\n\n${head}\n</head>\n\n`;
+    body = `<body>\n\n${body}\n</body>\n`;
+
+    const html = `<!doctype html>\n<html lang="en-US">\n${head}${body}</html>\n`;
+
+    ServerUtil.sendTextResponse(res, html, 'text/html', statusCode);
+  }
+
+  /**
    * Sends a JSON-bearing HTTP response.
    *
    * @param {http.ServerResponse} res The response object representing the
@@ -125,9 +146,9 @@ export default class ServerUtil extends UtilityClass {
    * @param {string} body The body of the response, as a string.
    * @param {string} contentType The content type, _without_ a charset. (The
    *   charset is always set to be `utf-8`.)
-   * @param {int} [statusCode = 200] The response status code.
+   * @param {int} statusCode The response status code.
    */
-  static sendTextResponse(res, body, contentType, statusCode = 200) {
+  static sendTextResponse(res, body, contentType, statusCode) {
     res
       .status(statusCode)
       .type(`${contentType}; charset=utf-8`)
