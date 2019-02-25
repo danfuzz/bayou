@@ -70,6 +70,9 @@ export default class Application extends CommonBase {
      */
     this._connections = new Set();
 
+    /** {Int} Count of connections that this server has ever had. */
+    this._connectionCountTotal = 0;
+
     /**
      * {function} The top-level "Express application" run by this instance. It
      * is a request handler function which is suitable for use with Node's
@@ -93,7 +96,17 @@ export default class Application extends CommonBase {
 
     this._connectionsUpdateLoop(); // This (async) method runs forever.
 
-    Object.freeze(this);
+    Object.seal(this);
+  }
+
+  /** {Int} Count of currently-active connections. */
+  get connectionCountNow() {
+    return this._connections.size;
+  }
+
+  /** {Int} Count of connections that this server has ever had. */
+  get connectionCountTotal() {
+    return this._connectionCountTotal;
   }
 
   /**
@@ -192,6 +205,7 @@ export default class Application extends CommonBase {
       try {
         const conn = new PostConnection(req, res, this._contextInfo);
         this._connections.add(conn);
+        this._connectionCountTotal++;
       } catch (e) {
         log.error('Trouble with API request:', e);
       }
@@ -235,6 +249,7 @@ export default class Application extends CommonBase {
       try {
         const conn = new WsConnection(wsSocket, req, this._contextInfo);
         this._connections.add(conn);
+        this._connectionCountTotal++;
       } catch (e) {
         log.error('Trouble with API websocket connection:', e);
       }

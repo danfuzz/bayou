@@ -33,12 +33,15 @@ export default class VarInfo extends CommonBase {
    * @returns {object} A JSON-encodable object with all of the variable info.
    */
   async get() {
-    const health     = await this._mainApplication.isHealthy();
-    const mode       = this._currentMode();
-    const pid        = process.pid;
-    const rootTokens = Auth.rootTokens.map(t => t.safeString);
+    const app = this._mainApplication;
 
-    return { health, mode, pid, rootTokens };
+    const connections = { now: app.connectionCountNow, total: app.connectionCountTotal };
+    const health      = await app.isHealthy();
+    const mode        = this._currentMode();
+    const pid         = process.pid;
+    const rootTokens  = Auth.rootTokens.map(t => t.safeString);
+
+    return { connections, health, mode, pid, rootTokens };
   }
 
   /**
