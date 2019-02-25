@@ -38,10 +38,9 @@ export default class VarInfo extends CommonBase {
     const connections = { now: app.connectionCountNow, total: app.connectionCountTotal };
     const health      = await app.isHealthy();
     const mode        = this._currentMode();
-    const pid         = process.pid;
     const rootTokens  = Auth.rootTokens.map(t => t.safeString);
 
-    return { connections, health, mode, pid, rootTokens };
+    return { connections, health, mode, rootTokens };
   }
 
   /**
