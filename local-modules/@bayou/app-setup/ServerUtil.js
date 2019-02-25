@@ -90,4 +90,48 @@ export default class ServerUtil extends UtilityClass {
 
     return server.address().port;
   }
+
+  /**
+   * Sends a JSON-bearing HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {object} body The body of the response, as a JSON-encodable object.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendJsonResponse(res, body, statusCode = 200) {
+    const text = `${JSON.stringify(body, null, 2)}\n`;
+
+    ServerUtil.sendTextResponse(res, text, 'application/json', statusCode);
+  }
+
+  /**
+   * Sends a plain-text HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {string} body The body of the response, as a string.
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendPlainTextResponse(res, body, statusCode = 200) {
+    ServerUtil.sendTextResponse(res, body, 'text/plain', statusCode);
+  }
+
+  /**
+   * Sends a text-content HTTP response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {string} body The body of the response, as a string.
+   * @param {string} contentType The content type, _without_ a charset. (The
+   *   charset is always set to be `utf-8`.)
+   * @param {int} [statusCode = 200] The response status code.
+   */
+  static sendTextResponse(res, body, contentType, statusCode = 200) {
+    res
+      .status(statusCode)
+      .type(`${contentType}; charset=utf-8`)
+      .set('Cache-Control', 'no-cache, no-store, no-transform')
+      .send(body);
+  }
 }
