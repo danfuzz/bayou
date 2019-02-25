@@ -21,6 +21,7 @@ import DebugTools from './DebugTools';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
+import VarInfo from './VarInfo';
 
 /**
  * {Int} How long to wait (in msec) between {@link #_connections} update
@@ -56,6 +57,12 @@ export default class Application extends CommonBase {
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = this._makeRootAccess();
+
+    /**
+     * {VarInfo} The "variable info" handler. This is what's responsible for
+     * producing the info sent back on the `/var` monitor endpoint.
+     */
+    this._varInfo = new VarInfo(this);
 
     /**
      * {Set<BaseConnection>} List of all currently active connections (or at
@@ -95,6 +102,14 @@ export default class Application extends CommonBase {
    */
   get rootAccess() {
     return this._rootAccess;
+  }
+
+  /**
+   * {VarInfo} The "variable info" handler. This is what's responsible for
+   * producing the info sent back on the `/var` monitor endpoint.
+   */
+  get varInfo() {
+    return this._varInfo;
   }
 
   /**

@@ -13,7 +13,6 @@ import { CommonBase } from '@bayou/util-common';
 import Application from './Application';
 import RequestLogger from './RequestLogger';
 import ServerUtil from './ServerUtil';
-import VarInfo from './VarInfo';
 
 /** {Logger} Logger. */
 const log = new Logger('app-monitor');
@@ -72,7 +71,8 @@ export default class Monitor extends CommonBase {
    * Sets up the webserver routes.
    */
   _addRoutes() {
-    const app = this._app;
+    const app             = this._app;
+    const mainApplication = this._mainApplication;
 
     // Logging.
     app.use(this._requestLogger.expressMiddleware);
@@ -85,7 +85,7 @@ export default class Monitor extends CommonBase {
     });
 
     app.get('/health', async (req_unused, res) => {
-      const [status, text] = await this._mainApplication.isHealthy()
+      const [status, text] = await mainApplication.isHealthy()
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
         : [503, '😿 Sorry to say we can\'t help you right now. 😿\n'];
 
@@ -99,7 +99,7 @@ export default class Monitor extends CommonBase {
       });
     });
 
-    const varInfo = new VarInfo(this._mainApplication);
+    const varInfo = mainApplication.varInfo;
     app.get('/var', async (req_unused, res) => {
       const info = await varInfo.get();
 
