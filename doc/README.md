@@ -6,6 +6,7 @@ Various bits of documentation.
 * [Coding Conventions](coding-conventions.md)
 * [Customization](customization.md)
 * [Development Guide](development.md)
+* [Running the System](running.md)
 * [Terminology](terminology.md)
 * [Testing](testing.md)
 
