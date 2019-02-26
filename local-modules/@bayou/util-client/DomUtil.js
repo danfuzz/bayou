@@ -18,7 +18,7 @@ export default class DomUtil extends UtilityClass {
    *   been loaded.
    */
   static addStylesheet(document, url) {
-    return new Promise((res, rej_unused) => {
+    return new Promise((res) => {
       const elem = document.createElement('link');
       elem.href = url;
       elem.rel = 'stylesheet';

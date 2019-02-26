@@ -49,7 +49,7 @@ export default class Tests extends UtilityClass {
     // which for the gory details).
     registerTests();
 
-    return new Promise((res, rej_unused) => {
+    return new Promise((res) => {
       mocha.run(res);
     });
   }

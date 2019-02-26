@@ -22,7 +22,7 @@ export default class Delay extends UtilityClass {
    * @returns {Promise} The delayed promise.
    */
   static resolve(delayMsec, value = true) {
-    return new Promise((res, rej_unused) => {
+    return new Promise((res) => {
       setTimeout(() => { res(value); }, delayMsec);
     });
   }

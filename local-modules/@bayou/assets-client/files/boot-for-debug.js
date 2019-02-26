@@ -22,7 +22,7 @@ function BAYOU_RECOVER(info) {
   var origin     = new URL(info.serverUrl).origin;
   var url        = `${origin}/debug/access/${documentId}/${authorId}`;
 
-  return new Promise((res, rej_unused) => {
+  return new Promise((res) => {
     var req = new XMLHttpRequest();
     req.open('GET', url);
     req.send();

@@ -121,7 +121,7 @@ export default class Condition {
     if (!this._became[idx]) {
       // There's not yet a promise. That is, there aren't yet any other waiters.
       // Make it, and hook up the corresponding trigger.
-      this._became[idx] = new Promise((res, rej_unused) => {
+      this._became[idx] = new Promise((res) => {
         this._trigger[idx] = res;
       });
     }

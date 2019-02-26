@@ -65,7 +65,7 @@ export default class Mutex extends CommonBase {
     if (this._lockedBy !== null) {
       // There's contention, so we have to queue up. The `release` function
       // queued up here gets called inside the returned unlock function below.
-      const released = new Promise((res, rej_unused) => {
+      const released = new Promise((res) => {
         const release = () => { res(true); };
         this._waiters.push({ key, release });
       });
