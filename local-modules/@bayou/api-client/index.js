@@ -3,8 +3,5 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import ApiClient from './ApiClient';
-import ApiClientNew from './ApiClientNew';
-import BaseServerConnection from './BaseServerConnection';
-import WsServerConnection from './WsServerConnection';
 
-export { ApiClient, ApiClientNew, BaseServerConnection, WsServerConnection };
+export { ApiClient };
