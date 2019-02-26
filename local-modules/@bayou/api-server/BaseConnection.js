@@ -168,6 +168,17 @@ export default class BaseConnection extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this connection is currently trying to become
+   * closed.
+   *
+   * @returns {boolean} `true` if the connection should be heading towards
+   *   being closed, or `false` if not.
+   */
+  isClosing() {
+    return this._closing;
+  }
+
+  /**
    * Indicates whether or not this connection is currently open (able to
    * receive and/or send data).
    *

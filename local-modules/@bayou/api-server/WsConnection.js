@@ -4,6 +4,7 @@
 
 import WebSocket from 'ws';
 
+import { Condition } from '@bayou/promise-util';
 import { WebsocketCodes } from '@bayou/util-common';
 
 import BaseConnection from './BaseConnection';
@@ -29,6 +30,24 @@ export default class WsConnection extends BaseConnection {
     /** {WebSocket} The websocket for the client connection. */
     this._ws = ws;
 
+    /**
+     * {Condition} Condition that becomes `true` when a `close` or `error`
+     * event has been received from {@link #_ws}.
+     */
+    this._wsCloseCondition = new Condition();
+
+    /**
+     * {Int} Count of messages that have been received and are in the middle of
+     * being acted upon.
+     */
+    this._pendingMessageCount = 0;
+
+    /**
+     * {Condition} Condition that becomes `true` whenever
+     * {@link #_pendingMessageCount} is `0`.
+     */
+    this._pendingZeroCondition = new Condition(true);
+
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
@@ -40,7 +59,12 @@ export default class WsConnection extends BaseConnection {
    * Implementation of method as required by the superclass.
    */
   async _impl_close() {
-    // **TODO:** Fill this in.
+    // Wait for the in-flight messsages to be handled.
+    await this._pendingZeroCondition.whenTrue();
+
+    // Tell the websocket to close, and wait for it to actually be closed.
+    this._ws.close(1000);
+    await this._wsCloseCondition.whenTrue();
   }
 
   /**
@@ -65,6 +89,7 @@ export default class WsConnection extends BaseConnection {
     const msgArgs = msg ? ['/', msg] : [];
 
     this._log.event.websocketClose(codeStr, ...msgArgs);
+    this._wsCloseCondition.value = true;
     await this.close();
   }
 
@@ -75,6 +100,7 @@ export default class WsConnection extends BaseConnection {
    */
   async _handleError(error) {
     this._log.event.websocketError(error);
+    this._wsCloseCondition.value = true;
 
     await this.close();
   }
@@ -86,11 +112,27 @@ export default class WsConnection extends BaseConnection {
    * @param {string} msg Incoming message, in JSON string form.
    */
   async _handleMessage(msg) {
+    if (this.isClosing()) {
+      // The connection has been asked to close. Just ignore any incoming
+      // messages (rather than, say, actually execute them or even respond with
+      // a "closing" error): Once any in-flight messages are handled, the
+      // connection will get closed for realsies, and these messages will get
+      // rejected (error thrown) on the calling side.
+      return;
+    }
+
     try {
+      this._pendingMessageCount++;
+      this._pendingZeroCondition.value = false;
+
       const response = await this.handleJsonMessage(msg);
+
       this._ws.send(response);
     } catch (e) {
       this._handleError(e);
+    } finally {
+      this._pendingMessageCount--;
+      this._pendingZeroCondition.value = (this._pendingMessageCount === 0);
     }
   }
 }
