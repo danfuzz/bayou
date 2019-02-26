@@ -11,7 +11,7 @@ import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
-import { Dirs, ProductInfo } from '@bayou/env-server';
+import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
@@ -22,6 +22,12 @@ import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
 import VarInfo from './VarInfo';
+
+/**
+ * {Int} How long to wait (in msec) between iterations in
+ * {@link #_closeConnections}.
+ */
+const CLOSE_CONNECTION_LOOP_DELAY_MSEC = 250; // 1/4 sec.
 
 /**
  * {Int} How long to wait (in msec) between {@link #_connections} update
@@ -162,13 +168,15 @@ export default class Application extends CommonBase {
 
     log.event.applicationPort(resultPort);
 
-    // **Note:** This is an `async` method but we don't actually want to wait
-    // for it to return, because that'd be when the system is shutting down!
-    ServerUtil.handleSystemShutdown(server);
-
     if ((port !== 0) && (port !== resultPort)) {
       log.warn(`Originally requested port: ${port}`);
     }
+
+    // **Note:** Both of these are `async` methods, but we don't actually want
+    // to wait for them to return, because that'd be when the system is shutting
+    // down!
+    ServerUtil.handleSystemShutdown(server);
+    this._handleSystemShutdown();
 
     return resultPort;
   }
@@ -288,6 +296,49 @@ export default class Application extends CommonBase {
     for (const dir of Deployment.ASSET_DIRS) {
       app.use('/', express.static(dir));
     }
+  }
+
+  /**
+   * Tells all connections to close. Iterates until there seem to be no more
+   * open connections.
+   */
+  async _closeConnections() {
+    for (;;) {
+      const open = [];
+
+      for (const conn of this._connections) {
+        if (conn.isOpen()) {
+          open.push(conn);
+        }
+      }
+
+      if (open.length === 0) {
+        break;
+      }
+
+      const closePromises = open.map(conn => conn.close());
+      await Promise.all(closePromises);
+
+      log.event.closedConnections(open.length);
+
+      await Delay.resolve(CLOSE_CONNECTION_LOOP_DELAY_MSEC);
+    }
+
+    log.event.allConnectionsClosed();
+  }
+
+  /**
+   * Handles system shutdown by relaying the shutdown request to all active
+   * connections.
+   */
+  async _handleSystemShutdown() {
+    const shutdownManager = ServerEnv.theOne.shutdownManager;
+
+    await shutdownManager.whenShuttingDown();
+
+    const allClosed = this._closeConnections();
+
+    shutdownManager.waitFor(allClosed);
   }
 
   /**
