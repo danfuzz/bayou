@@ -5,12 +5,6 @@
 import { TBoolean } from '@bayou/typecheck';
 
 /**
- * Promise that is permanently resolved as `true`. Used as a result from
- * `when*()`.
- */
-const RESOLVED_TRUE = Promise.resolve(true);
-
-/**
  * Boolean condition with promise-attached level triggers.
  */
 export default class Condition {
@@ -117,10 +111,10 @@ export default class Condition {
    * @returns {Promise<boolean>} Promise that resolves to `true` on an
    *   appropriate value change.
    */
-  _whenX(value) {
+  async _whenX(value) {
     if (this._value === value) {
       // Value is already as desired.
-      return RESOLVED_TRUE;
+      return true;
     }
 
     const idx = value ? 1 : 0;
