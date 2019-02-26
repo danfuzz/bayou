@@ -374,7 +374,7 @@ export default class DevMode extends Singleton {
     // the system was just starting up.
 
     let resolveReady;
-    const ready = new Promise((res) => { resolveReady = res; });
+    const ready = new Promise((resolve) => { resolveReady = resolve; });
     const minTime = Date.now() - (10 * 1000); // Ten seconds in the past.
 
     watcher.on('ready', () => {

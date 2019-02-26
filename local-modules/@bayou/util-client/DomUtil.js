@@ -18,11 +18,11 @@ export default class DomUtil extends UtilityClass {
    *   been loaded.
    */
   static addStylesheet(document, url) {
-    return new Promise((res) => {
+    return new Promise((resolve) => {
       const elem = document.createElement('link');
       elem.href = url;
       elem.rel = 'stylesheet';
-      elem.onload = () => { res(true); };
+      elem.onload = () => { resolve(true); };
 
       document.head.appendChild(elem);
 

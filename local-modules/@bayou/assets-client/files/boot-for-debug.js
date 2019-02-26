@@ -22,7 +22,7 @@ function BAYOU_RECOVER(info) {
   var origin     = new URL(info.serverUrl).origin;
   var url        = `${origin}/debug/access/${documentId}/${authorId}`;
 
-  return new Promise((res) => {
+  return new Promise((resolve) => {
     var req = new XMLHttpRequest();
     req.open('GET', url);
     req.send();
@@ -41,7 +41,7 @@ function BAYOU_RECOVER(info) {
     // data. If so, report it back. If not, fall back to `reloadPage()`.
     function gotKey() {
       if (req.status === 200) {
-        res(req.response);
+        resolve(req.response);
       } else {
         reloadPage();
       }
