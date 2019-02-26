@@ -36,6 +36,13 @@ export default class WsConnection extends BaseConnection {
 
   /**
    * Implementation of method as required by the superclass.
+   */
+  async _impl_close() {
+    // **TODO:** Fill this in.
+  }
+
+  /**
+   * Implementation of method as required by the superclass.
    *
    * @returns {boolean} `true` if the connection is open, or `false` if not.
    */
@@ -51,12 +58,12 @@ export default class WsConnection extends BaseConnection {
    * @param {number} code The reason code for why the socket was closed.
    * @param {string} msg The human-oriented description for the reason.
    */
-  _handleClose(code, msg) {
+  async _handleClose(code, msg) {
     const codeStr = WebsocketCodes.close(code);
     const msgArgs = msg ? ['/', msg] : [];
 
     this._log.event.websocketClose(codeStr, ...msgArgs);
-    this.close();
+    await this.close();
   }
 
   /**
@@ -64,9 +71,10 @@ export default class WsConnection extends BaseConnection {
    *
    * @param {object} error The error event.
    */
-  _handleError(error) {
+  async _handleError(error) {
     this._log.event.websocketError(error);
-    this.close();
+
+    await this.close();
   }
 
   /**

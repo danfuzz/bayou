@@ -45,6 +45,13 @@ export default class PostConnection extends BaseConnection {
 
   /**
    * Implementation of method as required by the superclass.
+   */
+  async _impl_close() {
+    // **TODO:** Fill this in.
+  }
+
+  /**
+   * Implementation of method as required by the superclass.
    *
    * @returns {boolean} `true` if the connection is open, or `false` if not.
    */
@@ -78,7 +85,8 @@ export default class PostConnection extends BaseConnection {
       .status(200)
       .type('application/json')
       .send(responseText);
-    this.close();
+
+    await this.close();
   }
 
   /**
@@ -86,12 +94,13 @@ export default class PostConnection extends BaseConnection {
    *
    * @param {object} error The error event.
    */
-  _handleError(error) {
+  async _handleError(error) {
     // Not logged as `.error()` because it's not an application error (at least
     // not on this side).
     this._log.info('Error event:', error);
     this._respond400('Trouble receiving POST payload.');
-    this.close();
+
+    await this.close();
   }
 
   /**

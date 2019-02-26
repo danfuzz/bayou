@@ -89,7 +89,11 @@ export default class BaseConnection extends CommonBase {
    * server doesn't necessarily make strong guarantees about promptly cleaning
    * up its connection-related state.
    */
-  close() {
+  async close() {
+    this._log.event.closing();
+
+    await this._impl_close();
+
     this._log.event.closed();
     this._context = null;
   }
@@ -153,6 +157,14 @@ export default class BaseConnection extends CommonBase {
    */
   isOpen() {
     return TBoolean.check(this._impl_isOpen());
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #close}. This is called and
+   * `await`ed upon before the base class performs its final cleanup.
+   */
+  async _impl_close() {
+    this._mustOverride();
   }
 
   /**
