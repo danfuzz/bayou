@@ -259,6 +259,7 @@ export default class ApiClient extends CommonBase {
     }
 
     // **TODO:** Fill in what to do while closing.
+    this._log.event.serverIsClosing();
   }
 
   /**

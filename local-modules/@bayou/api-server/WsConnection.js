@@ -4,8 +4,9 @@
 
 import WebSocket from 'ws';
 
+import { Message } from '@bayou/api-common';
 import { Condition } from '@bayou/promise-util';
-import { WebsocketCodes } from '@bayou/util-common';
+import { Functor, WebsocketCodes } from '@bayou/util-common';
 
 import BaseConnection from './BaseConnection';
 
@@ -73,6 +74,18 @@ export default class WsConnection extends BaseConnection {
    * Implementation of method as required by the superclass.
    */
   async _impl_close() {
+    try {
+      // Send a message to the client telling them what's up. If they're nice,
+      // they'll handle it promptly instead of, say, continuing to try to send
+      // messages.
+      this._ws.send(this.encodeMessage(new Message(0, 'meta', new Functor('close'))));
+    } catch (e) {
+      // Ignore exceptions. It's probably that the websocket is already closed
+      // (common case when we end up here from the client proactively closing),
+      // and in any case we don't really care about failure to send because
+      // we're trying to get the socket to be closed anyway!
+    }
+
     // Wait for the in-flight messsages to be handled.
     await this._pendingZeroCondition.whenTrue();
 

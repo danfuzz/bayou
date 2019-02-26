@@ -189,6 +189,19 @@ export default class BaseConnection extends CommonBase {
   }
 
   /**
+   * Encodes a message suitable for sending to the other side of this
+   * connection.
+   *
+   * @param {Message} message Message to encode.
+   * @returns {string} Encoded form of `message`.
+   */
+  encodeMessage(message) {
+    Message.check(message);
+
+    return this._codec.encodeJson(message);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #close}. This is called and
    * `await`ed upon before the base class performs its final cleanup. The
    * intention is that this method _not_ force unsafe closure, but rather that
