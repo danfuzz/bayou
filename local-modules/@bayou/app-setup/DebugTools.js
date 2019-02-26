@@ -11,7 +11,7 @@ import { Auth, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import ServerUtil from './ServerUtil';
 
@@ -65,6 +65,7 @@ export default class DebugTools extends CommonBase {
     this._bindParam('documentId');
     this._bindParam('revNum');
     this._bindParam('testFilter');
+    this._bindParam('token');
 
     this._bindHandler('access',      ':documentId');
     this._bindHandler('access',      ':documentId/:authorId');
@@ -211,7 +212,7 @@ export default class DebugTools extends CommonBase {
       // Fall through and throw error.
     }
 
-    const error = Errors.badValue(value, String, 'token');
+    const error = new Error();
     error.debugMsg = 'Bad value for `token`.';
     throw error;
   }
