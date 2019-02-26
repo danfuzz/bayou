@@ -32,6 +32,8 @@ export default class WsConnection extends BaseConnection {
     ws.on('message', this._handleMessage.bind(this));
     ws.on('close', this._handleClose.bind(this));
     ws.on('error', this._handleError.bind(this));
+
+    Object.seal(this);
   }
 
   /**

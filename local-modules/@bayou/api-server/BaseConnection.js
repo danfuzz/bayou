@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
@@ -56,6 +57,15 @@ export default class BaseConnection extends CommonBase {
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, this._context.tokenAuthorizer);
 
+    /** {boolean} Whether the connection should be aiming to become closed. */
+    this._closing = false;
+
+    /**
+     * {Condition} Condition which becomes `true` when the connection is
+     * closed.
+     */
+    this._closedCondition = new Condition();
+
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
     const metaTarget = new Target('meta', new MetaHandler(this));
@@ -90,12 +100,20 @@ export default class BaseConnection extends CommonBase {
    * up its connection-related state.
    */
   async close() {
+    if (this._closing) {
+      await this._closedCondition.whenTrue();
+      return;
+    }
+
+    this._closing = true;
     this._log.event.closing();
 
     await this._impl_close();
 
-    this._log.event.closed();
     this._context = null;
+    this._closedCondition.value = true;
+
+    this._log.event.closed();
   }
 
   /**

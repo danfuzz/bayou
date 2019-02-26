@@ -41,6 +41,8 @@ export default class PostConnection extends BaseConnection {
     req.on('data', this._handleData.bind(this));
     req.on('end', this._handleEnd.bind(this));
     req.on('error', this._handleError.bind(this));
+
+    Object.seal(this);
   }
 
   /**
