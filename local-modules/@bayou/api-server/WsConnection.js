@@ -10,6 +10,13 @@ import { WebsocketCodes } from '@bayou/util-common';
 import BaseConnection from './BaseConnection';
 
 /**
+ * {Int} Number of messages that are proactively rejected while in the process
+ * of closing a connection. See long comment in {@link #_handleMessage} for
+ * details.
+ */
+const MAX_MESSAGES_WHILE_CLOSING = 100;
+
+/**
  * Direct handler for API requests over a websocket connection.
  */
 export default class WsConnection extends BaseConnection {
@@ -35,6 +42,13 @@ export default class WsConnection extends BaseConnection {
      * event has been received from {@link #_ws}.
      */
     this._wsCloseCondition = new Condition();
+
+    /**
+     * {Int} Count of messages that have been allowed through during the act of
+     * closing the connection. See long comment in {@link #_handleMessage} for
+     * details.
+     */
+    this._messagesWhileClosing = 0;
 
     /**
      * {Int} Count of messages that have been received and are in the middle of
@@ -113,12 +127,24 @@ export default class WsConnection extends BaseConnection {
    */
   async _handleMessage(msg) {
     if (this.isClosing()) {
-      // The connection has been asked to close. Just ignore any incoming
-      // messages (rather than, say, actually execute them or even respond with
-      // a "closing" error): Once any in-flight messages are handled, the
-      // connection will get closed for realsies, and these messages will get
-      // rejected (error thrown) on the calling side.
-      return;
+      // The connection has been asked to close. We let a handful of messages go
+      // through, which the superclass will promptly reject with an error, and
+      // then we just ignore any further incoming messages. This arrangement
+      // lets the client know fairly promptly that the connection is going away
+      // (as opposed to, say, going silent, because it is often the case that
+      // the thing that is keeping the connection open is a long-poll-type
+      // request which may take a while to time out, and we don't want to just
+      // silently fail to act on data change requests), while also not allowing
+      // a client to be such a bad actor that it keeps the connection from
+      // getting shut down by keeping it filled with messages that get queued up
+      // for a response (terse though the response may be). In any case, once
+      // any in-flight messages are handled, the connection will get closed for
+      // realsies, and any messages left hanging will get rejected (error
+      // thrown) on the calling side.
+      this._messagesWhileClosing++;
+      if (this._messagesWhileClosing > MAX_MESSAGES_WHILE_CLOSING) {
+        return;
+      }
     }
 
     try {

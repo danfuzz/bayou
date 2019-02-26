@@ -225,6 +225,12 @@ export default class BaseConnection extends CommonBase {
    *   `undefined`.
    */
   async _actOnMessage(msg) {
+    if (this._closing) {
+      // The connection is in the process of getting closed. Just reject the
+      // message outright.
+      throw ConnectionError.connectionClosing(this._connectionId);
+    }
+
     const target = await this._getTarget(msg.targetId);
     const result = await target.call(msg.payload);
 
