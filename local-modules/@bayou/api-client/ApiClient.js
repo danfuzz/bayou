@@ -452,24 +452,23 @@ export default class ApiClient extends CommonBase {
     const wsState = this._websocketState;
 
     // Handle the cases where socket shutdown is imminent or has already
-    // happened. We don't just `throw` directly here, so that clients can
-    // consistently handle errors via one of the promise chaining mechanisms.
+    // happened.
     switch (wsState) {
       case WebSocket.CLOSED: {
         // The detail string here differentiates this case from cases where the
         // API message was already queued up or sent before the websocket became
         // closed.
-        return Promise.reject(ConnectionError.connectionClosed(this._connectionId, 'Already closed.'));
+        throw ConnectionError.connectionClosed(this._connectionId, 'Already closed.');
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(ConnectionError.connectionClosing(this._connectionId));
+        throw ConnectionError.connectionClosing(this._connectionId);
       }
     }
 
     if (this._targets.getOrNull(idOrTarget) === null) {
       // `idOrTarget` isn't in the map of same; that is it's totally unknown.
       // Most likely indicates a bug in a higher layer of the system.
-      return Promise.reject(ConnectionError.unknownTarget(this._connectionId, idOrTarget));
+      throw ConnectionError.unknownTarget(this._connectionId, idOrTarget);
     }
 
     const id = this._nextId;
