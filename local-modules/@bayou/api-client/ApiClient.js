@@ -85,6 +85,11 @@ export default class ApiClient extends CommonBase {
     this._pendingMessages = null;
 
     /**
+     * {boolean} Whether the server is trying to get this connection closed.
+     */
+    this._serverClosing = false;
+
+    /**
      * {TargetMap} Map of names/IDs to target proxies. See {@link
      * TargetMap#constructor} for details about the argument.
      */
@@ -229,6 +234,17 @@ export default class ApiClient extends CommonBase {
     return true;
   }
 
+  /** {Int} The websocket state. */
+  get _websocketState() {
+    if (this._ws === null) {
+      return WebSocket.CLOSED;
+    } else if (this._serverClosing) {
+      return WebSocket.CLOSING;
+    } else {
+      return this._ws.readyState;
+    }
+  }
+
   /** {string} The websocket URL for this instance. */
   get _websocketUrl() {
     const url = new URL(this._serverUrl);
@@ -258,8 +274,10 @@ export default class ApiClient extends CommonBase {
       return;
     }
 
-    // **TODO:** Fill in what to do while closing.
-    this._log.event.serverIsClosing();
+    if (!this._serverClosing) {
+      this._log.event.serverIsClosing();
+      this._serverClosing = true;
+    }
   }
 
   /**
@@ -428,12 +446,10 @@ export default class ApiClient extends CommonBase {
    *   to call it with.
    * @returns {*} Result or error returned by the remote call. In the case of an
    *   error, the rejection reason will always be an instance of
-   *  {@link ConnectionError} (see which for details).
+   *   {@link ConnectionError} (see which for details).
    */
   async _send(idOrTarget, payload) {
-    const wsState = (this._ws === null)
-      ? WebSocket.CLOSED
-      : this._ws.readyState;
+    const wsState = this._websocketState;
 
     // Handle the cases where socket shutdown is imminent or has already
     // happened. We don't just `throw` directly here, so that clients can
