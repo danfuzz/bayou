@@ -73,7 +73,6 @@ export default class LogStream extends CommonBase {
     if (callback) {
       // Make the callback happen in its own tick/turn.
       (async () => {
-        await Promise.resolve(true);
         callback();
       })();
     }

@@ -79,8 +79,8 @@ export default class ChainedEvent extends CommonBase {
     if (this._nextProm === null) {
       // First time `next` has been called; need to set up the promise and
       // resolver.
-      this._nextProm = new Promise((res, rej_unused) => {
-        this._nextResolver = res;
+      this._nextProm = new Promise((resolve) => {
+        this._nextResolver = resolve;
       });
     }
 

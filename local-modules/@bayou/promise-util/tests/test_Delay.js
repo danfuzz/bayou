@@ -8,22 +8,22 @@ import { describe, it } from 'mocha';
 import { Delay } from '@bayou/promise-util';
 
 describe('@bayou/promise-util/Delay', () => {
-  describe('delay(delayMSec)', () => {
-    it('should eventually resolve to true', async () => {
+  describe('delay(delayMsec)', () => {
+    it('eventually resolves to `true`', async () => {
       await assert.isFulfilled(Delay.resolve(10));
       await assert.eventually.strictEqual(Delay.resolve(10), true);
     });
   });
 
-  describe('delay(delayMSec, value)', () => {
-    it('should eventually resolve to the supplied value', async () => {
+  describe('delay(delayMsec, value)', () => {
+    it('eventually resolves to the supplied value', async () => {
       await assert.isFulfilled(Delay.resolve(10, 'floopty'));
       await assert.eventually.strictEqual(Delay.resolve(10, 'floopty'), 'floopty');
     });
   });
 
-  describe('reject(delayMSec, reason)', () => {
-    it('should eventually be rejected with the specified reason', async () => {
+  describe('reject()', () => {
+    it('eventually gets rejected with the specified reason', async () => {
       await assert.isRejected(Delay.reject(10, 'you smell'));
       await assert.isRejected(Delay.reject(10, 'you smell'), /^you smell$/);
     });

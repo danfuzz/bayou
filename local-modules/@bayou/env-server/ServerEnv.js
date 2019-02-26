@@ -121,7 +121,7 @@ export default class ServerEnv extends Singleton {
     // However, if it's not answering HTTP requests, then we'll consider it
     // dead.
 
-    const isActive = new Promise((resolve, reject_unused) => {
+    const isActive = new Promise((resolve) => {
       const request = http.get(Network.loopbackUrl);
 
       request.setTimeout(10 * 1000); // Give the server 10 seconds to respond.

@@ -9,11 +9,15 @@ import { Condition } from '@bayou/promise-util';
 
 describe('@bayou/promise-util/Condition', () => {
   describe('constructor()', () => {
-    it('should offer the constructed value', () => {
-      let cond;
-
-      cond = new Condition();
+    it('takes on the default value', () => {
+      const cond = new Condition();
       assert.strictEqual(cond.value, false, 'default');
+    });
+  });
+
+  describe('constructor(value)', () => {
+    it('takes on the constructed value', () => {
+      let cond;
 
       cond = new Condition(false);
       assert.strictEqual(cond.value, false, 'explicit `false`');
@@ -24,20 +28,28 @@ describe('@bayou/promise-util/Condition', () => {
   });
 
   describe('.value', () => {
-    it('should get a value that was previously set', () => {
-      const cond = new Condition();
+    it('gets the value that was previously set', () => {
+      const cond1 = new Condition(false);
 
-      cond.value = false;
-      assert.strictEqual(cond.value, false);
+      cond1.value = false;
+      assert.strictEqual(cond1.value, false);
 
-      cond.value = true;
-      assert.strictEqual(cond.value, true);
+      cond1.value = true;
+      assert.strictEqual(cond1.value, true);
 
-      cond.value = false;
-      assert.strictEqual(cond.value, false);
+      cond1.value = false;
+      assert.strictEqual(cond1.value, false);
+
+      const cond2 = new Condition(true);
+
+      cond2.value = false;
+      assert.strictEqual(cond2.value, false);
+
+      cond2.value = true;
+      assert.strictEqual(cond2.value, true);
     });
 
-    it('should trigger `true` waiters when set from `false` to `true`', async () => {
+    it('triggers `true` waiters when set from `false` to `true`', async () => {
       const cond = new Condition(false);
       let triggered = false;
 
@@ -52,7 +64,7 @@ describe('@bayou/promise-util/Condition', () => {
       assert.isTrue(triggered);
     });
 
-    it('should trigger `false` waiters when set from `true` to `false`', async () => {
+    it('triggers `false` waiters when set from `true` to `false`', async () => {
       const cond = new Condition(true);
       let triggered = false;
 
@@ -69,7 +81,7 @@ describe('@bayou/promise-util/Condition', () => {
   });
 
   describe('onOff()', () => {
-    it('should leave the value `false`', () => {
+    it('leaves the value `false`', () => {
       const cond = new Condition(false);
 
       cond.onOff();
@@ -80,7 +92,7 @@ describe('@bayou/promise-util/Condition', () => {
       assert.strictEqual(cond.value, false);
     });
 
-    it('should trigger `true` waiters when value started out `false`', async () => {
+    it('triggers `true` waiters when value started out `false`', async () => {
       const cond = new Condition(false);
       let triggered = false;
 
@@ -95,7 +107,7 @@ describe('@bayou/promise-util/Condition', () => {
       assert.isTrue(triggered);
     });
 
-    it('should trigger `false` waiters when value started out `true`', async () => {
+    it('triggers `false` waiters when value started out `true`', async () => {
       const cond = new Condition(true);
       let triggered = false;
 
@@ -112,7 +124,7 @@ describe('@bayou/promise-util/Condition', () => {
   });
 
   describe('whenFalse()', () => {
-    it('should trigger immediately if the value is already `false`', async () => {
+    it('triggers immediately if the value is already `false`', async () => {
       const cond = new Condition(false);
       let triggered = false;
 
@@ -127,7 +139,7 @@ describe('@bayou/promise-util/Condition', () => {
   });
 
   describe('whenTrue()', () => {
-    it('should trigger immediately if the value is already `true`', async () => {
+    it('triggers immediately if the value is already `true`', async () => {
       const cond = new Condition(true);
       let triggered = false;
 

@@ -22,8 +22,8 @@ export default class Delay extends UtilityClass {
    * @returns {Promise} The delayed promise.
    */
   static resolve(delayMsec, value = true) {
-    return new Promise((res, rej_unused) => {
-      setTimeout(() => { res(value); }, delayMsec);
+    return new Promise((resolve) => {
+      setTimeout(() => { resolve(value); }, delayMsec);
     });
   }
 
@@ -38,8 +38,8 @@ export default class Delay extends UtilityClass {
    * @returns {Promise} The delayed promise.
    */
   static reject(delayMsec, reason) {
-    return new Promise((res_unused, rej) => {
-      setTimeout(() => { rej(reason); }, delayMsec);
+    return new Promise((resolve_unused, reject) => {
+      setTimeout(() => { reject(reason); }, delayMsec);
     });
   }
 }

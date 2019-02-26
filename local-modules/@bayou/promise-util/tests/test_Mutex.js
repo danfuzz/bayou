@@ -9,7 +9,7 @@ import { Mutex } from '@bayou/promise-util';
 
 describe('@bayou/promise-util/Mutex', () => {
   describe('lock()', () => {
-    it('should work when there is blatantly no contention', async () => {
+    it('works when there is blatantly no contention', async () => {
       const mutex = new Mutex();
       const unlock = await mutex.lock();
 
@@ -17,7 +17,7 @@ describe('@bayou/promise-util/Mutex', () => {
       unlock();
     });
 
-    it('should reject attempts to double-unlock with the same unlocker', async () => {
+    it('rejects attempts to double-unlock with the same unlocker', async () => {
       const mutex = new Mutex();
       const unlock = await mutex.lock();
 
@@ -25,7 +25,7 @@ describe('@bayou/promise-util/Mutex', () => {
       assert.throws(() => { unlock(); });
     });
 
-    it('should provide the lock in request order', async () => {
+    it('provides the lock in request order', async () => {
       const mutex       = new Mutex();
       const gotOrder    = [];
       const expectOrder = [];
@@ -56,7 +56,7 @@ describe('@bayou/promise-util/Mutex', () => {
   });
 
   describe('withLockHeld()', () => {
-    it('should work with a synchronous function when there is blatantly no contention', async () => {
+    it('works with a synchronous function when there is blatantly no contention', async () => {
       const mutex = new Mutex();
 
       const result = await mutex.withLockHeld(() => { return 'blort'; });
@@ -65,7 +65,7 @@ describe('@bayou/promise-util/Mutex', () => {
       await assert.isRejected(mutex.withLockHeld(() => { throw new Error('oy'); }));
     });
 
-    it('should work with an `async` function when there is blatantly no contention', async () => {
+    it('works with an `async` function when there is blatantly no contention', async () => {
       const mutex = new Mutex();
 
       const result = await mutex.withLockHeld(async () => { return 'blort'; });
@@ -74,7 +74,7 @@ describe('@bayou/promise-util/Mutex', () => {
       await assert.isRejected(mutex.withLockHeld(async () => { throw new Error('oy'); }));
     });
 
-    it('should provide the lock in request order', async () => {
+    it('provides the lock in request order', async () => {
       const mutex = new Mutex();
 
       let result = 'x';
@@ -89,7 +89,7 @@ describe('@bayou/promise-util/Mutex', () => {
       assert.strictEqual(result, 'x0123456789');
     });
 
-    it('should reject non-function arguments', async () => {
+    it('rejects non-function arguments', async () => {
       const mutex = new Mutex();
       async function test(v) {
         await assert.isRejected(mutex.withLockHeld(v));

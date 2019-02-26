@@ -170,14 +170,14 @@ export default class ClientBundle extends Singleton {
    * @returns {Promise<Map<string,Buffer>>} The built artifacts.
    */
   build() {
-    const result = new Promise((res, rej) => {
+    const result = new Promise((resolve, reject) => {
       const compiler = this._newCompiler();
       compiler.run((error, stats) => {
         this._handleCompilation(error, stats);
         if (this._currentBundles.size !== 0) {
-          res(this._currentBundles);
+          resolve(this._currentBundles);
         } else {
-          rej('Trouble building client bundles.');
+          reject('Trouble building client bundles.');
         }
       });
     });
