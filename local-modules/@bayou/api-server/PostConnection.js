@@ -41,6 +41,28 @@ export default class PostConnection extends BaseConnection {
     req.on('data', this._handleData.bind(this));
     req.on('end', this._handleEnd.bind(this));
     req.on('error', this._handleError.bind(this));
+
+    Object.seal(this);
+  }
+
+  /**
+   * Implementation of method as required by the superclass.
+   */
+  async _impl_close() {
+    // Wait for the response to be completed, and then return. Per the base
+    // class docs, this method isn't supposed to hastily cut off an operation,
+    // and since a POST connection only handles a single call, the best we can
+    // do is just wait for that one call to get naturally completed.
+
+    const response = this._res;
+
+    if (!response.finished) {
+      const whenFinished = new Promise((resolve) => {
+        response.once('finish', () => resolve(true));
+      });
+
+      await whenFinished;
+    }
   }
 
   /**
@@ -78,7 +100,8 @@ export default class PostConnection extends BaseConnection {
       .status(200)
       .type('application/json')
       .send(responseText);
-    this.close();
+
+    await this.close();
   }
 
   /**
@@ -86,12 +109,13 @@ export default class PostConnection extends BaseConnection {
    *
    * @param {object} error The error event.
    */
-  _handleError(error) {
+  async _handleError(error) {
     // Not logged as `.error()` because it's not an application error (at least
     // not on this side).
     this._log.info('Error event:', error);
     this._respond400('Trouble receiving POST payload.');
-    this.close();
+
+    await this.close();
   }
 
   /**

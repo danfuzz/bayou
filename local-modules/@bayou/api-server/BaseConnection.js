@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
@@ -56,6 +57,15 @@ export default class BaseConnection extends CommonBase {
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, this._context.tokenAuthorizer);
 
+    /** {boolean} Whether the connection should be aiming to become closed. */
+    this._closing = false;
+
+    /**
+     * {Condition} Condition which becomes `true` when the connection is
+     * closed.
+     */
+    this._closedCondition = new Condition();
+
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
     const metaTarget = new Target('meta', new MetaHandler(this));
@@ -89,9 +99,21 @@ export default class BaseConnection extends CommonBase {
    * server doesn't necessarily make strong guarantees about promptly cleaning
    * up its connection-related state.
    */
-  close() {
-    this._log.event.closed();
+  async close() {
+    if (this._closing) {
+      await this._closedCondition.whenTrue();
+      return;
+    }
+
+    this._closing = true;
+    this._log.event.closing();
+
+    await this._impl_close();
+
     this._context = null;
+    this._closedCondition.value = true;
+
+    this._log.event.closed();
   }
 
   /**
@@ -146,6 +168,17 @@ export default class BaseConnection extends CommonBase {
   }
 
   /**
+   * Indicates whether or not this connection is currently trying to become
+   * closed.
+   *
+   * @returns {boolean} `true` if the connection should be heading towards
+   *   being closed, or `false` if not.
+   */
+  isClosing() {
+    return this._closing;
+  }
+
+  /**
    * Indicates whether or not this connection is currently open (able to
    * receive and/or send data).
    *
@@ -153,6 +186,29 @@ export default class BaseConnection extends CommonBase {
    */
   isOpen() {
     return TBoolean.check(this._impl_isOpen());
+  }
+
+  /**
+   * Encodes a message suitable for sending to the other side of this
+   * connection.
+   *
+   * @param {Message} message Message to encode.
+   * @returns {string} Encoded form of `message`.
+   */
+  encodeMessage(message) {
+    Message.check(message);
+
+    return this._codec.encodeJson(message);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #close}. This is called and
+   * `await`ed upon before the base class performs its final cleanup. The
+   * intention is that this method _not_ force unsafe closure, but rather that
+   * it hasten an orderly shutdown of the connection.
+   */
+  async _impl_close() {
+    this._mustOverride();
   }
 
   /**
@@ -182,6 +238,12 @@ export default class BaseConnection extends CommonBase {
    *   `undefined`.
    */
   async _actOnMessage(msg) {
+    if (this._closing) {
+      // The connection is in the process of getting closed. Just reject the
+      // message outright.
+      throw ConnectionError.connectionClosing(this._connectionId);
+    }
+
     const target = await this._getTarget(msg.targetId);
     const result = await target.call(msg.payload);
 

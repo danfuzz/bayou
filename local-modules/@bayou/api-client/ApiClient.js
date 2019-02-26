@@ -18,12 +18,6 @@ const UNKNOWN_CONNECTION_ID = 'id_unknown';
 
 /**
  * Connection with the server, via a websocket.
- *
- * **TODO:** This class is in the process of being replaced by the combination
- * of classes `ApiClientNew`, `BaseServerConnection`, and `WsServerConnection`.
- * Once those are ready, call sites should be adjusted to use the new (but
- * similar) API provided by `ApiClientNew`, this class should be removed, and
- * then `ApiClientNew` can be renamed to be just `ApiClient`.
  */
 export default class ApiClient extends CommonBase {
   /**
@@ -89,6 +83,11 @@ export default class ApiClient extends CommonBase {
      * established. Initialized and reset in `_resetConnection()`.
      */
     this._pendingMessages = null;
+
+    /**
+     * {boolean} Whether the server is trying to get this connection closed.
+     */
+    this._serverClosing = false;
 
     /**
      * {TargetMap} Map of names/IDs to target proxies. See {@link
@@ -235,6 +234,17 @@ export default class ApiClient extends CommonBase {
     return true;
   }
 
+  /** {Int} The websocket state. */
+  get _websocketState() {
+    if (this._ws === null) {
+      return WebSocket.CLOSED;
+    } else if (this._serverClosing) {
+      return WebSocket.CLOSING;
+    } else {
+      return this._ws.readyState;
+    }
+  }
+
   /** {string} The websocket URL for this instance. */
   get _websocketUrl() {
     const url = new URL(this._serverUrl);
@@ -244,6 +254,70 @@ export default class ApiClient extends CommonBase {
     url.protocol = url.protocol.replace(/^http/, 'ws');
 
     return url.href;
+  }
+
+  /**
+   * Handles an incoming API protocol {@link Message} object. The client only
+   * ever expects one possible target ID and message, namely `meta.close()`,
+   * which the server will send when it wants to close the connection.
+   *
+   * @param {Message} message The message.
+   */
+  _handleApiMessage(message) {
+    const { targetId, payload } = message;
+
+    // Check to see if it's the one message we recognize. If not, there's
+    // nothing to do other than log the weirdness. (E.g., if we throw, it'll
+    // end up in the void anyway.)
+    if ((targetId !== 'meta') || (payload.name !== 'close')) {
+      this._log.event.weirdMessage(message);
+      return;
+    }
+
+    if (!this._serverClosing) {
+      this._log.event.serverIsClosing();
+      this._serverClosing = true;
+    }
+  }
+
+  /**
+   * Handles an incoming API protocol {@link Response} object.
+   *
+   * @param {Response} response The response.
+   */
+  _handleApiResponse(response) {
+    const { id, result, error } = response;
+
+    const callback = this._callbacks[id];
+    if (callback) {
+      delete this._callbacks[id];
+      if (error) {
+        // **Note:** `error` is always an instance of `CodableError`.
+        this._log.detail(`Reject ${id}:`, error);
+        // What's going on here is that we use the information from the original
+        // error as the outer error payload, and include a `cause` that
+        // unambiguously indicates that the origin is remote. This arrangement
+        // means that clients can handle well-defined errors fairly
+        // transparently and straightforwardly (e.g. and notably, they don't
+        // have to "unwrap" the errors in the usual case), while still being
+        // able to ascertain the foreign origin of the errors when warranted.
+        const remoteCause = CodableError.remoteError(this.connectionId);
+        const rejectReason = new CodableError(remoteCause, error.info);
+        callback.reject(rejectReason);
+      } else {
+        this._log.detail(`Resolve ${id}:`, result);
+        if (result instanceof Remote) {
+          // The result is a proxied object, not a regular value.
+          callback.resolve(this._targets.addOrGet(result.targetId));
+        } else {
+          callback.resolve(result);
+        }
+      }
+    } else {
+      // There's nothing to catch an exception if we threw one here, so just log
+      // the weirdness.
+      this._log.event.orphanResponse(response);
+    }
   }
 
   /**
@@ -294,42 +368,16 @@ export default class ApiClient extends CommonBase {
   _handleMessage(event) {
     this._log.detail('Received raw data:', event.data);
 
-    const response = this._codec.decodeJson(event.data);
+    const obj = this._codec.decodeJson(event.data);
 
-    if (!(response instanceof Response)) {
-      throw ConnectionError.connectionNonsense(this._connectionId, 'Got strange response.');
-    }
-
-    const { id, result, error } = response;
-
-    const callback = this._callbacks[id];
-    if (callback) {
-      delete this._callbacks[id];
-      if (error) {
-        // **Note:** `error` is always an instance of `CodableError`.
-        this._log.detail(`Reject ${id}:`, error);
-        // What's going on here is that we use the information from the original
-        // error as the outer error payload, and include a `cause` that
-        // unambiguously indicates that the origin is remote. This arrangement
-        // means that clients can handle well-defined errors fairly
-        // transparently and straightforwardly (e.g. and notably, they don't
-        // have to "unwrap" the errors in the usual case), while still being
-        // able to ascertain the foreign origin of the errors when warranted.
-        const remoteCause = CodableError.remoteError(this.connectionId);
-        const rejectReason = new CodableError(remoteCause, error.info);
-        callback.reject(rejectReason);
-      } else {
-        this._log.detail(`Resolve ${id}:`, result);
-        if (result instanceof Remote) {
-          // The result is a proxied object, not a regular value.
-          callback.resolve(this._targets.addOrGet(result.targetId));
-        } else {
-          callback.resolve(result);
-        }
-      }
+    if (obj instanceof Response) {
+      this._handleApiResponse(obj);
+    } else if (obj instanceof Message) {
+      this._handleApiMessage(obj);
     } else {
-      // See above about `server_bug`.
-      throw ConnectionError.connectionNonsense(this._connectionId, `Orphan call for ID ${id}.`);
+      // There's nothing to catch an exception if we threw one here, so just log
+      // the weirdness.
+      this._log.event.weirdMessage(obj);
     }
   }
 
@@ -398,32 +446,29 @@ export default class ApiClient extends CommonBase {
    *   to call it with.
    * @returns {*} Result or error returned by the remote call. In the case of an
    *   error, the rejection reason will always be an instance of
-   *  {@link ConnectionError} (see which for details).
+   *   {@link ConnectionError} (see which for details).
    */
   async _send(idOrTarget, payload) {
-    const wsState = (this._ws === null)
-      ? WebSocket.CLOSED
-      : this._ws.readyState;
+    const wsState = this._websocketState;
 
     // Handle the cases where socket shutdown is imminent or has already
-    // happened. We don't just `throw` directly here, so that clients can
-    // consistently handle errors via one of the promise chaining mechanisms.
+    // happened.
     switch (wsState) {
       case WebSocket.CLOSED: {
         // The detail string here differentiates this case from cases where the
         // API message was already queued up or sent before the websocket became
         // closed.
-        return Promise.reject(ConnectionError.connectionClosed(this._connectionId, 'Already closed.'));
+        throw ConnectionError.connectionClosed(this._connectionId, 'Already closed.');
       }
       case WebSocket.CLOSING: {
-        return Promise.reject(ConnectionError.connectionClosing(this._connectionId));
+        throw ConnectionError.connectionClosing(this._connectionId);
       }
     }
 
     if (this._targets.getOrNull(idOrTarget) === null) {
       // `idOrTarget` isn't in the map of same; that is it's totally unknown.
       // Most likely indicates a bug in a higher layer of the system.
-      return Promise.reject(ConnectionError.unknownTarget(this._connectionId, idOrTarget));
+      throw ConnectionError.unknownTarget(this._connectionId, idOrTarget);
     }
 
     const id = this._nextId;
