@@ -207,13 +207,13 @@ export default class StateMachine {
         }
       };
 
-      this[`when_${name}`] = () => {
+      this[`when_${name}`] = async () => {
         if (this._stateName === name) {
           if (this._verboseLogging) {
             this._log.event.immediatelyTriggeredWaiter(name);
           }
 
-          return Promise.resolve(true);
+          return true;
         } else {
           if (this._verboseLogging) {
             this._log.event.addedWaiter(name);
