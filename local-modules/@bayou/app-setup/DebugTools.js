@@ -117,11 +117,9 @@ export default class DebugTools extends CommonBase {
       : `/${name}/${paramPath}`;
     const handlerMethod = this[`_handle_${camelCase(name)}`].bind(this);
 
-    function handleRequest(req, res, next) {
+    async function handleRequest(req, res, next) {
       try {
-        Promise.resolve(handlerMethod(req, res)).catch((error) => {
-          next(error);
-        });
+        await handlerMethod(req, res);
       } catch (error) {
         next(error);
       }
