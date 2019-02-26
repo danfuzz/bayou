@@ -5,9 +5,17 @@
 import { Auth, Network, Storage } from '@bayou/config-server';
 import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
+
+/**
+ * {Int} How long to wait (in msec) in {@link #makeSessionInfo} while holding
+ * a {@link FileComplex}, as a tactic to avoid overly-eager GC. See long comment
+ * in that method for details.
+ */
+const COMPLEX_HOLD_TIME_MSEC = 10 * 1000; // One second.
 
 /** Logger. */
 const log = new Logger('root-access');
@@ -63,7 +71,26 @@ export default class RootAccess extends CommonBase {
     // might as well warm it up. But also, this ensures that the complex is in
     // at least a semblance of a valid state before we return the info to the
     // caller.
-    await DocServer.theOne.getFileComplex(documentId);
+    const complex = await DocServer.theOne.getFileComplex(documentId);
+
+    // This is a little bit of a hack: Immediately after the above call to get
+    // the file complex returns, the complex _would_ be GC-able because there
+    // are no live references to it, were we not to do anything more. But we
+    // know that the reason we're in this method at all is because there's a
+    // client about to try to access the document, so we want to actually ensure
+    // the complex's liveness by the time that actually happens. So, what we do
+    // is hold the complex for just a moment in an async block, which should
+    // give the client enough time to come back and request it, at which point
+    // it will no longer be garbage due to its active use on the client
+    // connection.
+    (async () => {
+      await Delay.resolve(COMPLEX_HOLD_TIME_MSEC);
+      if (complex.bodyControl === complex.caretControl) {
+        // This should never actually be true. We just do this test as a tactic
+        // to keep `complex` from being a dead variable during the wait.
+        throw Errors.wtf('Different controls are equal?!');
+      }
+    })();
 
     const url         = `${Network.baseUrl}/api`;
     const authorToken = await this._getAuthorToken(authorId);
