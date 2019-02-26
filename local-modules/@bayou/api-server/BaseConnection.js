@@ -161,7 +161,9 @@ export default class BaseConnection extends CommonBase {
 
   /**
    * Subclass-specific implementation of {@link #close}. This is called and
-   * `await`ed upon before the base class performs its final cleanup.
+   * `await`ed upon before the base class performs its final cleanup. The
+   * intention is that this method _not_ force unsafe closure, but rather that
+   * it hasten an orderly shutdown of the connection.
    */
   async _impl_close() {
     this._mustOverride();

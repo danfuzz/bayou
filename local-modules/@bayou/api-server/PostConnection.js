@@ -47,7 +47,20 @@ export default class PostConnection extends BaseConnection {
    * Implementation of method as required by the superclass.
    */
   async _impl_close() {
-    // **TODO:** Fill this in.
+    // Wait for the response to be completed, and then return. Per the base
+    // class docs, this method isn't supposed to hastily cut off an operation,
+    // and since a POST connection only handles a single call, the best we can
+    // do is just wait for that one call to get naturally completed.
+
+    const response = this._res;
+
+    if (!response.finished) {
+      const whenFinished = new Promise((resolve) => {
+        response.once('finish', () => resolve(true));
+      });
+
+      await whenFinished;
+    }
   }
 
   /**
