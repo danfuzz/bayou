@@ -5,6 +5,7 @@
 import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Functor } from '@bayou/util-common';
 
+import BearerToken from './BearerToken';
 import TargetId from './TargetId';
 
 /**
@@ -18,7 +19,9 @@ export default class Message extends CommonBase {
    *
    * @param {Int|string} id Message ID, used to match requests and responses.
    *   Must be a non-negative integer or a string of at least eight characters.
-   * @param {string} targetId ID of the target object to send to.
+   * @param {string|BearerToken} targetId ID of the target object to send to. If
+   *   this is a {@link BearerToken}, then {@link BearerToken#secretToken} is
+   *   taken to be the actual ID.
    * @param {Functor} payload The name of the method to call and the arguments
    *   to call it with.
    */
@@ -30,8 +33,8 @@ export default class Message extends CommonBase {
       ? TInt.nonNegative(id)
       : TString.minLen(id, 8);
 
-    /** {string} ID of the target object. */
-    this._targetId = TargetId.check(targetId);
+    /** {string|BearerToken} ID of the target object. */
+    this._targetId = (targetId instanceof BearerToken) ? targetId : TargetId.check(targetId);
 
     /**
      * {Functor} The name of the method to call and the arguments to call it
@@ -43,12 +46,15 @@ export default class Message extends CommonBase {
   }
 
   /**
-   * Gets reconstruction arguments for this instance.
+   * Gets reconstruction arguments for this instance. If constructed with a
+   * {@link BearerToken} for `targetId`, the result of this method instead
+   * includes {@link BearerToken#secretToken} instead of the token object itself
+   * (since {@link BearerToken} isn't generally codec-encodable).
    *
    * @returns {array<*>} Reconstruction arguments.
    */
   deconstruct() {
-    return [this._id, this._targetId, this._payload];
+    return [this._id, this.targetId, this._payload];
   }
 
   /** {Int|string} Message ID. */
@@ -64,9 +70,14 @@ export default class Message extends CommonBase {
     return this._payload;
   }
 
-  /** {string} ID of the target object. */
+  /**
+   * {string} ID of the target object. If constructed with a {@link BearerToken}
+   * for `targetId`, this value is the token's {@link BearerToken#secretToken}.
+   */
   get targetId() {
-    return this._targetId;
+    const targetId = this._targetId;
+
+    return (targetId instanceof BearerToken) ? targetId.secretToken : targetId;
   }
 
   /**
