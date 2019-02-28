@@ -30,8 +30,8 @@ export default class Deployment extends UtilityClass {
    * @param {@bayou/top-server/Action} action The action that is about to be
    *   run.
    */
-  static aboutToRun(action) {
-    use.Deployment.aboutToRun(action);
+  static async aboutToRun(action) {
+    await use.Deployment.aboutToRun(action);
   }
 
   /**

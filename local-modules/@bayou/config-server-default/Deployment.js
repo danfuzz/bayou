@@ -31,7 +31,7 @@ export default class Deployment extends UtilityClass {
    * @param {@bayou/top-server/Action} action_unused The action that is about to
    *   be run.
    */
-  static aboutToRun(action_unused) {
+  static async aboutToRun(action_unused) {
     // This space intentionally left blank.
   }
 
