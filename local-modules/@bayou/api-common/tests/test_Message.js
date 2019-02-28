@@ -145,4 +145,41 @@ describe('@bayou/api-common/Message', () => {
       assert.strictEqual(msg.targetId, token.secretToken);
     });
   });
+
+  describe('withTargetId()', () => {
+    it('returns an instance with a replaced string `targetId`', () => {
+      const msg    = new Message(123, 'target-first', VALID_FUNCTOR);
+      const result = msg.withTargetId('target-second');
+
+      assert.strictEqual(result.targetId, 'target-second');
+      assert.strictEqual(result.id, 123);
+      assert.strictEqual(result.payload, VALID_FUNCTOR);
+    });
+
+    it('returns an instance with a replaced `BearerToken` `targetId`', () => {
+      const token  = new BearerToken('whoah', 'yeahhhh');
+      const msg    = new Message(999, 'target-first', VALID_FUNCTOR);
+      const result = msg.withTargetId(token);
+
+      assert.strictEqual(result.targetId, token.secretToken);
+      assert.strictEqual(result.logInfo.targetId, token.safeString);
+      assert.strictEqual(result.id, 999);
+      assert.strictEqual(result.payload, VALID_FUNCTOR);
+    });
+
+    it('rejects an invalid `targetId`', () => {
+      const msg = new Message(123, 'target-first', VALID_FUNCTOR);
+
+      function test(tid) {
+        assert.throws(() => msg.withTargetId(tid), /badValue/);
+      }
+
+      test(null);
+      test(123);
+      test('');
+      test('&');
+      test(new Map());
+      test({ x : 123 });
+    });
+  });
 });

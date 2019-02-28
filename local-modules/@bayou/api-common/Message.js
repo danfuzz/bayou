@@ -95,4 +95,16 @@ export default class Message extends CommonBase {
 
     return (targetId instanceof BearerToken) ? targetId.secretToken : targetId;
   }
+
+  /**
+   * Returns a new instance just like `this` except with the `targetId` as
+   * given.
+   *
+   * @param {string|BearerToken} targetId The new target ID (or token
+   *   representative of same).
+   * @returns {Message} An appropriately-constructed instance.
+   */
+  withTargetId(targetId) {
+    return new Message(this._id, targetId, this._payload);
+  }
 }
