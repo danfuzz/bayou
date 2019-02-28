@@ -68,10 +68,9 @@ export default class Message extends CommonBase {
    * form if this instance was constructed with a {@link BearerToken}.
    */
   get logInfo() {
-    const id          = this._id;
-    const rawTargetId = this._targetId;
-    const targetId    = (rawTargetId instanceof BearerToken) ? rawTargetId.safeString : rawTargetId;
-    const payload     = this._payload;
+    const id       = this._id;
+    const targetId = TargetId.safeString(this._targetId);
+    const payload  = this._payload;
 
     // **TODO:** Ultimately, we probably want to perform redaction on the
     // `payload`.
