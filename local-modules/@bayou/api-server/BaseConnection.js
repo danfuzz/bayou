@@ -55,7 +55,7 @@ export default class BaseConnection extends CommonBase {
     this._codec = this._context.codec;
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLog(this._log, this._context.tokenAuthorizer);
+    this._apiLog = new ApiLog(this._log);
 
     /** {boolean} Whether the connection should be aiming to become closed. */
     this._closing = false;
@@ -278,6 +278,15 @@ export default class BaseConnection extends CommonBase {
     }
 
     if (msg instanceof Message) {
+      const auth     = this._context.tokenAuthorizer;
+      const targetId = msg.targetId;
+
+      if (auth.isToken(targetId)) {
+        // The `targetId` is a token string. Replace the string with an actual
+        // `BearerToken` instance.
+        return msg.withTargetId(auth.tokenFromString(targetId));
+      }
+
       return msg;
     }
 

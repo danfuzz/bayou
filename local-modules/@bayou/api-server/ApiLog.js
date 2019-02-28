@@ -5,8 +5,6 @@
 import { BaseLogger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseTokenAuthorizer from './BaseTokenAuthorizer';
-
 /**
  * Handler of the logging of API calls.
  */
@@ -15,17 +13,12 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
-   * @param {BaseTokenAuthorizer} tokenAuth Token authorizer. Just used for
-   *   token parsing (to handle redaction).
    */
-  constructor(log, tokenAuth) {
+  constructor(log) {
     super();
 
     /** {BaseLogger} Logger to use. */
     this._log = BaseLogger.check(log);
-
-    /** {BaseTokenAuthorizer} Token authorizer. Just used for token parsing. */
-    this._tokenAuth = BaseTokenAuthorizer.check(tokenAuth);
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
@@ -86,7 +79,7 @@ export default class ApiLog extends CommonBase {
    */
   incomingMessage(msg) {
     const details = {
-      msg: this._redactMessage(msg),
+      msg:       msg.logInfo,
       startTime: Date.now()
     };
 
@@ -111,26 +104,7 @@ export default class ApiLog extends CommonBase {
     };
 
     // **TODO:** This will ultimately need to redact some information beyond
-    // what `_redactMessage()` might have done.
+    // what `msg.logInfo` might have done.
     this._log.event.apiReturned(details);
-  }
-
-  /**
-   * Performs redaction on a message, so as to avoid logging sensitive security
-   * and user-data details.
-   *
-   * @param {Message} msg The original message.
-   * @returns {Message} The redacted form.
-   */
-  _redactMessage(msg) {
-    const targetId = msg.targetId;
-
-    if (this._tokenAuth.isToken(targetId)) {
-      const token = this._tokenAuth.tokenFromString(targetId);
-      msg = msg.withTargetId(token.safeString);
-    }
-
-    // **TODO:** This will ultimately need to do more redaction.
-    return msg;
   }
 }
