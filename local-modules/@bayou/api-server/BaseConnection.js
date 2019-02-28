@@ -278,6 +278,15 @@ export default class BaseConnection extends CommonBase {
     }
 
     if (msg instanceof Message) {
+      const auth     = this._context.tokenAuthorizer;
+      const targetId = msg.targetId;
+
+      if (auth.isToken(targetId)) {
+        // The `targetId` is a token string. Replace the string with an actual
+        // `BearerToken` instance.
+        return msg.withTargetId(auth.tokenFromString(targetId));
+      }
+
       return msg;
     }
 
