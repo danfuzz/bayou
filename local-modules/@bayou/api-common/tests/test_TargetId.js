@@ -137,42 +137,4 @@ describe('@bayou/api-common/TargetId', () => {
       test(new Map());
     });
   });
-
-  describe('targetString()', () => {
-    it('returns the argument if is is a valid ID string', () => {
-      function test(s) {
-        assert.strictEqual(TargetId.targetString(s), s);
-      }
-
-      test('abc_123');
-      test('0123.456-789');
-    });
-
-    it('returns the secret token out of a given `BearerToken`', () => {
-      function test(id, secret) {
-        const token = new BearerToken(id, `${id}-${secret}`);
-        assert.strictEqual(TargetId.targetString(token), token.secretToken);
-      }
-
-      test('foo',   '123123-8999');
-      test('x',     'abc_def');
-      test('b.c.d', 'zorch');
-    });
-
-    it('rejects invalid strings', () => {
-      assert.throws(() => TargetId.targetString('!?%'), /badValue/);
-    });
-
-    it('should reject non-`BearerToken` non-strings', () => {
-      function test(value) {
-        assert.throws(() => TargetId.targetString(value), /badValue/);
-      }
-
-      test(null);
-      test(undefined);
-      test(true);
-      test(123);
-      test(new Map());
-    });
-  });
 });
