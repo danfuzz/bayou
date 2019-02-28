@@ -5,8 +5,6 @@
 import { BaseLogger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseTokenAuthorizer from './BaseTokenAuthorizer';
-
 /**
  * Handler of the logging of API calls.
  */
@@ -15,17 +13,12 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
-   * @param {BaseTokenAuthorizer} tokenAuth Token authorizer. Just used for
-   *   token parsing (to handle redaction).
    */
-  constructor(log, tokenAuth) {
+  constructor(log) {
     super();
 
     /** {BaseLogger} Logger to use. */
     this._log = BaseLogger.check(log);
-
-    /** {BaseTokenAuthorizer} Token authorizer. Just used for token parsing. */
-    this._tokenAuth = BaseTokenAuthorizer.check(tokenAuth);
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
