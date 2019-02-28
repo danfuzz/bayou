@@ -408,7 +408,7 @@ export default class ApiClient extends CommonBase {
     for (const id in this._callbacks) {
       const { message, reject } = this._callbacks[id];
 
-      this._log.event.rejectDuringTermination(...message.deconstruct());
+      this._log.event.rejectDuringTermination(message.logInfo);
       reject(error);
     }
 
