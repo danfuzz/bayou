@@ -34,7 +34,7 @@ export default class Message extends CommonBase {
       : TString.minLen(id, 8);
 
     /** {string|BearerToken} ID of the target object. */
-    this._targetId = (targetId instanceof BearerToken) ? targetId : TargetId.check(targetId);
+    this._targetId = TargetId.orToken(targetId);
 
     /**
      * {Functor} The name of the method to call and the arguments to call it
@@ -72,6 +72,9 @@ export default class Message extends CommonBase {
     const rawTargetId = this._targetId;
     const targetId    = (rawTargetId instanceof BearerToken) ? rawTargetId.safeString : rawTargetId;
     const payload     = this._payload;
+
+    // **TODO:** Ultimately, we probably want to perform redaction on the
+    // `payload`.
 
     return { id, targetId, payload };
   }

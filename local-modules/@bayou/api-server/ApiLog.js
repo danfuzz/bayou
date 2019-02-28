@@ -86,7 +86,7 @@ export default class ApiLog extends CommonBase {
    */
   incomingMessage(msg) {
     const details = {
-      msg: this._redactMessage(msg),
+      msg:       msg.logInfo,
       startTime: Date.now()
     };
 
@@ -111,26 +111,7 @@ export default class ApiLog extends CommonBase {
     };
 
     // **TODO:** This will ultimately need to redact some information beyond
-    // what `_redactMessage()` might have done.
+    // what `msg.logInfo` might have done.
     this._log.event.apiReturned(details);
-  }
-
-  /**
-   * Performs redaction on a message, so as to avoid logging sensitive security
-   * and user-data details.
-   *
-   * @param {Message} msg The original message.
-   * @returns {Message} The redacted form.
-   */
-  _redactMessage(msg) {
-    const targetId = msg.targetId;
-
-    if (this._tokenAuth.isToken(targetId)) {
-      const token = this._tokenAuth.tokenFromString(targetId);
-      msg = msg.withTargetId(token.safeString);
-    }
-
-    // **TODO:** This will ultimately need to do more redaction.
-    return msg;
   }
 }

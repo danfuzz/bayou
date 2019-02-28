@@ -37,7 +37,7 @@ describe('@bayou/api-server/ApiLog', () => {
       const tokAuth = new MockTokenAuthorizer();
       const apiLog  = new ApiLog(logger, tokAuth);
       const token   = tokAuth.tokenFromString('token-123xyz');
-      const msg     = new Message(123, token.secretToken, new Functor('x', 'y'));
+      const msg     = new Message(123, token, new Functor('x', 'y'));
 
       apiLog.incomingMessage(msg);
 
@@ -49,17 +49,12 @@ describe('@bayou/api-server/ApiLog', () => {
       const payload = record[0][2];
 
       // The payload is of the form `apiReceived({ msg: ... })`, and we are
-      // just going to be asserting on the `msg` part.
+      // just going to be asserting on the `msg` part, which should be the
+      // result of `Message.logInfo`, which is an ad-hoc plain object. For this
+      // test, we _just_ care about the `targetId`.
       assert.instanceOf(payload, Functor);
       const loggedMsg = payload.args[0].msg;
-
-      // This should be the encoded form of a `Message`, which is itself a
-      // three-argument functor, the second argument being the ID.
-      assert.instanceOf(loggedMsg, Functor);
-      const loggedId = loggedMsg.args[1];
-
-      // The actual point of this unit test.
-      assert.strictEqual(loggedId, `${token.id}-...`);
+      assert.strictEqual(loggedMsg.targetId, token.safeString);
     });
   });
 });
