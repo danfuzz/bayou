@@ -89,6 +89,23 @@ describe('@bayou/api-common/Message', () => {
     });
   });
 
+  describe('.logInfo', () => {
+    it('has all the constructed arguments if `targetId` was constructed as a string', () => {
+      const msg    = new Message(123, 'target-yep', VALID_FUNCTOR);
+      const result = msg.logInfo;
+
+      assert.deepEqual(result, { id: 123, targetId: 'target-yep', payload: VALID_FUNCTOR });
+    });
+
+    it('has the token\'s `safeString` if the instance was constructed with a `BearerToken`', () => {
+      const token = new BearerToken('florp', 'florp-like');
+      const msg   = new Message(914, token, VALID_FUNCTOR);
+      const result = msg.logInfo;
+
+      assert.deepEqual(result, { id: 914, targetId: token.safeString, payload: VALID_FUNCTOR });
+    });
+  });
+
   describe('.payload', () => {
     it('is the constructed `payload`', () => {
       const msg = new Message(123, 'target', VALID_FUNCTOR);

@@ -63,6 +63,20 @@ export default class Message extends CommonBase {
   }
 
   /**
+   * {object} Ad-hoc object with the contents of this instance, suitable for
+   * logging. In particular, the {@link #targetId} is represented in redacted
+   * form if this instance was constructed with a {@link BearerToken}.
+   */
+  get logInfo() {
+    const id          = this._id;
+    const rawTargetId = this._targetId;
+    const targetId    = (rawTargetId instanceof BearerToken) ? rawTargetId.safeString : rawTargetId;
+    const payload     = this._payload;
+
+    return { id, targetId, payload };
+  }
+
+  /**
    * {Functor} The name of the method to call and the arguments to call it
    * with.
    */
