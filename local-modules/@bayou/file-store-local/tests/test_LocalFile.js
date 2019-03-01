@@ -17,6 +17,9 @@ describe('@bayou/file-store-local/LocalFile', () => {
     });
   });
 
+  // **TODO:** Need to test `appendChange()`. See other TODO below for an
+  // example that should be extracted into a test here (and fixed).
+
   describe('create()', () => {
     it('should cause a non-existent file to come into existence', async () => {
       const file = TempFiles.makeFile();
