@@ -7,7 +7,6 @@ import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
 import FileSnapshot from './FileSnapshot';
-import PredicateOp from './PredicateOp';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TheModule from './TheModule';
@@ -19,7 +18,6 @@ export {
   FileDelta,
   FileOp,
   FileSnapshot,
-  PredicateOp,
   StorageId,
   StoragePath
 };
