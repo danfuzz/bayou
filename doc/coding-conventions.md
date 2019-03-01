@@ -131,8 +131,8 @@ taking into account recent additions to the language.
   methods together within a class as being part of a "namespace" of some sort.
   When this is the case, the names take the form `<namespace>_<method>` where
   the namespace and method name are underscore-separated. For example, the
-  transaction operation constructors in `@bayou/file-store.TransactionOp` are
-  all defined as `op_<name>`.
+  file operation constructors in `@bayou/file-store-ot.FileOp` are all defined
+  as `op_<name>`.
 
 * Abstract methods &mdash; Sometimes base classes want to define abstract
   methods for their subclasses to fill in. The naming pattern for these is a
