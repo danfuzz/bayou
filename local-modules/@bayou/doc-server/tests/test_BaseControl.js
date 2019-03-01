@@ -167,7 +167,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('appendChange()', () => {
-    it('should perform an appropriate transaction given a valid change', async () => {
+    it('should perform an appropriate operation given a valid change', async () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control = new MockControl(fileAccess, 'boop');
@@ -975,37 +975,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.strictEqual(await control.whenRevNum(37), 37);
     });
 
-    it.skip('should issue transactions until the revision is written', async () => {
-      const file       = new MockFile('blort');
-      const fileAccess = new FileAccess(CODEC, 'doc-1', file);
-      const control    = new MockControl(fileAccess, 'boop');
-
-      let revNum = 11;
-      control.currentRevNum = async () => {
-        return revNum;
-      };
-
-      let transactCount = 0;
-      file._impl_transact = (spec) => {
-        const ops = spec.opsWithName('whenPathNot');
-
-        assert.lengthOf(ops, 1);
-        assert.strictEqual(ops[0].props.storagePath, '/mock_control/revision_number');
-
-        transactCount++;
-        revNum += 2; // So that the outer call will succeed after two iterations.
-
-        return {
-          revNum:    123,
-          newRevNum: null,
-          data:      null,
-          paths:     new Set(['/mock_control/revision_number'])
-        };
-      };
-
-      const result = await control.whenRevNum(14);
-      assert.strictEqual(result, 15);
-      assert.strictEqual(transactCount, 2);
-    });
+    // **TODO:** Need a test that demonstrates this method waiting until the
+    // revision is written.
   });
 });
