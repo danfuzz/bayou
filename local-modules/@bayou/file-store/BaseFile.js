@@ -58,16 +58,16 @@ export default class BaseFile extends CommonBase {
   /**
    * Clamps a given timeout value (in msec) to be within the range specified
    * by `minTimeoutMsec..maxTimeoutMsec` as defined by this class. As a special
-   * case, the string value `'never'` is interpreted the same as
-   * `maxTimeoutMsec`. As a double-special case, the value `'never'` is treated
-   * as a period of one day if `maxTimeoutMsec` is `null`. It is an error to
-   * pass a value less than `0`.
+   * case, `null` is interpreted the same as `maxTimeoutMsec`. As a
+   * double-special case, `null` is treated as a period of one day if
+   * `maxTimeoutMsec` is `null`. It is an error to pass a value less than `0`.
    *
-   * @param {Int|'never'} value The millisecond timeout value to clamp.
+   * @param {Int|null} value The millisecond timeout value to clamp, or `null`
+   *   to indicate the maximum possible value.
    * @returns {Int} The clamped value.
    */
   clampTimeoutMsec(value) {
-    if (value === 'never') {
+    if (value === null) {
       value = this.maxTimeoutMsec;
       return (value === null)
         ? 24 * 60 * 60 * 1000 // One day in msec.
