@@ -10,17 +10,11 @@ import BaseFile from './BaseFile';
 
 /**
  * Combination of a `BaseFile` with a `Codec`, with operations to make it easy
- * to build transactions and interpret their results with respect to API-coded
- * values.
+ * to perform file access and modification in a codec-aware fashion.
  *
- * In addition to instance methods that mirror `BaseFile`, this class also
- * defines a set of instance methods for constructing transaction operations,
- * that is, instances of `TransactionOp`, with the same method names as the
- * static constructor methods defined by `TransactionOp`. In the case of
- * the methods defined here, instead of accepting `FrozenBuffer` or hash string
- * arguments where `TransactionOp` so defines them, this class accepts any
- * objects at all, so long as they can successfully be encoded by the codec with
- * which the instance of this class was instantiated.
+ * The main thing this class provides is a set of instance methods for
+ * constructing `FileOp`s operations, with the same method names as the static
+ * constructor methods defined by that class.
  *
  * **Note:** This class is _intentionally_ not a full wrapper over `BaseFile`.
  * It _just_ provides operations that benefit from the application of a `Codec`.
@@ -56,36 +50,6 @@ export default class FileCodec extends CommonBase {
    */
   get codec() {
     return this._codec;
-  }
-
-  /**
-   * Runs the specified transaction, automatically decoding any values returned
-   * in the `data`. This method passes through any errors thrown due to failure
-   * to decode a buffer.
-   *
-   * @param {TransactionSpec} spec Specification for the transaction, that is,
-   *   the set of operations to perform.
-   * @returns {object} Object with mappings as described in
-   *   `BaseFile.transact()`, except that mappings in `data` bind to decoded
-   *   values and not raw buffers.
-   * @throws {InfoError} Thrown if the transaction failed. Errors so thrown
-   *   contain details sufficient for programmatic understanding of the issue.
-   */
-  async transact(spec) {
-    const result  = await this._file.transact(spec);
-    const rawData = result.data;
-
-    if (rawData === undefined) {
-      return result;
-    }
-
-    const cookedData = new Map();
-    for (const [storagePath, value] of rawData) {
-      cookedData.set(storagePath, this._codec.decodeJsonBuffer(value));
-    }
-
-    result.data = cookedData;
-    return result;
   }
 
   /**
