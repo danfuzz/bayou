@@ -13,7 +13,6 @@ import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TheModule from './TheModule';
 import TransactionOp from './TransactionOp';
-import TransactionSpec from './TransactionSpec';
 
 export {
   TheModule,
@@ -26,6 +25,5 @@ export {
   PredicateSpec,
   StorageId,
   StoragePath,
-  TransactionOp,
-  TransactionSpec
+  TransactionOp
 };
