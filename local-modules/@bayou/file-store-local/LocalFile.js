@@ -239,13 +239,14 @@ export default class LocalFile extends BaseFile {
    *
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance FileChange.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended and `false` if revision number indicates a lost append race.
-   *   Any other issue will throw an error.
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
   async _impl_appendChange(fileChange, timeoutMsec) {
     FileChange.check(fileChange);
@@ -335,111 +336,6 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Implementation as required by the superclass.
-   *
-   * @param {TransactionSpec} spec Same as with `transact()`.
-   * @returns {object} Same as with `transact()`, except with `null`s instead of
-   *   missing properties.
-   */
-  async _impl_transact(spec) {
-    this._log.detail('Transaction:', spec);
-
-    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
-    // storage, as that (potential) storage read can take significant time.
-    const timeoutMsec = this.clampTimeoutMsec(spec.timeoutMsec);
-    let timeout = false; // Gets set to `true` when the timeout expires.
-    const timeoutProm = Delay.resolve(timeoutMsec);
-    (async () => {
-      await timeoutProm;
-      timeout = true;
-    })();
-
-    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
-    if (timeout) {
-      throw Errors.timedOut(timeoutMsec);
-    }
-
-    if (!this._fileShouldExist) {
-      throw Errors.fileNotFound(this.id);
-    }
-
-    // Per the spec / docs, a `TransactionSpec` only has one of pull, push, or
-    // wait ops. So, we can safely dispatch to a category-specific handler here.
-
-    if (spec.hasPullOps()) {
-      const snapshot = this.currentSnapshot;
-      const result   = spec.runPull(snapshot);
-
-      // Add the properties required by the `_impl_transact()` contract.
-      result.newRevNum = null;
-      result.revNum    = snapshot.revNum;
-
-      return result;
-    } else if (spec.hasPushOps()) {
-      const snapshot = this.currentSnapshot;
-      const change   = spec.runPush(snapshot);
-
-      this._changes[change.revNum] = change;
-      this._storageToWrite.set(change.revNum, this._encodeChange(change));
-      this._storageNeedsFlush();
-
-      // Form the return value as required by the `_impl_transact()` contract.
-      return {
-        data:      null,
-        newRevNum: change.revNum,
-        paths:     null,
-        revNum:    snapshot.revNum
-      };
-    } else if (spec.hasWaitOps()) {
-      // It's a wait transaction, so we need to be prepared to loop / retry
-      // (until satisfaction or timeout).
-      for (;;) {
-        const snapshot   = this.currentSnapshot;
-        const pathResult = spec.runWait(snapshot);
-
-        if (pathResult !== null) {
-          // Form the return value as required by the `_impl_transact()`
-          // contract.
-          return {
-            data:      null,
-            newRevNum: null,
-            paths:     new Set([pathResult]),
-            revNum:    snapshot.revNum
-          };
-        }
-
-        // Force the `_changeCondition` to `false` (though it might already be
-        // so set; innocuous if so), and wait either for it to become `true`
-        // (that is, wait for _any_ change to the file) or for timeout to occur.
-        this._changeCondition.value = false;
-        await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-        if (timeout) {
-          throw Errors.timedOut(timeoutMsec);
-        }
-
-        // Have to re-check for file existence, as the file could have been
-        // deleted while we were waiting.
-        if (!this._fileShouldExist) {
-          throw Errors.fileNotFound(this.id);
-        }
-      }
-    } else {
-      // It's a prerequisite-only transaction. Do the requested checks, and
-      // return a nearly-empty return value as required by the
-      // `_impl_transact()` contract.
-      const snapshot = this.currentSnapshot;
-
-      spec.runPrerequisites(snapshot);
-      return {
-        data:      null,
-        newRevNum: null,
-        paths:     null,
-        revNum:    snapshot.revNum
-      };
-    }
-  }
-
-  /**
    * {RevisionNumber|-1} Current revision number, or `-1` if the file either
    * doesn't exist at all or is in the transitional state where it exists but
    * there aren't yet any changes written.
@@ -450,7 +346,8 @@ export default class LocalFile extends BaseFile {
 
   /**
    * {FileSnapshot} Snapshot of the current revision. It is not valid to get
-   * this if the file doesn't exist (created and has at least one change).
+   * this if the file doesn't exist (was not created at all or does not have at
+   * least one change).
    */
   get currentSnapshot() {
     const revNum  = this._currentRevNum;

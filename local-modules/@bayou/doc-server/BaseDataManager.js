@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TransactionSpec, FileOp } from '@bayou/file-store-ot';
+import { FileOp } from '@bayou/file-store-ot';
 import { TArray } from '@bayou/typecheck';
 
 import BaseComplexMember from './BaseComplexMember';
@@ -14,16 +14,9 @@ import ValidationStatus from './ValidationStatus';
  */
 export default class BaseDataManager extends BaseComplexMember {
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get initSpec() {
-    return TransactionSpec.check(this._impl_initSpec);
-  }
-
-  /**
-   * {Array<FileOps>} FileOps which when run will initialize the portion of the
-   * file which this class is responsible for. Subclasses must override this.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for.
    */
   get initOps() {
     const ops = this._impl_initOps;
@@ -32,8 +25,8 @@ export default class BaseDataManager extends BaseComplexMember {
   }
 
   /**
-   * Performs any actions that are required in the wake of having run the
-   * {@link #initSpec} transaction.
+   * Performs any actions that are required in the wake of having stored the
+   * initial file contents. See also {@link #initOps}.
    */
   async afterInit() {
     // The only point of this arrangement is to preserve the invariant that
@@ -59,19 +52,9 @@ export default class BaseDataManager extends BaseComplexMember {
   }
 
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for. Subclasses must
-   * override this.
-   *
-   * @abstract
-   */
-  get _impl_initSpec() {
-    return this._mustOverride();
-  }
-
-  /**
-   * {Array<FileOps>} FileOps which when run will initialize the portion of the
-   * file which this class is responsible for. Subclasses must override this.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for Subclasses must override this.
    *
    * @abstract
    */

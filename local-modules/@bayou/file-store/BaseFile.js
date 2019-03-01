@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { StorageId, StoragePath, TransactionSpec, FileChange } from '@bayou/file-store-ot';
-import { TBoolean, TInt, TMap, TObject, TSet, TString } from '@bayou/typecheck';
-import { CommonBase, Errors, FrozenBuffer } from '@bayou/util-common';
+import { StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
+import { TBoolean, TInt, TString } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -58,16 +58,16 @@ export default class BaseFile extends CommonBase {
   /**
    * Clamps a given timeout value (in msec) to be within the range specified
    * by `minTimeoutMsec..maxTimeoutMsec` as defined by this class. As a special
-   * case, the string value `'never'` is interpreted the same as
-   * `maxTimeoutMsec`. As a double-special case, the value `'never'` is treated
-   * as a period of one day if `maxTimeoutMsec` is `null`. It is an error to
-   * pass a value less than `0`.
+   * case, `null` is interpreted the same as `maxTimeoutMsec`. As a
+   * double-special case, `null` is treated as a period of one day if
+   * `maxTimeoutMsec` is `null`. It is an error to pass a value less than `0`.
    *
-   * @param {Int|'never'} value The millisecond timeout value to clamp.
+   * @param {Int|null} value The millisecond timeout value to clamp, or `null`
+   *   to indicate the maximum possible value.
    * @returns {Int} The clamped value.
    */
   clampTimeoutMsec(value) {
-    if (value === 'never') {
+    if (value === null) {
       value = this.maxTimeoutMsec;
       return (value === null)
         ? 24 * 60 * 60 * 1000 // One day in msec.
@@ -151,116 +151,23 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Performs a transaction, which consists of a set of operations to be
-   * executed with respect to a file as an atomic unit. See `TransactionOp` for
-   * details about the possible operations and how they are ordered. This
-   * method will throw an error if it was not possible to perform the
-   * transaction for any reason.
-   *
-   * The return value from a successful call is an object with the following
-   * bindings:
-   *
-   * * `revNum` &mdash; The revision number of the file which was used to
-   *   satisfy the request. This is always the most recent revision possible
-   *   given the restrictions defined in the transaction spec (if any). If there
-   *   are no restrictions, then this is always the most recent revision at the
-   *   instant the transaction was run.
-   * * `newRevNum` &mdash; If the transaction spec included any modification
-   *   operations, the revision number of the file that resulted from those
-   *   modifications.
-   * * `data` &mdash; If the transaction spec included any data read operations,
-   *   a `Map<string, FrozenBuffer>` from storage ID strings (`StoragePath`s or
-   *   content hashes) to the data which was read. **Note:** Even if there was
-   *   no data to read (e.g., all read operations were for non-bound paths), as
-   *   long as the spec included any read operations, this property will still
-   *   be present.
-   * * `paths` &mdash; If the transaction spec included any wait or path list
-   *   operations, a `Set<string>` of storage paths that resulted from the
-   *   operations. **Note:** Even if there were no found paths (e.g., no
-   *   operations matched any paths), as long as the spec included any wait or
-   *   path list operations, this property will still be present.
-   *
-   * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
-   * `false`, then this method will fail.
-   *
-   * @param {TransactionSpec} spec Specification for the transaction, that is,
-   *   the set of operations to perform.
-   * @returns {object} Object with mappings as described above.
-   * @throws {InfoError} Thrown if the transaction failed. Errors so thrown
-   *   contain details sufficient for programmatic understanding of the issue.
-   */
-  async transact(spec) {
-    TransactionSpec.check(spec);
-
-    const result = await this._impl_transact(spec);
-    TObject.withExactKeys(result, ['revNum', 'newRevNum', 'data', 'paths']);
-
-    // Validate and convert the result to be as documented.
-
-    TInt.nonNegative(result.revNum);
-
-    if (result.newRevNum === null) {
-      delete result.newRevNum;
-    } else {
-      TInt.min(result.newRevNum, result.revNum + 1);
-    }
-
-    if (spec.hasReadOps()) {
-      if (result.data === null) {
-        throw Errors.badUse('Improper subclass behavior: Expected non-`null` `data`.');
-      }
-      try {
-        TMap.check(result.data, x => StorageId.check(x), x => FrozenBuffer.check(x));
-      } catch (e) {
-        // Contextually-appropriate error.
-        throw Errors.badUse('Improper subclass behavior: Expected `data` to be a map from `StorageId` to `FrozenBuffer`.');
-      }
-    } else {
-      if (result.data !== null) {
-        throw Errors.badUse('Improper subclass behavior: Expected `null` `data`.');
-      }
-      delete result.data;
-    }
-
-    if (spec.hasPathOps()) {
-      if (result.paths === null) {
-        throw Errors.badUse('Improper subclass behavior: Expected non-`null` `paths`.');
-      }
-      try {
-        TSet.check(result.paths, x => StoragePath.check(x));
-      } catch (e) {
-        // Contextually-appropriate error.
-        throw Errors.badUse('Improper subclass behavior: Expected `paths` to contain `StoragePath`s.');
-      }
-    } else {
-      if (result.paths !== null) {
-        throw Errors.badUse('Improper subclass behavior: Expected `null` `paths`.');
-      }
-      delete result.paths;
-    }
-
-    return result;
-  }
-
-  /**
    * Appends a new change to the document. On success, this returns `true`.
    *
    * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
+   * sense of {@link #exists}. That is, if {@link #exists} would return
    * `false`, then this method will fail.
    *
-   * @param {FileChange} fileChange Change to append. Must be an
-   *   instance of FileChange.
+   * @param {FileChange} fileChange Change to append.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended and `false` if revision number indicates a lost append race.
-   *   Any other issue will throw an error.
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
-  async appendChange(fileChange, timeoutMsec) {
+  async appendChange(fileChange, timeoutMsec = null) {
     FileChange.check(fileChange);
 
     const result = await this._impl_appendChange(fileChange, timeoutMsec);
@@ -299,23 +206,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Main implementation of `transact()`. It is guaranteed to be called with a
-   * valid `TransactionSpec`, though the spec may not be sensible in term of the
-   * actual requested operations. The return value should contain all of the
-   * return properties specified by `transact()`; if a given property is to be
-   * absent in the final result, at this layer it should be represented as
-   * `null`.
-   *
-   * @abstract
-   * @param {TransactionSpec} spec Same as with `transact()`.
-   * @returns {object} Same as with `transact()`, except with `null`s instead of
-   *   missing properties.
-   */
-  async _impl_transact(spec) {
-    return this._mustOverride(spec);
-  }
-
-  /**
    * Abstract implementation of `appendChange()`.
    * Appends a new change to the document. On success, this returns `true`.
    *
@@ -325,15 +215,17 @@ export default class BaseFile extends CommonBase {
    *
    * Each subclass implements its own version of `appendChange()`.
    *
+   * @abstract
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance of FileChange.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended, otherwise will throw an error.
-   * @abstract
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
   async _impl_appendChange(fileChange, timeoutMsec) {
     return this._mustOverride(fileChange, timeoutMsec);

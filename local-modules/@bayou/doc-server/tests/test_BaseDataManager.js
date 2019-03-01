@@ -7,38 +7,12 @@ import { describe, it } from 'mocha';
 
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { BaseDataManager, FileAccess, ValidationStatus } from '@bayou/doc-server';
-import { TransactionSpec } from '@bayou/file-store-ot';
 import { MockFile } from '@bayou/file-store/mocks';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
 const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, 'doc-123', new MockFile('blort'));
 
 describe('@bayou/doc-server/BaseDataManager', () => {
-  describe('.initSpec', () => {
-    it('should call through to the impl', () => {
-      const spec = new TransactionSpec();
-      class TestDataManager extends BaseDataManager {
-        get _impl_initSpec() {
-          return spec;
-        }
-      }
-
-      const dm = new TestDataManager(FILE_ACCESS, 'boop');
-      assert.strictEqual(dm.initSpec, spec);
-    });
-
-    it('should reject an improper subclass choice', () => {
-      class HasBadSpec extends BaseDataManager {
-        get _impl_initSpec() {
-          return ['not a spec'];
-        }
-      }
-
-      const dm = new HasBadSpec(FILE_ACCESS, 'boop');
-      assert.throws(() => dm.initSpec);
-    });
-  });
-
   describe('afterInit()', () => {
     it('should call through to the impl', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');

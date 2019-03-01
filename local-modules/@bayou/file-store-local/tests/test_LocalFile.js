@@ -5,20 +5,23 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TransactionOp, TransactionSpec } from '@bayou/file-store-ot';
+import { FileChange, FileOp } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
 import TempFiles from './TempFiles';
 
 describe('@bayou/file-store-local/LocalFile', () => {
   describe('constructor()', () => {
-    it('should not throw given valid arguments', () => {
+    it('does not throw given valid arguments', () => {
       assert.doesNotThrow(() => { TempFiles.makeFile(); });
     });
   });
 
+  // **TODO:** Need to test `appendChange()`. See other TODO below for an
+  // example that should be extracted into a test here (and fixed).
+
   describe('create()', () => {
-    it('should cause a non-existent file to come into existence', async () => {
+    it('causes a non-existent file to come into existence', async () => {
       const file = TempFiles.makeFile();
 
       assert.isFalse(await file.exists()); // Baseline assumption.
@@ -29,43 +32,36 @@ describe('@bayou/file-store-local/LocalFile', () => {
       await TempFiles.doneWithFile(file);
     });
 
-    it('should do nothing if called on a non-empty file', async () => {
+    it('does nothing if called on a non-empty file', async () => {
       const file        = await TempFiles.makeAndCreateFile();
       const storagePath = '/abc';
       const value       = FrozenBuffer.coerce('x');
 
-      // Baseline assumption.
+      // Baseline setup / assumption.
 
-      let spec = new TransactionSpec(
-        TransactionOp.op_writePath(storagePath, value)
-      );
+      const change1 = new FileChange(1, [FileOp.op_writePath(storagePath, value)]);
+      // **TODO:** Adding this line should fail, but doesn't!!
+      // await file.appendChange(FileChange.FIRST);
+      await file.appendChange(change1);
 
-      await file.transact(spec);
-
-      spec = new TransactionSpec(
-        TransactionOp.op_readPath(storagePath)
-      );
-
-      let result = (await file.transact(spec)).data.get(storagePath);
-      assert.strictEqual(result.string, value.string);
+      assert.isTrue(await file.exists());
+      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
 
       // The real test.
 
-      await file.create();
+      await assert.isFulfilled(file.create());
 
-      // Ensure the file exists.
+      // Ensure the file exists and that the path that was written is still
+      // there.
       assert.isTrue(await file.exists());
-
-      // Same transaction as above.
-      result = (await file.transact(spec)).data.get(storagePath);
-      assert.strictEqual(result.string, value.string);
+      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
 
       await TempFiles.doneWithFile(file);
     });
   });
 
   describe('delete()', () => {
-    it('should cause an existing file to stop existing', async () => {
+    it('causes an existing file to stop existing', async () => {
       const file = await TempFiles.makeAndCreateFile();
       assert.isTrue(await file.exists()); // Baseline assumption.
 
@@ -77,14 +73,14 @@ describe('@bayou/file-store-local/LocalFile', () => {
   });
 
   describe('exists()', () => {
-    it('should return `false` if the underlying storage does not exist', async () => {
+    it('returns `false` if the underlying storage does not exist', async () => {
       const file = TempFiles.makeFile();
       assert.isFalse(await file.exists());
 
       await TempFiles.doneWithFile(file);
     });
 
-    it('should return `true` if the file was created in the filesystem', async () => {
+    it('returns `true` if the file was created in the filesystem', async () => {
       const dir = TempFiles.uniquePath();
       const file1 = await TempFiles.makeAndCreateFile(dir);
 

@@ -4,7 +4,7 @@
 
 import { Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta } from '@bayou/doc-common';
-import { TransactionSpec, FileOp, FileChange } from '@bayou/file-store-ot';
+import { FileOp, FileChange } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
@@ -108,36 +108,6 @@ export default class FileBootstrap extends BaseDataManager {
   }
 
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for. In this case, it
-   * constructs the combined spec for the entire file, based on all the
-   * subcomponents.
-   */
-  get _impl_initSpec() {
-    const eraseSpec = new TransactionSpec(
-      // If the file already existed, this clears out the old contents.
-      // **TODO:** In cases where this is a re-creation based on a migration
-      // problem, we probably want to preserve the old data by moving it aside
-      // (e.g. into a `lossage/<timestamp>` prefix) instead of just blasting it
-      // away entirely.
-      this.fileCodec.op_deleteAll()
-    );
-
-    const schemaSpec   = this._schemaHandler.initSpec;
-    const bodySpec     = this._bodyControl.initSpec;
-    const caretSpec    = this._caretControl.initSpec;
-    const propertySpec = this._propertyControl.initSpec;
-
-    const result = eraseSpec
-      .concat(schemaSpec)
-      .concat(bodySpec)
-      .concat(caretSpec)
-      .concat(propertySpec);
-
-    return result;
-  }
-
-  /**
    * Subclass-specific implementation of `afterInit()`. In this case, it runs
    * the `afterInit()` methods on each of the subcomponents.
    */
@@ -151,10 +121,10 @@ export default class FileBootstrap extends BaseDataManager {
   }
 
   /**
-   * {Array<FileOp>} Array of aggregated `FileOps` which when run will
-   * initialize the portion of the file which this class is responsible
-   * for. In this case, it constructs the aggregated `FileOps` for the
-   * entire file, based on all the subcomponents.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for. In this case, it constructs the aggregated
+   * {@link FileOp}s for the entire file, based on all the subcomponents.
    */
   get _impl_initOps() {
     // If the file already existed, this clears out the old contents.
@@ -272,8 +242,8 @@ export default class FileBootstrap extends BaseDataManager {
     await this.file.appendChange(initialFileChange, FILE_CREATE_TIMEOUT_MSEC);
     await this.afterInit();
 
-    // **TODO:** Ideally, this would be rolled into the transaction as defined
-    // by `initSpec` above.
+    // **TODO:** Ideally, this would be rolled into the operations set up by
+    // by `.initOps` above.
     await this._bodyControl.update(change);
 
     return true;

@@ -7,13 +7,9 @@ import FileChange from './FileChange';
 import FileDelta from './FileDelta';
 import FileOp from './FileOp';
 import FileSnapshot from './FileSnapshot';
-import PredicateOp from './PredicateOp';
-import PredicateSpec from './PredicateSpec';
 import StorageId from './StorageId';
 import StoragePath from './StoragePath';
 import TheModule from './TheModule';
-import TransactionOp from './TransactionOp';
-import TransactionSpec from './TransactionSpec';
 
 export {
   TheModule,
@@ -22,10 +18,6 @@ export {
   FileDelta,
   FileOp,
   FileSnapshot,
-  PredicateOp,
-  PredicateSpec,
   StorageId,
-  StoragePath,
-  TransactionOp,
-  TransactionSpec
+  StoragePath
 };
