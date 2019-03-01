@@ -11,7 +11,7 @@ import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mo
 import { DurableControl, FileAccess } from '@bayou/doc-server';
 import { MockControl } from '@bayou/doc-server/mocks';
 import { MockFile } from '@bayou/file-store/mocks';
-import { Errors as fileStoreOt_Errors, TransactionSpec, FileChange, FileSnapshot, FileOp } from '@bayou/file-store-ot';
+import { Errors as fileStoreOt_Errors, FileChange, FileSnapshot, FileOp } from '@bayou/file-store-ot';
 import { Timestamp } from '@bayou/ot-common';
 import { TheModule as mocks_TheModule } from '@bayou/ot-common/mocks';
 import { Errors, FrozenBuffer } from '@bayou/util-common';
@@ -163,13 +163,6 @@ describe('@bayou/doc-server/BaseControl', () => {
     it('should reject non-`FileAccess` arguments', () => {
       assert.throws(() => new MockControl(null,      'boop'));
       assert.throws(() => new MockControl({ x: 10 }, 'boop'));
-    });
-  });
-
-  describe('.initSpec', () => {
-    it('should be a `TransactionSpec`', () => {
-      const result = new MockControl(FILE_ACCESS, 'florp').initSpec;
-      assert.instanceOf(result, TransactionSpec);
     });
   });
 

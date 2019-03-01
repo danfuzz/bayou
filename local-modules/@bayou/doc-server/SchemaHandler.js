@@ -32,17 +32,6 @@ export default class SchemaHandler extends BaseDataManager {
   }
 
   /**
-   * {TransactionSpec} Spec for a transaction which when run will initialize the
-   * portion of the file which this class is responsible for.
-   */
-  get _impl_initSpec() {
-    return new TransactionSpec(
-      // Version for the file schema.
-      this.fileCodec.op_writePath(Paths.SCHEMA_VERSION, this._schemaVersion)
-    );
-  }
-
-  /**
    * {FileOp} Array of aggregated FileOps which when run will initialize
    * the portion of the file which this class is responsible for. In this case,
    * it constructs the FileOp to account for the file's schema.
