@@ -14,23 +14,23 @@ describe('@bayou/file-store-local/LocalFileStore', () => {
   });
 
   describe('isFileId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(lfs.isFileId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(lfs.isFileId('123456789_123456789-12'));
     });
 
-    it('should not allow non-ASCII characters', () => {
+    it('does not allow non-ASCII characters', () => {
       assert.isFalse(lfs.isFileId('123456789•123456789•12'));
     });
 
-    it('should not allow non-alphanum characters', () => {
+    it('does not allow non-alphanum characters', () => {
       assert.isFalse(lfs.isFileId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string', () => {
+    it('throws an error given a non-string', () => {
       assert.throws(() => lfs.isFileId(123), /badValue/);
     });
   });

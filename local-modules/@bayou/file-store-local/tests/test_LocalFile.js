@@ -12,7 +12,7 @@ import TempFiles from './TempFiles';
 
 describe('@bayou/file-store-local/LocalFile', () => {
   describe('constructor()', () => {
-    it('should not throw given valid arguments', () => {
+    it('does not throw given valid arguments', () => {
       assert.doesNotThrow(() => { TempFiles.makeFile(); });
     });
   });
@@ -21,7 +21,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
   // example that should be extracted into a test here (and fixed).
 
   describe('create()', () => {
-    it('should cause a non-existent file to come into existence', async () => {
+    it('causes a non-existent file to come into existence', async () => {
       const file = TempFiles.makeFile();
 
       assert.isFalse(await file.exists()); // Baseline assumption.
@@ -32,7 +32,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
       await TempFiles.doneWithFile(file);
     });
 
-    it('should do nothing if called on a non-empty file', async () => {
+    it('does nothing if called on a non-empty file', async () => {
       const file        = await TempFiles.makeAndCreateFile();
       const storagePath = '/abc';
       const value       = FrozenBuffer.coerce('x');
@@ -61,7 +61,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
   });
 
   describe('delete()', () => {
-    it('should cause an existing file to stop existing', async () => {
+    it('causes an existing file to stop existing', async () => {
       const file = await TempFiles.makeAndCreateFile();
       assert.isTrue(await file.exists()); // Baseline assumption.
 
@@ -73,14 +73,14 @@ describe('@bayou/file-store-local/LocalFile', () => {
   });
 
   describe('exists()', () => {
-    it('should return `false` if the underlying storage does not exist', async () => {
+    it('returns `false` if the underlying storage does not exist', async () => {
       const file = TempFiles.makeFile();
       assert.isFalse(await file.exists());
 
       await TempFiles.doneWithFile(file);
     });
 
-    it('should return `true` if the file was created in the filesystem', async () => {
+    it('returns `true` if the file was created in the filesystem', async () => {
       const dir = TempFiles.uniquePath();
       const file1 = await TempFiles.makeAndCreateFile(dir);
 
