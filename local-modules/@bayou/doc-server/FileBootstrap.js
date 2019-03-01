@@ -121,10 +121,10 @@ export default class FileBootstrap extends BaseDataManager {
   }
 
   /**
-   * {Array<FileOp>} Array of aggregated `FileOps` which when run will
-   * initialize the portion of the file which this class is responsible
-   * for. In this case, it constructs the aggregated `FileOps` for the
-   * entire file, based on all the subcomponents.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for. In this case, it constructs the aggregated
+   * {@link FileOp}s for the entire file, based on all the subcomponents.
    */
   get _impl_initOps() {
     // If the file already existed, this clears out the old contents.

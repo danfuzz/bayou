@@ -14,8 +14,9 @@ import ValidationStatus from './ValidationStatus';
  */
 export default class BaseDataManager extends BaseComplexMember {
   /**
-   * {Array<FileOps>} FileOps which when run will initialize the portion of the
-   * file which this class is responsible for. Subclasses must override this.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for.
    */
   get initOps() {
     const ops = this._impl_initOps;
@@ -51,8 +52,9 @@ export default class BaseDataManager extends BaseComplexMember {
   }
 
   /**
-   * {Array<FileOps>} FileOps which when run will initialize the portion of the
-   * file which this class is responsible for. Subclasses must override this.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for Subclasses must override this.
    *
    * @abstract
    */

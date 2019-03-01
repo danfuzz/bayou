@@ -779,9 +779,10 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * {Array<FileOp>} Array of aggregated FileOps which when run will initialize
-   * the portion of the file which this class is responsible for. This
-   * implementation should be sufficient for all subclasses of this class.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for. This implementation should be sufficient for all
+   * subclasses of this class.
    */
   get _impl_initOps() {
     const clazz = this.constructor;

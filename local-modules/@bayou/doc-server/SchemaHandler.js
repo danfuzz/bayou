@@ -32,9 +32,10 @@ export default class SchemaHandler extends BaseDataManager {
   }
 
   /**
-   * {FileOp} Array of aggregated FileOps which when run will initialize
-   * the portion of the file which this class is responsible for. In this case,
-   * it constructs the FileOp to account for the file's schema.
+   * {array<FileOp>} Array of {@link FileOp}s which when made into a
+   * {@link FileChange} will initialize the portion of the file which this class
+   * is responsible for. In this case, it is a single-element array consisting
+   * of the {@link FileOp} which stores the file's schema.
    */
   get _impl_initOps() {
     const encodedSchemaVersion = this.fileCodec.codec.encodeJsonBuffer(this._schemaVersion);
