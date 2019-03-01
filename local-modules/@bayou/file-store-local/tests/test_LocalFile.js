@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TransactionOp, TransactionSpec } from '@bayou/file-store-ot';
+import { FileChange, FileOp } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
 import TempFiles from './TempFiles';
@@ -34,31 +34,24 @@ describe('@bayou/file-store-local/LocalFile', () => {
       const storagePath = '/abc';
       const value       = FrozenBuffer.coerce('x');
 
-      // Baseline assumption.
+      // Baseline setup / assumption.
 
-      let spec = new TransactionSpec(
-        TransactionOp.op_writePath(storagePath, value)
-      );
+      const change1 = new FileChange(1, [FileOp.op_writePath(storagePath, value)]);
+      // **TODO:** Adding this line should fail, but doesn't!!
+      // await file.appendChange(FileChange.FIRST);
+      await file.appendChange(change1);
 
-      await file.transact(spec);
-
-      spec = new TransactionSpec(
-        TransactionOp.op_readPath(storagePath)
-      );
-
-      let result = (await file.transact(spec)).data.get(storagePath);
-      assert.strictEqual(result.string, value.string);
+      assert.isTrue(await file.exists());
+      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
 
       // The real test.
 
-      await file.create();
+      await assert.isFulfilled(file.create());
 
-      // Ensure the file exists.
+      // Ensure the file exists and that the path that was written is still
+      // there.
       assert.isTrue(await file.exists());
-
-      // Same transaction as above.
-      result = (await file.transact(spec)).data.get(storagePath);
-      assert.strictEqual(result.string, value.string);
+      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
 
       await TempFiles.doneWithFile(file);
     });
