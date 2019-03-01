@@ -1127,23 +1127,6 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Constructs a path-range file operation for the indicated range of changes,
-   * specifically for the portion of the document controlled by this class.
-   *
-   * @param {string} op The file operation constructor method.
-   * @param {Int} startInclusive The start of the range to read (inclusive).
-   * @param {Int} endExclusive The end of the range to read (exclusive). Must be
-   *   `>= startInc`.
-   * @returns {TransactionOp} The corresponding file operation.
-   */
-  _opForChangeRange(op, startInclusive, endExclusive) {
-    RevisionNumber.check(startInclusive);
-    RevisionNumber.check(endExclusive, startInclusive);
-
-    return op.call(this.fileCodec, this.constructor.changePathPrefix, startInclusive, endExclusive);
-  }
-
-  /**
    * Writes the given snapshot into the stored snapshot file path for this
    * document part. In addition, this deletes changes that have "aged out" from
    * ephemeral parts.
