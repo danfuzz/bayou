@@ -247,20 +247,20 @@ export default class BaseFile extends CommonBase {
    * Appends a new change to the document. On success, this returns `true`.
    *
    * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
+   * sense of {@link #exists}. That is, if {@link #exists} would return
    * `false`, then this method will fail.
    *
-   * @param {FileChange} fileChange Change to append. Must be an
-   *   instance of FileChange.
+   * @param {FileChange} fileChange Change to append.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended and `false` if revision number indicates a lost append race.
-   *   Any other issue will throw an error.
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
-  async appendChange(fileChange, timeoutMsec) {
+  async appendChange(fileChange, timeoutMsec = null) {
     FileChange.check(fileChange);
 
     const result = await this._impl_appendChange(fileChange, timeoutMsec);
@@ -325,15 +325,17 @@ export default class BaseFile extends CommonBase {
    *
    * Each subclass implements its own version of `appendChange()`.
    *
+   * @abstract
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance of FileChange.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended, otherwise will throw an error.
-   * @abstract
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
   async _impl_appendChange(fileChange, timeoutMsec) {
     return this._mustOverride(fileChange, timeoutMsec);

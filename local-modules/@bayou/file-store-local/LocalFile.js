@@ -239,13 +239,14 @@ export default class LocalFile extends BaseFile {
    *
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance FileChange.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended and `false` if revision number indicates a lost append race.
-   *   Any other issue will throw an error.
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
    */
   async _impl_appendChange(fileChange, timeoutMsec) {
     FileChange.check(fileChange);
@@ -450,7 +451,8 @@ export default class LocalFile extends BaseFile {
 
   /**
    * {FileSnapshot} Snapshot of the current revision. It is not valid to get
-   * this if the file doesn't exist (created and has at least one change).
+   * this if the file doesn't exist (was not created at all or does not have at
+   * least one change).
    */
   get currentSnapshot() {
     const revNum  = this._currentRevNum;
