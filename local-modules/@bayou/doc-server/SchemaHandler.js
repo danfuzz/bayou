@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
-import { TransactionSpec, FileOp } from '@bayou/file-store-ot';
+import { FileOp } from '@bayou/file-store-ot';
 
 import BaseDataManager from './BaseDataManager';
 import Paths from './Paths';
