@@ -373,6 +373,8 @@ export default class BodyClient extends StateMachine {
     // determination immediately below.
     this._addErrorStamp();
 
+    let nextState;
+
     if (this._isUnrecoverablyErrored()) {
       // We've hit the point of unrecoverability. Inform the session and
       // transition into the `unrecoverableError` state. When this happens,
@@ -382,7 +384,7 @@ export default class BodyClient extends StateMachine {
       this._docSession.reportError(reason);
       this.log.event.cannotRecover();
 
-      this.s_unrecoverableError();
+      nextState = this.s_unrecoverableError;
     } else {
       // Wait an appropriate amount of time and then try starting again (unless
       // the instance got `stop()`ed in the mean time). The `start` event will
@@ -399,13 +401,14 @@ export default class BodyClient extends StateMachine {
         }
       })();
 
-      this.s_errorWait();
+      nextState = this.s_errorWait;
     }
 
-    if (this._manageEnabledState) {
-      // Stop the user from trying to do more edits, as they'd get lost.
-      this._quill.disable();
-    }
+    // Stop the user from trying to do more edits, as they'd get lost, and then
+    // transition into whatever state is appropriate per the unrecoverability
+    // test above.
+    this.s_becomeDisabled();
+    this.q_nextState(nextState);
   }
 
   /**
