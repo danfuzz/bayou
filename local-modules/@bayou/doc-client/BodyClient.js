@@ -361,11 +361,6 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    if (this._manageEnabledState) {
-      // Stop the user from trying to do more edits, as they'd get lost.
-      this._quill.disable();
-    }
-
     if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
       this.log.info(reason.message);
@@ -374,34 +369,43 @@ export default class BodyClient extends StateMachine {
       this.log.error(`Severe synch issue in \`${method}\``, reason);
     }
 
-    // Note the time of the error, and determine if we've hit the point of
-    // unrecoverability. If so, inform the session and transition into the
-    // `unrecoverableError` state. When this happens, higher-level logic can
-    // notice and take further action.
+    // Note the time of the error, which also informs the "unrecoverability"
+    // determination immediately below.
     this._addErrorStamp();
+
     if (this._isUnrecoverablyErrored()) {
+      // We've hit the point of unrecoverability. Inform the session and
+      // transition into the `unrecoverableError` state. When this happens,
+      // higher-level logic can notice and take further action. (That is, we are
+      // only considered unrecoverable from the perspective of this instance,
+      // and not necessarily from the larger system perspective.)
       this._docSession.reportError(reason);
       this.log.event.cannotRecover();
+
       this.s_unrecoverableError();
-      return;
+    } else {
+      // Wait an appropriate amount of time and then try starting again (unless
+      // the instance got `stop()`ed in the mean time). The `start` event will
+      // be received in the `errorWait` state, and as such will be handled
+      // differently than a clean start from scratch.
+
+      (async () => {
+        const delayMsec = (this._errorStamps.length === 1)
+          ? FIRST_RESTART_DELAY_MSEC
+          : RESTART_DELAY_MSEC;
+        await Delay.resolve(delayMsec);
+        if (this._running) {
+          this.q_start();
+        }
+      })();
+
+      this.s_errorWait();
     }
 
-    // Wait an appropriate amount of time and then try starting again (unless
-    // the instance got `stop()`ed in the mean time). The `start` event will be
-    // received in the `errorWait` state, and as such will be handled
-    // differently than a clean start from scratch.
-
-    (async () => {
-      const delayMsec = (this._errorStamps.length === 1)
-        ? FIRST_RESTART_DELAY_MSEC
-        : RESTART_DELAY_MSEC;
-      await Delay.resolve(delayMsec);
-      if (this._running) {
-        this.q_start();
-      }
-    })();
-
-    this.s_errorWait();
+    if (this._manageEnabledState) {
+      // Stop the user from trying to do more edits, as they'd get lost.
+      this._quill.disable();
+    }
   }
 
   /**
