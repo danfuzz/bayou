@@ -683,17 +683,8 @@ export default class BodyClient extends StateMachine {
 
     // And with that, it's now safe to enable Quill so that it will accept user
     // input, if editing is enabled.
-    if (this._manageEnabledState) {
-      this._quill.enable();
-
-      // Focus the editor area so the user can start typing right away
-      // rather than make them have to click-to-focus first.
-      QuillUtil.editorDiv(this._quill).focus();
-    }
-
-    // Head into our first iteration of idling while waiting for changes coming
-    // in locally (from quill) or from the server.
-    this._becomeIdle();
+    this.s_becomeEnabled();
+    this.q_start();
   }
 
   /**
