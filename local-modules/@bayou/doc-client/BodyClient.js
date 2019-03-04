@@ -6,7 +6,7 @@ import { ConnectionError } from '@bayou/api-common';
 import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
-import { TInt, TString } from '@bayou/typecheck';
+import { TFunction, TInt, TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';
 
@@ -253,6 +253,19 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Validates a `nextState` event. This event is used when transitioning
+   * through the states `becomeEnabled` and `becomeDisables`, so that they (a)
+   * have an event to act on, and (b) know what state to transition to after the
+   * act of enabling or disabling.
+   *
+   * @param {function} stateFunction The `s_*` function which corresponds to the
+   *   desired next state.
+   */
+  _check_nextState(stateFunction) {
+    TFunction.checkCallable(stateFunction);
+  }
+
+  /**
    * Validates a `start` event. This is the event that kicks off the client.
    */
   _check_start() {
@@ -478,6 +491,36 @@ export default class BodyClient extends StateMachine {
    */
   _handle_any_wantInputAfterDelay() {
     // Nothing to do.
+  }
+
+  /**
+   * In state `becomeDisabled`, handles event `nextState`. This is where the
+   * Quill instance gets disabled, but only if this instance is managing the
+   * enabled state (depends on a constructor parameter); if not, it is during a
+   * transition to this state that clients of this class should tell the Quill
+   * instance to become disabled. In either case, this instance immediately
+   * transitions into the state indicated by `stateFunction`.
+   *
+   * @param {function} stateFunction The `s_*` function which corresponds to the
+   *   desired next state.
+   */
+  _handle_becomeDisabled_nextState(stateFunction) {
+    // **TODO:** Fill this in.
+  }
+
+  /**
+   * In state `becomeEnabled`, handles event `nextState`. This is where the
+   * Quill instance gets enabled, but only if this instance is managing the
+   * enabled state (depends on a constructor parameter); if not, it is during a
+   * transition to this state that clients of this class should tell the Quill
+   * instance to become enabled. In either case, this instance immediately
+   * transitions into the state indicated by `stateFunction`.
+   *
+   * @param {function} stateFunction The `s_*` function which corresponds to the
+   *   desired next state.
+   */
+  _handle_becomeEnabled_nextState(stateFunction) {
+    // **TODO:** Fill this in.
   }
 
   /**
