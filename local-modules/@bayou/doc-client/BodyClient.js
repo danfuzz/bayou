@@ -463,16 +463,12 @@ export default class BodyClient extends StateMachine {
       this._running = false;
     }
 
-    if (this._manageEnabledState) {
-      // As soon as we're trying to stop, we should prevent the user from doing
-      // any editing.
-      this._quill.disable();
-    }
-
-    // Go into the `detached` state. In that state, additional incoming events
-    // will get ignored, except for `start` which will bring the client back to
-    // life.
-    this.s_detached();
+    // As soon as we're trying to stop, we should prevent the user from doing
+    // any editing. And having disabled editing, we should just go back to being
+    // in the `detached` state. In that state, additional incoming events will
+    // get ignored, except for `start` which will bring the client back to life.
+    this.s_becomeDisabled();
+    this.q_nextState(this.s_detached);
   }
 
   /**
