@@ -212,19 +212,6 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotUpdate` event. This represents a successful result
-   * from the API call `body_update()`.
-   *
-   * @param {BodyDelta} delta The delta that was originally applied.
-   * @param {BodyChange} correctedChange The correction to the expected
-   *   result as returned from `body_update()`.
-   */
-  _check_gotUpdate(delta, correctedChange) {
-    BodyDelta.check(delta);
-    BodyChange.check(correctedChange);
-  }
-
-  /**
    * Validates a `gotChangeAfter` event. This represents a successful result
    * from the API call `body_getChangeAfter()`.
    *
@@ -250,6 +237,19 @@ export default class BodyClient extends StateMachine {
    */
   _check_gotQuillEvent(baseRevNum) {
     TInt.nonNegative(baseRevNum);
+  }
+
+  /**
+   * Validates a `gotUpdate` event. This represents a successful result
+   * from the API call `body_update()`.
+   *
+   * @param {BodyDelta} delta The delta that was originally applied.
+   * @param {BodyChange} correctedChange The correction to the expected
+   *   result as returned from `body_update()`.
+   */
+  _check_gotUpdate(delta, correctedChange) {
+    BodyDelta.check(delta);
+    BodyChange.check(correctedChange);
   }
 
   /**
