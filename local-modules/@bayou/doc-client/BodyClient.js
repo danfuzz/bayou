@@ -254,9 +254,9 @@ export default class BodyClient extends StateMachine {
 
   /**
    * Validates a `nextState` event. This event is used when transitioning
-   * through the states `becomeEnabled` and `becomeDisables`, so that they (a)
-   * have an event to act on, and (b) know what state to transition to after the
-   * act of enabling or disabling.
+   * through the state `becomeDisabled`, so that it (a) has an event to act on,
+   * and (b) know what state to transition to after the act of enabling or
+   * disabling.
    *
    * @param {function} stateFunction The `s_*` function which corresponds to the
    *   desired next state.
@@ -266,7 +266,8 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Validates a `start` event. This is the event that kicks off the client.
+   * Validates a `start` event. This is the event that kicks off the client. It
+   * is also used to prompt action in the `becomeEnabled` state.
    */
   _check_start() {
     // Nothing to do.
@@ -505,22 +506,33 @@ export default class BodyClient extends StateMachine {
    *   desired next state.
    */
   _handle_becomeDisabled_nextState(stateFunction) {
-    // **TODO:** Fill this in.
+    if (this._manageEnabledState) {
+      this._quill.disable();
+    }
+
+    stateFunction.call(this);
   }
 
   /**
-   * In state `becomeEnabled`, handles event `nextState`. This is where the
-   * Quill instance gets enabled, but only if this instance is managing the
-   * enabled state (depends on a constructor parameter); if not, it is during a
+   * In state `becomeEnabled`, handles event `start`. This is where the Quill
+   * instance gets enabled, but only if this instance is managing the enabled
+   * state (depends on a constructor parameter); if not, it is during a
    * transition to this state that clients of this class should tell the Quill
    * instance to become enabled. In either case, this instance immediately
-   * transitions into the state indicated by `stateFunction`.
-   *
-   * @param {function} stateFunction The `s_*` function which corresponds to the
-   *   desired next state.
+   * transitions into the `idle` state after handling this event.
    */
-  _handle_becomeEnabled_nextState(stateFunction) {
-    // **TODO:** Fill this in.
+  _handle_becomeEnabled_start() {
+    if (this._manageEnabledState) {
+      this._quill.enable();
+
+      // Focus the editor area so the user can start typing right away
+      // rather than make them have to click-to-focus first.
+      QuillUtil.editorDiv(this._quill).focus();
+    }
+
+    // Head into our first post-connection iteration of idling while waiting for
+    // changes coming in locally (from Quill) or from the server.
+    this._becomeIdle();
   }
 
   /**
