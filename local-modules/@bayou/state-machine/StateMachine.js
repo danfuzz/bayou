@@ -144,6 +144,19 @@ export default class StateMachine {
   }
 
   /**
+   * Causes the instance to be in a new state.
+   *
+   * @param {string} stateName The name of the new state.
+   */
+  set state(stateName) {
+    TString.check(stateName);
+
+    // Rather than recapitulate the logic of changing state, just call through
+    // to the appropriate `s_*` method.
+    this[`s_${stateName}`]();
+  }
+
+  /**
    * Adds to this instance two methods per event name, named `q_<name>` and
    * `p_<name>`, each of which takes any number of arguments and enqueues an
    * event with the associated name and the given arguments. `q_*` methods
