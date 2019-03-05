@@ -275,6 +275,17 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_currentRevNum() {
+    await this._readStorageIfNecessary();
+
+    return this._currentRevNum;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.

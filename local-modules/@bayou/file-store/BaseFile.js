@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
+import { RevisionNumber } from '@bayou/ot-common';
 import { TBoolean, TInt, TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
@@ -99,6 +100,27 @@ export default class BaseFile extends CommonBase {
    */
   async create() {
     await this._impl_create();
+  }
+
+  /**
+   * Gets the instantaneously-current revision number of the file controlled by
+   * this instance. It is an error to call this on a file that does not exist
+   * (in the sense of {@link #exists}).
+   *
+   * **Note:** Due to the asynchronous nature of the system, the value returned
+   * here could be out-of-date by the time it is received by the caller. As
+   * such, even when used promptly, it should not be treated as "definitely
+   * current" but more like "probably current but possibly just a lower bound."
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously-current revision number.
+   */
+  async currentRevNum(timeoutMsec = null) {
+    const revNum = await this._impl_currentRevNum(timeoutMsec);
+    return RevisionNumber.check(revNum);
   }
 
   /**
@@ -214,6 +236,17 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Subclass-specific implementation of {@link #currentRevNum}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_currentRevNum() {
+    return this._mustOverride();
+  }
+
+  /**
    * Subclass-specific implementation of {@link #delete}. Subclasses must
    * override this method.
    *
@@ -231,13 +264,14 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
-    this._mustOverride();
+    return this._mustOverride();
   }
 
   /**
    * Subclass-specific implementation of {@link #whenPathIsNot}. Subclasses must
    * override this method.
    *
+   * @abstract
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.
@@ -245,7 +279,6 @@ export default class BaseFile extends CommonBase {
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
    *   allowed value.
-   * @abstract
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
     this._mustOverride(storagePath, hash, timeoutMsec);
