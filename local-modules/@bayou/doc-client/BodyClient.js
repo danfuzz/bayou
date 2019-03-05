@@ -212,19 +212,6 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Validates a `gotUpdate` event. This represents a successful result
-   * from the API call `body_update()`.
-   *
-   * @param {BodyDelta} delta The delta that was originally applied.
-   * @param {BodyChange} correctedChange The correction to the expected
-   *   result as returned from `body_update()`.
-   */
-  _check_gotUpdate(delta, correctedChange) {
-    BodyDelta.check(delta);
-    BodyChange.check(correctedChange);
-  }
-
-  /**
    * Validates a `gotChangeAfter` event. This represents a successful result
    * from the API call `body_getChangeAfter()`.
    *
@@ -253,7 +240,33 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Validates a `start` event. This is the event that kicks off the client.
+   * Validates a `gotUpdate` event. This represents a successful result
+   * from the API call `body_update()`.
+   *
+   * @param {BodyDelta} delta The delta that was originally applied.
+   * @param {BodyChange} correctedChange The correction to the expected
+   *   result as returned from `body_update()`.
+   */
+  _check_gotUpdate(delta, correctedChange) {
+    BodyDelta.check(delta);
+    BodyChange.check(correctedChange);
+  }
+
+  /**
+   * Validates a `nextState` event. This event is used when transitioning
+   * through the state `becomeDisabled`, so that it (a) has an event to act on,
+   * and (b) know what state to transition to after the act of enabling or
+   * disabling.
+   *
+   * @param {string} stateName The desired next state.
+   */
+  _check_nextState(stateName) {
+    TString.check(stateName);
+  }
+
+  /**
+   * Validates a `start` event. This is the event that kicks off the client. It
+   * is also used to prompt action in the `becomeEnabled` state.
    */
   _check_start() {
     // Nothing to do.
@@ -347,11 +360,6 @@ export default class BodyClient extends StateMachine {
       return;
     }
 
-    if (this._manageEnabledState) {
-      // Stop the user from trying to do more edits, as they'd get lost.
-      this._quill.disable();
-    }
-
     if (reason instanceof ConnectionError) {
       // It's connection-related and probably no big deal.
       this.log.info(reason.message);
@@ -360,34 +368,46 @@ export default class BodyClient extends StateMachine {
       this.log.error(`Severe synch issue in \`${method}\``, reason);
     }
 
-    // Note the time of the error, and determine if we've hit the point of
-    // unrecoverability. If so, inform the session and transition into the
-    // `unrecoverableError` state. When this happens, higher-level logic can
-    // notice and take further action.
+    // Note the time of the error, which also informs the "unrecoverability"
+    // determination immediately below.
     this._addErrorStamp();
+
+    let nextState;
+
     if (this._isUnrecoverablyErrored()) {
+      // We've hit the point of unrecoverability. Inform the session and
+      // transition into the `unrecoverableError` state. When this happens,
+      // higher-level logic can notice and take further action. (That is, we are
+      // only considered unrecoverable from the perspective of this instance,
+      // and not necessarily from the larger system perspective.)
       this._docSession.reportError(reason);
       this.log.event.cannotRecover();
-      this.s_unrecoverableError();
-      return;
+
+      nextState = 'unrecoverableError';
+    } else {
+      // Wait an appropriate amount of time and then try starting again (unless
+      // the instance got `stop()`ed in the mean time). The `start` event will
+      // be received in the `errorWait` state, and as such will be handled
+      // differently than a clean start from scratch.
+
+      (async () => {
+        const delayMsec = (this._errorStamps.length === 1)
+          ? FIRST_RESTART_DELAY_MSEC
+          : RESTART_DELAY_MSEC;
+        await Delay.resolve(delayMsec);
+        if (this._running) {
+          this.q_start();
+        }
+      })();
+
+      nextState = 'errorWait';
     }
 
-    // Wait an appropriate amount of time and then try starting again (unless
-    // the instance got `stop()`ed in the mean time). The `start` event will be
-    // received in the `errorWait` state, and as such will be handled
-    // differently than a clean start from scratch.
-
-    (async () => {
-      const delayMsec = (this._errorStamps.length === 1)
-        ? FIRST_RESTART_DELAY_MSEC
-        : RESTART_DELAY_MSEC;
-      await Delay.resolve(delayMsec);
-      if (this._running) {
-        this.q_start();
-      }
-    })();
-
-    this.s_errorWait();
+    // Stop the user from trying to do more edits, as they'd get lost, and then
+    // transition into whatever state is appropriate per the unrecoverability
+    // test above.
+    this.s_becomeDisabled();
+    this.p_nextState(nextState);
   }
 
   /**
@@ -449,16 +469,12 @@ export default class BodyClient extends StateMachine {
       this._running = false;
     }
 
-    if (this._manageEnabledState) {
-      // As soon as we're trying to stop, we should prevent the user from doing
-      // any editing.
-      this._quill.disable();
-    }
-
-    // Go into the `detached` state. In that state, additional incoming events
-    // will get ignored, except for `start` which will bring the client back to
-    // life.
-    this.s_detached();
+    // As soon as we're trying to stop, we should prevent the user from doing
+    // any editing. And having disabled editing, we should just go back to being
+    // in the `detached` state. In that state, additional incoming events will
+    // get ignored, except for `start` which will bring the client back to life.
+    this.s_becomeDisabled();
+    this.p_nextState('detached');
   }
 
   /**
@@ -478,6 +494,46 @@ export default class BodyClient extends StateMachine {
    */
   _handle_any_wantInputAfterDelay() {
     // Nothing to do.
+  }
+
+  /**
+   * In state `becomeDisabled`, handles event `nextState`. This is where the
+   * Quill instance gets disabled, but only if this instance is managing the
+   * enabled state (depends on a constructor parameter); if not, it is during a
+   * transition to this state that clients of this class should tell the Quill
+   * instance to become disabled. In either case, this instance immediately
+   * transitions into the indicated state.
+   *
+   * @param {function} stateName The name of the state to transition into.
+   */
+  _handle_becomeDisabled_nextState(stateName) {
+    if (this._manageEnabledState) {
+      this._quill.disable();
+    }
+
+    this.state = stateName;
+  }
+
+  /**
+   * In state `becomeEnabled`, handles event `start`. This is where the Quill
+   * instance gets enabled, but only if this instance is managing the enabled
+   * state (depends on a constructor parameter); if not, it is during a
+   * transition to this state that clients of this class should tell the Quill
+   * instance to become enabled. In either case, this instance immediately
+   * transitions into the `idle` state after handling this event.
+   */
+  _handle_becomeEnabled_start() {
+    if (this._manageEnabledState) {
+      this._quill.enable();
+
+      // Focus the editor area so the user can start typing right away
+      // rather than make them have to click-to-focus first.
+      QuillUtil.editorDiv(this._quill).focus();
+    }
+
+    // Head into our first post-connection iteration of idling while waiting for
+    // changes coming in locally (from Quill) or from the server.
+    this._becomeIdle();
   }
 
   /**
@@ -628,17 +684,8 @@ export default class BodyClient extends StateMachine {
 
     // And with that, it's now safe to enable Quill so that it will accept user
     // input, if editing is enabled.
-    if (this._manageEnabledState) {
-      this._quill.enable();
-
-      // Focus the editor area so the user can start typing right away
-      // rather than make them have to click-to-focus first.
-      QuillUtil.editorDiv(this._quill).focus();
-    }
-
-    // Head into our first iteration of idling while waiting for changes coming
-    // in locally (from quill) or from the server.
-    this._becomeIdle();
+    this.s_becomeEnabled();
+    this.q_start();
   }
 
   /**
@@ -1187,12 +1234,6 @@ export default class BodyClient extends StateMachine {
    * re-issuing the `stop`, we'll just end up back here for another try.
    */
   _waitThenStop() {
-    if (this._manageEnabledState) {
-      // As soon as we're trying to stop, we should prevent the user from doing
-      // any editing.
-      this._quill.disable();
-    }
-
     // **Note:** We do this in an immediate-async block so as to make this
     // method return promptly. Its callers in fact want to be able to proceed
     // with event processing in the mean time.
@@ -1201,5 +1242,12 @@ export default class BodyClient extends StateMachine {
       await Delay.resolve(STOP_POLL_DELAY_MSEC);
       this.q_stop();
     })();
+
+    // Bounce into the `becomeDisabled` state, to perform the actual acts of
+    // disabling, and then return to whatever state we're in now, so as to
+    // complete the pending action.
+    const currentState = this.state;
+    this.s_becomeDisabled();
+    this.p_nextState(currentState);
   }
 }

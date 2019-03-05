@@ -44,10 +44,13 @@ import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
  *   matching handlers for both (state, any-event) and (any-state, event), then
  *   the former "wins."
  *
- * Constructing an instance will cause the instance to have a method added per
- * named event, `q_<name>`, each of which takes any number of arguments and
- * queues up a new event (and does nothing else; e.g. doesn't cause synchronous
- * dispatch of events).
+ * Constructing an instance will cause the instance to have two methods added
+ * per named event, `q_<name>` and `p_<name>`, each of which takes any number of
+ * arguments and queues up a new event (and does nothing else; e.g. doesn't
+ * cause synchronous dispatch of events). `q_*` methods do normal FIFO queueing,
+ * and `p_*` methods do LIFO pushing (which can be useful when an event handler
+ * wants to guarantee transition to a new state with a known event at the head
+ * of the queue).
  *
  * Similarly, a method is added for each state, `s_<name>`, each of which takes
  * no arguments and causes the machine to switch into the so-named state.
@@ -141,9 +144,24 @@ export default class StateMachine {
   }
 
   /**
-   * Adds to this instance one method per event name, named `q_<name>`, each of
-   * which takes any number of arguments and enqueues an event with the
-   * associated name and the given arguments.
+   * Causes the instance to be in a new state.
+   *
+   * @param {string} stateName The name of the new state.
+   */
+  set state(stateName) {
+    TString.check(stateName);
+
+    // Rather than recapitulate the logic of changing state, just call through
+    // to the appropriate `s_*` method.
+    this[`s_${stateName}`]();
+  }
+
+  /**
+   * Adds to this instance two methods per event name, named `q_<name>` and
+   * `p_<name>`, each of which takes any number of arguments and enqueues an
+   * event with the associated name and the given arguments. `q_*` methods
+   * perform normal FIFO enqueuing, and `p_*` methods perform LIFO pushes (which
+   * can be useful for intra-machine communication).
    */
   _addEnqueueMethods() {
     const eventNames = Object.keys(this._eventValidators);
@@ -151,7 +169,7 @@ export default class StateMachine {
     for (const name of eventNames) {
       const validator = this._eventValidators[name];
 
-      this[`q_${name}`] = (...args) => {
+      const enqueueOrPush = (enqueue, args) => {
         const validArgs = validator.apply(this, args) || args;
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
@@ -159,7 +177,7 @@ export default class StateMachine {
         }
 
         if (this._eventQueue === null) {
-          throw Errors.badUse('Attempt to queue events on aborted instance.');
+          throw Errors.badUse('Attempt to send event to an aborted instance.');
         }
 
         const event = new Functor(name, ...args);
@@ -168,9 +186,17 @@ export default class StateMachine {
           this._log.event.enqueued(event);
         }
 
-        this._eventQueue.push(event);
+        if (enqueue) {
+          this._eventQueue.push(event);
+        } else {
+          this._eventQueue.unshift(event);
+        }
+
         this._anyEventPending.value = true;
       };
+
+      this[`q_${name}`] = (...args) => { enqueueOrPush(true,  args); };
+      this[`p_${name}`] = (...args) => { enqueueOrPush(false, args); };
     }
   }
 
@@ -233,38 +259,34 @@ export default class StateMachine {
   }
 
   /**
-   * Dispatches all events on the queue, including any new events that get
-   * enqueued during dispatch.
+   * Dispatches the first event on the queue. If the queue is empty, waits for
+   * an event to be enqueued, or for the instance to be shut down.
    *
    * @returns {boolean} `true` iff the instance should still be considered
    *   active; `false` means it is being shut down.
    */
-  async _dispatchAll() {
+  async _dispatchOne() {
     for (;;) {
-      // Grab the queue locally.
-      const queue = this._eventQueue;
-
       // Check to see if we're done (either idle or shutting down).
-      if (queue === null) {
-        return false; // Shutting down.
-      } else if (queue.length === 0) {
-        return true;  // Idle.
-      }
-
-      // Reset the queue for further event collection.
-      this._eventQueue = [];
-      this._anyEventPending.value = false;
-
-      // Dispatch each event that had been queued on entry to this (outer) loop.
-      // Check to see if the machine has been aborted (queue becomes `null` if
-      // so) before each dispatch.
-      for (const event of queue) {
-        if (this._eventQueue === null) {
-          return false;
-        }
-        await this._dispatchEvent(event);
+      if (this._eventQueue === null) {
+        // Shutting down.
+        return false;
+      } else if (this._eventQueue.length === 0) {
+        // Idle.
+        this._anyEventPending.value = false;
+        await this._anyEventPending.whenTrue();
+      } else {
+        // There's an event!
+        break;
       }
     }
+
+    // Grab the first event on the queue, and dispatch it.
+    const event = this._eventQueue.shift();
+    await this._dispatchEvent(event);
+
+    // The instance is still active.
+    return true;
   }
 
   /**
@@ -407,12 +429,10 @@ export default class StateMachine {
    */
   async _serviceEventQueue() {
     for (;;) {
-      const stillActive = await this._dispatchAll();
+      const stillActive = await this._dispatchOne();
       if (!stillActive) {
         break;
       }
-
-      await this._anyEventPending.whenTrue();
     }
   }
 
