@@ -82,7 +82,9 @@ export default class StateMachine {
     TString.check(initialState);
 
     /** {BaseLogger} Logger to use. */
-    this._log = (logger === null) ? new Logger('state-machine') : BaseLogger.check(logger);
+    this._log = (logger === null)
+      ? new Logger('state-machine')
+      : BaseLogger.check(logger).withAddedContext('sm');
 
     /** {boolean} Whether to be particularly chatty in the logs. */
     this._verboseLogging = TBoolean.check(verboseLogging);
@@ -259,37 +261,6 @@ export default class StateMachine {
   }
 
   /**
-   * Dispatches the first event on the queue. If the queue is empty, waits for
-   * an event to be enqueued, or for the instance to be shut down.
-   *
-   * @returns {boolean} `true` iff the instance should still be considered
-   *   active; `false` means it is being shut down.
-   */
-  async _dispatchOne() {
-    for (;;) {
-      // Check to see if we're done (either idle or shutting down).
-      if (this._eventQueue === null) {
-        // Shutting down.
-        return false;
-      } else if (this._eventQueue.length === 0) {
-        // Idle.
-        this._anyEventPending.value = false;
-        await this._anyEventPending.whenTrue();
-      } else {
-        // There's an event!
-        break;
-      }
-    }
-
-    // Grab the first event on the queue, and dispatch it.
-    const event = this._eventQueue.shift();
-    await this._dispatchEvent(event);
-
-    // The instance is still active.
-    return true;
-  }
-
-  /**
    * Dispatches the given event.
    *
    * @param {Functor} event The event.
@@ -326,6 +297,37 @@ export default class StateMachine {
     if ((this._eventCount % 25) === 0) {
       log.event.eventsHandled(this._eventCount);
     }
+  }
+
+  /**
+   * Dispatches the first event on the queue. If the queue is empty, waits for
+   * an event to be enqueued, or for the instance to be shut down.
+   *
+   * @returns {boolean} `true` iff the instance should still be considered
+   *   active; `false` means it is being shut down.
+   */
+  async _dispatchOne() {
+    for (;;) {
+      // Check to see if we're done (either idle or shutting down).
+      if (this._eventQueue === null) {
+        // Shutting down.
+        return false;
+      } else if (this._eventQueue.length === 0) {
+        // Idle.
+        this._anyEventPending.value = false;
+        await this._anyEventPending.whenTrue();
+      } else {
+        // There's an event!
+        break;
+      }
+    }
+
+    // Grab the first event on the queue, and dispatch it.
+    const event = this._eventQueue.shift();
+    await this._dispatchEvent(event);
+
+    // The instance is still active.
+    return true;
   }
 
   /**
@@ -428,12 +430,16 @@ export default class StateMachine {
    * the instance has gotten halted (most likely due to an external error).
    */
   async _serviceEventQueue() {
+    this._log.event.running();
+
     for (;;) {
       const stillActive = await this._dispatchOne();
       if (!stillActive) {
         break;
       }
     }
+
+    this._log.event.stopped();
   }
 
   /**
