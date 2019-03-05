@@ -233,38 +233,34 @@ export default class StateMachine {
   }
 
   /**
-   * Dispatches all events on the queue, including any new events that get
-   * enqueued during dispatch.
+   * Dispatches the first event on the queue. If the queue is empty, waits for
+   * an event to be enqueued, or for the instance to be shut down.
    *
    * @returns {boolean} `true` iff the instance should still be considered
    *   active; `false` means it is being shut down.
    */
-  async _dispatchAll() {
+  async _dispatchOne() {
     for (;;) {
-      // Grab the queue locally.
-      const queue = this._eventQueue;
-
       // Check to see if we're done (either idle or shutting down).
-      if (queue === null) {
-        return false; // Shutting down.
-      } else if (queue.length === 0) {
-        return true;  // Idle.
-      }
-
-      // Reset the queue for further event collection.
-      this._eventQueue = [];
-      this._anyEventPending.value = false;
-
-      // Dispatch each event that had been queued on entry to this (outer) loop.
-      // Check to see if the machine has been aborted (queue becomes `null` if
-      // so) before each dispatch.
-      for (const event of queue) {
-        if (this._eventQueue === null) {
-          return false;
-        }
-        await this._dispatchEvent(event);
+      if (this._eventQueue === null) {
+        // Shutting down.
+        return false;
+      } else if (this._eventQueue.length === 0) {
+        // Idle.
+        this._anyEventPending.value = false;
+        await this._anyEventPending.whenTrue();
+      } else {
+        // There's an event!
+        break;
       }
     }
+
+    // Grab the first event on the queue, and dispatch it.
+    const event = this._eventQueue.shift();
+    await this._dispatchEvent(event);
+
+    // The instance is still active.
+    return true;
   }
 
   /**
@@ -407,12 +403,10 @@ export default class StateMachine {
    */
   async _serviceEventQueue() {
     for (;;) {
-      const stillActive = await this._dispatchAll();
+      const stillActive = await this._dispatchOne();
       if (!stillActive) {
         break;
       }
-
-      await this._anyEventPending.whenTrue();
     }
   }
 
