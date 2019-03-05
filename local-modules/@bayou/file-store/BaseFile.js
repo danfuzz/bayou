@@ -102,30 +102,12 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Main implementation of `create()`.
-   *
-   * @abstract
-   */
-  async _impl_create() {
-    this._mustOverride();
-  }
-
-  /**
    * Deletes the storage for this file if it exists. This does nothing if the
    * file does not exist. Immediately after this call returns successfully, the
    * file is guaranteed not to exist.
    */
   async delete() {
     await this._impl_delete();
-  }
-
-  /**
-   * Main implementation of `delete()`.
-   *
-   * @abstract
-   */
-  async _impl_delete() {
-    this._mustOverride();
   }
 
   /**
@@ -138,16 +120,6 @@ export default class BaseFile extends CommonBase {
     const result = this._impl_exists();
 
     return TBoolean.check(await result);
-  }
-
-  /**
-   * Main implementation of `exists()`.
-   *
-   * @abstract
-   * @returns {boolean} `true` iff this file exists.
-   */
-  async _impl_exists() {
-    this._mustOverride();
   }
 
   /**
@@ -206,14 +178,14 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Abstract implementation of `appendChange()`.
-   * Appends a new change to the document. On success, this returns `true`.
+   * Subclass-specific implementation of {@link #appendChange}. Appends a new
+   * change to the document. On success, this returns `true`.
    *
    * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
-   * `false`, then this method will fail.
+   * sense of the method {@link #exists} method. That is, if {@link #exists}
+   * would return `false`, then this method will fail.
    *
-   * Each subclass implements its own version of `appendChange()`.
+   * Subclasses must override this method.
    *
    * @abstract
    * @param {FileChange} fileChange Change to append. Must be an
@@ -232,9 +204,39 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Abstract implementation of `whenPathIsNot()`
+   * Subclass-specific implementation of {@link #create}. Subclasses must
+   * override this method.
    *
-   * Each subclass implements its own version.
+   * @abstract
+   */
+  async _impl_create() {
+    this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #delete}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   */
+  async _impl_delete() {
+    this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #exists}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @returns {boolean} `true` iff this file exists.
+   */
+  async _impl_exists() {
+    this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #whenPathIsNot}. Subclasses must
+   * override this method.
    *
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
@@ -246,8 +248,6 @@ export default class BaseFile extends CommonBase {
    * @abstract
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
-    await this._mustOverride(storagePath, hash, timeoutMsec);
-
-    return;
+    this._mustOverride(storagePath, hash, timeoutMsec);
   }
 }
