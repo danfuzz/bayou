@@ -6,7 +6,7 @@ import { ConnectionError } from '@bayou/api-common';
 import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
-import { TFunction, TInt, TString } from '@bayou/typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';
 
@@ -258,11 +258,10 @@ export default class BodyClient extends StateMachine {
    * and (b) know what state to transition to after the act of enabling or
    * disabling.
    *
-   * @param {function} stateFunction The `s_*` function which corresponds to the
-   *   desired next state.
+   * @param {string} stateName The desired next state.
    */
-  _check_nextState(stateFunction) {
-    TFunction.checkCallable(stateFunction);
+  _check_nextState(stateName) {
+    TString.check(stateName);
   }
 
   /**
@@ -384,7 +383,7 @@ export default class BodyClient extends StateMachine {
       this._docSession.reportError(reason);
       this.log.event.cannotRecover();
 
-      nextState = this.s_unrecoverableError;
+      nextState = 'unrecoverableError';
     } else {
       // Wait an appropriate amount of time and then try starting again (unless
       // the instance got `stop()`ed in the mean time). The `start` event will
@@ -401,14 +400,14 @@ export default class BodyClient extends StateMachine {
         }
       })();
 
-      nextState = this.s_errorWait;
+      nextState = 'errorWait';
     }
 
     // Stop the user from trying to do more edits, as they'd get lost, and then
     // transition into whatever state is appropriate per the unrecoverability
     // test above.
     this.s_becomeDisabled();
-    this.q_nextState(nextState);
+    this.p_nextState(nextState);
   }
 
   /**
@@ -475,7 +474,7 @@ export default class BodyClient extends StateMachine {
     // in the `detached` state. In that state, additional incoming events will
     // get ignored, except for `start` which will bring the client back to life.
     this.s_becomeDisabled();
-    this.q_nextState(this.s_detached);
+    this.p_nextState('detached');
   }
 
   /**
@@ -503,17 +502,16 @@ export default class BodyClient extends StateMachine {
    * enabled state (depends on a constructor parameter); if not, it is during a
    * transition to this state that clients of this class should tell the Quill
    * instance to become disabled. In either case, this instance immediately
-   * transitions into the state indicated by `stateFunction`.
+   * transitions into the indicated state.
    *
-   * @param {function} stateFunction The `s_*` function which corresponds to the
-   *   desired next state.
+   * @param {function} stateName The name of the state to transition into.
    */
-  _handle_becomeDisabled_nextState(stateFunction) {
+  _handle_becomeDisabled_nextState(stateName) {
     if (this._manageEnabledState) {
       this._quill.disable();
     }
 
-    stateFunction.call(this);
+    this.state = stateName;
   }
 
   /**
@@ -1236,12 +1234,6 @@ export default class BodyClient extends StateMachine {
    * re-issuing the `stop`, we'll just end up back here for another try.
    */
   _waitThenStop() {
-    if (this._manageEnabledState) {
-      // As soon as we're trying to stop, we should prevent the user from doing
-      // any editing.
-      this._quill.disable();
-    }
-
     // **Note:** We do this in an immediate-async block so as to make this
     // method return promptly. Its callers in fact want to be able to proceed
     // with event processing in the mean time.
@@ -1250,5 +1242,12 @@ export default class BodyClient extends StateMachine {
       await Delay.resolve(STOP_POLL_DELAY_MSEC);
       this.q_stop();
     })();
+
+    // Bounce into the `becomeDisabled` state, to perform the actual acts of
+    // disabling, and then return to whatever state we're in now, so as to
+    // complete the pending action.
+    const currentState = this.state;
+    this.s_becomeDisabled();
+    this.p_nextState(currentState);
   }
 }
