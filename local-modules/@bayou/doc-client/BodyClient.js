@@ -314,36 +314,10 @@ export default class BodyClient extends StateMachine {
   // Event handlers.
   //
   // These are ordered from most generic to most specific. In particular,
-  // `stateName_eventName` is most specific, `any_eventName` is middle-of-the-
-  // road, and `stateName_any` is most generic (that is, the last form only gets
+  // `stateName_eventName` is most specific, `stateName_any` is middle-of-the-
+  // road, and `any_eventName` is most generic (that is, the last form only gets
   // invoked if neither other form matches).
   //
-
-  /**
-   * In state `errorWait`, handles most events.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args The event arguments.
-   */
-  _handle_errorWait_any(name, ...args) {
-    // This space intentionally left blank (except for logging): We might get
-    // "zombie" events from a connection that's shuffling towards doom. But even
-    // if so, we will already have set up a timer to reset the connection.
-    this.log.event.eventWhenErrorWait(new Functor(name, ...args));
-  }
-
-  /**
-   * In state `unrecoverableError`, handles all events. Specifically, this does
-   * nothing, and no further events can be expected. Client code of this class
-   * can use the transition into this state to perform higher-level error
-   * recovery.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args The event arguments.
-   */
-  _handle_unrecoverableError_any(name, ...args) {
-    this.log.event.eventWhenUnrecoverable(new Functor(name, ...args));
-  }
 
   /**
    * In any state, handles event `apiError`. This is a "normal" occurrence if
@@ -494,6 +468,32 @@ export default class BodyClient extends StateMachine {
    */
   _handle_any_wantInputAfterDelay() {
     // Nothing to do.
+  }
+
+  /**
+   * In state `errorWait`, handles all events.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_errorWait_any(name, ...args) {
+    // This space intentionally left blank (except for logging): We might get
+    // "zombie" events from a connection that's shuffling towards doom. But even
+    // if so, we will already have set up a timer to reset the connection.
+    this.log.event.eventWhenErrorWait(new Functor(name, ...args));
+  }
+
+  /**
+   * In state `unrecoverableError`, handles all events. Specifically, this does
+   * nothing, and no further events can be expected. Client code of this class
+   * can use the transition into this state to perform higher-level error
+   * recovery.
+   *
+   * @param {string} name The event name.
+   * @param {...*} args The event arguments.
+   */
+  _handle_unrecoverableError_any(name, ...args) {
+    this.log.event.eventWhenUnrecoverable(new Functor(name, ...args));
   }
 
   /**

@@ -42,7 +42,8 @@ import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
  *   no more specific handler. In the case of an `any` event name, the event
  *   name itself is prepended to the event arguments. **Note:** If there are
  *   matching handlers for both (state, any-event) and (any-state, event), then
- *   the former "wins."
+ *   the former "wins." That is, `_handle_stateName_any()` takes precedence over
+ *   `_handle_any_eventName()`.
  *
  * Constructing an instance will cause the instance to have two methods added
  * per named event, `q_<name>` and `p_<name>`, each of which takes any number of
