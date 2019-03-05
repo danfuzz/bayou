@@ -284,6 +284,20 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+  * Implementation as required by the superclass.
+   *
+   * @param {Int} revNum Which revision to get.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec.
+   * @returns {FileSnapshot|null} Snapshot of the indicated revision, if
+   *   available.
+   */
+  async _impl_getSnapshot(revNum, timeoutMsec) {
+    // **TODO:** Fill this in.
+    return this._mustOverride(revNum, timeoutMsec);
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @param {StoragePath} storagePath The storage path to use to get the

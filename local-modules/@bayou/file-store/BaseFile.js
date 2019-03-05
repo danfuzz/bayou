@@ -3,9 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
-import { RevisionNumber } from '@bayou/ot-common';
+import { FileSnapshot, RevisionNumber } from '@bayou/ot-common';
 import { TBoolean, TInt, TString } from '@bayou/typecheck';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -171,6 +171,40 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Gets a snapshot of the full file as of the indicated revision. It is an
+   * error to request a revision that does not yet exist. For subclasses that
+   * don't keep full history, it is also an error to request a revision that is
+   * _no longer_ available; in this case, the error name is always
+   * `revisionNotAvailable`.
+   *
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the current (most recent) revision. **Note:** Due to
+   *   the asynchronous nature of the system, when passed as `null` the
+   *   resulting revision might already have been superseded by the time it is
+   *   returned to the caller.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FileSnapshot} Snapshot of the indicated revision.
+   */
+  async getSnapshot(revNum = null, timeoutMsec = null) {
+    const currentRevNum = await this.currentRevNum();
+
+    revNum = (revNum === null)
+      ? currentRevNum
+      : RevisionNumber.maxInc(revNum, currentRevNum);
+
+    const result = await this._impl_getSnapshot(revNum, timeoutMsec);
+
+    if (result === null) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
+
+    return FileSnapshot.check(result);
+  }
+
+  /**
    * Waits for a path to change away from given hash. It returns only
    * after the change is made. If the change has already been made by the time
    * this method is called, then it returns promptly.
@@ -265,6 +299,28 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_exists() {
     return this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getSnapshot}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FileSnapshot|null} Snapshot of the indicated revision. A return
+   *   value of `null` specifically indicates that `revNum` is a revision older
+   *   than what this instance can provide (and will cause this class to report
+   *   a `revisionNotAvailable` error).
+   * @throws {Error} Thrown for any problem other than the revision not being
+   *   available due to it being aged out.
+   */
+  async _impl_getSnapshot(revNum, timeoutMsec) {
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**
