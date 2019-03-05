@@ -274,10 +274,12 @@ export default class BaseFile extends CommonBase {
    * override this method.
    *
    * @abstract
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec.
    * @returns {Int} The instantaneously current revision number of the file.
    */
-  async _impl_currentRevNum() {
-    return this._mustOverride();
+  async _impl_currentRevNum(timeoutMsec) {
+    return this._mustOverride(timeoutMsec);
   }
 
   /**

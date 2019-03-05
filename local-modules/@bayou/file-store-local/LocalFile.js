@@ -203,7 +203,7 @@ export default class LocalFile extends BaseFile {
   /**
    * Reads the file storage if it has not yet been loaded by given timeout.
    *
-   * @param {int} timeoutMsec The amount of time before reading storage is
+   * @param {Int|null} timeoutMsec The amount of time before reading storage is
    *   aborted and timeout error thrown.
    */
   async _readStorageIfNecessaryWithTimeout(timeoutMsec) {
@@ -275,10 +275,12 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec.
    * @returns {Int} The instantaneously current revision number of the file.
    */
-  async _impl_currentRevNum() {
-    await this._readStorageIfNecessary();
+  async _impl_currentRevNum(timeoutMsec = null) {
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
 
     return this._currentRevNum;
   }
