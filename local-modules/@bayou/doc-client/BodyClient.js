@@ -346,18 +346,12 @@ export default class BodyClient extends StateMachine {
     // determination immediately below.
     this._addErrorStamp();
 
-    let nextState;
-
     if (this._isUnrecoverablyErrored()) {
       // We've hit the point of unrecoverability. Inform the session and
-      // transition into the `unrecoverableError` state. When this happens,
-      // higher-level logic can notice and take further action. (That is, we are
-      // only considered unrecoverable from the perspective of this instance,
-      // and not necessarily from the larger system perspective.)
+      // transition into the `unrecoverableError` state. See the documentation
+      // on `_handle_unrecoverableError_stop()` for further discussion.
       this._docSession.reportError(reason);
-      this.log.event.cannotRecover();
-
-      nextState = 'unrecoverableError';
+      this._becomeUnrecoverable();
     } else {
       // Wait an appropriate amount of time and then try starting again (unless
       // the instance got `stop()`ed in the mean time). The `start` event will
@@ -374,14 +368,11 @@ export default class BodyClient extends StateMachine {
         }
       })();
 
-      nextState = 'errorWait';
+      // Stop the user from trying to do more edits, as they'd get lost, and
+      // then hang out in `errorWait` until the above delay completes.
+      this.s_becomeDisabled();
+      this.p_nextState('errorWait');
     }
-
-    // Stop the user from trying to do more edits, as they'd get lost, and then
-    // transition into whatever state is appropriate per the unrecoverability
-    // test above.
-    this.s_becomeDisabled();
-    this.p_nextState(nextState);
   }
 
   /**
@@ -394,7 +385,7 @@ export default class BodyClient extends StateMachine {
    */
   _handle_any_error(error) {
     this.log.error('Unexpected error in handler', error);
-    this.s_unrecoverableError();
+    this._becomeUnrecoverable();
   }
 
   /**
@@ -435,7 +426,8 @@ export default class BodyClient extends StateMachine {
 
   /**
    * Handler for `stop` events in most states (all of them except for the ones
-   * which are active when there are in-flight changes to deal with).
+   * which are active when there are in-flight changes to deal with, and during
+   * transition through the `unrecoverableError` state).
    */
   _handle_any_stop() {
     if (this._running) {
@@ -481,19 +473,6 @@ export default class BodyClient extends StateMachine {
     // "zombie" events from a connection that's shuffling towards doom. But even
     // if so, we will already have set up a timer to reset the connection.
     this.log.event.eventWhenErrorWait(new Functor(name, ...args));
-  }
-
-  /**
-   * In state `unrecoverableError`, handles all events. Specifically, this does
-   * nothing, and no further events can be expected. Client code of this class
-   * can use the transition into this state to perform higher-level error
-   * recovery.
-   *
-   * @param {string} name The event name.
-   * @param {...*} args The event arguments.
-   */
-  _handle_unrecoverableError_any(name, ...args) {
-    this.log.event.eventWhenUnrecoverable(new Functor(name, ...args));
   }
 
   /**
@@ -1007,6 +986,29 @@ export default class BodyClient extends StateMachine {
     this._waitThenStop();
   }
 
+  /**
+   * In state `unrecoverableError`, handles the `stop` event. This event is set
+   * up to be immediately dispatched to this state, and this is immediately
+   * responded to by transitioning into the `detached` state. The point of the
+   * transition to `unrecoverableError` is so that clients of this class can
+   * detect it (e.g. via `when_unrecoverableError()`) and take action based on
+   * that transition. Once in the `detached` state, it is valid to call
+   * {@link #start} to try to reinitiate a connection and reconnect (or
+   * recreate) the session.
+   *
+   * **Note:** The name of the state is meant to suggest that _this class_
+   * considers things to be unrecoverable, not that things are quite so dire in
+   * the larger context.
+   */
+  _handle_unrecoverableError_stop() {
+    this.log.event.nowUnrecoverable();
+
+    // Stop the user from trying to do more edits, as they'd get lost, and then
+    // transition into `detached`.
+    this.s_becomeDisabled();
+    this.p_nextState('detached');
+  }
+
   //
   // Private methods (which aren't part of the state machine definition).
   //
@@ -1035,6 +1037,17 @@ export default class BodyClient extends StateMachine {
     } else {
       this.s_detached();
     }
+  }
+
+  /**
+   * Sets up the client to transition into the `unrecoverableError` state and
+   * then become `detached`.
+   */
+  _becomeUnrecoverable() {
+    // Set the state, and push a `stop` to the front of the queue, which is the
+    // one event that the state can handle and expects.
+    this.s_unrecoverableError();
+    this.p_stop();
   }
 
   /**
