@@ -44,10 +44,13 @@ import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
  *   matching handlers for both (state, any-event) and (any-state, event), then
  *   the former "wins."
  *
- * Constructing an instance will cause the instance to have a method added per
- * named event, `q_<name>`, each of which takes any number of arguments and
- * queues up a new event (and does nothing else; e.g. doesn't cause synchronous
- * dispatch of events).
+ * Constructing an instance will cause the instance to have two methods added
+ * per named event, `q_<name>` and `p_<name>`, each of which takes any number of
+ * arguments and queues up a new event (and does nothing else; e.g. doesn't
+ * cause synchronous dispatch of events). `q_*` methods do normal FIFO queueing,
+ * and `p_*` methods do LIFO pushing (which can be useful when an event handler
+ * wants to guarantee transition to a new state with a known event at the head
+ * of the queue).
  *
  * Similarly, a method is added for each state, `s_<name>`, each of which takes
  * no arguments and causes the machine to switch into the so-named state.
@@ -141,9 +144,11 @@ export default class StateMachine {
   }
 
   /**
-   * Adds to this instance one method per event name, named `q_<name>`, each of
-   * which takes any number of arguments and enqueues an event with the
-   * associated name and the given arguments.
+   * Adds to this instance two methods per event name, named `q_<name>` and
+   * `p_<name>`, each of which takes any number of arguments and enqueues an
+   * event with the associated name and the given arguments. `q_*` methods
+   * perform normal FIFO enqueuing, and `p_*` methods perform LIFO pushes (which
+   * can be useful for intra-machine communication).
    */
   _addEnqueueMethods() {
     const eventNames = Object.keys(this._eventValidators);
@@ -151,7 +156,7 @@ export default class StateMachine {
     for (const name of eventNames) {
       const validator = this._eventValidators[name];
 
-      this[`q_${name}`] = (...args) => {
+      const enqueueOrPush = (enqueue, args) => {
         const validArgs = validator.apply(this, args) || args;
 
         if ((validArgs !== undefined) && !Array.isArray(validArgs)) {
@@ -159,7 +164,7 @@ export default class StateMachine {
         }
 
         if (this._eventQueue === null) {
-          throw Errors.badUse('Attempt to queue events on aborted instance.');
+          throw Errors.badUse('Attempt to send event to an aborted instance.');
         }
 
         const event = new Functor(name, ...args);
@@ -168,9 +173,17 @@ export default class StateMachine {
           this._log.event.enqueued(event);
         }
 
-        this._eventQueue.push(event);
+        if (enqueue) {
+          this._eventQueue.push(event);
+        } else {
+          this._eventQueue.unshift(event);
+        }
+
         this._anyEventPending.value = true;
       };
+
+      this[`q_${name}`] = (...args) => { enqueueOrPush(true,  args); };
+      this[`p_${name}`] = (...args) => { enqueueOrPush(false, args); };
     }
   }
 
