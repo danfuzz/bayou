@@ -370,8 +370,7 @@ export default class BodyClient extends StateMachine {
 
       // Stop the user from trying to do more edits, as they'd get lost, and
       // then hang out in `errorWait` until the above delay completes.
-      this.s_becomeDisabled();
-      this.p_nextState('errorWait');
+      this._becomeDisabled('errorWait');
     }
   }
 
@@ -439,8 +438,7 @@ export default class BodyClient extends StateMachine {
     // any editing. And having disabled editing, we should just go back to being
     // in the `detached` state. In that state, additional incoming events will
     // get ignored, except for `start` which will bring the client back to life.
-    this.s_becomeDisabled();
-    this.p_nextState('detached');
+    this._becomeDisabled('detached');
   }
 
   /**
@@ -1005,8 +1003,7 @@ export default class BodyClient extends StateMachine {
 
     // Stop the user from trying to do more edits, as they'd get lost, and then
     // transition into `detached`.
-    this.s_becomeDisabled();
-    this.p_nextState('detached');
+    this._becomeDisabled('detached');
   }
 
   //
@@ -1023,6 +1020,20 @@ export default class BodyClient extends StateMachine {
 
     this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
     this._errorStamps.push(now);
+  }
+
+  /**
+   * Sets up the client to transition through the `becomeDisabled` state to
+   * another specified state. This transition is what clients of this class can
+   * listen to, in order for them to trigger the actual disabling of the Quill
+   * instance.
+   *
+   * @param {string} nextState The state to transition to after (briefly) being
+   *   in the `becomeDisabled` state.
+   */
+  _becomeDisabled(nextState) {
+    this.s_becomeDisabled();
+    this.p_nextState(nextState);
   }
 
   /**
@@ -1259,8 +1270,6 @@ export default class BodyClient extends StateMachine {
     // Bounce into the `becomeDisabled` state, to perform the actual acts of
     // disabling, and then return to whatever state we're in now, so as to
     // complete the pending action.
-    const currentState = this.state;
-    this.s_becomeDisabled();
-    this.p_nextState(currentState);
+    this._becomeDisabled(this.state);
   }
 }
