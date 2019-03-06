@@ -3,8 +3,9 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
+import { FileSnapshot, RevisionNumber } from '@bayou/ot-common';
 import { TBoolean, TInt, TString } from '@bayou/typecheck';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * Base class representing access to a particular file. Subclasses must override
@@ -102,12 +103,24 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Main implementation of `create()`.
+   * Gets the instantaneously-current revision number of the file controlled by
+   * this instance. It is an error to call this on a file that does not exist
+   * (in the sense of {@link #exists}).
    *
-   * @abstract
+   * **Note:** Due to the asynchronous nature of the system, the value returned
+   * here could be out-of-date by the time it is received by the caller. As
+   * such, even when used promptly, it should not be treated as "definitely
+   * current" but more like "probably current but possibly just a lower bound."
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
+   * @returns {Int} The instantaneously-current revision number.
    */
-  async _impl_create() {
-    this._mustOverride();
+  async currentRevNum(timeoutMsec = null) {
+    const revNum = await this._impl_currentRevNum(timeoutMsec);
+    return RevisionNumber.check(revNum);
   }
 
   /**
@@ -117,15 +130,6 @@ export default class BaseFile extends CommonBase {
    */
   async delete() {
     await this._impl_delete();
-  }
-
-  /**
-   * Main implementation of `delete()`.
-   *
-   * @abstract
-   */
-  async _impl_delete() {
-    this._mustOverride();
   }
 
   /**
@@ -141,16 +145,6 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Main implementation of `exists()`.
-   *
-   * @abstract
-   * @returns {boolean} `true` iff this file exists.
-   */
-  async _impl_exists() {
-    this._mustOverride();
-  }
-
-  /**
    * Appends a new change to the document. On success, this returns `true`.
    *
    * It is an error to call this method on a file that doesn't exist, in the
@@ -160,8 +154,8 @@ export default class BaseFile extends CommonBase {
    * @param {FileChange} fileChange Change to append.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
@@ -174,6 +168,40 @@ export default class BaseFile extends CommonBase {
     TBoolean.check(result);
 
     return result;
+  }
+
+  /**
+   * Gets a snapshot of the full file as of the indicated revision. It is an
+   * error to request a revision that does not yet exist. For subclasses that
+   * don't keep full history, it is also an error to request a revision that is
+   * _no longer_ available; in this case, the error name is always
+   * `revisionNotAvailable`.
+   *
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the current (most recent) revision. **Note:** Due to
+   *   the asynchronous nature of the system, when passed as `null` the
+   *   resulting revision might already have been superseded by the time it is
+   *   returned to the caller.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
+   * @returns {FileSnapshot} Snapshot of the indicated revision.
+   */
+  async getSnapshot(revNum = null, timeoutMsec = null) {
+    const currentRevNum = await this.currentRevNum();
+
+    revNum = (revNum === null)
+      ? currentRevNum
+      : RevisionNumber.maxInc(revNum, currentRevNum);
+
+    const result = await this._impl_getSnapshot(revNum, timeoutMsec);
+
+    if (result === null) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
+
+    return FileSnapshot.check(result);
   }
 
   /**
@@ -193,8 +221,8 @@ export default class BaseFile extends CommonBase {
    * @param {FrozenBuffer} hash Hash to validate against.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    */
   async whenPathIsNot(storagePath, hash, timeoutMsec) {
     StoragePath.check(storagePath);
@@ -206,22 +234,22 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Abstract implementation of `appendChange()`.
-   * Appends a new change to the document. On success, this returns `true`.
+   * Subclass-specific implementation of {@link #appendChange}. Appends a new
+   * change to the document. On success, this returns `true`.
    *
    * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
-   * `false`, then this method will fail.
+   * sense of the method {@link #exists} method. That is, if {@link #exists}
+   * would return `false`, then this method will fail.
    *
-   * Each subclass implements its own version of `appendChange()`.
+   * Subclasses must override this method.
    *
    * @abstract
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance of FileChange.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
    *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
@@ -232,22 +260,87 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
-   * Abstract implementation of `whenPathIsNot()`
+   * Subclass-specific implementation of {@link #create}. Subclasses must
+   * override this method.
    *
-   * Each subclass implements its own version.
+   * @abstract
+   */
+  async _impl_create() {
+    this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #currentRevNum}. Subclasses must
+   * override this method.
    *
+   * @abstract
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_currentRevNum(timeoutMsec) {
+    return this._mustOverride(timeoutMsec);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #delete}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   */
+  async _impl_delete() {
+    this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #exists}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @returns {boolean} `true` iff this file exists.
+   */
+  async _impl_exists() {
+    return this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getSnapshot}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FileSnapshot|null} Snapshot of the indicated revision. A return
+   *   value of `null` specifically indicates that `revNum` is a revision older
+   *   than what this instance can provide (and will cause this class to report
+   *   a `revisionNotAvailable` error).
+   * @throws {Error} Thrown for any problem other than the revision not being
+   *   available due to it being aged out.
+   */
+  async _impl_getSnapshot(revNum, timeoutMsec) {
+    return this._mustOverride(revNum, timeoutMsec);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #whenPathIsNot}. Subclasses must
+   * override this method.
+   *
+   * @abstract
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
    *   allowed value.
-   * @abstract
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
-    await this._mustOverride(storagePath, hash, timeoutMsec);
-
-    return;
+    this._mustOverride(storagePath, hash, timeoutMsec);
   }
 }

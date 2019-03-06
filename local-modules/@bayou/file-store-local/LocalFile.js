@@ -115,10 +115,36 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * {string} The filesystem path where the storage for this instance resides.
+   * {FileSnapshot} Snapshot of the current revision. It is not valid to get
+   * this if the file doesn't exist (was not created at all or does not have at
+   * least one change).
    */
-  get storagePath() {
-    return this._storagePath;
+  get currentSnapshot() {
+    const revNum  = this._currentRevNum;
+    const changes = this._changes;
+    const already = this._snapshot;
+
+    if (revNum < 0) {
+      throw Errors.badUse('File does not exist and/or has no changes at all!');
+    }
+
+    if (already && already.revNum === revNum) {
+      return already;
+    }
+
+    const [base, startAt] = already
+      ? [already,            already.revNum + 1]
+      : [FileSnapshot.EMPTY, 0];
+
+    let result = base;
+    for (let i = startAt; i <= revNum; i++) {
+      result = result.compose(changes[i]);
+    }
+
+    this._snapshot = result;
+    this._log.event.madeSnapshot(revNum);
+
+    return result;
   }
 
   /**
@@ -141,6 +167,13 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * {string} The filesystem path where the storage for this instance resides.
+   */
+  get storagePath() {
+    return this._storagePath;
+  }
+
+  /**
    * Forces pending writes to happen promptly, and waits until they have been
    * completed and settled in the filesystem.
    *
@@ -149,6 +182,49 @@ export default class LocalFile extends BaseFile {
    */
   async flush() {
     await this._flushPendingStorage();
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * Appends a new change to the document. On success, this returns `true`.
+   * Failures are reported via thrown errors.
+   *
+   * It is an error to call this method on a file that doesn't exist, in the
+   * sense of the `exists()` method. That is, if `exists()` would return
+   * `false`, then this method will fail.
+   *
+   * @param {FileChange} fileChange Change to append. Must be an
+   *   instance FileChange.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
+   * @returns {boolean} Success flag. `true` indicates that the change was
+   *   appended, and `false` indicates that the operation failed due to a lost
+   *   append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race.
+   */
+  async _impl_appendChange(fileChange, timeoutMsec) {
+    FileChange.check(fileChange);
+
+    const newRevNum = fileChange.revNum;
+    TInt.maxInc(newRevNum, this._currentRevNum + 1);
+
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    if (!this._fileShouldExist) {
+      throw Errors.fileNotFound(this.id);
+    }
+
+    // Lost append race
+    if (newRevNum <= this._currentRevNum) {
+      return false;
+    }
+
+    this._changes[newRevNum] = fileChange;
+    this._storageToWrite.set(fileChange.revNum, this._encodeChange(fileChange));
+    this._storageNeedsFlush();
+
+    return true;
   }
 
   /**
@@ -169,6 +245,19 @@ export default class LocalFile extends BaseFile {
       // Get it written out.
       this._storageNeedsFlush();
     }
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
+   * @returns {Int} The instantaneously current revision number of the file.
+   */
+  async _impl_currentRevNum(timeoutMsec) {
+    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+
+    return this._currentRevNum;
   }
 
   /**
@@ -201,75 +290,17 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the file storage if it has not yet been loaded by given timeout.
+  * Implementation as required by the superclass.
    *
-   * @param {int} timeoutMsec The amount of time before reading storage is
-   *   aborted and timeout error thrown.
-   */
-  async _readStorageIfNecessaryWithTimeout(timeoutMsec) {
-    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
-    // storage, as that (potential) storage read can take significant time.
-    const clampedTimeoutMsec = this.clampTimeoutMsec(timeoutMsec);
-    let timeout = false; // Gets set to `true` when the timeout expires.
-    const timeoutProm = Delay.resolve(clampedTimeoutMsec);
-
-    (async () => {
-      await timeoutProm;
-      timeout = true;
-    })();
-
-    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
-
-    if (timeout) {
-      throw Errors.timedOut(clampedTimeoutMsec);
-    }
-
-    return;
-  }
-
-  /**
-   * Implementation as required by the superclass.
-   *
-   * Appends a new change to the document. On success, this returns `true`.
-   * Failures are reported via thrown errors.
-   *
-   * It is an error to call this method on a file that doesn't exist, in the
-   * sense of the `exists()` method. That is, if `exists()` would return
-   * `false`, then this method will fail.
-   *
-   * @param {FileChange} fileChange Change to append. Must be an
-   *   instance FileChange.
+   * @param {Int} revNum Which revision to get.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
-   *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
-   * @returns {boolean} Success flag. `true` indicates that the change was
-   *   appended, and `false` indicates that the operation failed due to a lost
-   *   append race.
-   * @throws {Error} Thrown for failures _other than_ lost append race.
+   *   in msec.
+   * @returns {FileSnapshot|null} Snapshot of the indicated revision, if
+   *   available.
    */
-  async _impl_appendChange(fileChange, timeoutMsec) {
-    FileChange.check(fileChange);
-
-    const newRevNum = fileChange.revNum;
-    TInt.maxInc(newRevNum, this._currentRevNum + 1);
-
-    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
-
-    if (!this._fileShouldExist) {
-      throw Errors.fileNotFound(this.id);
-    }
-
-    // Lost append race
-    if (newRevNum <= this._currentRevNum) {
-      return false;
-    }
-
-    this._changes[newRevNum] = fileChange;
-    this._storageToWrite.set(fileChange.revNum, this._encodeChange(fileChange));
-    this._storageNeedsFlush();
-
-    return true;
+  async _impl_getSnapshot(revNum, timeoutMsec) {
+    // **TODO:** Fill this in.
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**
@@ -278,10 +309,8 @@ export default class LocalFile extends BaseFile {
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
    * @abstract
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
@@ -342,39 +371,6 @@ export default class LocalFile extends BaseFile {
    */
   get _currentRevNum() {
     return this._changes.length - 1;
-  }
-
-  /**
-   * {FileSnapshot} Snapshot of the current revision. It is not valid to get
-   * this if the file doesn't exist (was not created at all or does not have at
-   * least one change).
-   */
-  get currentSnapshot() {
-    const revNum  = this._currentRevNum;
-    const changes = this._changes;
-    const already = this._snapshot;
-
-    if (revNum < 0) {
-      throw Errors.badUse('File does not exist and/or has no changes at all!');
-    }
-
-    if (already && already.revNum === revNum) {
-      return already;
-    }
-
-    const [base, startAt] = already
-      ? [already,            already.revNum + 1]
-      : [FileSnapshot.EMPTY, 0];
-
-    let result = base;
-    for (let i = startAt; i <= revNum; i++) {
-      result = result.compose(changes[i]);
-    }
-
-    this._snapshot = result;
-    this._log.event.madeSnapshot(revNum);
-
-    return result;
   }
 
   /**
@@ -590,6 +586,33 @@ export default class LocalFile extends BaseFile {
 
     // Wait for the pending read to complete.
     await this._storageReadyPromise;
+  }
+
+  /**
+   * Reads the file storage if it has not yet been loaded by given timeout.
+   *
+   * @param {Int|null} timeoutMsec The amount of time before reading storage is
+   *   aborted and timeout error thrown.
+   */
+  async _readStorageIfNecessaryWithTimeout(timeoutMsec) {
+    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
+    // storage, as that (potential) storage read can take significant time.
+    const clampedTimeoutMsec = this.clampTimeoutMsec(timeoutMsec);
+    let timeout = false; // Gets set to `true` when the timeout expires.
+    const timeoutProm = Delay.resolve(clampedTimeoutMsec);
+
+    (async () => {
+      await timeoutProm;
+      timeout = true;
+    })();
+
+    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+
+    if (timeout) {
+      throw Errors.timedOut(clampedTimeoutMsec);
+    }
+
+    return;
   }
 
   /**

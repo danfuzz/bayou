@@ -479,11 +479,11 @@ export default class BaseControl extends BaseDataManager {
    * request a revision that is _no longer_ available; in this case, the error
    * name is always `revisionNotAvailable`.
    *
-   * @param {Int|null} revNum Which revision to get. If passed as `null`,
-   *   indicates the current (most recent) revision. **Note:** Due to the
-   *   asynchronous nature of the system, when passed as `null` the resulting
-   *   revision might already have been superseded by the time it is returned to
-   *   the caller.
+   * @param {Int|null} [revNum = null] Which revision to get. If passed as
+   *   `null`, indicates the current (most recent) revision. **Note:** Due to
+   *   the asynchronous nature of the system, when passed as `null` the
+   *   resulting revision might already have been superseded by the time it is
+   *   returned to the caller.
    * @returns {BaseSnapshot} Snapshot of the indicated revision. Always an
    *   instance of the concrete snapshot type appropriate for this instance.
    */
