@@ -274,8 +274,10 @@ export default class BaseFile extends CommonBase {
    * override this method.
    *
    * @abstract
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async _impl_currentRevNum(timeoutMsec) {
@@ -310,10 +312,10 @@ export default class BaseFile extends CommonBase {
    * @abstract
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
+   *   value.
    * @returns {FileSnapshot|null} Snapshot of the indicated revision. A return
    *   value of `null` specifically indicates that `revNum` is a revision older
    *   than what this instance can provide (and will cause this class to report

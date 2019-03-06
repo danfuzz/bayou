@@ -252,11 +252,11 @@ export default class LocalFile extends BaseFile {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
    * @returns {Int} The instantaneously current revision number of the file.
    */
-  async _impl_currentRevNum(timeoutMsec = null) {
+  async _impl_currentRevNum(timeoutMsec) {
     await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
 
     return this._currentRevNum;
@@ -295,8 +295,8 @@ export default class LocalFile extends BaseFile {
   * Implementation as required by the superclass.
    *
    * @param {Int} revNum Which revision to get.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
    * @returns {FileSnapshot|null} Snapshot of the indicated revision, if
    *   available.
    */
