@@ -300,8 +300,11 @@ export default class LocalFile extends BaseFile {
    *   available.
    */
   async _impl_getSnapshot(revNum, timeoutMsec) {
-    // **TODO:** Fill this in.
-    return this._mustOverride(revNum, timeoutMsec);
+    // **TODO:** This should probably be set up to work when `revNum` is
+    // something other than the current revision.
+    await this._readStorageIfNecessary(timeoutMsec);
+    const current = this.currentSnapshot;
+    return (current.revNum === revNum) ? current : null;
   }
 
   /**
