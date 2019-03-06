@@ -179,9 +179,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       let actualFileChange;
 
       // TODO: Replace with stub
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(snapshotRevNum, [['yes']])
-      });
+      file.getSnapshot = () => new MockSnapshot(snapshotRevNum, [['yes']]);
 
       // TODO: Replace with stub
       file.appendChange = (changeToAppend) => {
@@ -221,9 +219,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       };
 
       // TODO: Replace with stub
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [['x', 1]])
-      });
+      file.getSnapshot = () => new MockSnapshot(100, [['x', 1]]);
 
       async function test(timeout, expect, msg) {
         await assert.isRejected(control.appendChange(change, timeout), /to_be_expected/, `${msg} rejection check`);
@@ -257,9 +253,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [['yes']])
-      });
+      file.getSnapshot = () => new MockSnapshot(100, [['yes']]);
 
       // TODO: Replace with spy
       let storeSnapshotCalled = false;
@@ -277,9 +271,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [['yes']])
-      });
+      file.getSnapshot = () => new MockSnapshot(100, [['yes']]);
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
         throw new Error('Should not have been called');
@@ -303,9 +295,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       const control    = new MockControl(fileAccess, 'boop');
       const change     = new MockChange(99, [['x', 'f'], ['y', 'b']]);
 
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new MockSnapshot(100, [['x']])
-      });
+      file.getSnapshot = () => new MockSnapshot(100, [['x']]);
 
       control._maybeWriteStoredSnapshot = (revNum_unused) => {
         throw new Error('Should not have been called');
@@ -368,9 +358,7 @@ describe('@bayou/doc-server/BaseControl', () => {
 
       const fileOp = FileOp.op_writePath('/mock_control/revision_number', CODEC.encodeJsonBuffer(expectedRevNum));
 
-      Object.defineProperty(file, 'currentSnapshot', {
-        get: () => new FileSnapshot(90909, [fileOp])
-      });
+      file.getSnapshot = () => new FileSnapshot(90909, [fileOp]);
 
       await assert.eventually.strictEqual(control.currentRevNum(), expectedRevNum);
     });
@@ -382,9 +370,7 @@ describe('@bayou/doc-server/BaseControl', () => {
         const control    = new MockControl(fileAccess, 'boop');
 
         // TODO: Replace with stub
-        Object.defineProperty(file, 'currentSnapshot', {
-          get: () => new MockSnapshot(revNum, [[`snap_blort_${revNum}`]])
-        });
+        file.getSnapshot = () => new MockSnapshot(revNum, [[`snap_blort_${revNum}`]]);
 
         await assert.isRejected(control.currentRevNum(), /^badValue/);
       }
