@@ -248,8 +248,8 @@ export default class BaseFile extends CommonBase {
    *   instance of FileChange.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
    *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
@@ -276,8 +276,8 @@ export default class BaseFile extends CommonBase {
    * @abstract
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
    *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async _impl_currentRevNum(timeoutMsec) {
@@ -314,8 +314,8 @@ export default class BaseFile extends CommonBase {
    *   number for the instantaneously-current revision or earlier.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
    *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {FileSnapshot|null} Snapshot of the indicated revision. A return
    *   value of `null` specifically indicates that `revNum` is a revision older
    *   than what this instance can provide (and will cause this class to report
@@ -335,9 +335,9 @@ export default class BaseFile extends CommonBase {
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
    *   allowed value.
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {

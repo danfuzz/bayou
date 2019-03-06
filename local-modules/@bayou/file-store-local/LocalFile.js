@@ -197,9 +197,7 @@ export default class LocalFile extends BaseFile {
    * @param {FileChange} fileChange Change to append. Must be an
    *   instance FileChange.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
-   *   in msec. This value will be silently clamped to the allowable range as
-   *   defined by {@link Timeouts}. `null` is treated as the maximum allowed
-   *   value.
+   *   in msec.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
@@ -311,10 +309,8 @@ export default class LocalFile extends BaseFile {
    * @param {StoragePath} storagePath The storage path to use to get the
    *   data to validate.
    * @param {FrozenBuffer} hash Hash to validate against.
-   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
-   *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
    * @abstract
    */
   async _impl_whenPathIsNot(storagePath, hash, timeoutMsec) {
