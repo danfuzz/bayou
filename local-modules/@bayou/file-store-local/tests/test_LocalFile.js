@@ -17,8 +17,32 @@ describe('@bayou/file-store-local/LocalFile', () => {
     });
   });
 
-  // **TODO:** Need to test `appendChange()`. See other TODO below for an
-  // example that should be extracted into a test here (and fixed).
+  describe('appendChange()', () => {
+    it('loses the append race on an existing revision number', async () => {
+      const file  = await TempFiles.makeAndCreateFile();
+      const value = FrozenBuffer.coerce('x');
+
+      // This should lose the race (return `false`) because `create()` writes
+      // change #0.
+      assert.isFalse(await file.appendChange(FileChange.FIRST));
+
+      // Append change #1 twice. First should succeed. Second should lose.
+
+      const change1 = new FileChange(1, [FileOp.op_writePath('/x', value)]);
+      assert.isTrue(await file.appendChange(change1));
+      assert.isFalse(await file.appendChange(change1));
+    });
+
+    it('fails with an error when given a `revNum` more than one past the end', async () => {
+      const file  = await TempFiles.makeAndCreateFile();
+      const value = FrozenBuffer.coerce('x');
+
+      for (let revNum = 2; revNum < 1000; revNum = (revNum * 2) + 123) {
+        const change = new FileChange(revNum, [FileOp.op_writePath('/x', value)]);
+        await assert.isRejected(file.appendChange(change), /badValue/, `revNum ${revNum}`);
+      }
+    });
+  });
 
   describe('create()', () => {
     it('causes a non-existent file to come into existence', async () => {
@@ -32,6 +56,22 @@ describe('@bayou/file-store-local/LocalFile', () => {
       await TempFiles.doneWithFile(file);
     });
 
+    it('causes a non-existent file to have one change with the expected contents', async () => {
+      const file = TempFiles.makeFile();
+
+      await file.create();
+
+      const revNum = await file.currentRevNum();
+      assert.strictEqual(revNum, 0);
+
+      const snap = await file.getSnapshot(0);
+      assert.strictEqual(snap.size, 0);
+
+      // **TODO:** Should try to `getChange(0)`, when that becomes possible.
+
+      await TempFiles.doneWithFile(file);
+    });
+
     it('does nothing if called on a non-empty file', async () => {
       const file        = await TempFiles.makeAndCreateFile();
       const storagePath = '/abc';
@@ -40,12 +80,12 @@ describe('@bayou/file-store-local/LocalFile', () => {
       // Baseline setup / assumption.
 
       const change1 = new FileChange(1, [FileOp.op_writePath(storagePath, value)]);
-      // **TODO:** Adding this line should fail, but doesn't!!
-      // await file.appendChange(FileChange.FIRST);
       await file.appendChange(change1);
 
       assert.isTrue(await file.exists());
-      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
+
+      const snap1 = await file.getSnapshot();
+      assert.doesNotThrow(() => snap1.checkPathIs(storagePath, value));
 
       // The real test.
 
@@ -53,8 +93,12 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       // Ensure the file exists and that the path that was written is still
       // there.
+
       assert.isTrue(await file.exists());
-      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
+
+      const snap2 = await file.getSnapshot();
+
+      assert.doesNotThrow(() => snap2.checkPathIs(storagePath, value));
 
       await TempFiles.doneWithFile(file);
     });

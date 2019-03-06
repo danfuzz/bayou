@@ -101,7 +101,7 @@ export default class BodyClient extends StateMachine {
    *   (`true`) or not (`false`) this instance should automatically manage the
    *   "enabled" state of `quill`. If `false`, it is up to clients of this class
    *   to use `quill.enable()` and `quill.disable()`.
-   * @param {int} [pollingDelayMsec = 0] Delay in msecs to wait before
+   * @param {Int} [pollingDelayMsec = 0] Delay in msecs to wait before
    *   transitioning from `wantInputAfterDelay` to `wantInput`.
    */
   constructor(quill, docSession, manageEnabledState = true, pollingDelayMsec = 0) {
@@ -119,7 +119,7 @@ export default class BodyClient extends StateMachine {
      */
     this._manageEnabledState = manageEnabledState;
 
-    /** {int} Delay between polling for changes, 0 by default. */
+    /** {Int} Delay between polling for changes, 0 by default. */
     this._pollingDelayMsec = pollingDelayMsec;
 
     /**
@@ -293,7 +293,7 @@ export default class BodyClient extends StateMachine {
   /**
    * Validates a `wantInputAfterDelay` event.
    *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   * @param {Int} delayMsec Msec to wait before firing `wantInput`.
    */
   _check_wantInputAfterDelay(delayMsec) {
     TInt.nonNegative(delayMsec);
@@ -844,7 +844,7 @@ export default class BodyClient extends StateMachine {
    * after a configured delay, which will make requests both to the server and
    * to the local Quill instance.
    *
-   * @param {int} delayMsec Msec to wait before firing `wantInput`.
+   * @param {Int} delayMsec Msec to wait before firing `wantInput`.
    */
   async _handle_idle_wantInputAfterDelay(delayMsec) {
     // Fire off the next iteration of requesting server changes, after a delay.

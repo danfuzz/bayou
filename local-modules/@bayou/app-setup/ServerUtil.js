@@ -99,7 +99,7 @@ export default class ServerUtil extends UtilityClass {
    * @param {string|null} head HTML head text if any, or `null` to not include
    *   a `<head>` section.
    * @param {string} body HTML body text.
-   * @param {int} [statusCode = 200] The response status code.
+   * @param {Int} [statusCode = 200] The response status code.
    */
   static sendHtmlResponse(res, head, body, statusCode = 200) {
     head = (head === null)
@@ -118,7 +118,7 @@ export default class ServerUtil extends UtilityClass {
    * @param {http.ServerResponse} res The response object representing the
    *   connection to send to.
    * @param {object} body The body of the response, as a JSON-encodable object.
-   * @param {int} [statusCode = 200] The response status code.
+   * @param {Int} [statusCode = 200] The response status code.
    */
   static sendJsonResponse(res, body, statusCode = 200) {
     const text = `${JSON.stringify(body, null, 2)}\n`;
@@ -132,7 +132,7 @@ export default class ServerUtil extends UtilityClass {
    * @param {http.ServerResponse} res The response object representing the
    *   connection to send to.
    * @param {string} body The body of the response, as a string.
-   * @param {int} [statusCode = 200] The response status code.
+   * @param {Int} [statusCode = 200] The response status code.
    */
   static sendPlainTextResponse(res, body, statusCode = 200) {
     ServerUtil.sendTextResponse(res, body, 'text/plain', statusCode);
@@ -146,7 +146,7 @@ export default class ServerUtil extends UtilityClass {
    * @param {string} body The body of the response, as a string.
    * @param {string} contentType The content type, _without_ a charset. (The
    *   charset is always set to be `utf-8`.)
-   * @param {int} statusCode The response status code.
+   * @param {Int} statusCode The response status code.
    */
   static sendTextResponse(res, body, contentType, statusCode) {
     res

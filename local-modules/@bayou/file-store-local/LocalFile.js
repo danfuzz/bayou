@@ -87,10 +87,11 @@ export default class LocalFile extends BaseFile {
     this._storageIsDirty = false;
 
     /**
-     * {Promise<true>|null} Promise which resolves to `true` if `_changes` is
-     * fully initialized with respect to the stored state. Becomes non-`null`
-     * during the first call to `_readStorageIfNecessary()`. It is used to
-     * prevent superfluous re-reading of the storage directory.
+     * {Promise<true>|null} Promise which resolves to `true` when
+     * {@link #_changes} is first initialized with respect to the stored state.
+     * _Eventually_ becomes non-`null` in response to the first call to
+     * {@link #_readStorageIfNecessary}. It is used to prevent superfluous
+     * re-reading of the storage directory.
      */
     this._storageReadyPromise = null;
 
@@ -209,7 +210,7 @@ export default class LocalFile extends BaseFile {
     const newRevNum = fileChange.revNum;
     TInt.maxInc(newRevNum, this._currentRevNum + 1);
 
-    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+    await this._readStorageIfNecessary(timeoutMsec);
 
     if (!this._fileShouldExist) {
       throw Errors.fileNotFound(this.id);
@@ -231,7 +232,7 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    */
   async _impl_create() {
-    await this._readStorageIfNecessary();
+    await this._readStorageIfNecessary(null);
 
     if (!this._fileShouldExist) {
       // Indicate that the file should exist.
@@ -255,7 +256,7 @@ export default class LocalFile extends BaseFile {
    * @returns {Int} The instantaneously current revision number of the file.
    */
   async _impl_currentRevNum(timeoutMsec) {
-    await this._readStorageIfNecessaryWithTimeout(timeoutMsec);
+    await this._readStorageIfNecessary(timeoutMsec);
 
     return this._currentRevNum;
   }
@@ -264,7 +265,7 @@ export default class LocalFile extends BaseFile {
    * Implementation as required by the superclass.
    */
   async _impl_delete() {
-    await this._readStorageIfNecessary();
+    await this._readStorageIfNecessary(null);
 
     if (this._fileShouldExist) {
       // Indicate that the file should not exist, and reset the storage (to be
@@ -284,7 +285,7 @@ export default class LocalFile extends BaseFile {
    * @returns {boolean} `true` iff this file exists.
    */
   async _impl_exists() {
-    await this._readStorageIfNecessary();
+    await this._readStorageIfNecessary(null);
 
     return this._fileShouldExist;
   }
@@ -299,8 +300,11 @@ export default class LocalFile extends BaseFile {
    *   available.
    */
   async _impl_getSnapshot(revNum, timeoutMsec) {
-    // **TODO:** Fill this in.
-    return this._mustOverride(revNum, timeoutMsec);
+    // **TODO:** This should probably be set up to work when `revNum` is
+    // something other than the current revision.
+    await this._readStorageIfNecessary(timeoutMsec);
+    const current = this.currentSnapshot;
+    return (current.revNum === revNum) ? current : null;
   }
 
   /**
@@ -327,7 +331,12 @@ export default class LocalFile extends BaseFile {
       timeout = true;
     })();
 
-    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+    // **TODO:** `_readStorageIfNecessary()` _also_ performs timeout work. We
+    // should instead be able to do something like initialize a timeout (like,
+    // a `Timeout` object, and pass _that_ into the call instead of just an
+    // int msec value).
+    await Promise.race([this._readStorageIfNecessary(timeoutMsec), timeoutProm]);
+
     if (timeout) {
       throw Errors.timedOut(clampedTimeoutMsec);
     }
@@ -336,11 +345,21 @@ export default class LocalFile extends BaseFile {
       throw Errors.fileNotFound(this.id);
     }
 
-    // It's a wait transaction, so we need to be prepared to loop / retry
-    // (until satisfaction or timeout).
+    // It's a wait transaction, so we need to be prepared to loop / retry (until
+    // satisfaction or timeout).
     for (;;) {
+      if (timeout) {
+        throw Errors.timedOut(clampedTimeoutMsec);
+      }
 
-      if (this.currentSnapshot.checkPathIsNot(storagePath, hash)) {
+      // **TODO:** Similar to the TODO above, `getSnapshot()` does timeout
+      // stuff, and we ought to be able to pass in the timeout-in-progress here.
+      // For now, we just make the call time out after 1000msec as a fixed
+      // value, which (a) is typically much smaller than the outer timeout, and
+      // (b) shouldn't ever actually get triggered in practice.
+      const snapshot = await this.getSnapshot(null, 1000);
+
+      if (snapshot.checkPathIsNot(storagePath, hash)) {
         // Wait condition was satisfied. If the op has a `path` then that's the
         // storage ID result; otherwise it's its `hash`. (There are no other
         // possibilities.)
@@ -352,9 +371,6 @@ export default class LocalFile extends BaseFile {
       // (that is, wait for _any_ change to the file) or for timeout to occur.
       this._changeCondition.value = false;
       await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-      if (timeout) {
-        throw Errors.timedOut(clampedTimeoutMsec);
-      }
 
       // Have to re-check for file existence, as the file could have been
       // deleted while we were waiting.
@@ -576,27 +592,28 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Reads the file storage if it has not yet been loaded.
+   * Reads the file storage if it has not yet been loaded at all.
+   *
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
    */
-  async _readStorageIfNecessary() {
+  async _readStorageIfNecessary(timeoutMsec) {
+    if (this._changes.length > 0) {
+      // There is at least one change, therefore there is no need to perform an
+      // _initial_ load.
+      return;
+    }
+
     if (this._storageReadyPromise === null) {
       // This is the first time the storage has been requested. Initiate a read.
       this._storageReadyPromise = this._readStorage();
     }
 
-    // Wait for the pending read to complete.
-    await this._storageReadyPromise;
-  }
+    // Arrange for timeout. **Note:** Needs to be done _before_ possibly
+    // reading storage, as that (potential) storage read can take significant
+    // time. (And that's the case here, because the call to `_readStorage()`
+    // above is `async`.)
 
-  /**
-   * Reads the file storage if it has not yet been loaded by given timeout.
-   *
-   * @param {Int|null} timeoutMsec The amount of time before reading storage is
-   *   aborted and timeout error thrown.
-   */
-  async _readStorageIfNecessaryWithTimeout(timeoutMsec) {
-    // Arrange for timeout. **Note:** Needs to be done _before_ possibly reading
-    // storage, as that (potential) storage read can take significant time.
     const clampedTimeoutMsec = this.clampTimeoutMsec(timeoutMsec);
     let timeout = false; // Gets set to `true` when the timeout expires.
     const timeoutProm = Delay.resolve(clampedTimeoutMsec);
@@ -606,13 +623,11 @@ export default class LocalFile extends BaseFile {
       timeout = true;
     })();
 
-    await Promise.race([this._readStorageIfNecessary(), timeoutProm]);
+    await Promise.race([this._storageReadyPromise, timeoutProm]);
 
     if (timeout) {
       throw Errors.timedOut(clampedTimeoutMsec);
     }
-
-    return;
   }
 
   /**

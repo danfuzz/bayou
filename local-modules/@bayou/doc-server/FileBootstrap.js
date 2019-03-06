@@ -36,7 +36,7 @@ const RECOVERY_NOTE = new BodyDelta([
   ['text', '(Recreated document due to allegedly-recoverable corruption.)\n']
 ]);
 
-/** {int} Timeout for file creation, in msec. */
+/** {Int} Timeout for file creation, in msec. */
 const FILE_CREATE_TIMEOUT_MSEC = 10000;
 
 /**

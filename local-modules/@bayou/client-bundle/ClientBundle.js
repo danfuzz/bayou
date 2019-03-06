@@ -5,6 +5,7 @@
 import memory_fs from 'memory-fs';
 import webpack from 'webpack';
 
+import { Delay } from '@bayou/promise-util';
 import { Singleton } from '@bayou/util-common';
 
 import WebpackConfig from './WebpackConfig';
@@ -139,15 +140,19 @@ export default class ClientBundle extends Singleton {
    * @param {function} next Function to call to execute the next handler in the
    *   chain.
    */
-  _requestHandler(req, res, next) {
+  async _requestHandler(req, res, next) {
     const bundles = this._currentBundles;
 
     if (bundles.size === 0) {
-      // This request came in before bundles have ever been built. Instead of
-      // trying to get too fancy, we just wait a second and retry (which itself
-      // might end up waiting some more).
-      setTimeout(() => { this._requestHandler(req, res, next); }, 1000);
-      return;
+      // This request came in before bundles have ever been built, but we know
+      // by virtue of being here that they are in the process of being built.
+      // Instead of trying to get too fancy, we just wait a second and recheck
+      // (and maybe recheck yet again, etc.).
+      this._log.event.waitingForBundles();
+      while (bundles.size === 0) {
+        await Delay.resolve(1000);
+      }
+      this._log.event.doneWaitingForBundles();
     }
 
     const name = req.params.name;
