@@ -203,10 +203,10 @@ export default class BaseControl extends BaseDataManager {
       throw Errors.badValue(change, clazz.changeClass, 'non-empty');
     }
 
-    const revNum = change.revNum;
-    const baseRevNum = revNum - 1;
-    const changePath = clazz.pathForChange(revNum);
-    const revisionPath = clazz.revisionNumberPath;
+    const revNum             = change.revNum;
+    const baseRevNum         = revNum - 1;
+    const changePath         = clazz.pathForChange(revNum);
+    const revisionPath       = clazz.revisionNumberPath;
     const clampedTimeoutMsec = Timeouts.clamp(timeoutMsec);
 
     const fileOps = [
@@ -214,7 +214,7 @@ export default class BaseControl extends BaseDataManager {
       FileOp.op_writePath(revisionPath, codec.encodeJsonBuffer(revNum))
     ];
 
-    const snapshot = file.currentSnapshot;
+    const snapshot   = await file.getSnapshot();
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
     try {
@@ -275,10 +275,10 @@ export default class BaseControl extends BaseDataManager {
    * @returns {Int} The instantaneously-current revision number.
    */
   async currentRevNum(timeoutMsec_unused = null) {
-    const { file, codec } = this.fileCodec;
-    const clazz = this.constructor;
+    const { file, codec }   = this.fileCodec;
+    const clazz             = this.constructor;
     const revNumStoragePath = clazz.revisionNumberPath;
-    const fileSnapshot = file.currentSnapshot;
+    const fileSnapshot      = await file.getSnapshot();
 
     fileSnapshot.checkPathPresent(revNumStoragePath);
 
@@ -538,11 +538,10 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const file = this.fileCodec.file;
-    const changePathPrefix = this.constructor.changePathPrefix;
-    const paths = file.currentSnapshot.getPathRange(
-      changePathPrefix, startInclusive, endExclusive);
-    const result = [];
+    const snapshot = await this.fileCodec.file.getSnapshot();
+    const prefix   = this.constructor.changePathPrefix;
+    const paths    = snapshot.getPathRange(prefix, startInclusive, endExclusive);
+    const result   = [];
 
     for (const path of paths.keys()) {
       result.push(StoragePath.getIndex(path));
@@ -569,10 +568,10 @@ export default class BaseControl extends BaseDataManager {
    *   was ever stored.
    */
   async readStoredSnapshotOrNull(timeoutMsec_unused = null) {
-    const clazz = this.constructor;
-    const storedSnapshotPath = clazz.storedSnapshotPath;
-    const { file, codec } = this.fileCodec;
-    const fileSnapshot = file.currentSnapshot;
+    const clazz                 = this.constructor;
+    const storedSnapshotPath    = clazz.storedSnapshotPath;
+    const { file, codec }       = this.fileCodec;
+    const fileSnapshot          = await file.getSnapshot();
     const encodedStoredSnapshot = fileSnapshot.getOrNull(storedSnapshotPath);
 
     if (encodedStoredSnapshot === null) {
@@ -851,15 +850,14 @@ export default class BaseControl extends BaseDataManager {
    * @returns {string} One of the constants defined by {@link ValidationStatus}.
    */
   async _impl_validationStatus() {
-    const clazz = this.constructor;
-    const file = this.fileCodec.file;
-    const codec = this.fileCodec.codec;
-    const fileSnapshot = file.currentSnapshot;
+    const clazz           = this.constructor;
+    const { file, codec } = this.fileCodec;
+    const fileSnapshot    = await file.getSnapshot();
 
     const encodedSnapshot = fileSnapshot.getOrNull(clazz.storedSnapshotPath);
-    const snapshot = encodedSnapshot ? codec.decodeJsonBuffer(encodedSnapshot) : undefined;
-    const encodedRevNum = fileSnapshot.getOrNull(clazz.revisionNumberPath);
-    const revNum = codec.decodeJsonBuffer(encodedRevNum);
+    const snapshot        = encodedSnapshot ? codec.decodeJsonBuffer(encodedSnapshot) : undefined;
+    const encodedRevNum   = fileSnapshot.getOrNull(clazz.revisionNumberPath);
+    const revNum          = codec.decodeJsonBuffer(encodedRevNum);
 
     // Check the revision number (mandatory) and stored snapshot (if present).
     try {
@@ -1056,10 +1054,11 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const result = [];
+    const result          = [];
     const { file, codec } = this.fileCodec;
-    const data = file.currentSnapshot.getPathRange(
-      this.constructor.changePathPrefix, startInclusive, endExclusive);
+    const snapshot        = await file.getSnapshot();
+    const prefix          = this.constructor.changePathPrefix;
+    const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
 
     this.log.event.gettingChangeRange(startInclusive, endExclusive);
 

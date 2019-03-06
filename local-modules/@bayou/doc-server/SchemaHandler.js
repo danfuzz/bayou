@@ -57,7 +57,7 @@ export default class SchemaHandler extends BaseDataManager {
    */
   async _impl_validationStatus() {
     const { file, codec } = this.fileCodec;
-    const snapshot = file.currentSnapshot;
+    const snapshot        = await file.getSnapshot();
     let schemaVersion;
 
     try {
