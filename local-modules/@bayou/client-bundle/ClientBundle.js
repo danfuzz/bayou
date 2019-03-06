@@ -144,9 +144,10 @@ export default class ClientBundle extends Singleton {
     const bundles = this._currentBundles;
 
     if (bundles.size === 0) {
-      // This request came in before bundles have ever been built. Instead of
-      // trying to get too fancy, we just wait a second and retry (and maybe
-      // retry again, etc.).
+      // This request came in before bundles have ever been built, but we know
+      // by virtue of being here that they are in the process of being built.
+      // Instead of trying to get too fancy, we just wait a second and recheck
+      // (and maybe recheck yet again, etc.).
       this._log.event.waitingForBundles();
       while (bundles.size === 0) {
         await Delay.resolve(1000);
