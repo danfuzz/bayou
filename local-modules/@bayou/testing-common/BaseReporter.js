@@ -82,7 +82,7 @@ export default class BaseReporter extends CommonBase {
    * specified filter matches no tests), then the runner emits no events, and so
    * nothing else on this class will get called.
    *
-   * @param {int} failures The number of test failures.
+   * @param {Int} failures The number of test failures.
    * @param {function|undefined} fn Optional function to call with `failures` as
    *   an argument.
    */

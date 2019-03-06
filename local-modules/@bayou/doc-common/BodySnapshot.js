@@ -27,7 +27,7 @@ export default class BodySnapshot extends BaseSnapshot {
   }
 
   /**
-   * {int} The length of this document, where the count is made
+   * {Int} The length of this document, where the count is made
    * up of text and embeds. An embed has a length of 1.
    */
   get length() {
@@ -89,7 +89,7 @@ export default class BodySnapshot extends BaseSnapshot {
    * Checks to make sure that the given retain OP's count
    * does not exceed the document body length
    * @param {BodyOp} retainOp A retain Op.
-   * @param {int} bodyLength The maximum length that can be retained.
+   * @param {Int} bodyLength The maximum length that can be retained.
    * @throws {Error} A validation error if any semantic validation fails
    *   on given `retain` op.
    */
