@@ -348,6 +348,10 @@ export default class LocalFile extends BaseFile {
     // It's a wait transaction, so we need to be prepared to loop / retry (until
     // satisfaction or timeout).
     for (;;) {
+      if (timeout) {
+        throw Errors.timedOut(clampedTimeoutMsec);
+      }
+
       // **TODO:** Similar to the TODO above, `getSnapshot()` does timeout
       // stuff, and we ought to be able to pass in the timeout-in-progress here.
       // For now, we just make the call time out after 1000msec as a fixed
@@ -367,9 +371,6 @@ export default class LocalFile extends BaseFile {
       // (that is, wait for _any_ change to the file) or for timeout to occur.
       this._changeCondition.value = false;
       await Promise.race([this._changeCondition.whenTrue(), timeoutProm]);
-      if (timeout) {
-        throw Errors.timedOut(clampedTimeoutMsec);
-      }
 
       // Have to re-check for file existence, as the file could have been
       // deleted while we were waiting.
