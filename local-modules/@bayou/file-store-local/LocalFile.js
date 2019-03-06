@@ -345,11 +345,17 @@ export default class LocalFile extends BaseFile {
       throw Errors.fileNotFound(this.id);
     }
 
-    // It's a wait transaction, so we need to be prepared to loop / retry
-    // (until satisfaction or timeout).
+    // It's a wait transaction, so we need to be prepared to loop / retry (until
+    // satisfaction or timeout).
     for (;;) {
+      // **TODO:** Similar to the TODO above, `getSnapshot()` does timeout
+      // stuff, and we ought to be able to pass in the timeout-in-progress here.
+      // For now, we just make the call time out after 1000msec as a fixed
+      // value, which (a) is typically much smaller than the outer timeout, and
+      // (b) shouldn't ever actually get triggered in practice.
+      const snapshot = await this.getSnapshot(null, 1000);
 
-      if (this.currentSnapshot.checkPathIsNot(storagePath, hash)) {
+      if (snapshot.checkPathIsNot(storagePath, hash)) {
         // Wait condition was satisfied. If the op has a `path` then that's the
         // storage ID result; otherwise it's its `hash`. (There are no other
         // possibilities.)
