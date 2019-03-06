@@ -114,8 +114,8 @@ export default class BaseFile extends CommonBase {
    *
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {Int} The instantaneously-current revision number.
    */
   async currentRevNum(timeoutMsec = null) {
@@ -154,8 +154,8 @@ export default class BaseFile extends CommonBase {
    * @param {FileChange} fileChange Change to append.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
@@ -184,8 +184,8 @@ export default class BaseFile extends CommonBase {
    *   returned to the caller.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {FileSnapshot} Snapshot of the indicated revision.
    */
   async getSnapshot(revNum = null, timeoutMsec = null) {
@@ -221,8 +221,8 @@ export default class BaseFile extends CommonBase {
    * @param {FrozenBuffer} hash Hash to validate against.
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
-   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
-   *   allowed value.
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
    */
   async whenPathIsNot(storagePath, hash, timeoutMsec) {
     StoragePath.check(storagePath);
