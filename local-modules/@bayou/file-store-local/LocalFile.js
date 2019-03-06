@@ -116,39 +116,6 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * {FileSnapshot} Snapshot of the current revision. It is not valid to get
-   * this if the file doesn't exist (was not created at all or does not have at
-   * least one change).
-   */
-  get currentSnapshot() {
-    const revNum  = this._currentRevNum;
-    const changes = this._changes;
-    const already = this._snapshot;
-
-    if (revNum < 0) {
-      throw Errors.badUse('File does not exist and/or has no changes at all!');
-    }
-
-    if (already && already.revNum === revNum) {
-      return already;
-    }
-
-    const [base, startAt] = already
-      ? [already,            already.revNum + 1]
-      : [FileSnapshot.EMPTY, 0];
-
-    let result = base;
-    for (let i = startAt; i <= revNum; i++) {
-      result = result.compose(changes[i]);
-    }
-
-    this._snapshot = result;
-    this._log.event.madeSnapshot(revNum);
-
-    return result;
-  }
-
-  /**
    * {Int} Value as required by the superclass. It is defined to be one minute
    * here not because of any inherent time limit in the implementation, but
    * just to make the limit small enough to be easily observable when testing.
@@ -303,7 +270,7 @@ export default class LocalFile extends BaseFile {
     // **TODO:** This should probably be set up to work when `revNum` is
     // something other than the current revision.
     await this._readStorageIfNecessary(timeoutMsec);
-    const current = this.currentSnapshot;
+    const current = await this._getCurrentSnapshot();
     return (current.revNum === revNum) ? current : null;
   }
 
@@ -481,6 +448,39 @@ export default class LocalFile extends BaseFile {
     return path.resolve(this._storagePath, fileName);
   }
 
+  /**
+   * Gets a snapshot for the instantaneous-current revision number, creating it
+   * if not yet done, or returning the previously-cached value.
+   *
+   * @returns {FileSnapshot} Snapshot of the current revision.
+   */
+  async _getCurrentSnapshot() {
+    const revNum  = this._currentRevNum;
+    const changes = this._changes;
+    const already = this._snapshot;
+
+    if (revNum < 0) {
+      throw Errors.badUse('File does not exist and/or has no changes at all!');
+    }
+
+    if (already && already.revNum === revNum) {
+      return already;
+    }
+
+    const [base, startAt] = already
+      ? [already,            already.revNum + 1]
+      : [FileSnapshot.EMPTY, 0];
+
+    let result = base;
+    for (let i = startAt; i <= revNum; i++) {
+      result = result.compose(changes[i]);
+    }
+
+    this._snapshot = result;
+    this._log.event.madeSnapshot(revNum);
+
+    return result;
+  }
 
   /**
    * Reads the storage directory, initializing `_changes`. If the directory

@@ -227,7 +227,7 @@ export default class FileBootstrap extends BaseDataManager {
 
     // `revNum` is `1` because a newly-created body always has an empty
     // change for revision `0`.
-    const change = new BodyChange(1, firstText, Timestamp.now());
+    const change  = new BodyChange(1, firstText, Timestamp.now());
     const initOps = this.initOps;
 
     await this.file.create();
@@ -237,7 +237,7 @@ export default class FileBootstrap extends BaseDataManager {
     // future, we will presumably replace the entire notion of conveying
     // information through appending notes in the document itself, and this
     // entire code block will disappear.
-    const currentRevNum = this.file.currentSnapshot.revNum;
+    const currentRevNum     = await this.file.currentRevNum();
     const initialFileChange = new FileChange(currentRevNum + 1, initOps);
     await this.file.appendChange(initialFileChange, FILE_CREATE_TIMEOUT_MSEC);
     await this.afterInit();
