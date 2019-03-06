@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
-import { FileSnapshot, RevisionNumber } from '@bayou/ot-common';
+import { FileSnapshot, StorageId, StoragePath, FileChange } from '@bayou/file-store-ot';
+import { RevisionNumber } from '@bayou/ot-common';
 import { TBoolean, TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
