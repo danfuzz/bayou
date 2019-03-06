@@ -45,7 +45,9 @@ describe('@bayou/file-store-local/LocalFile', () => {
       await file.appendChange(change1);
 
       assert.isTrue(await file.exists());
-      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
+
+      const snap1 = await file.getSnapshot();
+      assert.doesNotThrow(() => snap1.checkPathIs(storagePath, value));
 
       // The real test.
 
@@ -53,8 +55,12 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       // Ensure the file exists and that the path that was written is still
       // there.
+
       assert.isTrue(await file.exists());
-      assert.doesNotThrow(() => file.currentSnapshot.checkPathIs(storagePath, value));
+
+      const snap2 = await file.getSnapshot();
+
+      assert.doesNotThrow(() => snap2.checkPathIs(storagePath, value));
 
       await TempFiles.doneWithFile(file);
     });
