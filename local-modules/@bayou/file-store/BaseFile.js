@@ -159,7 +159,9 @@ export default class BaseFile extends CommonBase {
    * @returns {boolean} Success flag. `true` indicates that the change was
    *   appended, and `false` indicates that the operation failed due to a lost
    *   append race.
-   * @throws {Error} Thrown for failures _other than_ lost append race.
+   * @throws {Error} Thrown for failures _other than_ lost append race. In the
+   *   case of `fileChange` having a too-large `revNum`, this is a `badValue`
+   *   error.
    */
   async appendChange(fileChange, timeoutMsec = null) {
     FileChange.check(fileChange);
