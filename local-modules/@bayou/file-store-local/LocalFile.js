@@ -517,7 +517,7 @@ export default class LocalFile extends BaseFile {
       return null;
     }
 
-    this._log.event.composingSnapshot(revNum, base.revNum);
+    this._log.event.makingSnapshot(revNum, base.revNum);
 
     // Compose the result one chunk of changes at a time. See comment on
     // `MAX_ATOMIC_COMPOSED_CHANGES`, above, for discussion. **TODO:** It would
