@@ -355,7 +355,7 @@ export default class FileSnapshot extends BaseSnapshot {
   /**
    * Implementation as required by the superclass.
    *
-   * @param {CaretChange} change The change to be validated in the context of
+   * @param {FileChange} change The change to be validated in the context of
    *   `this`.
    * @throws {Error} Thrown if `change` is not valid to compose with `this`.
    */
