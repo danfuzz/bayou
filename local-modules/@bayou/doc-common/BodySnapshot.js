@@ -56,13 +56,11 @@ export default class BodySnapshot extends BaseSnapshot {
   }
 
   /**
-   * Implementation of {@link validateChange}, which
-   * will perform semantic validation checks on a body change
-   * in the context of a snapshot.
+   * Implementation as required by the superclass.
    *
-   * @param {BodyChange} change The change being validated.
-   * @throws {Error} A validation error if semantic validation
-   *   performed on a given change fails.
+   * @param {BodyChange} change The change to be validated in the context of
+   *   `this`.
+   * @throws {Error} Thrown if `change` is not valid to compose with `this`.
    */
   _impl_validateChange(change) {
     const ops = change.delta.ops;

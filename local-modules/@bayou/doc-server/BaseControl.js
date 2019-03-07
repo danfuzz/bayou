@@ -1167,14 +1167,17 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
-   * Subclass-specific implementation of {@link #validateChange}. Subclasses
-   * must override this to perform validation.
-   * @param {BaseChange} change Change to apply.
-   * @returns {boolean} `true` if valid, otherwise throws and error.
+   * Subclass-specific change validation. Subclasses must override this method.
+   *
    * @abstract
+   * @param {BaseChange} change Change to apply.
+   * @param {BaseSnapshot} baseSnapshot The base snapshot the change is being
+   *   applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
    */
-  _impl_validateChange(change) {
-    return this._mustOverride(change);
+  _impl_validateChange(change, baseSnapshot) {
+    this._mustOverride(change, baseSnapshot);
   }
 
   /**

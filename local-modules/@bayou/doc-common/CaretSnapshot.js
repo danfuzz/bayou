@@ -269,9 +269,15 @@ export default class CaretSnapshot extends BaseSnapshot {
     return new CaretDelta(resultOps);
   }
 
-  // TODO: implement caret snapshot specific validation
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {CaretChange} change The change to be validated in the context of
+   *   `this`.
+   * @throws {Error} Thrown if `change` is not valid to compose with `this`.
+   */
   _impl_validateChange() {
-    return true;
+    // **TODO:** Implement this!
   }
 
   /**

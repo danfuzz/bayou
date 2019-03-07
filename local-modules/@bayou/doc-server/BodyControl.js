@@ -29,6 +29,23 @@ export default class BodyControl extends DurableControl {
     Object.seal(this);
   }
 
+  // TODO: Add queuing logic to only export HTML once in a while,
+  // using a timer for now. In the future, use external job queue.
+  /**
+   * Queues up an HTML export of the current body snapshot.
+   *
+   * @param {RevisionNumber} revNum The revision number of the body snapshot to
+   *   convert to HTML.
+   * @param {string} documentId The document ID.
+   */
+  async queueHtmlExport(revNum, documentId) {
+    RevisionNumber.check(revNum);
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
+
+    const snapshot = await this._impl_getSnapshot(revNum);
+    await HtmlExport.exportHtml(snapshot, documentId);
+  }
+
   /**
    * Subclass-specific implementation of `afterInit()`.
    */
@@ -86,12 +103,13 @@ export default class BodyControl extends DurableControl {
   }
 
   /**
-   * Subclass-specific implementation of {@link #validateChange}. This
-   * class implements semantic validation for an OT change in the Body.
-   * @param {BodyChange} change The change to apply.
-   * @param {BodySnapshot} baseSnapshot The base snapshot the change
-   *   is being applied to.
-   * @throws {Error} A validation error if any semantic validation fails.
+   * Implementation as required by the superclass.
+   *
+   * @param {BodyChange} change Change to apply.
+   * @param {BodySnapshot} baseSnapshot The base snapshot the change is being
+   *   applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
    */
   _impl_validateChange(change, baseSnapshot) {
     // TODO: Add semantic validation for:
@@ -102,23 +120,6 @@ export default class BodyControl extends DurableControl {
     // `change` in the context of the snapshot
     // it is being applied to.
     baseSnapshot.validateChange(change);
-  }
-
-  // TODO: Add queuing logic to only export HTML once in a while,
-  // using a timer for now. In the future, use external job queue.
-  /**
-   * Queues up an HTML export of the current body snapshot.
-   *
-   * @param {RevisionNumber} revNum The revision number of the body snapshot to
-   *   convert to HTML.
-   * @param {string} documentId The document ID.
-   */
-  async queueHtmlExport(revNum, documentId) {
-    RevisionNumber.check(revNum);
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
-
-    const snapshot = await this._impl_getSnapshot(revNum);
-    await HtmlExport.exportHtml(snapshot, documentId);
   }
 
   /**

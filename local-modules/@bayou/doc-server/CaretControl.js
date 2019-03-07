@@ -169,6 +169,19 @@ export default class CaretControl extends EphemeralControl {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {CaretChange} change_unused Change to apply.
+   * @param {CaretSnapshot} baseSnapshot_unused The base snapshot the change is
+   *   being applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
+   */
+  _impl_validateChange(change_unused, baseSnapshot_unused) {
+    // **TODO:** Implement this!
+  }
+
+  /**
    * Perform idle caret cleanup, but only if it's been long enough since the
    * last time that was done. If in fact cleanup is performed, it happens
    * _asynchronously_ with respect to the call to this method.
@@ -233,11 +246,6 @@ export default class CaretControl extends EphemeralControl {
     }
 
     this.log.event.removedIdle(removedCount);
-  }
-
-  // TODO: Implement validateChange for Caret Control
-  _impl_validateChange() {
-    return true;
   }
 
   /**
