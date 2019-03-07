@@ -206,7 +206,7 @@ export default class LocalFile extends BaseFile {
       this._fileShouldExist = true;
 
       // Make the standard empty initial change.
-      const firstChange = new FileChange(0, []);
+      const firstChange = FileChange.FIRST;
       this._changes[0] = firstChange;
       this._storageToWrite.set(0, this._encodeChange(firstChange));
 
