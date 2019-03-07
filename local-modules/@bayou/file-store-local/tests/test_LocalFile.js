@@ -125,7 +125,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
     });
 
     it('returns `true` if the file was created in the filesystem', async () => {
-      const dir = TempFiles.uniquePath();
+      const dir   = TempFiles.uniquePath();
       const file1 = await TempFiles.makeAndCreateFile(dir);
 
       // Baseline assumption: Check that `file1` believes itself to exist.
@@ -139,6 +139,35 @@ describe('@bayou/file-store-local/LocalFile', () => {
       assert.isTrue(await file2.exists());
 
       await TempFiles.doneWithFile(file2);
+    });
+  });
+
+  describe('getChange()', () => {
+    it('successfully gets an existing change', async () => {
+      const file = await TempFiles.makeAndCreateFile();
+
+      const got0 = await file.getChange(0);
+      assert.instanceOf(got0, FileChange);
+      assert.deepEqual(got0, FileChange.FIRST);
+
+      const storagePath = '/boop/beep';
+      const value       = FrozenBuffer.coerce('floop-fleep');
+      const change1     = new FileChange(1, [FileOp.op_writePath(storagePath, value)]);
+      assert.isTrue(await file.appendChange(change1));
+
+      const got1 = await file.getChange(1);
+      assert.instanceOf(got1, FileChange);
+      assert.deepEqual(got1, change1);
+
+      await TempFiles.doneWithFile(file);
+    });
+
+    it('reports an error given a future `revNum`', async () => {
+      const file = await TempFiles.makeAndCreateFile();
+
+      assert.isRejected(file.getChange(1), /badValue/);
+
+      await TempFiles.doneWithFile(file);
     });
   });
 });

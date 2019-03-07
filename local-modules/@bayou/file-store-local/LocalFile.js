@@ -267,8 +267,8 @@ export default class LocalFile extends BaseFile {
    *   revision, if available.
    */
   async _impl_getChange(revNum, timeoutMsec) {
-    // **TODO:** Implement this!
-    return this._mustOverride(revNum, timeoutMsec);
+    await this._readStorageIfNecessary(timeoutMsec);
+    return this._changes[revNum] || null;
   }
 
   /**
