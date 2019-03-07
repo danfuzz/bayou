@@ -173,8 +173,10 @@ export default class FileBootstrap extends BaseDataManager {
    * @returns {boolean} `true` once setup and initialization are complete.
    */
   async _init() {
-    this.log.info('Doing bootstrap-time validation...');
+    this.log.event.validatingDocument();
     const status  = await this.validationStatus();
+
+    this.log.event.validatedDocument(); // **Note:** The call to `validationStatus()` logs the result.
 
     if (status === ValidationStatus.STATUS_ok) {
       // All's well.

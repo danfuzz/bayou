@@ -68,13 +68,13 @@ export default class DocServer extends Singleton {
         // It's a _promise_ for a `FileComplex`. This happens if we got a
         // request for a file in parallel with it getting constructed.
         const result = await already;
-        result.log.info('Retrieved parallel-requested complex.');
+        result.log.event.parallelRequest();
         return result;
       } else {
         // It's a weak reference. If not dead, it refers to a `FileComplex`.
         if (!weak.isDead(already)) {
           const result = weak.get(already);
-          result.log.info('Retrieved cached complex.');
+          result.log.event.foundInCache();
           return result;
         }
         // The weak reference is dead. We'll fall through and construct a new
@@ -88,6 +88,8 @@ export default class DocServer extends Singleton {
 
     const resultPromise = (async () => {
       try {
+        const startTime = Date.now();
+
         // This validates the document ID and lets us find out the corresponding
         // file ID.
         const docInfo = await Storage.dataStore.getDocumentInfo(documentId);
@@ -96,9 +98,9 @@ export default class DocServer extends Singleton {
         const file   = await Storage.fileStore.getFile(fileId);
         const result = new FileComplex(this._codec, documentId, file);
 
-        result.log.info('Initializing...');
+        result.log.event.makingComplex(...((fileId === documentId) ? [] : [fileId]));
+
         await result.init();
-        result.log.info('Done initializing.');
 
         const resultRef = weak(result, this._complexReaper(documentId));
 
@@ -106,13 +108,9 @@ export default class DocServer extends Singleton {
         // result.
         this._complexes.set(documentId, resultRef);
 
-        if (documentId === fileId) {
-          result.log.info('Constructed new complex.');
-        } else {
-          // Only explicitly note the file ID when it differs from the document
-          // ID.
-          result.log.info(`Constructed new complex, with file ID \`${fileId}\`.`);
-        }
+        const endTime = Date.now();
+        result.log.event.madeComplex(...((fileId === documentId) ? [] : [fileId]));
+        result.log.event.initTimeMsec(endTime - startTime);
 
         return result;
       } catch (e) {
@@ -128,7 +126,7 @@ export default class DocServer extends Singleton {
 
     // Store the the promise for the result in the cache, and return it.
 
-    log.withAddedContext(documentId).info('About to construct complex.');
+    log.withAddedContext(documentId).event.aboutToMake();
     this._complexes.set(documentId, resultPromise);
     return resultPromise;
   }
@@ -150,7 +148,7 @@ export default class DocServer extends Singleton {
     // _before_ this reaper was called, the cleanup code here would have
     // incorrectly removed a perfectly valid binding.
     return () => {
-      log.info('Reaped idle file complex:', documentId);
+      log.event.reaped(documentId);
     };
   }
 }
