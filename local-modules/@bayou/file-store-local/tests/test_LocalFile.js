@@ -86,7 +86,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
       assert.isTrue(await file.exists());
 
       const snap1 = await file.getSnapshot();
-      assert.doesNotThrow(() => snap1.checkPathIs(storagePath, value));
+      assert.deepEqual(snap1.getOrNull(storagePath), value);
 
       // The real test.
 
@@ -99,7 +99,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       const snap2 = await file.getSnapshot();
 
-      assert.doesNotThrow(() => snap2.checkPathIs(storagePath, value));
+      assert.deepEqual(snap2.getOrNull(storagePath), value);
 
       await TempFiles.doneWithFile(file);
     });
@@ -187,7 +187,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       const got1 = await file.getSnapshot(1);
       assert.instanceOf(got1, FileSnapshot);
-      assert.strictEqual(got1.getOrNull(path1), value1);
+      assert.deepEqual(got1.getOrNull(path1), value1);
 
       const path2   = '/hello_again';
       const value2  = FrozenBuffer.coerce('yoyo');
@@ -196,7 +196,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       const got2 = await file.getSnapshot(2);
       assert.instanceOf(got1, FileSnapshot);
-      assert.strictEqual(got2.getOrNull(path2), value2);
+      assert.deepEqual(got2.getOrNull(path2), value2);
 
       await TempFiles.doneWithFile(file);
     });
@@ -214,7 +214,7 @@ describe('@bayou/file-store-local/LocalFile', () => {
 
       const got2 = await file.getSnapshot(2);
       assert.instanceOf(got2, FileSnapshot);
-      assert.strictEqual(got2.getOrNull(path), value2);
+      assert.deepEqual(got2.getOrNull(path), value2);
 
       await TempFiles.doneWithFile(file);
     });
