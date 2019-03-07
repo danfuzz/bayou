@@ -15,6 +15,15 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * The model that this class embodies is that a file is a random-access
  * key-value store with keys having a path-like structure and values being
  * arbitrary binary data.
+ *
+ * **Note:** This class intentionally bears resemblance to
+ * {@link doc-server.BaseControl} in terms of its API. However, it probably
+ * won't be the case that these two classes will become siblings to a baser
+ * base class, because, in the long run, the type managed as a "change" in this
+ * class will not be a subclass of {@link ot-common.BaseChange} (because of the
+ * needs of file GC). That said, it is worth keeping an eye on these classes to
+ * (a) maintain parallel structure where feasible, and (b) see if there turns
+ * out to be any common functionality that really can be factored out.
  */
 export default class BaseFile extends CommonBase {
   /**
@@ -173,6 +182,39 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Gets a particular change to the file that this instance controls,
+   * identified by revision number. It is an error to request the change for a
+   * revision that does not yet exist. It is also an error to request a change
+   * for a revision that is no longer represented in history. (That is,
+   * instances of this class are not obliged &mdash; moreso, are not expected
+   * &mdash; to keep full _file_ change history. In the case of requesting an
+   * aged-out revision, this method throws an error with the name
+   * `revisionNotAvailable`.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty file).
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
+   * @returns {FileChange} The requested change.
+   */
+  async getChange(revNum, timeoutMsec) {
+    const currentRevNum = await this.currentRevNum();
+
+    RevisionNumber.maxInc(revNum, currentRevNum);
+
+    const result = await this._impl_getChange(revNum, timeoutMsec);
+
+    if (result === null) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
+
+    return FileChange.check(result);
+  }
+
+  /**
    * Gets a snapshot of the full file as of the indicated revision. It is an
    * error to request a revision that does not yet exist. For subclasses that
    * don't keep full history, it is also an error to request a revision that is
@@ -305,6 +347,28 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_exists() {
     return this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getChange}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FileChange|null} Change instance corresponding to the indicated
+   *   revision. A return value of `null` specifically indicates that `revNum`
+   *   corresponds to a revision that is no longer available (and will cause
+   * this class to report a `revisionNotAvailable` error to its caller).
+   * @throws {Error} Thrown for any problem other than the revision not being
+   *   available.
+   */
+  async _impl_getChange(revNum, timeoutMsec) {
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**

@@ -206,7 +206,7 @@ export default class LocalFile extends BaseFile {
       this._fileShouldExist = true;
 
       // Make the standard empty initial change.
-      const firstChange = new FileChange(0, []);
+      const firstChange = FileChange.FIRST;
       this._changes[0] = firstChange;
       this._storageToWrite.set(0, this._encodeChange(firstChange));
 
@@ -255,6 +255,20 @@ export default class LocalFile extends BaseFile {
     await this._readStorageIfNecessary(null);
 
     return this._fileShouldExist;
+  }
+
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {Int} revNum Which revision to get.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
+   * @returns {FileChange|null} Change instance corresponding to the indicated
+   *   revision, if available.
+   */
+  async _impl_getChange(revNum, timeoutMsec) {
+    await this._readStorageIfNecessary(timeoutMsec);
+    return this._changes[revNum] || null;
   }
 
   /**
