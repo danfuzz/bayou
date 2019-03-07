@@ -233,9 +233,15 @@ export default class PropertySnapshot extends BaseSnapshot {
     return new PropertyDelta(resultOps);
   }
 
-  // TODO: implement property snapshot specific validation
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {PropertyChange} change The change to be validated in the context of
+   *   `this`.
+   * @throws {Error} Thrown if `change` is not valid to compose with `this`.
+   */
   _impl_validateChange() {
-    return true;
+    // **TODO:** Implement this!
   }
 
   /**

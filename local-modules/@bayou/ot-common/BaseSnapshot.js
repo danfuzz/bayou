@@ -226,13 +226,14 @@ export default class BaseSnapshot extends CommonBase {
    * Semantic validation for an OT change in the context of this snapshot.
    * Each subclass implements its own version of the semantic validation.
    *
-   * @param {BodyChange} change The change to apply.
-   * @returns {boolean} `true` if valid change, otherwise throws an error.
+   * @param {BaseChange} change The change to apply.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
    */
   validateChange(change) {
     this.constructor.changeClass.check(change);
 
-    return this._impl_validateChange(change);
+    this._impl_validateChange(change);
   }
 
   /**
@@ -283,17 +284,17 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
-   * The abstract implementation of {@link #validateChange}. This
-   * class implements semantic validation for an OT change in the context
-   * of this snapshot. Should be implemented by all subclasses.
+   * Main implementation of {@link #validateChange}, as defined by the subclass.
+   * This method should return without error if `change` is valid to compose
+   * with `this`, or throw an error if invalid.
    *
    * @abstract
-   * @param {BodyChange} change The change to be validated in the context
-   *   of this snapshot.
-   * @returns {boolean} `true` if valid change, otherwise throws an error.
+   * @param {BaseChange} change The change to be validated in the context of
+   *   `this`.
+   * @throws {Error} Thrown if `change` is not valid to compose with `this`.
    */
   _impl_validateChange(change) {
-    return this._mustOverride(change);
+    this._mustOverride(change);
   }
 
   /**

@@ -352,9 +352,15 @@ export default class FileSnapshot extends BaseSnapshot {
     return new FileDelta(resultOps);
   }
 
-  // TODO: implement file snapshot specific validation
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {CaretChange} change The change to be validated in the context of
+   *   `this`.
+   * @throws {Error} Thrown if `change` is not valid to compose with `this`.
+   */
   _impl_validateChange() {
-    return true;
+    // **TODO:** Implement this!
   }
 
   /**
