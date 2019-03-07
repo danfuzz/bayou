@@ -24,8 +24,17 @@ const log = new Logger('local-file');
  */
 const DIRTY_DELAY_MSEC = 5 * 1000; // 5 seconds.
 
-/** {number} Maximum number of simultaneous FS calls to issue in parallel. */
+/** {Int} Maximum number of simultaneous FS calls to issue in parallel. */
 const MAX_PARALLEL_FS_CALLS = 20;
+
+/**
+ * {Int} Maximum number of changes to compose together in a single tick
+ * (top-level Node event loop iteration), when producing a snapshot. This limit
+ * exists so as to avoid {@link #_getCurrentSnapshot} choking up Node by being
+ * CPU-bound for an extended period of time. That is, we want to be a good
+ * cooperative-multitasking citizen.
+ */
+const MAX_ATOMIC_COMPOSED_CHANGES = 50;
 
 /**
  * File implementation that stores everything in the locally-accessible
@@ -61,10 +70,9 @@ export default class LocalFile extends BaseFile {
     this._changes = [];
 
     /**
-     * {FileSnapshot|null} Cached snapshot, or `null` if none is as yet
-     * computed.
+     * {Promise<FileSnapshot>} Promise for the most recently cached snapshot.
      */
-    this._snapshot = null;
+    this._snapshotPromise = Promise.resolve(FileSnapshot.EMPTY);
 
     /**
      * {boolean|null} Whether the file should exist as of the next write. This
@@ -239,7 +247,7 @@ export default class LocalFile extends BaseFile {
       // ready for potential re-creation).
       this._fileShouldExist = false;
       this._changes         = [];
-      this._snapshot        = null;
+      this._snapshotPromise = Promise.resolve(FileSnapshot.EMPTY);
 
       // Get it erased.
       this._storageNeedsFlush();
@@ -272,7 +280,7 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-  * Implementation as required by the superclass.
+   * Implementation as required by the superclass.
    *
    * @param {Int} revNum Which revision to get.
    * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
@@ -281,11 +289,33 @@ export default class LocalFile extends BaseFile {
    *   available.
    */
   async _impl_getSnapshot(revNum, timeoutMsec) {
-    // **TODO:** This should probably be set up to work when `revNum` is
-    // something other than the current revision.
     await this._readStorageIfNecessary(timeoutMsec);
-    const current = await this._getCurrentSnapshot();
-    return (current.revNum === revNum) ? current : null;
+
+    // Kinda icky: Set up `already` to be a direct reference to the current
+    // snapshot. But if the promise that points at it has been replaced by the
+    // time the `await` returns, it means that some other caller has already
+    // initiated getting a new snapshot, and we should just wait for that.
+    let already;
+    for (;;) {
+      const sp = this._snapshotPromise;
+      already = await sp;
+      if (this._snapshotPromise === sp) {
+        break;
+      }
+    }
+
+    if (already.revNum === revNum) {
+      return already;
+    } else {
+      const snapshot = this._getSnapshot(revNum, already);
+
+      if (revNum === this._currentRevNum) {
+        // It's the current revision, so drop it into the cache.
+        this._snapshotPromise = snapshot;
+      }
+
+      return snapshot;
+    }
   }
 
   /**
@@ -463,34 +493,52 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
-   * Gets a snapshot for the instantaneous-current revision number, creating it
-   * if not yet done, or returning the previously-cached value.
+   * Helper for {@link #_impl_getSnapshot}, which gets a snapshot for the given
+   * revision, if available.
    *
-   * @returns {FileSnapshot} Snapshot of the current revision.
+   * @param {Int} revNum The revision number.
+   * @param {FileSnapshot} base Snapshot which can be used as a base to compose
+   *   on top of.
+   * @returns {FileSnapshot|null} Snapshot of the indicated revision, if
+   *   available.
    */
-  async _getCurrentSnapshot() {
-    const revNum  = this._currentRevNum;
+  async _getSnapshot(revNum, base) {
     const changes = this._changes;
-    const already = this._snapshot;
+    const startAt = base.revNum + 1;
 
-    if (revNum < 0) {
-      throw Errors.badUse('File does not exist and/or has no changes at all!');
+    if (revNum === base.revNum) {
+      // Asked to produce the base. Easy!
+      return base;
+    } else if (revNum <= base.revNum) {
+      // The base is a later than `revNum`. Technically, we could recompose from
+      // `0`, but for now we don't need to be able to do that. **TODO:**
+      // Consider addressing this. More to the point, we will probably have to
+      // at some point.
+      return null;
     }
 
-    if (already && already.revNum === revNum) {
-      return already;
-    }
+    this._log.event.composingSnapshot(revNum, base.revNum);
 
-    const [base, startAt] = already
-      ? [already,            already.revNum + 1]
-      : [FileSnapshot.EMPTY, 0];
-
+    // Compose the result one chunk of changes at a time. See comment on
+    // `MAX_ATOMIC_COMPOSED_CHANGES`, above, for discussion. **TODO:** It would
+    // be great if `FileSnapshot` more directly supported composing multiple
+    // changes, as much of the slowness here is due to the re-re-...-validation
+    // performed on known-good values in the `FileSnapshot` constructor.
     let result = base;
-    for (let i = startAt; i <= revNum; i++) {
-      result = result.compose(changes[i]);
+    let at     = startAt;
+    while (at <= revNum) {
+      const chunkStart = at;
+      const chunkEnd   = Math.min(chunkStart + MAX_ATOMIC_COMPOSED_CHANGES - 1, revNum);
+
+      for (/*at*/; at <= chunkEnd; at++) {
+        result = result.compose(changes[at]);
+      }
+
+      this._log.event.composedForSnapshot(revNum, chunkStart, chunkEnd);
+
+      await Delay.resolve(10); // Force a tick boundary and wee delay.
     }
 
-    this._snapshot = result;
     this._log.event.madeSnapshot(revNum);
 
     return result;
@@ -509,7 +557,7 @@ export default class LocalFile extends BaseFile {
       // Directory doesn't actually exist. Just initialize empty storage.
       this._fileShouldExist = false;
       this._changes         = [];
-      this._snapshot        = null;
+      this._snapshotPromise = Promise.resolve(FileSnapshot.EMPTY);
 
       this._changeCondition.value = true;
 
@@ -594,7 +642,7 @@ export default class LocalFile extends BaseFile {
     }
 
     this._changes         = changes;
-    this._snapshot        = null;
+    this._snapshotPromise = Promise.resolve(FileSnapshot.EMPTY);
     this._storageToWrite  = new Map();
     this._storageIsDirty  = false;
 
