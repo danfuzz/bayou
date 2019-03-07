@@ -258,6 +258,20 @@ export default class LocalFile extends BaseFile {
   }
 
   /**
+   * Implementation as required by the superclass.
+   *
+   * @param {Int} revNum Which revision to get.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec.
+   * @returns {FileChange|null} Change instance corresponding to the indicated
+   *   revision, if available.
+   */
+  async _impl_getChange(revNum, timeoutMsec) {
+    // **TODO:** Implement this!
+    return this._mustOverride(revNum, timeoutMsec);
+  }
+
+  /**
   * Implementation as required by the superclass.
    *
    * @param {Int} revNum Which revision to get.

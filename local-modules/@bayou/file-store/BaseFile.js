@@ -182,6 +182,39 @@ export default class BaseFile extends CommonBase {
   }
 
   /**
+   * Gets a particular change to the file that this instance controls,
+   * identified by revision number. It is an error to request the change for a
+   * revision that does not yet exist. It is also an error to request a change
+   * for a revision that is no longer represented in history. (That is,
+   * instances of this class are not obliged &mdash; moreso, are not expected
+   * &mdash; to keep full _file_ change history. In the case of requesting an
+   * aged-out revision, this method throws an error with the name
+   * `revisionNotAvailable`.
+   *
+   * @param {Int} revNum The revision number of the change. The result is the
+   *   change which produced that revision. E.g., `0` is a request for the first
+   *   change (the change from the empty file).
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link #clampTimeoutMsec}. `null` is treated as the
+   *   maximum allowed value.
+   * @returns {FileChange} The requested change.
+   */
+  async getChange(revNum, timeoutMsec) {
+    const currentRevNum = await this.currentRevNum();
+
+    RevisionNumber.maxInc(revNum, currentRevNum);
+
+    const result = await this._impl_getChange(revNum, timeoutMsec);
+
+    if (result === null) {
+      throw Errors.revisionNotAvailable(revNum);
+    }
+
+    return FileChange.check(result);
+  }
+
+  /**
    * Gets a snapshot of the full file as of the indicated revision. It is an
    * error to request a revision that does not yet exist. For subclasses that
    * don't keep full history, it is also an error to request a revision that is
@@ -314,6 +347,28 @@ export default class BaseFile extends CommonBase {
    */
   async _impl_exists() {
     return this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getChange}. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @param {Int} revNum Which revision to get. Guaranteed to be a revision
+   *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} timeoutMsec Maximum amount of time to allow in this call,
+   *   in msec. This value will be silently clamped to the allowable range as
+   *   defined by {@link #clampTimeoutMsec}. `null` is treated as the maximum
+   *   allowed value.
+   * @returns {FileChange|null} Change instance corresponding to the indicated
+   *   revision. A return value of `null` specifically indicates that `revNum`
+   *   corresponds to a revision that is no longer available (and will cause
+   * this class to report a `revisionNotAvailable` error to its caller).
+   * @throws {Error} Thrown for any problem other than the revision not being
+   *   available.
+   */
+  async _impl_getChange(revNum, timeoutMsec) {
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**
