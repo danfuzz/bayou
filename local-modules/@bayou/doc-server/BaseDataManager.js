@@ -46,7 +46,7 @@ export default class BaseDataManager extends BaseComplexMember {
   async validationStatus() {
     const result = ValidationStatus.check(await this._impl_validationStatus());
 
-    this.log.info(`Validation status: ${result}`);
+    this.log.event.validationStatus(result);
 
     return result;
   }
