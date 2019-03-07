@@ -223,6 +223,19 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * Semantic validation for an OT change in the context of this snapshot.
+   * Each subclass implements its own version of the semantic validation.
+   *
+   * @param {BodyChange} change The change to apply.
+   * @returns {boolean} `true` if valid change, otherwise throws an error.
+   */
+  validateChange(change) {
+    this.constructor.changeClass.check(change);
+
+    return this._impl_validateChange(change);
+  }
+
+  /**
    * Returns an instance just like this one except with the content set as
    * given. This will return `this` if `content` is strictly equal (`===`) to
    * `this.content`.
@@ -253,33 +266,6 @@ export default class BaseSnapshot extends CommonBase {
   }
 
   /**
-   * Semantic validation for an OT change in the context of this snapshot.
-   * Each subclass implements its own version of the semantic validation.
-   *
-   * @param {BodyChange} change The change to apply.
-   * @returns {boolean} `true` if valid change, otherwise throws an error.
-   */
-  validateChange(change) {
-    this.constructor.changeClass.check(change);
-
-    return this._impl_validateChange(change);
-  }
-
-  /**
-   * The abstract implementation of {@link #validateChange}. This
-   * class implements semantic validation for an OT change in the context
-   * of this snapshot. Should be implemented by all subclasses.
-   *
-   * @abstract
-   * @param {BodyChange} change The change to be validated in the context
-   *   of this snapshot.
-   * @returns {boolean} `true` if valid change, otherwise throws an error.
-   */
-  _impl_validateChange(change) {
-    return this._mustOverride(change);
-  }
-
-  /**
    * Main implementation of {@link #diff}, as defined by the subclass. Takes a
    * snapshot of the same class, and produces a delta (not a change)
    * representing the difference.
@@ -294,6 +280,20 @@ export default class BaseSnapshot extends CommonBase {
    */
   _impl_diffAsDelta(newerSnapshot) {
     return this._mustOverride(newerSnapshot);
+  }
+
+  /**
+   * The abstract implementation of {@link #validateChange}. This
+   * class implements semantic validation for an OT change in the context
+   * of this snapshot. Should be implemented by all subclasses.
+   *
+   * @abstract
+   * @param {BodyChange} change The change to be validated in the context
+   *   of this snapshot.
+   * @returns {boolean} `true` if valid change, otherwise throws an error.
+   */
+  _impl_validateChange(change) {
+    return this._mustOverride(change);
   }
 
   /**
