@@ -86,9 +86,17 @@ export default class PropertyControl extends DurableControl {
     return finalChange;
   }
 
-  // TODO: Implement validateChange for Property Control
-  _impl_validateChange() {
-    return true;
+  /**
+   * Implementation as required by the superclass.
+   *
+   * @param {PropertyChange} change_unused Change to apply.
+   * @param {PropertySnapshot} baseSnapshot_unused The base snapshot the change
+   *   is being applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
+   */
+  _impl_validateChange(change_unused, baseSnapshot_unused) {
+    // **TODO:** Implement this!
   }
 
   /**
