@@ -15,6 +15,15 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * The model that this class embodies is that a file is a random-access
  * key-value store with keys having a path-like structure and values being
  * arbitrary binary data.
+ *
+ * **Note:** This class intentionally bears resemblance to
+ * {@link doc-server.BaseControl} in terms of its API. However, it probably
+ * won't be the case that these two classes will become siblings to a baser
+ * base class, because, in the long run, the type managed as a "change" in this
+ * class will not be a subclass of {@link ot-common.BaseChange} (because of the
+ * needs of file GC). That said, it is worth keeping an eye on these classes to
+ * (a) maintain parallel structure where feasible, and (b) see if there turns
+ * out to be any common functionality that really can be factored out.
  */
 export default class BaseFile extends CommonBase {
   /**
