@@ -67,7 +67,8 @@ describe('@bayou/file-store-local/LocalFile', () => {
       const snap = await file.getSnapshot(0);
       assert.strictEqual(snap.size, 0);
 
-      // **TODO:** Should try to `getChange(0)`, when that becomes possible.
+      const change = await file.getChange(0);
+      assert.deepEqual(change, FileChange.FIRST);
 
       await TempFiles.doneWithFile(file);
     });
