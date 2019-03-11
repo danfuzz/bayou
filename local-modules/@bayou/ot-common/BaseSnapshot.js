@@ -134,20 +134,44 @@ export default class BaseSnapshot extends CommonBase {
    * `revNum` as this instance, this method returns `this`. Otherwise, this
    * method returns a new instance.
    *
+   * **Note:** This method is `async` because composing many changes can be
+   * CPU-intensive, and as such it can be a bad idea to perform an invocation of
+   * this method without having it be able to yield (allow other code to run) in
+   * the middle of the operation. The second argument of the method controls
+   * the yielding behavior.
+   *
    * @param {array<BaseChange>} changes Changes to compose on top of this
    *   instance. Each array element must be an instance of the `changeClass` as
    *   defined by the subclass.
+   * @param {Int} [maxChangesPerIteration = 1] The number of changes that are to
+   *   be composed without yielding to other computation. (See note above.)
+   * @param {function} [yieldFunction = () => {}] Function call and `await` on
+   *   the result of, at each iteration. Clients of this method are advised to
+   *   insert a short delay in the function's behavior, to help avoid CPU
+   *   starvation. The function is passed `start` and `end` arguments with
+   *   semantics similar to `Array.slice()`, indicating which elements of
+   *   `changes` are _about to be_ processed.
    * @returns {BaseSnapshot} New instance consisting of the composition of
    *   this instance with all of the `changes`. Will be a direct instance of the
    *   same class as `this`.
    */
-  composeAll(changes) {
+  async composeAll(changes, maxChangesPerIteration = 1, yieldFunction = () => { /*empty*/ }) {
     TArray.check(changes);
 
     let result = this;
 
-    for (const c of changes) {
-      result = result.compose(c);
+    for (let i = 0; i < changes.length; i += maxChangesPerIteration) {
+      const startAt = i;
+      const endAt   = i + maxChangesPerIteration;
+      const chunk   = changes.slice(i, i + maxChangesPerIteration);
+
+      await yieldFunction(startAt, endAt);
+
+      // **TODO:** Make it possible for this to have a more efficient
+      // implementation in subclasses.
+      for (const c of chunk) {
+        result = result.compose(c);
+      }
     }
 
     return result;

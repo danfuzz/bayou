@@ -157,11 +157,11 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
   });
 
   describe('composeAll()', () => {
-    it('should call through to the delta and wrap the result in a new instance', () => {
+    it('should call through to the delta and wrap the result in a new instance', async () => {
       const snap    = new MockSnapshot(10, [new MockOp('x')]);
       const change1 = new MockChange(21, [new MockOp('y')]);
       const change2 = new MockChange(22, [new MockOp('z')]);
-      const result = snap.composeAll([change1, change2]);
+      const result  = await snap.composeAll([change1, change2]);
 
       assert.instanceOf(result, MockSnapshot);
       assert.strictEqual(result.revNum, 22);
@@ -171,44 +171,57 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
         [new MockOp('composedDoc_'), new MockOp('z')]);
     });
 
-    it('should return `this` given same-`revNum` empty-`delta` changes', () => {
+    it('should return `this` given same-`revNum` empty-`delta` changes', async () => {
       const snap   = new MockSnapshot(10, [new MockOp('x')]);
       const change = new MockChange(10, []);
-      const result = snap.composeAll([change, change, change, change]);
+      const result = await snap.composeAll([change, change, change, change]);
 
       assert.strictEqual(result, snap);
     });
 
-    it('should reject instances of the wrong change class', () => {
+    it('should reject instances of the wrong change class', async () => {
       const snap   = new MockSnapshot(10, []);
       const change = new AnotherChange(0, []);
 
-      assert.throws(() => { snap.composeAll([change]); });
+      await assert.isRejected(snap.composeAll([change]), /badValue/);
     });
 
-    it('should reject non-change array elements', () => {
+    it('should reject non-change array elements', async () => {
       const snap = new MockSnapshot(10, []);
 
-      function test(v) {
-        assert.throws(() => { snap.compose([v]); });
+      async function test(v) {
+        await assert.isRejected(snap.composeAll([v]), /badValue/);
       }
 
-      test(undefined);
-      test(null);
-      test(false);
-      test('blort');
-      test([]);
-      test(['florp']);
-      test({ x: 10 });
-      test(new Map());
-      test(MockDelta.EMPTY);
-      test(MockSnapshot.EMPTY);
+      await test(undefined);
+      await test(null);
+      await test(false);
+      await test(123);
+      await test('blort');
+      await test([]);
+      await test(['florp']);
+      await test({ x: 10 });
+      await test(new Map());
+      await test(MockDelta.EMPTY);
+      await test(MockSnapshot.EMPTY);
     });
 
-    it('should reject non-array arguments', () => {
-      const snap   = new MockSnapshot(10, []);
+    it('should reject non-array arguments', async () => {
+      const snap = new MockSnapshot(10, []);
 
-      assert.throws(() => { snap.composeAll(123); });
+      async function test(v) {
+        await assert.isRejected(snap.composeAll(v), /badValue/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test(false);
+      await test(123);
+      await test('blort');
+      await test({ x: 10 });
+      await test(new Map());
+      await test(MockDelta.EMPTY);
+      await test(MockSnapshot.EMPTY);
     });
   });
 
