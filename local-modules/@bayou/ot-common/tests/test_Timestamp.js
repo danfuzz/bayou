@@ -15,39 +15,39 @@ const SEC_2040_JAN_01 = Math.floor(new Date(2040, 1, 1, 0, 0, 0, 0).valueOf() / 
 
 describe('@bayou/ot-common/Timestamp', () => {
   describe('.MAX_VALUE', () => {
-    it('should be an instance of the class', () => {
+    it('is an instance of the class', () => {
       assert.instanceOf(Timestamp.MAX_VALUE, Timestamp);
     });
 
-    it('should be larger than `MIN_VALUE`', () => {
+    it('is larger than `MIN_VALUE`', () => {
       assert.strictEqual(Timestamp.MAX_VALUE.compareTo(Timestamp.MIN_VALUE), 1);
     });
 
-    it('should have the largest allowed `usecs`', () => {
+    it('has the largest allowed `usecs`', () => {
       assert.strictEqual(Timestamp.MAX_VALUE.usecs, 999999);
     });
   });
 
   describe('.MIN_VALUE', () => {
-    it('should be an instance of the class', () => {
+    it('is an instance of the class', () => {
       assert.instanceOf(Timestamp.MIN_VALUE, Timestamp);
     });
 
-    it('should be smaller than `MAX_VALUE`', () => {
+    it('is smaller than `MAX_VALUE`', () => {
       assert.strictEqual(Timestamp.MIN_VALUE.compareTo(Timestamp.MAX_VALUE), -1);
     });
 
-    it('should have `0` for `usecs`', () => {
+    it('has `0` for `usecs`', () => {
       assert.strictEqual(Timestamp.MIN_VALUE.usecs, 0);
     });
   });
 
   describe('check()', () => {
-    it('should reject `null`', () => {
+    it('rejects `null`', () => {
       assert.throws(() => Timestamp.check(null));
     });
 
-    it('should reject non-instances', () => {
+    it('rejects non-instances', () => {
       assert.throws(() => Timestamp.check(37));
       assert.throws(() => Timestamp.check('x'));
       assert.throws(() => Timestamp.check(false));
@@ -55,14 +55,14 @@ describe('@bayou/ot-common/Timestamp', () => {
       assert.throws(() => Timestamp.check(new Map()));
     });
 
-    it('should accept an instance', () => {
+    it('accepts an instance', () => {
       const value = new Timestamp(SEC_2010_JAN_01, 0);
       assert.strictEqual(Timestamp.check(value), value);
     });
   });
 
   describe('fromMsec()', () => {
-    it('should produce an instance with the expected fields', () => {
+    it('produces an instance with the expected fields', () => {
       function test(v) {
         const sec  = Math.floor(v / 1000);
         const usec = Math.floor((v - (sec * 1000)) * 1000);
@@ -80,7 +80,7 @@ describe('@bayou/ot-common/Timestamp', () => {
   });
 
   describe('fromUsec()', () => {
-    it('should produce an instance with the expected fields', () => {
+    it('produces an instance with the expected fields', () => {
       function test(v) {
         const sec  = Math.floor(v / 1000000);
         const usec = v - (sec * 1000000);
@@ -98,11 +98,11 @@ describe('@bayou/ot-common/Timestamp', () => {
   });
 
   describe('orNull()', () => {
-    it('should accept `null`', () => {
+    it('accepts `null`', () => {
       assert.isNull(Timestamp.orNull(null));
     });
 
-    it('should reject non-instances', () => {
+    it('rejects non-instances', () => {
       assert.throws(() => Timestamp.orNull(37));
       assert.throws(() => Timestamp.orNull('x'));
       assert.throws(() => Timestamp.orNull(false));
@@ -110,14 +110,14 @@ describe('@bayou/ot-common/Timestamp', () => {
       assert.throws(() => Timestamp.orNull(new Map()));
     });
 
-    it('should accept an instance', () => {
+    it('accepts an instance', () => {
       const value = new Timestamp(SEC_2010_JAN_01, 0);
       assert.strictEqual(Timestamp.orNull(value), value);
     });
   });
 
   describe('constructor()', () => {
-    it('should accept two in-range integers and reflect those values in the corresponding fields', () => {
+    it('accepts two in-range integers and reflect those values in the corresponding fields', () => {
       function test(secs, usecs) {
         const result = new Timestamp(secs, usecs);
         assert.strictEqual(result.secs, secs);
@@ -131,7 +131,7 @@ describe('@bayou/ot-common/Timestamp', () => {
   });
 
   describe('toString()', () => {
-    it('should convert as expected', () => {
+    it('converts as expected', () => {
       function test(secs, usecs) {
         const result = new Timestamp(secs, usecs);
 
