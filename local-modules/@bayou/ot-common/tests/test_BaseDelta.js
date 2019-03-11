@@ -28,23 +28,23 @@ describe('@bayou/ot-common/BaseDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = MockDelta.EMPTY;
 
-    it('should be an instance of the subclass', () => {
+    it('is an instance of the subclass', () => {
       assert.instanceOf(EMPTY, MockDelta);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(EMPTY);
     });
 
-    it('should have an empty `ops`', () => {
+    it('has an empty `ops`', () => {
       assert.lengthOf(EMPTY.ops, 0);
     });
 
-    it('should have a frozen `ops`', () => {
+    it('has a frozen `ops`', () => {
       assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `.isEmpty()`', () => {
+    it('is `.isEmpty()`', () => {
       assert.isTrue(EMPTY.isEmpty());
     });
   });
@@ -62,7 +62,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should succeed for: ${inspect(v)}`, () => {
+        it(`succeeds for: ${inspect(v)}`, () => {
           new MockDelta(v);
         });
       }
@@ -87,13 +87,13 @@ describe('@bayou/ot-common/BaseDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should fail for: ${inspect(v)}`, () => {
+        it(`fails for: ${inspect(v)}`, () => {
           assert.throws(() => new MockDelta(v));
         });
       }
     });
 
-    it('should convert array-of-array arguments into constructed ops', () => {
+    it('converts array-of-array arguments into constructed ops', () => {
       function test(...argses) {
         const ops = argses.map(a => new MockOp(...a));
         const result = new MockDelta(argses);
@@ -114,7 +114,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
   });
 
   describe('compose()', () => {
-    it('should call through to the impl when given valid arguments', () => {
+    it('calls through to the impl when given valid arguments', () => {
       function test(ops1, ops2, wantDocument, expectOps) {
         const d1     = new MockDelta(ops1);
         const d2     = new MockDelta(ops2);
@@ -130,7 +130,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test([], [['x']], true,  [['composedDoc'], ['x']]);
     });
 
-    it('should reject invalid `other` arguments', () => {
+    it('rejects invalid `other` arguments', () => {
       function test(value) {
         const delta = MockDelta.EMPTY;
         assert.throws(() => { delta.compose(value, false); }, /badValue/);
@@ -144,7 +144,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test(new Map());
     });
 
-    it('should reject non-boolean `wantDocument` arguments', () => {
+    it('rejects non-boolean `wantDocument` arguments', () => {
       function test(value) {
         const delta = MockDelta.EMPTY;
         assert.throws(() => { delta.compose(delta, value); }, /badValue/);
@@ -157,21 +157,21 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test('blort');
     });
 
-    it('should reject a non-document `this` when `wantDocument` is `true`', () => {
+    it('rejects a non-document `this` when `wantDocument` is `true`', () => {
       const delta = new MockDelta([['notDocument']]);
       assert.throws(() => { delta.compose(MockDelta.EMPTY, true); }, /badUse/);
     });
   });
 
   describe('deconstruct()', () => {
-    it('should return a data value', () => {
+    it('returns a data value', () => {
       const delta  = new MockDelta([['x', 1, 2, 3, [4, 5, 6]], ['y', { x: ['y'] }]]);
       const result = delta.deconstruct();
 
       assert.isTrue(DataUtil.isData(result));
     });
 
-    it('should return an array of length one, which contains an array-of-arrays', () => {
+    it('returns an array of length one, which contains an array-of-arrays', () => {
       const delta  = new MockDelta([['x', 1], ['y', [1, 2]]]);
       const result = delta.deconstruct();
 
@@ -184,7 +184,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       }
     });
 
-    it('should return a value which successfully round-trips from and to a constructor argument', () => {
+    it('returns a value which successfully round-trips from and to a constructor argument', () => {
       function test(arg) {
         const delta1 = new MockDelta(arg);
         const result = delta1.deconstruct();
@@ -205,7 +205,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       function test(ops) {
         const delta = new MockDelta(ops);
         assert.isTrue(delta.equals(delta));
@@ -216,7 +216,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test(MockDelta.NOT_DOCUMENT_OPS);
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(ops) {
         const d1 = new MockDelta(ops);
         const d2 = new MockDelta(ops);
@@ -231,7 +231,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test([['x'], ['y', 1, 2, 3]]);
     });
 
-    it('should return `true` when equal ops are not also `===`', () => {
+    it('returns `true` when equal ops are not also `===`', () => {
       const ops1 = [new MockOp('x'), new MockOp('y')];
       const ops2 = [new MockOp('x'), new MockOp('y')];
       const d1 = new MockDelta(ops1);
@@ -241,7 +241,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       assert.isTrue(d2.equals(d1));
     });
 
-    it('should return `false` when array lengths differ', () => {
+    it('returns `false` when array lengths differ', () => {
       const op1 = new MockOp('x');
       const op2 = new MockOp('y');
       const d1 = new MockDelta([op1]);
@@ -251,7 +251,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       assert.isFalse(d2.equals(d1));
     });
 
-    it('should return `false` when corresponding ops differ', () => {
+    it('returns `false` when corresponding ops differ', () => {
       function test(ops1, ops2) {
         const d1 = new MockDelta(ops1);
         const d2 = new MockDelta(ops2);
@@ -276,7 +276,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       test([op1, op2, op3, op4, op5], [op1, op2, op3, op4, op1]);
     });
 
-    it('should return `false` when passed a non-instance or an instance of a different class', () => {
+    it('returns `false` when passed a non-instance or an instance of a different class', () => {
       const delta = new MockDelta([]);
 
       assert.isFalse(delta.equals(undefined));
@@ -298,14 +298,16 @@ describe('@bayou/ot-common/BaseDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
+        it(`returns \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(new MockDelta(v).isDocument());
         });
       }
     });
 
     describe('`false` cases', () => {
-      assert.isFalse(new MockDelta(MockDelta.NOT_DOCUMENT_OPS).isDocument());
+      it('returns `false` when appropriate', () => {
+        assert.isFalse(new MockDelta(MockDelta.NOT_DOCUMENT_OPS).isDocument());
+      });
     });
   });
 
@@ -317,7 +319,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
+        it(`returns \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(v.isEmpty());
         });
       }
@@ -330,7 +332,7 @@ describe('@bayou/ot-common/BaseDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${inspect(v)}`, () => {
+        it(`returns \`false\` for: ${inspect(v)}`, () => {
           const delta = new MockDelta(v);
           assert.isFalse(delta.isEmpty());
         });

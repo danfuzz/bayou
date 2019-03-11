@@ -31,15 +31,15 @@ describe('@bayou/ot-common/BaseChange', () => {
   describe('.FIRST', () => {
     const first = MockChange.FIRST;
 
-    it('should be an instance of the subclass', () => {
+    it('is an instance of the subclass', () => {
       assert.instanceOf(first, MockChange);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(first);
     });
 
-    it('should have the expected properties', () => {
+    it('has the expected properties', () => {
       assert.deepEqual(first.delta, MockDelta.EMPTY);
       assert.strictEqual(first.revNum, 0);
       assert.isNull(first.authorId);
@@ -48,12 +48,12 @@ describe('@bayou/ot-common/BaseChange', () => {
   });
 
   describe('constructor()', () => {
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const result = new MockChange(0, MockDelta.EMPTY);
       assert.isFrozen(result);
     });
 
-    it('should accept valid arguments, which should be reflected in the accessors', () => {
+    it('accepts valid arguments, which should be reflected in the accessors', () => {
       function test(...args) {
         assertFields(new MockChange(...args), ...args);
       }
@@ -69,18 +69,18 @@ describe('@bayou/ot-common/BaseChange', () => {
       test(242, MockDelta.EMPTY,   Timestamp.MAX_VALUE, 'florp9019');
     });
 
-    it('should accept a valid `delta` array, which should get passed to the delta constructor', () => {
+    it('accepts a valid `delta` array, which should get passed to the delta constructor', () => {
       const array  = MockDelta.VALID_OPS;
       const result = new MockChange(0, array);
 
       assert.deepEqual(result.delta.ops, array);
     });
 
-    it('should reject an invalid `delta` array, via the delta constructor', () => {
+    it('rejects an invalid `delta` array, via the delta constructor', () => {
       assert.throws(() => { new MockChange(0, MockDelta.INVALID_OPS); });
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new MockChange(...args));
       }
@@ -121,7 +121,7 @@ describe('@bayou/ot-common/BaseChange', () => {
       const orig = new MockChange(...args);
 
       describe(`${methodName}()`, () => {
-        it('should produce a new instance with the expected fields', () => {
+        it('produces a new instance with the expected fields', () => {
           const result     = orig[methodName](newValue);
           const expectArgs = args.slice();
 
@@ -129,12 +129,12 @@ describe('@bayou/ot-common/BaseChange', () => {
           assertFields(result, ...expectArgs);
         });
 
-        it('should return `this` if the given argument is the same as what is in the instance', () => {
+        it('returns `this` if the given argument is the same as what is in the instance', () => {
           const result = orig[methodName](args[argIndex]);
           assert.strictEqual(result, orig);
         });
 
-        it('should reject invalid arguments', () => {
+        it('rejects invalid arguments', () => {
           function reject(v) {
             assert.throws(() => orig[methodName](v));
           }
