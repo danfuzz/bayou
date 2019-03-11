@@ -179,6 +179,55 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.strictEqual(result, snap);
     });
 
+    it('calls the `yieldFunction` the appropriate number of times and with the expected arguments', async () => {
+      const snap    = new MockSnapshot(10, [new MockOp('x')]);
+      const changes = [];
+
+      for (let i = 0; i < 100; i++) {
+        changes.push(new MockChange(i + 100, [new MockOp('yes', i)]));
+      }
+
+      async function test(max) {
+        let callCount   = 0;
+        let expectStart = 0;
+        const asserts   = [];
+
+        const yfunc = async (start, end) => {
+          callCount++;
+
+          // Required so as to capture this iteration's values for use in the
+          // closure below.
+          const cc = callCount;
+          const s  = expectStart;
+
+          asserts.push(() => {
+            const e = Math.min(s + max, changes.length);
+            assert.strictEqual(start, s, `at count ${cc}`);
+            assert.strictEqual(end,   e, `at count ${cc}`);
+          });
+
+          expectStart += max;
+        };
+
+        await snap.composeAll(changes, max, yfunc);
+        assert.strictEqual(callCount, Math.ceil(changes.length / max));
+
+        // What's going on here: We don't want to throw assertion errors inside
+        // the middle of the call to `composeAll()`, so we build up an array of
+        // assertion closures as we go, and run through them all here, after the
+        // call to the method under test is complete.
+        for (const a of asserts) {
+          a();
+        }
+      }
+
+      await test(1);
+      await test(2);
+      await test(10);
+      await test(31);
+      await test(67);
+    });
+
     it('rejects instances of the wrong change class', async () => {
       const snap = new MockSnapshot(10, []);
       const good = new MockChange(0, []);

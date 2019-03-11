@@ -162,7 +162,7 @@ export default class BaseSnapshot extends CommonBase {
 
     for (let i = 0; i < changes.length; i += maxChangesPerIteration) {
       const startAt = i;
-      const endAt   = i + maxChangesPerIteration;
+      const endAt   = Math.min(i + maxChangesPerIteration, changes.length);
       const chunk   = changes.slice(i, i + maxChangesPerIteration);
 
       await yieldFunction(startAt, endAt);
