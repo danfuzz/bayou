@@ -118,7 +118,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composedDoc'), new MockOp('y')]);
+        [new MockOp('composedDoc', 1), new MockOp('y')]);
     });
 
     it('returns `this` given a same-`revNum` empty-`delta` change', () => {
@@ -157,7 +157,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
   });
 
   describe('composeAll()', () => {
-    it('calls through to the delta and wrap the result in a new instance', async () => {
+    it('calls through to the delta and wraps the result in a new instance', async () => {
       const snap    = new MockSnapshot(10, [new MockOp('x')]);
       const change1 = new MockChange(21, [new MockOp('y')]);
       const change2 = new MockChange(22, [new MockOp('z')]);
@@ -168,7 +168,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       assert.instanceOf(result.contents, MockDelta);
 
       assert.deepEqual(result.contents.ops,
-        [new MockOp('composedDoc_'), new MockOp('z')]);
+        [new MockOp('composedDoc', 2), new MockOp('z')]);
     });
 
     it('returns `this` given same-`revNum` empty-`delta` changes', async () => {

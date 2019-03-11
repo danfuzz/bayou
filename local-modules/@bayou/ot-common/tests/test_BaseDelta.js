@@ -126,8 +126,8 @@ describe('@bayou/ot-common/BaseDelta', () => {
         assert.deepEqual(result.ops, expectOps);
       }
 
-      test([], [['x']], false, [['composedNotDoc'], ['x']]);
-      test([], [['x']], true,  [['composedDoc'], ['x']]);
+      test([], [['x']], false, [['composedNotDoc', 1], ['x']]);
+      test([], [['x']], true,  [['composedDoc',    1], ['x']]);
     });
 
     it('rejects invalid `other` arguments', () => {
