@@ -39,7 +39,7 @@ export default class BaseOp extends CommonBase {
    * on an instance of this class.
    *
    * **Note:** This depends on the set of `CODE_*` properties being correct for
-   * the concrete subclass class.
+   * the concrete subclass.
    *
    * @param {string} name Potential opcode name.
    * @returns {boolean} `true` if `name` is valid for use as an opcode name on

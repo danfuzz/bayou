@@ -12,23 +12,23 @@ import { MockOp } from '@bayou/ot-common/mocks';
 
 describe('@bayou/ot-common/BaseOp', () => {
   describe('constructor()', () => {
-    it('should accept a string `name argument', () => {
+    it('accepts a string `name argument', () => {
       const result = new MockOp('x');
       assert.strictEqual(result.payload.name, 'x');
     });
 
-    it('should accept at least ten arguments after the name', () => {
+    it('accepts at least ten arguments after the name', () => {
       const result = new MockOp('x', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
       assert.strictEqual(result.payload.args.length, 10);
     });
 
-    it('should produce a frozen instance with a frozen payload', () => {
+    it('produces a frozen instance with a frozen payload', () => {
       const op = new MockOp('x');
       assert.isFrozen(op);
       assert.isFrozen(op.payload);
     });
 
-    it('should have all frozen payload arguments even when given non-frozen ones', () => {
+    it('has all frozen payload arguments even when given non-frozen ones', () => {
       function test(...args) {
         const op      = new MockOp('x', ...args);
         const gotArgs = op.payload.args;
@@ -56,7 +56,7 @@ describe('@bayou/ot-common/BaseOp', () => {
       test({ a: { b: { c: 30 } }, d: [[[[['like']]]]] });
     });
 
-    it('should reject payloads with arguments that are neither frozen nor deep-freezable data', () => {
+    it('rejects payloads with arguments that are neither frozen nor deep-freezable data', () => {
       function test(...args) {
         assert.throws(() => new MockOp('x', ...args));
       }
@@ -75,7 +75,7 @@ describe('@bayou/ot-common/BaseOp', () => {
       //test(new Functor('x', 1, 2, new Set()));
     });
 
-    it('should reject non-string first arguments', () => {
+    it('rejects non-string first arguments', () => {
       function test(v) {
         assert.throws(() => new MockOp(v));
       }
@@ -88,7 +88,7 @@ describe('@bayou/ot-common/BaseOp', () => {
   });
 
   describe('.payload', () => {
-    it('should be a functor based on the constructor arguments', () => {
+    it('is a functor based on the constructor arguments', () => {
       const payload = new Functor('x', 1, 2, 3);
       const op = new MockOp(payload.name, ...payload.args);
 
@@ -97,7 +97,7 @@ describe('@bayou/ot-common/BaseOp', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should return an array data value', () => {
+    it('returns an array data value', () => {
       const op     = new MockOp('x', ['florp', 'like'], { timeline: 'sideways' });
       const result = op.deconstruct();
 
@@ -105,7 +105,7 @@ describe('@bayou/ot-common/BaseOp', () => {
       assert.isTrue(DataUtil.isData(result));
     });
 
-    it('should return a value which successfully round-trips from and to constructor arguments', () => {
+    it('returns a value which successfully round-trips from and to constructor arguments', () => {
       function test(...args) {
         const op1    = new MockOp(...args);
         const result = op1.deconstruct();
