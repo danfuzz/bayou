@@ -180,17 +180,23 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
     });
 
     it('rejects instances of the wrong change class', async () => {
-      const snap   = new MockSnapshot(10, []);
-      const change = new AnotherChange(0, []);
+      const snap = new MockSnapshot(10, []);
+      const good = new MockChange(0, []);
+      const bad  = new AnotherChange(0, []);
 
-      await assert.isRejected(snap.composeAll([change]), /badValue/);
+      await assert.isRejected(snap.composeAll([bad]), /badValue/);
+      await assert.isRejected(snap.composeAll([bad, good]), /badValue/);
+      await assert.isRejected(snap.composeAll([good, bad]), /badValue/);
     });
 
     it('rejects non-change array elements', async () => {
-      const snap = new MockSnapshot(10, []);
+      const snap   = new MockSnapshot(10, []);
+      const change = new MockChange(10, []);
 
       async function test(v) {
         await assert.isRejected(snap.composeAll([v]), /badValue/);
+        await assert.isRejected(snap.composeAll([v, change]), /badValue/);
+        await assert.isRejected(snap.composeAll([change, v]), /badValue/);
       }
 
       await test(undefined);
