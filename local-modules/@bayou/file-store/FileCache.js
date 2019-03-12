@@ -121,7 +121,7 @@ export default class FileCache extends CommonBase {
       // Clear the cache entry, but only if it hasn't already been replaced with
       // a new live reference. (Without the check, we'd have a concurrency
       // hazard.)
-      if (this.getOrNull(fileId) === null) {
+      if (this.getOrNull(fileId, true) === null) {
         this._cache.delete(fileId);
       }
     };
