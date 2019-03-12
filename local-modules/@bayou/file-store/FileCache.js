@@ -71,13 +71,16 @@ export default class FileCache extends CommonBase {
       return null;
     }
 
-    const result = BaseFile.check(weak.get(fileRef));
+    const result = weak.get(fileRef);
 
     if (!quiet) {
       this._log.event.retrieved(fileId);
     }
 
-    return result;
+    // We've seen cases where a weakly-referenced object gets collected
+    // and replaced with an instance of a different class. If this check
+    // throws an error, that's what's going on here.
+    return BaseFile.check(result);
   }
 
   /**
