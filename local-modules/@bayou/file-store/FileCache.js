@@ -65,7 +65,7 @@ export default class FileCache extends CommonBase {
       // re-instantiate the file and add it.
 
       if (!quiet) {
-        this._log.event.dead(fileId);
+        this._log.event.foundDead(fileId);
       }
 
       return null;

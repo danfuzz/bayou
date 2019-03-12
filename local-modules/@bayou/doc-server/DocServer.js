@@ -83,7 +83,7 @@ export default class DocServer extends Singleton {
         }
         // The weak reference is dead. We'll fall through and construct a new
         // result.
-        log.withAddedContext(documentId).info('Cached complex was gc\'ed.');
+        log.withAddedContext(documentId).event.foundDead();
       }
     }
 
