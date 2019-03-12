@@ -908,7 +908,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.deepEqual(gotBase, new MockSnapshot(6, [new MockOp('x', 6)]));
       assert.strictEqual(gotChange, change);
       assert.deepEqual(gotExpected,
-        new MockSnapshot(7, [new MockOp('composedDoc'), new MockOp('y')]));
+        new MockSnapshot(7, [new MockOp('composedDoc', 1), new MockOp('y')]));
       assert.isNumber(gotTimeout);
 
       assert.instanceOf(result, MockChange);

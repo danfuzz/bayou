@@ -75,7 +75,11 @@ export default class DocServer extends Singleton {
         if (!weak.isDead(already)) {
           const result = weak.get(already);
           result.log.event.foundInCache();
-          return result;
+
+          // We've seen cases where a weakly-referenced object gets collected
+          // and replaced with an instance of a different class. If this check
+          // throws an error, that's what's going on here.
+          return FileComplex.check(result);
         }
         // The weak reference is dead. We'll fall through and construct a new
         // result.

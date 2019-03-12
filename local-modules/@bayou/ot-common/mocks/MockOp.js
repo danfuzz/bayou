@@ -9,8 +9,6 @@ import { BaseOp } from '@bayou/ot-common';
  */
 export default class MockOp extends BaseOp {
   static get CODE_composedDoc()    { return 'composedDoc';    }
-  static get CODE_composedDoc_()   { return 'composedDoc_';   }
-  static get CODE_composedDoc__()  { return 'composedDoc__';  }
   static get CODE_composedNotDoc() { return 'composedNotDoc'; }
   static get CODE_diffDelta()      { return 'diffDelta';      }
   static get CODE_notDocument()    { return 'notDocument';    }
@@ -22,6 +20,10 @@ export default class MockOp extends BaseOp {
 
   get name() {
     return this.payload.name;
+  }
+
+  get arg0() {
+    return this.payload.args[0];
   }
 
   static _impl_isValidPayload() {

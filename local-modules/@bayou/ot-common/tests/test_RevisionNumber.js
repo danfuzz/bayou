@@ -50,7 +50,7 @@ function rejectNonNumbers(name, ...args) {
 
 describe('@bayou/ot-common/RevisionNumber', () => {
   describe('check()', () => {
-    it('should accept non-negative integers', () => {
+    it('accepts non-negative integers', () => {
       function test(value) {
         assert.strictEqual(RevisionNumber.check(value), value);
       }
@@ -64,17 +64,17 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(900090009);
     });
 
-    it('should reject other numbers', () => {
+    it('rejects other numbers', () => {
       rejectBadNumbers('check');
     });
 
-    it('should reject non-numbers', () => {
+    it('rejects non-numbers', () => {
       rejectNonNumbers('check');
     });
   });
 
   describe('maxExc()', () => {
-    it('should accept non-negative integers up to the specified limit', () => {
+    it('accepts non-negative integers up to the specified limit', () => {
       function test(value, limit) {
         assert.strictEqual(RevisionNumber.maxExc(value, limit), value);
       }
@@ -87,7 +87,7 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(37, 39);
     });
 
-    it('should reject non-negative integers beyond the specified limit', () => {
+    it('rejects non-negative integers beyond the specified limit', () => {
       function test(value, limit) {
         assert.throws(() => RevisionNumber.maxExc(value, limit), /^badValue/);
       }
@@ -99,17 +99,17 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(100, 99);
     });
 
-    it('should reject other numbers', () => {
+    it('rejects other numbers', () => {
       rejectBadNumbers('maxExc', 10);
     });
 
-    it('should reject non-numbers', () => {
+    it('rejects non-numbers', () => {
       rejectNonNumbers('maxExc', 10);
     });
   });
 
   describe('maxInc()', () => {
-    it('should accept non-negative integers up to the specified limit', () => {
+    it('accepts non-negative integers up to the specified limit', () => {
       function test(value, limit) {
         assert.strictEqual(RevisionNumber.maxInc(value, limit), value);
       }
@@ -126,7 +126,7 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(37, 37);
     });
 
-    it('should reject non-negative integers beyond the specified limit', () => {
+    it('rejects non-negative integers beyond the specified limit', () => {
       function test(value, limit) {
         assert.throws(() => RevisionNumber.maxInc(value, limit), /^badValue/);
       }
@@ -138,17 +138,17 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(100, 98);
     });
 
-    it('should reject other numbers', () => {
+    it('rejects other numbers', () => {
       rejectBadNumbers('maxInc', 10);
     });
 
-    it('should reject non-numbers', () => {
+    it('rejects non-numbers', () => {
       rejectNonNumbers('maxInc', 10);
     });
   });
 
   describe('min()', () => {
-    it('should accept non-negative integers at or beyond the specified limit', () => {
+    it('accepts non-negative integers at or beyond the specified limit', () => {
       function test(value, limit) {
         assert.strictEqual(RevisionNumber.min(value, limit), value);
       }
@@ -175,17 +175,17 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(100, 10000);
     });
 
-    it('should reject other numbers', () => {
+    it('rejects other numbers', () => {
       rejectBadNumbers('min', 10);
     });
 
-    it('should reject non-numbers', () => {
+    it('rejects non-numbers', () => {
       rejectNonNumbers('min', 10);
     });
   });
 
   describe('orNeg1()', () => {
-    it('should accept non-negative integers', () => {
+    it('accepts non-negative integers', () => {
       function test(value) {
         assert.strictEqual(RevisionNumber.orNeg1(value), value);
       }
@@ -199,11 +199,11 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(900090009);
     });
 
-    it('should accept `-1`', () => {
+    it('accepts `-1`', () => {
       assert.strictEqual(RevisionNumber.orNeg1(-1), -1);
     });
 
-    it('should reject other numbers', () => {
+    it('rejects other numbers', () => {
       function test(value) {
         assert.throws(() => RevisionNumber.orNeg1(value), /^badValue/);
       }
@@ -216,7 +216,7 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(NaN);
     });
 
-    it('should reject non-numbers', () => {
+    it('rejects non-numbers', () => {
       rejectNonNumbers('orNeg1');
     });
   });
