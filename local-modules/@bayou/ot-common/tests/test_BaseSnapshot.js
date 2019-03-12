@@ -181,16 +181,18 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
 
     it('calls the `yieldFunction` the appropriate number of times and with the expected arguments', async () => {
       const snap    = new MockSnapshot(10, [new MockOp('x')]);
-      const changes = [];
+      const allChanges = [];
 
       for (let i = 0; i < 100; i++) {
-        changes.push(new MockChange(i + 100, [new MockOp('yes', i)]));
+        allChanges.push(new MockChange(i + 100, [new MockOp('yes', i), new MockOp('x', i)]));
       }
 
-      async function test(max) {
+      async function test(max, total = allChanges.length) {
+        const label     = `max ${max}, total ${total}`;
+        const asserts   = [];
+        const changes   = allChanges.slice(0, total);
         let callCount   = 0;
         let expectStart = 0;
-        const asserts   = [];
 
         const yfunc = async (start, end) => {
           callCount++;
@@ -202,15 +204,19 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
 
           asserts.push(() => {
             const e = Math.min(s + max, changes.length);
-            assert.strictEqual(start, s, `at count ${cc}`);
-            assert.strictEqual(end,   e, `at count ${cc}`);
+            assert.strictEqual(start, s, `${label}, count ${cc}`);
+            assert.strictEqual(end,   e, `${label}, count ${cc}`);
           });
 
           expectStart += max;
         };
 
-        await snap.composeAll(changes, max, yfunc);
-        assert.strictEqual(callCount, Math.ceil(changes.length / max));
+        const result = await snap.composeAll(changes, max, yfunc);
+        assert.strictEqual(callCount, Math.ceil(changes.length / max), label);
+
+        const lastChange = changes[changes.length - 1];
+        const expectOps  = [new MockOp('composedDoc', total), ...lastChange.delta.ops];
+        assert.deepEqual(result, new MockSnapshot(lastChange.revNum, expectOps), label);
 
         // What's going on here: We don't want to throw assertion errors inside
         // the middle of the call to `composeAll()`, so we build up an array of
@@ -222,10 +228,26 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       }
 
       await test(1);
+      await test(1, 1);
+      await test(1, 2);
+      await test(1, 17);
+      await test(1, 90);
       await test(2);
+      await test(2, 1);
+      await test(2, 2);
+      await test(2, 5);
+      await test(2, 80);
+      await test(2, 99);
       await test(10);
+      await test(10, 1);
+      await test(10, 9);
+      await test(10, 95);
       await test(31);
+      await test(31, 25);
       await test(67);
+      await test(67, 98);
+      await test(100);
+      await test(100, 52);
     });
 
     it('rejects instances of the wrong change class', async () => {
