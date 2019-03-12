@@ -181,16 +181,17 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
 
     it('calls the `yieldFunction` the appropriate number of times and with the expected arguments', async () => {
       const snap    = new MockSnapshot(10, [new MockOp('x')]);
-      const changes = [];
+      const allChanges = [];
 
       for (let i = 0; i < 100; i++) {
-        changes.push(new MockChange(i + 100, [new MockOp('yes', i)]));
+        allChanges.push(new MockChange(i + 100, [new MockOp('yes', i)]));
       }
 
-      async function test(max) {
+      async function test(max, total = allChanges.length) {
+        const asserts   = [];
+        const changes   = allChanges.slice(0, total);
         let callCount   = 0;
         let expectStart = 0;
-        const asserts   = [];
 
         const yfunc = async (start, end) => {
           callCount++;
@@ -222,10 +223,28 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
       }
 
       await test(1);
+      await test(1, 1);
+      await test(1, 2);
+      await test(1, 17);
+      await test(1, 90);
       await test(2);
+      await test(2, 1);
+      await test(2, 2);
+      await test(2, 5);
+      await test(2, 80);
+      await test(2, 101);
       await test(10);
+      await test(10, 1);
+      await test(10, 9);
+      await test(10, 95);
+      await test(10, 107);
       await test(31);
+      await test(31, 25);
       await test(67);
+      await test(67, 180);
+      await test(100);
+      await test(140);
+      await test(175);
     });
 
     it('rejects instances of the wrong change class', async () => {
