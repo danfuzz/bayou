@@ -78,7 +78,8 @@ export default class DocServer extends Singleton {
 
           // We've seen cases where a weakly-referenced object gets collected
           // and replaced with an instance of a different class. If this check
-          // throws an error, that's what's going on here.
+          // throws an error, that's what's going on here. (This is evidence of
+          // a bug in Node or in the `weak` package.)
           return FileComplex.check(result);
         }
         // The weak reference is dead. We'll fall through and construct a new
