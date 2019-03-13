@@ -138,7 +138,7 @@ export default class FileComplex extends BaseComplexMember {
     // author matches, we create and return the corresponding object.
 
     const caretSnapshot = await this.caretControl.getSnapshot();
-    const foundCaret = caretSnapshot.getOrNull(caretId);
+    const foundCaret    = caretSnapshot.getOrNull(caretId);
 
     if (foundCaret === null) {
       throw Errors.badId(caretId);
