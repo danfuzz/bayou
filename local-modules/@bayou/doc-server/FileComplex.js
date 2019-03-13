@@ -105,12 +105,23 @@ export default class FileComplex extends BaseComplexMember {
     CaretId.check(caretId);
 
     const foundWeak = this._sessions.get(caretId);
-    if ((foundWeak !== undefined) && !weak.isDead(foundWeak)) {
-      const foundSession = weak.get(foundWeak);
-      if (foundSession instanceof DocSession) {
-        // There is already a `DocSession` for the given session ID.
+
+    if (foundWeak) {
+      // Found in cache.
+      if (weak.isDead(foundWeak)) {
+        // ...but it's since been reaped. Fall through and search for the caret
+        // in the snapshot for same.
+        this.log.event.foundDead(authorId, caretId);
+      } else {
+        // We've seen cases where a weakly-referenced object gets collected
+        // and replaced with an instance of a different class. If this check
+        // throws an error, that's what's going on here. (This is evidence of
+        // a bug in Node or in the `weak` package.)
+        const foundSession = DocSession.check(weak.get(foundWeak));
+
         if (authorId === foundSession.getAuthorId()) {
-          // ...and the author ID matches. Bingo!
+          // We found a pre-existing session for the caret, and the author ID
+          // matches. Bingo!
           return foundSession;
         } else {
           // Existing caret but wrong author ID for it. Log it (could be useful
@@ -127,7 +138,7 @@ export default class FileComplex extends BaseComplexMember {
     // author matches, we create and return the corresponding object.
 
     const caretSnapshot = await this.caretControl.getSnapshot();
-    const foundCaret = caretSnapshot.getOrNull(caretId);
+    const foundCaret    = caretSnapshot.getOrNull(caretId);
 
     if (foundCaret === null) {
       throw Errors.badId(caretId);

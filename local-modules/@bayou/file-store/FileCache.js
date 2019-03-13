@@ -65,12 +65,16 @@ export default class FileCache extends CommonBase {
       // re-instantiate the file and add it.
 
       if (!quiet) {
-        this._log.event.dead(fileId);
+        this._log.event.foundDead(fileId);
       }
 
       return null;
     }
 
+    // We've seen cases where a weakly-referenced object gets collected
+    // and replaced with an instance of a different class. If this check
+    // throws an error, that's what's going on here. (This is evidence of
+    // a bug in Node or in the `weak` package.)
     const result = BaseFile.check(weak.get(fileRef));
 
     if (!quiet) {
@@ -117,7 +121,7 @@ export default class FileCache extends CommonBase {
       // Clear the cache entry, but only if it hasn't already been replaced with
       // a new live reference. (Without the check, we'd have a concurrency
       // hazard.)
-      if (this.getOrNull(fileId) === null) {
+      if (this.getOrNull(fileId, true) === null) {
         this._cache.delete(fileId);
       }
     };
