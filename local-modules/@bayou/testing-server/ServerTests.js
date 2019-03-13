@@ -42,7 +42,8 @@ export default class ServerTests extends UtilityClass {
     const mocha = new Mocha({
       grep:            testFilter || /./,
       reporter:        CollectingReporter,
-      reporterOptions: { holder: reporterHolder }
+      reporterOptions: { holder: reporterHolder },
+      timeout:         10 * 1000 // Ten seconds.
     });
 
     log.info('Initializing server tests...');
