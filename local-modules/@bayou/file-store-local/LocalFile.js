@@ -503,9 +503,6 @@ export default class LocalFile extends BaseFile {
    *   available.
    */
   async _getSnapshot(revNum, base) {
-    const changes = this._changes;
-    const startAt = base.revNum + 1;
-
     if (revNum === base.revNum) {
       // Asked to produce the base. Easy!
       return base;
@@ -519,25 +516,21 @@ export default class LocalFile extends BaseFile {
 
     this._log.event.makingSnapshot(revNum, base.revNum);
 
+    const changes   = this._changes.slice(base.revNum + 1, revNum + 1);
+    const yieldFunc = async (start, end) => {
+      const startRevNum = changes[start].revNum;
+      const endRevNum   = changes[end - 1].revNum;
+      this._log.event.composedForSnapshot(revNum, startRevNum, endRevNum);
+      await Delay.resolve(10); // Force a (non-micro) tick boundary and wee delay.
+    };
+
     // Compose the result one chunk of changes at a time. See comment on
-    // `MAX_ATOMIC_COMPOSED_CHANGES`, above, for discussion. **TODO:** It would
-    // be great if `FileSnapshot` more directly supported composing multiple
-    // changes, as much of the slowness here is due to the re-re-...-validation
-    // performed on known-good values in the `FileSnapshot` constructor.
-    let result = base;
-    let at     = startAt;
-    while (at <= revNum) {
-      const chunkStart = at;
-      const chunkEnd   = Math.min(chunkStart + MAX_ATOMIC_COMPOSED_CHANGES - 1, revNum);
-
-      for (/*at*/; at <= chunkEnd; at++) {
-        result = result.compose(changes[at]);
-      }
-
-      this._log.event.composedForSnapshot(revNum, chunkStart, chunkEnd);
-
-      await Delay.resolve(10); // Force a tick boundary and wee delay.
-    }
+    // `MAX_ATOMIC_COMPOSED_CHANGES`, above, for discussion. **TODO:** Once
+    // `BaseSnapshot` has an `_impl_` carve-out for subclass-specific multiple
+    // composition, `FileSnapshot` should probably implement it, as  much of the
+    // slowness here is due to the re-re-...-validation performed on known-good
+    // values in the `FileSnapshot` constructor.
+    const result = await base.composeAll(changes, MAX_ATOMIC_COMPOSED_CHANGES, yieldFunc);
 
     this._log.event.madeSnapshot(revNum);
 

@@ -180,7 +180,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
     });
 
     it('calls the `yieldFunction` the appropriate number of times and with the expected arguments', async () => {
-      const snap    = new MockSnapshot(10, [new MockOp('x')]);
+      const snap       = new MockSnapshot(10, [new MockOp('x')]);
       const allChanges = [];
 
       for (let i = 0; i < 100; i++) {
