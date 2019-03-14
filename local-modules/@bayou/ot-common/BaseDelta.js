@@ -28,7 +28,7 @@ export default class BaseDelta extends CommonBase {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
 
-    if (!this._EMPTY) {
+    if (!(this._EMPTY instanceof this)) {
       this._EMPTY = new this([]);
     }
 
@@ -112,7 +112,9 @@ export default class BaseDelta extends CommonBase {
 
   /**
    * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta.
+   * This operation works equally whether or not `this` is a document delta. If
+   * `other` is empty (and `this` is an appropriate instance with regards to
+   * `wantDocument`), then this method will return `this`.
    *
    * @param {BaseDelta} other The delta to compose. Must be an instance of the
    *   same concrete class as `this`.
@@ -129,6 +131,10 @@ export default class BaseDelta extends CommonBase {
 
     if (wantDocument && !this.isDocument()) {
       throw Errors.badUse('`wantDocument === true` on non-document instance.');
+    }
+
+    if (other.isEmpty()) {
+      return this;
     }
 
     const result = this._impl_compose(other, wantDocument);
@@ -238,7 +244,9 @@ export default class BaseDelta extends CommonBase {
   /**
    * Main implementation of {@link #compose}. Subclasses must fill this in.
    * If `wantDocument` is passed as `true`, `this` is guaranteed to be a
-   * document delta.
+   * document delta. As a special case, {@link #compose} will _not_ call this
+   * method with an empty value for `other`, as that is detected directly
+   * (causing {@link #compose} to return `this`).
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed

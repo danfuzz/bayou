@@ -114,6 +114,23 @@ describe('@bayou/ot-common/BaseDelta', () => {
   });
 
   describe('compose()', () => {
+    it('returns `this` when `other` is empty', () => {
+      class TestDelta extends MockDelta {
+        _impl_compose(other_unused, wantDocument_unused) {
+          throw new Error('should not have been called');
+        }
+      }
+
+      const docDelta    = new TestDelta([['x']]);
+      const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
+
+      assert.strictEqual(docDelta.compose(TestDelta.EMPTY, true), docDelta);
+      assert.strictEqual(docDelta.compose(new TestDelta([]), true), docDelta);
+
+      assert.strictEqual(nondocDelta.compose(TestDelta.EMPTY, false), nondocDelta);
+      assert.strictEqual(nondocDelta.compose(new TestDelta([]), false), nondocDelta);
+    });
+
     it('calls through to the impl when given valid arguments', () => {
       function test(ops1, ops2, wantDocument, expectOps) {
         const d1     = new MockDelta(ops1);
