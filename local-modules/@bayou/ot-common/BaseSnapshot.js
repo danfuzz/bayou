@@ -131,8 +131,9 @@ export default class BaseSnapshot extends CommonBase {
    * Composes a sequence of changes on top of this instance, in order, to
    * produce a new instance. If the given array of changes is empty, this method
    * returns `this`. If all of the changes have an empty `delta` and the same
-   * `revNum` as this instance, this method returns `this`. Otherwise, this
-   * method returns a new instance.
+   * `revNum` as this instance (including the case where `changes` is an empty
+   * array), this method returns `this`. Otherwise, this method returns a new
+   * instance.
    *
    * **Note:** This method is `async` because composing many changes can be
    * CPU-intensive, and as such it can be a bad idea to perform an invocation of
@@ -158,23 +159,34 @@ export default class BaseSnapshot extends CommonBase {
   async composeAll(changes, maxChangesPerIteration = 1, yieldFunction = () => { /*empty*/ }) {
     TArray.check(changes);
 
-    let result = this;
+    if (changes.length === 0) {
+      return this;
+    }
+
+    let contents = this._contents;
 
     for (let i = 0; i < changes.length; i += maxChangesPerIteration) {
       const startAt = i;
       const endAt   = Math.min(i + maxChangesPerIteration, changes.length);
-      const chunk   = changes.slice(i, i + maxChangesPerIteration);
+
+      const chunk = [];
+      for (let j = startAt; j < endAt; j++) {
+        const change = this.constructor.changeClass.check(changes[j]);
+        chunk.push(change.delta);
+      }
 
       await yieldFunction(startAt, endAt);
 
-      // **TODO:** Make it possible for this to have a more efficient
-      // implementation in subclasses.
-      for (const c of chunk) {
-        result = result.compose(c);
-      }
+      contents = contents.composeAll(chunk, true);
     }
 
-    return result;
+    const revNum = changes[changes.length - 1].revNum;
+
+    if ((revNum === this._revNum) && (contents === this._contents)) {
+      return this;
+    }
+
+    return new this.constructor(revNum, contents);
   }
 
   /**
