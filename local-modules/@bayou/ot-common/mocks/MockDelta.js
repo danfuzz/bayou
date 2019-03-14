@@ -39,7 +39,8 @@ export default class MockDelta extends BaseDelta {
       resultArg = op0.arg0 + 1;
     }
 
-    return new MockDelta([new MockOp(resultName, resultArg), ...other.ops]);
+    const thisClass = this.constructor;
+    return new thisClass([new MockOp(resultName, resultArg), ...other.ops]);
   }
 
   _impl_isDocument() {
