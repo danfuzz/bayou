@@ -408,11 +408,11 @@ export default class BaseControl extends BaseDataManager {
     let result = baseDelta;
     const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
-      const end = Math.min(i + MAX, endExclusive);
+      const end     = Math.min(i + MAX, endExclusive);
       const changes = await this._getChangeRange(i, end, false);
-      for (const c of changes) {
-        result = result.compose(c.delta, wantDocument);
-      }
+      const deltas  = changes.map(c => c.delta);
+
+      result = result.composeAll(deltas, wantDocument);
     }
 
     return result;
