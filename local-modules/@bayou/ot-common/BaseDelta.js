@@ -28,7 +28,7 @@ export default class BaseDelta extends CommonBase {
     // **Note:** `this` in the context of a static method is the class, not an
     // instance.
 
-    if (!this._EMPTY) {
+    if (!(this._EMPTY instanceof this)) {
       this._EMPTY = new this([]);
     }
 
@@ -113,6 +113,9 @@ export default class BaseDelta extends CommonBase {
   /**
    * Composes another instance on top of this one, to produce a new instance.
    * This operation works equally whether or not `this` is a document delta.
+   * If `other` is an empty delta, this method still typically returns a new
+   * instance, though subclasses can choose to return `this` if circumstances
+   * warrant it).
    *
    * @param {BaseDelta} other The delta to compose. Must be an instance of the
    *   same concrete class as `this`.
@@ -120,24 +123,63 @@ export default class BaseDelta extends CommonBase {
    *   a document delta. _Some_ subclasses operate differently when asked to
    *   produce a document vs. not, and this parameter controls that (potential)
    *   behavior. When `true`, `this` must be passed as a document delta.
-   * @returns {BodyDelta} Result of composition. Is always an instance of the
+   * @returns {BaseDelta} Result of composition. Is always an instance of the
    *   same concrete class as `this`.
    */
   compose(other, wantDocument) {
-    this.constructor.check(other);
+    return this.composeAll([other], wantDocument);
+  }
+
+  /**
+   * Composes a sequence of deltas on top of this instance, in order, to
+   * produce a new instance. This operation works equally whether or not `this`
+   * is a document delta. If the given array is empty, this method returns
+   * `this`. Otherwise, this method typically returns a new instance (though
+   * subclasses can choose to return `this` if circumstances warrant it).
+   *
+   * **Note:** This method can potentially be CPU-intensive, especially if the
+   * `deltas` array has many elements and/or has many ops inside the elements
+   * (in aggregate). As such, it is recommended practice to split known (or
+   * reasonably expected) intense compositions into separate invocations across
+   * multiple ticks. One layer up in this module, the method
+   * {@link BaseSnapshot#composeAll} is in fact an `async` method which knows
+   * how to split things up appropriately. It may be a good idea to call that
+   * instead of calling this method more directly.
+   *
+   * @param {array<BaseDelta>} deltas Instances to compose on top of this
+   *   instance. Each array element must be an instance of the `deltaClass` as
+   *   defined by the subclass.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta. _Some_ subclasses operate differently when asked to
+   *   produce a document vs. not, and this parameter controls that (potential)
+   *   behavior. When `true`, `this` must be passed as a document delta.
+   * @returns {BaseDelta} New instance consisting of the composition of
+   *   this instance with all of the `deltas`. Will be a direct instance of the
+   *   same class as `this`.
+   */
+  composeAll(deltas, wantDocument) {
+    TArray.check(deltas);
     TBoolean.check(wantDocument);
 
     if (wantDocument && !this.isDocument()) {
       throw Errors.badUse('`wantDocument === true` on non-document instance.');
     }
 
-    const result = this._impl_compose(other, wantDocument);
+    let result = this;
 
-    this.constructor.check(result);
+    // **TODO:** Make it possible for this to have a more efficient
+    // implementation in subclasses.
+    for (const d of deltas) {
+      this.constructor.check(d);
 
-    if (wantDocument && !result.isDocument()) {
-      // This indicates a bug in the subclass.
-      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
+      result = result._impl_compose(d, wantDocument);
+
+      this.constructor.check(result);
+
+      if (wantDocument && !result.isDocument()) {
+        // This indicates a bug in the subclass.
+        throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
+      }
     }
 
     return result;
@@ -236,9 +278,9 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Main implementation of {@link #compose}. Subclasses must fill this in.
-   * If `wantDocument` is passed as `true`, `this` is guaranteed to be a
-   * document delta.
+   * Main implementation of {@link #compose} and {@link #composeAll}. Subclasses
+   * must fill this in. If `wantDocument` is passed as `true`, `this` is
+   * guaranteed to be a document delta.
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed
