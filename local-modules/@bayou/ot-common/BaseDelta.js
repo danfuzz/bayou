@@ -120,7 +120,7 @@ export default class BaseDelta extends CommonBase {
    *   a document delta. _Some_ subclasses operate differently when asked to
    *   produce a document vs. not, and this parameter controls that (potential)
    *   behavior. When `true`, `this` must be passed as a document delta.
-   * @returns {BodyDelta} Result of composition. Is always an instance of the
+   * @returns {BaseDelta} Result of composition. Is always an instance of the
    *   same concrete class as `this`.
    */
   compose(other, wantDocument) {
