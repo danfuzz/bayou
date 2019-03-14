@@ -171,14 +171,6 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
         [new MockOp('composedDoc', 2), new MockOp('z')]);
     });
 
-    it('returns a value equal to `this` given same-`revNum` empty-`delta` changes', async () => {
-      const snap   = new MockSnapshot(10, [new MockOp('x')]);
-      const change = new MockChange(10, []);
-      const result = await snap.composeAll([change, change, change, change]);
-
-      assert.deepEqual(result, snap);
-    });
-
     it('calls the `yieldFunction` the appropriate number of times and with the expected arguments', async () => {
       const snap       = new MockSnapshot(10, [new MockOp('x')]);
       const allChanges = [];
