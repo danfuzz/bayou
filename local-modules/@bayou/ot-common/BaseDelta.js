@@ -126,27 +126,7 @@ export default class BaseDelta extends CommonBase {
    *   same concrete class as `this`.
    */
   compose(other, wantDocument) {
-    this.constructor.check(other);
-    TBoolean.check(wantDocument);
-
-    if (wantDocument && !this.isDocument()) {
-      throw Errors.badUse('`wantDocument === true` on non-document instance.');
-    }
-
-    if (other.isEmpty()) {
-      return this;
-    }
-
-    const result = this._impl_compose(other, wantDocument);
-
-    this.constructor.check(result);
-
-    if (wantDocument && !result.isDocument()) {
-      // This indicates a bug in the subclass.
-      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
-    }
-
-    return result;
+    return this.composeAll([other], wantDocument);
   }
 
   /**
