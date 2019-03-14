@@ -112,9 +112,10 @@ export default class BaseDelta extends CommonBase {
 
   /**
    * Composes another instance on top of this one, to produce a new instance.
-   * This operation works equally whether or not `this` is a document delta. If
-   * `other` is empty (and `this` is an appropriate instance with regards to
-   * `wantDocument`), then this method will return `this`.
+   * This operation works equally whether or not `this` is a document delta.
+   * If `other` is an empty delta, this method still typically returns a new
+   * instance, though subclasses can choose to return `this` if circumstances
+   * warrant it).
    *
    * @param {BaseDelta} other The delta to compose. Must be an instance of the
    *   same concrete class as `this`.
@@ -132,9 +133,9 @@ export default class BaseDelta extends CommonBase {
   /**
    * Composes a sequence of deltas on top of this instance, in order, to
    * produce a new instance. This operation works equally whether or not `this`
-   * is a document delta.If the given array is empty or if it only contains
-   * empty instances, this method returns `this`. Otherwise, this method returns
-   * a new instance.
+   * is a document delta. If the given array is empty, this method returns
+   * `this`. Otherwise, this method typically returns a new instance (though
+   * subclasses can choose to return `this` if circumstances warrant it).
    *
    * **Note:** This method can potentially be CPU-intensive, especially if the
    * `deltas` array has many elements and/or has many ops inside the elements
@@ -170,10 +171,6 @@ export default class BaseDelta extends CommonBase {
     // implementation in subclasses.
     for (const d of deltas) {
       this.constructor.check(d);
-
-      if (d.isEmpty()) {
-        continue;
-      }
 
       result = result._impl_compose(d, wantDocument);
 
@@ -283,9 +280,7 @@ export default class BaseDelta extends CommonBase {
   /**
    * Main implementation of {@link #compose} and {@link #composeAll}. Subclasses
    * must fill this in. If `wantDocument` is passed as `true`, `this` is
-   * guaranteed to be a document delta. As a special case, the public methods
-   * will _not_ call this method with an empty value for `other`, as that is
-   * detected and handled directly (as a no-op).
+   * guaranteed to be a document delta.
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed

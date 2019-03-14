@@ -114,21 +114,33 @@ describe('@bayou/ot-common/BaseDelta', () => {
   });
 
   describe('compose()', () => {
-    it('returns `this` when `other` is empty', () => {
+    it('calls the `_impl` even when `other` is empty', () => {
+      let implCalled = false;
       class TestDelta extends MockDelta {
-        _impl_compose(other_unused, wantDocument_unused) {
-          throw new Error('should not have been called');
+        _impl_compose(...args) {
+          implCalled = true;
+          return super._impl_compose(...args);
         }
       }
 
       const docDelta    = new TestDelta([['x']]);
       const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
 
-      assert.strictEqual(docDelta.compose(TestDelta.EMPTY, true), docDelta);
-      assert.strictEqual(docDelta.compose(new TestDelta([]), true), docDelta);
+      implCalled = false;
+      assert.deepEqual(docDelta.compose(TestDelta.EMPTY, true), new TestDelta([['composedDoc', 1]]));
+      assert.isTrue(implCalled);
 
-      assert.strictEqual(nondocDelta.compose(TestDelta.EMPTY, false), nondocDelta);
-      assert.strictEqual(nondocDelta.compose(new TestDelta([]), false), nondocDelta);
+      implCalled = false;
+      assert.deepEqual(docDelta.compose(new TestDelta([]), true), new TestDelta([['composedDoc', 1]]));
+      assert.isTrue(implCalled);
+
+      implCalled = false;
+      assert.deepEqual(nondocDelta.compose(TestDelta.EMPTY, false), new TestDelta([['composedNotDoc', 1]]));
+      assert.isTrue(implCalled);
+
+      implCalled = false;
+      assert.deepEqual(nondocDelta.compose(new TestDelta([]), false), new TestDelta([['composedNotDoc', 1]]));
+      assert.isTrue(implCalled);
     });
 
     it('calls through to the impl when given valid arguments', () => {
@@ -189,25 +201,6 @@ describe('@bayou/ot-common/BaseDelta', () => {
       assert.strictEqual(nondocDelta.composeAll([], false), nondocDelta);
     });
 
-    it('returns `this` when `deltas` is non-empty but all instances are empty', () => {
-      const docDelta    = new MockDelta([['x']]);
-      const nondocDelta = new MockDelta(MockDelta.NOT_DOCUMENT_OPS);
-
-      function test(count) {
-        const deltas = [];
-        for (let i = 0; i < count; i++) {
-          deltas.push(MockDelta.EMPTY);
-        }
-
-        assert.strictEqual(docDelta.composeAll(deltas, true), docDelta);
-        assert.strictEqual(nondocDelta.composeAll(deltas, false), nondocDelta);
-      }
-
-      test(1);
-      test(2);
-      test(10);
-    });
-
     it('calls through to `compose()` the appropriate number of times returning the expected ultimate result', () => {
       let callCount = 0;
 
@@ -232,17 +225,17 @@ describe('@bayou/ot-common/BaseDelta', () => {
 
         callCount = 0;
         const docResult = docDelta.composeAll(deltas, true);
-        assert.strictEqual(callCount, count - emptyCount);
+        assert.strictEqual(callCount, count);
         assert.deepEqual(
           docResult,
-          new TestDelta([['composedDoc', count - emptyCount], ['yes', count + 100]]));
+          new TestDelta([['composedDoc', count], ['yes', count + 100]]));
 
         callCount = 0;
         const nondocResult = nondocDelta.composeAll(deltas, false);
-        assert.strictEqual(callCount, count - emptyCount);
+        assert.strictEqual(callCount, count);
         assert.deepEqual(
           nondocResult,
-          new TestDelta([['composedNotDoc', count - emptyCount], ['yes', count + 100]]));
+          new TestDelta([['composedNotDoc', count], ['yes', count + 100]]));
       }
 
       test(1);
