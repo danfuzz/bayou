@@ -11,10 +11,9 @@ import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 import LogTag from './LogTag';
 
-
 /**
- * Base class for loggers. Subclasses must implement `_impl_logEvent()` and
- * `_impl_logMessage()`.
+ * Base class for loggers. Subclasses must implement a handful of `_impl_*`
+ * methods.
  */
 export default class BaseLogger extends CommonBase {
   /**
@@ -28,6 +27,12 @@ export default class BaseLogger extends CommonBase {
      * as to enable `this.event.whatever(...)`.
      */
     this._event = LogProxyHandler.makeProxy((...args) => this.logEvent(...args));
+
+    /**
+     * {Proxy} Proxy which uses an instance of {@link LogProxyHandler}, so
+     * as to enable `this.metric.whatever(...)`.
+     */
+    this._metric = LogProxyHandler.makeProxy((...args) => this.logMetric(...args));
   }
 
   /**
@@ -38,6 +43,16 @@ export default class BaseLogger extends CommonBase {
    */
   get event() {
     return this._event;
+  }
+
+  /**
+   * {Proxy} Metric logger. This is a proxy object which synthesizes metrics
+   * logging functions. For any name `someName`, `metric.someName` is a
+   * function that, when called with arguments `(some, args)`, will log a
+   * metric `someName(some, args)`.
+   */
+  get metric() {
+    return this._metric;
   }
 
   /**
