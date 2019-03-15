@@ -16,16 +16,6 @@ import BaseLogger from './BaseLogger';
  */
 export default class EventProxyHandler extends MethodCacheProxyHandler {
   /**
-   * Makes a proxy that is handled by an instance of this class.
-   *
-   * @param {BaseLogger} log Logger to call through to.
-   * @returns {Proxy} An appropriately-constructed proxy object.
-   */
-  static makeProxy(log) {
-    return new Proxy(Object.freeze({}), new EventProxyHandler(log));
-  }
-
-  /**
    * Constructs an instance.
    *
    * @param {BaseLogger} log Logger to call through to.
