@@ -14,7 +14,7 @@ import BaseLogger from './BaseLogger';
  * For example, `proxy.blort(1, 2, 3)` will cause a `blort` event to
  * be logged with arguments `[1, 2, 3]`.
  */
-export default class EventProxyHandler extends MethodCacheProxyHandler {
+export default class LogProxyHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *

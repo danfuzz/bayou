@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { CommonBase, DataUtil, Errors, Functor } from '@bayou/util-common';
 
-import EventProxyHandler from './EventProxyHandler';
+import LogProxyHandler from './LogProxyHandler';
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 import LogTag from './LogTag';
@@ -24,10 +24,10 @@ export default class BaseLogger extends CommonBase {
     super();
 
     /**
-     * {Proxy} Proxy which uses an instance of {@link EventProxyHandler}, so
+     * {Proxy} Proxy which uses an instance of {@link LogProxyHandler}, so
      * as to enable `this.event.whatever(...)`.
      */
-    this._event = EventProxyHandler.makeProxy(this);
+    this._event = LogProxyHandler.makeProxy(this);
   }
 
   /**
