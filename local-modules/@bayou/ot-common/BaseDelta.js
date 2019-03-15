@@ -307,8 +307,16 @@ export default class BaseDelta extends CommonBase {
     let result = this;
 
     for (const d of deltas) {
+      if (result !== this) {
+        // No need to check the incoming `this`, as the caller (in this class)
+        // guarantees validity. Somewhat similarly, we do the check here at the
+        // top of the loop instead of after the re-assignment of `result` below,
+        // because the caller will always check the final result, and so a
+        // post-assignment check here would _also_ be redundant.
+        this._checkResult(result, wantDocument);
+      }
+
       result = result._impl_compose(d, wantDocument);
-      this._checkResult(result, wantDocument);
     }
 
     return result;
