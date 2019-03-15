@@ -10,7 +10,7 @@ import { FrozenBuffer } from '@bayou/util-common';
 
 describe('@bayou/file-store-ot/StorageId', () => {
   describe('check()', () => {
-    it('should accept valid id strings', () => {
+    it('accepts valid ID strings', () => {
       function test(value) {
         assert.strictEqual(StorageId.check(value), value);
       }
@@ -19,7 +19,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('blort').hash);
     });
 
-    it('should reject invalid strings', () => {
+    it('rejects invalid strings', () => {
       function test(value) {
         assert.throws(() => { StorageId.check(value); });
       }
@@ -30,7 +30,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('blort').hash + '123123');
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       function test(value) {
         assert.throws(() => { StorageId.check(value); });
       }
@@ -45,7 +45,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
   });
 
   describe('checkOrGetHash()', () => {
-    it('should accept valid hash strings', () => {
+    it('accepts valid hash strings', () => {
       function test(value) {
         assert.strictEqual(StorageId.checkOrGetHash(value), value);
       }
@@ -54,7 +54,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('zorch').hash);
     });
 
-    it('should accept `FrozenBuffer` instances, converting to their respective hashes', () => {
+    it('accepts `FrozenBuffer` instances, converting to their respective hashes', () => {
       function test(value) {
         const buf = new FrozenBuffer(value);
         assert.strictEqual(StorageId.checkOrGetHash(buf), buf.hash);
@@ -65,7 +65,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test('splatch');
     });
 
-    it('should reject invalid strings', () => {
+    it('rejects invalid strings', () => {
       function test(value) {
         assert.throws(() => { StorageId.checkOrGetHash(value); });
       }
@@ -77,7 +77,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('blort').hash + '123123');
     });
 
-    it('should reject non-`FrozenBuffer` non-strings', () => {
+    it('rejects non-`FrozenBuffer` non-strings', () => {
       function test(value) {
         assert.throws(() => { StorageId.checkOrGetHash(value); });
       }
@@ -92,7 +92,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
   });
 
   describe('isInstance()', () => {
-    it('should return `true` for valid id strings', () => {
+    it('returns `true` for valid ID strings', () => {
       function test(value) {
         assert.isTrue(StorageId.isInstance(value));
       }
@@ -101,7 +101,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('blort').hash);
     });
 
-    it('should return `false` for invalid strings', () => {
+    it('returns `false` for invalid strings', () => {
       function test(value) {
         assert.isFalse(StorageId.isInstance(value));
       }
@@ -112,7 +112,7 @@ describe('@bayou/file-store-ot/StorageId', () => {
       test(FrozenBuffer.coerce('blort').hash + '123123');
     });
 
-    it('should `false` for non-strings', () => {
+    it('returns `false` for non-strings', () => {
       function test(value) {
         assert.isFalse(StorageId.isInstance(value));
       }

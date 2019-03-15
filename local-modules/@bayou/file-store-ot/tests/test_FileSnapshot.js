@@ -11,7 +11,7 @@ import { FrozenBuffer } from '@bayou/util-common';
 
 describe('@bayou/file-store-ot/FileSnapshot', () => {
   describe('.EMPTY', () => {
-    it('should be an empty instance', () => {
+    it('is an empty instance', () => {
       const EMPTY = FileSnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
@@ -39,17 +39,17 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       ];
 
       for (const v of values) {
-        it(`should succeed for array: ${inspect(v)}`, () => {
+        it(`succeeds for array: ${inspect(v)}`, () => {
           new FileSnapshot(0, v);
         });
 
-        it(`should succeed for delta: ${inspect(v)}`, () => {
+        it(`succeeds for delta: ${inspect(v)}`, () => {
           new FileSnapshot(0, new FileDelta(v));
         });
       }
     });
 
-    it('should accept valid revision numbers', () => {
+    it('accepts valid revision numbers', () => {
       function test(value) {
         new FileSnapshot(value, FileDelta.EMPTY);
       }
@@ -59,12 +59,12 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       test(999999);
     });
 
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const snap = new FileSnapshot(0, [FileOp.op_writePath('/x', FrozenBuffer.coerce('y'))]);
       assert.isFrozen(snap);
     });
 
-    it('should reject an array or delta that is not all valid ops', () => {
+    it('rejects an array or delta that is not all valid ops', () => {
       function test(value) {
         assert.throws(() => { new FileSnapshot(0, value); });
 
@@ -103,7 +103,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       ]);
     });
 
-    it('should reject invalid revision numbers', () => {
+    it('rejects invalid revision numbers', () => {
       function test(value) {
         assert.throws(() => { new FileSnapshot(value, FileDelta.EMPTY); });
       }
@@ -120,7 +120,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('.size', () => {
-    it('should indicate the count of bound IDs', () => {
+    it('indicates the count of bound IDs', () => {
       function test(ops) {
         const snap = new FileSnapshot(1, ops);
         assert.strictEqual(snap.size, ops.length);
@@ -150,7 +150,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const buf  = FrozenBuffer.coerce('oh yeah');
       const snap = new FileSnapshot(914,
         [FileOp.op_writePath('/a', buf), FileOp.op_writePath('/b', buf)]);
@@ -161,7 +161,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.deepEqual(result.delta, FileDelta.EMPTY);
     });
 
-    it('should result in a `revNum` diff if that in fact changes', () => {
+    it('results in a `revNum` diff if that in fact changes', () => {
       const buf    = FrozenBuffer.coerce('oh yeah');
       const snap1  = new FileSnapshot(123, [FileOp.op_writePath('/a', buf)]);
       const snap2  = new FileSnapshot(456, [FileOp.op_writePath('/a', buf)]);
@@ -173,7 +173,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a path removal if that in fact happens', () => {
+    it('results in a path removal if that in fact happens', () => {
       const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(0, [
         FileOp.op_writePath('/a', buf),
@@ -190,7 +190,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.isTrue(composed.equals(snap2));
     });
 
-    it('should result in a blob removal if that in fact happens', () => {
+    it('results in a blob removal if that in fact happens', () => {
       const buf1  = FrozenBuffer.coerce('oh yeah');
       const buf2  = FrozenBuffer.coerce('oh no');
       const buf3  = FrozenBuffer.coerce('oh wha?!');
@@ -211,7 +211,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('entries()', () => {
-    it('should return an iterator', () => {
+    it('returns an iterator', () => {
       const snap   = new FileSnapshot(0, []);
       const result = snap.entries();
 
@@ -222,7 +222,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.strictEqual(result[Symbol.iterator](), result);
     });
 
-    it('should in fact iterate over the storage IDs', () => {
+    it('in fact iterates over the storage IDs', () => {
       function test(ops) {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
@@ -276,7 +276,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       function test(...args) {
         const snap = new FileSnapshot(...args);
         assert.isTrue(snap.equals(snap), inspect(snap));
@@ -295,7 +295,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       ]);
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(...args) {
         const snap1 = new FileSnapshot(...args);
         const snap2 = new FileSnapshot(...args);
@@ -318,7 +318,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       ]);
     });
 
-    it('should return `true` when identical construction ops are passed in different orders', () => {
+    it('returns `true` when identical construction ops are passed in different orders', () => {
       const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(321, [
         FileOp.op_writePath('/a', buf),
@@ -336,7 +336,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.isTrue(snap1.equals(snap2));
     });
 
-    it('should return `false` when `revNum`s differ', () => {
+    it('returns `false` when `revNum`s differ', () => {
       const buf   = FrozenBuffer.coerce('oh yeah');
       const snap1 = new FileSnapshot(123, [FileOp.op_writePath('/a', buf)]);
       const snap2 = new FileSnapshot(456, [FileOp.op_writePath('/a', buf)]);
@@ -345,7 +345,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
 
-    it('should return `false` when a path value differs', () => {
+    it('returns `false` when a path value differs', () => {
       const buf1 = FrozenBuffer.coerce('oh yeah 1');
       const buf2 = FrozenBuffer.coerce('oh yeah 2');
       const snap1 = new FileSnapshot(9, [
@@ -363,7 +363,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
 
-    it('should return `false` when passed a non-snapshot', () => {
+    it('returns `false` when passed a non-snapshot', () => {
       const snap = FileSnapshot.EMPTY;
 
       assert.isFalse(snap.equals(undefined));
@@ -377,7 +377,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('get()', () => {
-    it('should return the value associated with an existing ID', () => {
+    it('returns the value associated with an existing ID', () => {
       const buf1 = FrozenBuffer.coerce('oh yeah 1');
       const buf2 = FrozenBuffer.coerce('oh yeah 2');
 
@@ -401,7 +401,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       test('/x/y/z', FrozenBuffer.coerce('blorp'));
     });
 
-    it('should throw an error when given an unbound storage ID', () => {
+    it('throws an error when given an unbound storage ID', () => {
       const buf  = FrozenBuffer.coerce('stuff');
       const snap = new FileSnapshot(1, [FileOp.op_writePath('/blort', buf)]);
 
@@ -411,7 +411,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
   });
 
   describe('getOrNull()', () => {
-    it('should return the value associated with an existing storage ID', () => {
+    it('returns the value associated with an existing storage ID', () => {
       const buf1 = FrozenBuffer.coerce('oh yeah 1');
       const buf2 = FrozenBuffer.coerce('oh yeah 2');
 
@@ -435,7 +435,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       test('/x/y/z', FrozenBuffer.coerce('blorp'));
     });
 
-    it('should return `null` when given an ID that is not bound', () => {
+    it('returns `null` when given an ID that is not bound', () => {
       const buf  = FrozenBuffer.coerce('stuff');
       const snap = new FileSnapshot(1, [FileOp.op_writePath('/blort', buf)]);
 
@@ -444,8 +444,8 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
     });
   });
 
-  describe('getPathPrefix', () => {
-    it('should retrieve all bindings at or under the indicated prefix', () => {
+  describe('getPathPrefix()', () => {
+    it('retrieves all bindings at or under the indicated prefix', () => {
       const buf1 = new FrozenBuffer('buf1');
       const buf2 = new FrozenBuffer('buf2');
       const buf3 = new FrozenBuffer('buf3');
@@ -477,7 +477,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       }));
     });
 
-    it('should reject a bogus prefix', () => {
+    it('rejects a bogus prefix', () => {
       const snap = FileSnapshot.EMPTY;
 
       function test(value) {
@@ -497,8 +497,8 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
     });
   });
 
-  describe('getPathRange', () => {
-    it('should retrieve all bindings in the indicated range', () => {
+  describe('getPathRange()', () => {
+    it('retrieves all bindings in the indicated range', () => {
       const buf1 = new FrozenBuffer('buf1');
       const buf2 = new FrozenBuffer('buf2');
       const buf3 = new FrozenBuffer('buf3');
@@ -532,7 +532,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       }));
     });
 
-    it('should reject a bogus prefix', () => {
+    it('rejects a bogus prefix', () => {
       const snap = FileSnapshot.EMPTY;
 
       function test(value) {
@@ -551,7 +551,7 @@ describe('@bayou/file-store-ot/FileSnapshot', () => {
       test(new FrozenBuffer('florp').hash); // Valid _id_ but invalid _path_.
     });
 
-    it('should reject a bogus range', () => {
+    it('rejects a bogus range', () => {
       const snap = FileSnapshot.EMPTY;
 
       function test(start, end) {
