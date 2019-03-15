@@ -13,7 +13,7 @@ const LOG_TAG = new LogTag('blort-tag');
 
 describe('@bayou/see-all-server/RecentSink', () => {
   describe('log()', () => {
-    it('should log a regular item as given', () => {
+    it('logs a regular item as given', () => {
       const sink   = new RecentSink(1);
       const record = LogRecord.forMessage(90909, 'yay-stack', LOG_TAG, 'error', 'bar', 'baz');
 
@@ -24,7 +24,7 @@ describe('@bayou/see-all-server/RecentSink', () => {
       assert.strictEqual(contents[0], record);
     });
 
-    it('should log a time record as given', () => {
+    it('logs a time record as given', () => {
       const sink = new RecentSink(1);
       const lr   = LogRecord.forTime(80808);
 
@@ -37,7 +37,7 @@ describe('@bayou/see-all-server/RecentSink', () => {
   });
 
   describe('.contents', () => {
-    it('should contain all logged items assuming no `time` has been logged', () => {
+    it('contains all logged items assuming no `time` has been logged', () => {
       const sink = new RecentSink(1);
       const NUM_LINES = 10;
 
@@ -58,7 +58,7 @@ describe('@bayou/see-all-server/RecentSink', () => {
       }
     });
 
-    it('should only contain new-enough items if `time` was just logged', () => {
+    it('only contains new-enough items if `time` was just logged', () => {
       function timeForLine(line) {
         return 12345 + (line * 100);
       }
@@ -87,7 +87,7 @@ describe('@bayou/see-all-server/RecentSink', () => {
   });
 
   describe('.htmlContents', () => {
-    it('should return the logged lines as HTML', () => {
+    it('returns the logged lines as HTML', () => {
       const sink = new RecentSink(1);
       const NUM_LINES = 10;
 

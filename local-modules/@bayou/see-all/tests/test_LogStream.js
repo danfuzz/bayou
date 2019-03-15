@@ -11,7 +11,7 @@ import { MockLogger } from '@bayou/see-all/mocks';
 
 describe('@bayou/see-all/LogStream', () => {
   describe('constructor()', () => {
-    it('should accept valid arguments', () => {
+    it('accepts valid arguments', () => {
       const logger = new MockLogger();
 
       new LogStream(logger, 'info');
@@ -19,11 +19,11 @@ describe('@bayou/see-all/LogStream', () => {
       new LogStream(logger, 'error');
     });
 
-    it('should reject an invalid logger argument', () => {
+    it('rejects an invalid logger argument', () => {
       assert.throws(() => { new LogStream(null, 'info'); });
     });
 
-    it('should reject an invalid `level` argument', () => {
+    it('rejects an invalid `level` argument', () => {
       const logger = new MockLogger();
 
       assert.throws(() => { new LogStream(logger, 'blortch is not a level'); });
@@ -31,7 +31,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('write(string)', () => {
-    it('should call through to the underlying logger', () => {
+    it('calls through to the underlying logger', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'info');
 
@@ -42,7 +42,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('write(string, encoding)', () => {
-    it('should not pay attention to the `encoding` argument', () => {
+    it('does not pay attention to the `encoding` argument', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'debug');
 
@@ -52,7 +52,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('write(string, encoding, callback)', () => {
-    it('should call the callback', async () => {
+    it('calls the callback', async () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'info');
       let gotCallback = false;
@@ -67,7 +67,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('write(buffer)', () => {
-    it('should call through to the underlying logger', () => {
+    it('calls through to the underlying logger', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'error');
 
@@ -77,7 +77,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('write(buffer, encoding)', () => {
-    it('should not pay attention to the `encoding` argument', () => {
+    it('does not pay attention to the `encoding` argument', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'warn');
 
@@ -87,7 +87,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('end(string)', () => {
-    it('should call through to the underlying logger', () => {
+    it('calls through to the underlying logger', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'info');
 
@@ -97,7 +97,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('end(string, encoding)', () => {
-    it('should not pay attention to the `encoding` argument', () => {
+    it('does not pay attention to the `encoding` argument', () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'debug');
 
@@ -107,7 +107,7 @@ describe('@bayou/see-all/LogStream', () => {
   });
 
   describe('end(string, encoding, callback)', () => {
-    it('should *not* call the callback', async () => {
+    it('does *not* call the callback', async () => {
       const logger = new MockLogger();
       const ls = new LogStream(logger, 'info');
       let gotCallback = false;
