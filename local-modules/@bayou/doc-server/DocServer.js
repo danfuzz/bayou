@@ -115,7 +115,7 @@ export default class DocServer extends Singleton {
 
         const endTime = Date.now();
         result.log.event.madeComplex(...((fileId === documentId) ? [] : [fileId]));
-        result.log.event.initTimeMsec(endTime - startTime);
+        result.log.metric.initTimeMsec(endTime - startTime);
 
         return result;
       } catch (e) {
