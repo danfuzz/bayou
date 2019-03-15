@@ -27,7 +27,7 @@ export default class BaseLogger extends CommonBase {
      * {Proxy} Proxy which uses an instance of {@link LogProxyHandler}, so
      * as to enable `this.event.whatever(...)`.
      */
-    this._event = LogProxyHandler.makeProxy(this);
+    this._event = LogProxyHandler.makeProxy((...args) => this.logEvent(...args));
   }
 
   /**

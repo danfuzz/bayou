@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TFunction } from '@bayou/typecheck';
 import { MethodCacheProxyHandler } from '@bayou/util-common';
-
-import BaseLogger from './BaseLogger';
 
 /**
  * Proxy handler which provides the illusion of an object with infinitely many
@@ -18,13 +17,15 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *
-   * @param {BaseLogger} log Logger to call through to.
+   * @param {function} logFunction Function to call through to to perform
+   *   logging. It must take a string name as the first argument and arbitrary
+   *   additional arguments.
    */
-  constructor(log) {
+  constructor(logFunction) {
     super();
 
-    /** {BaseLogger} Logger to call through to. */
-    this._log = BaseLogger.check(log);
+    /** {function} Function to call through to to perform logging. */
+    this._logFunction = TFunction.checkCallable(logFunction);
 
     Object.freeze(this);
   }
@@ -37,7 +38,7 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
    */
   _impl_methodFor(name) {
     return (...args) => {
-      this._log.logEvent(name, ...args);
+      this._logFunction(name, ...args);
     };
   }
 }
