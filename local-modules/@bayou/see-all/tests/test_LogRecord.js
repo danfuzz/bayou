@@ -25,6 +25,23 @@ describe('@bayou/see-all/LogRecord', () => {
     });
   });
 
+  describe('eventNameFromMetricName()', () => {
+    it('converts a name as expected', () => {
+      const orig1   = 'boop';
+      const orig2   = 'florp';
+      const result1 = LogRecord.eventNameFromMetricName(orig1);
+      const result2 = LogRecord.eventNameFromMetricName(orig2);
+
+      assert.isTrue(result1.endsWith(orig1));
+      assert.isTrue(result2.endsWith(orig2));
+
+      const prefix1 = result1.slice(0, result1.length - orig1.length);
+      const prefix2 = result2.slice(0, result2.length - orig2.length);
+
+      assert.strictEqual(prefix1, prefix2);
+    });
+  });
+
   describe('checkMessageLevel()', () => {
     it('accepts valid levels', () => {
       function test(level) {
@@ -48,7 +65,7 @@ describe('@bayou/see-all/LogRecord', () => {
     });
   });
 
-  describe('messageString()', () => {
+  describe('.messageString', () => {
     it('operates as expected', () => {
       const LOG_TAG = new LogTag('whee');
 
@@ -84,6 +101,28 @@ describe('@bayou/see-all/LogRecord', () => {
       test('123',       123);
       test('[ 1, 2 ]',  [1, 2]);
       test('{ a: 10 }', { a: 10 });
+    });
+  });
+
+  describe('.metricName', () => {
+    const LOG_TAG = new LogTag('boop');
+
+    it('is `null` for a message', () => {
+      const lr = LogRecord.forMessage(0, 'some-stack-trace', LOG_TAG, 'info', 'woop');
+      assert.isNull(lr.metricName);
+    });
+
+    it('is `null` for a non-metric event', () => {
+      const lr = LogRecord.forEvent(0, 'some-stack-trace', LOG_TAG, new Functor('zorch', 123));
+      assert.isNull(lr.metricName);
+    });
+
+    it('is the expected metric name for a metric event', () => {
+      const name      = 'bloop';
+      const eventName = LogRecord.eventNameFromMetricName(name);
+      const payload   = new Functor(eventName, 123);
+      const lr        = LogRecord.forEvent(0, 'some-stack-trace', LOG_TAG, payload);
+      assert.strictEqual(lr.metricName, name);
     });
   });
 

@@ -2,9 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { TFunction } from '@bayou/typecheck';
 import { MethodCacheProxyHandler } from '@bayou/util-common';
-
-import BaseLogger from './BaseLogger';
 
 /**
  * Proxy handler which provides the illusion of an object with infinitely many
@@ -14,27 +13,19 @@ import BaseLogger from './BaseLogger';
  * For example, `proxy.blort(1, 2, 3)` will cause a `blort` event to
  * be logged with arguments `[1, 2, 3]`.
  */
-export default class EventProxyHandler extends MethodCacheProxyHandler {
-  /**
-   * Makes a proxy that is handled by an instance of this class.
-   *
-   * @param {BaseLogger} log Logger to call through to.
-   * @returns {Proxy} An appropriately-constructed proxy object.
-   */
-  static makeProxy(log) {
-    return new Proxy(Object.freeze({}), new EventProxyHandler(log));
-  }
-
+export default class LogProxyHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *
-   * @param {BaseLogger} log Logger to call through to.
+   * @param {function} logFunction Function to call through to to perform
+   *   logging. It must take a string name as the first argument and arbitrary
+   *   additional arguments.
    */
-  constructor(log) {
+  constructor(logFunction) {
     super();
 
-    /** {BaseLogger} Logger to call through to. */
-    this._log = BaseLogger.check(log);
+    /** {function} Function to call through to to perform logging. */
+    this._logFunction = TFunction.checkCallable(logFunction);
 
     Object.freeze(this);
   }
@@ -47,7 +38,7 @@ export default class EventProxyHandler extends MethodCacheProxyHandler {
    */
   _impl_methodFor(name) {
     return (...args) => {
-      this._log.logEvent(name, ...args);
+      this._logFunction(name, ...args);
     };
   }
 }

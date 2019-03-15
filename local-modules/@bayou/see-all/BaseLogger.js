@@ -6,15 +6,14 @@ import { inspect } from 'util';
 
 import { CommonBase, DataUtil, Errors, Functor } from '@bayou/util-common';
 
-import EventProxyHandler from './EventProxyHandler';
+import LogProxyHandler from './LogProxyHandler';
 import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 import LogTag from './LogTag';
 
-
 /**
- * Base class for loggers. Subclasses must implement `_impl_logEvent()` and
- * `_impl_logMessage()`.
+ * Base class for loggers. Subclasses must implement a handful of `_impl_*`
+ * methods.
  */
 export default class BaseLogger extends CommonBase {
   /**
@@ -24,10 +23,16 @@ export default class BaseLogger extends CommonBase {
     super();
 
     /**
-     * {Proxy} Proxy which uses an instance of {@link EventProxyHandler}, so
+     * {Proxy} Proxy which uses an instance of {@link LogProxyHandler}, so
      * as to enable `this.event.whatever(...)`.
      */
-    this._event = EventProxyHandler.makeProxy(this);
+    this._event = LogProxyHandler.makeProxy((...args) => this.logEvent(...args));
+
+    /**
+     * {Proxy} Proxy which uses an instance of {@link LogProxyHandler}, so
+     * as to enable `this.metric.whatever(...)`.
+     */
+    this._metric = LogProxyHandler.makeProxy((...args) => this.logMetric(...args));
   }
 
   /**
@@ -38,6 +43,16 @@ export default class BaseLogger extends CommonBase {
    */
   get event() {
     return this._event;
+  }
+
+  /**
+   * {Proxy} Metric logger. This is a proxy object which synthesizes metrics
+   * logging functions. For any name `someName`, `metric.someName` is a
+   * function that, when called with arguments `(some, args)`, will log a
+   * metric `someName(some, args)`.
+   */
+  get metric() {
+    return this._metric;
   }
 
   /**
@@ -68,6 +83,21 @@ export default class BaseLogger extends CommonBase {
   logMessage(level, ...message) {
     LogRecord.checkMessageLevel(level);
     this._impl_logMessage(level, message);
+  }
+
+  /**
+   * Logs a metric. From the perspective of this class, a metric is just a
+   * structured event with a special name prefix.
+   *
+   * @param {string} name Event name.
+   * @param {...*} args Event payload arguments. Recommended practice for
+   *   metrics is that these arguments be simple atomic data, especially
+   *   numbers and booleans. For a metric that represents an atomic occurrence
+   *   (with no salient data) to merely be counted / aggregated, it is valid to
+   *   pass no additional arguments.
+   */
+  logMetric(name, ...args) {
+    this.logEvent(LogRecord.eventNameFromMetricName(name), ...args);
   }
 
   /**

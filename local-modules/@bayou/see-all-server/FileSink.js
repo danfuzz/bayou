@@ -46,16 +46,28 @@ export default class FileSink extends BaseSink {
     logRecord = Redactor.redact(logRecord);
 
     const { tag: { main, context }, stack, timeMsec } = logRecord;
-    const tag     = [main, ...context];
-    const details = { timeMsec, stack, tag, message: logRecord.messageString };
+    const tag        = [main, ...context];
+    const metricName = logRecord.metricName;
+    const details    = { timeMsec, stack, tag };
 
-    if (logRecord.isTime()) {
+    if (metricName !== null) {
+      // Metrics are pulled into the `details` directly with the same key as the
+      // metric name. Additionally, as a human-oriented convenience, if there is
+      // only one payload argument, it is represented directly instead of being
+      // represented as a one-element array.
+      const args = logRecord.payload.args;
+      details[metricName] = (args.length === 1) ? args[0] : args;
+    } else if (logRecord.isTime()) {
       // No need to log timestamp records. Those are only really useful for
       // human-oriented logging, because every log record builds in a timestamp
       // which gets included in its JSON-encoded form.
       return;
     } else if (logRecord.isMessage()) {
-      details.level = logRecord.payload.name;
+      details.level   = logRecord.payload.name;
+      details.message = logRecord.messageString;
+    } else {
+      // Regular event.
+      details.message = logRecord.messageString;
     }
 
     this._writeJson(details);
