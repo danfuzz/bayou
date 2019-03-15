@@ -13,6 +13,9 @@ import LogTag from './LogTag';
 const MESSAGE_LEVELS_ARRAY =
   Object.freeze(['debug', 'error', 'warn', 'info', 'detail']);
 
+/** {string} Prefix which distinguishes metric names from other event names. */
+const METRIC_PREFIX = 'metric-';
+
 /**
  * {Set<string>} Set of severity levels for message instances where having a
  * stack trace in the human-oriented output is most desirable.
@@ -120,6 +123,17 @@ export default class LogRecord extends CommonBase {
     }
 
     return level;
+  }
+
+  /**
+   * Makes the event name that corresponds to the given plain metric name.
+   *
+   * @param {string} name The raw metric name.
+   * @returns {string} The corresponding event name.
+   */
+  static eventNameFromMetricName(name) {
+    TString.check(name);
+    return `${METRIC_PREFIX}${name}`;
   }
 
   /**
@@ -307,14 +321,6 @@ export default class LogRecord extends CommonBase {
   }
 
   /**
-   * {Functor} Main log payload. In the case of ad-hoc human-oriented
-   * messages, the functor name is the severity level.
-   */
-  get payload() {
-    return this._payload;
-  }
-
-  /**
    * {string} Unified message string, composed from all of the individual
    * arguments. The form varies based on the sort of record (ad-hoc message vs.
    * structured event vs. timestamp).
@@ -390,6 +396,26 @@ export default class LogRecord extends CommonBase {
     }
 
     return result.join('');
+  }
+
+  /**
+   * {string|null} The plain metric name corresponding to this instance, or
+   * `null` if this instance doesn't represent a metric.
+   */
+  get metricName() {
+    const name = this._payload.name;
+
+    return name.startsWith(METRIC_PREFIX)
+      ? name.slice(METRIC_PREFIX.length)
+      : null;
+  }
+
+  /**
+   * {Functor} Main log payload. In the case of ad-hoc human-oriented
+   * messages, the functor name is the severity level.
+   */
+  get payload() {
+    return this._payload;
   }
 
   /**

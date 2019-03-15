@@ -67,6 +67,23 @@ describe('@bayou/see-all/BaseLogger', () => {
     }
   });
 
+  describe('logMetric()', () => {
+    it('calls through to `_impl_logEvent()` when given valid arguments', () => {
+      const logger  = new MockLogger();
+      const name    = 'blort';
+      const payload = new Functor(LogRecord.eventNameFromMetricName(name), 1, '2', [3]);
+
+      logger.logMetric(name, ...payload.args);
+
+      assert.deepEqual(logger.record, [['event', [], payload]]);
+    });
+
+    it('rejects invalid payload names', () => {
+      const logger = new MockLogger();
+      assert.throws(() => logger.logMetric('$&*', 1, 2, 3));
+    });
+  });
+
   describe('streamFor()', () => {
     it('returns a stream which operates as expected', () => {
       const logger = new MockLogger();

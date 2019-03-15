@@ -71,6 +71,19 @@ export default class BaseLogger extends CommonBase {
   }
 
   /**
+   * Logs a metric. From the perspective of this class, a metric is just a
+   * structured event with a special name prefix.
+   *
+   * @param {string} name Event name.
+   * @param {...*} args Event payload arguments. Recommended practice for
+   *   metrics is that these arguments be simple atomic data, especially
+   *   numbers and booleans.
+   */
+  logMetric(name, ...args) {
+    this.logEvent(LogRecord.eventNameFromMetricName(name), ...args);
+  }
+
+  /**
    * Logs an ad-hoc message at the `debug` level.
    *
    * @param {...*} message Message to log. See {@link #logMessage} for details.
