@@ -13,6 +13,18 @@ import { Functor } from '@bayou/util-common';
 // made to `_impl_logEvent()` and `_impl_logMessage()`.
 
 describe('@bayou/see-all/BaseLogger', () => {
+  describe('.event', () => {
+    it('provides a whatever valid name you want, calling through to `logEvent()` when used', () => {
+      const logger = new MockLogger();
+      const name   = 'whatTheMuffin';
+      const args   = ['x', 'y', 'z'];
+      const expect = new Functor(name, ...args);
+      logger.event[name](...args);
+
+      assert.deepEqual(logger.record, [['event', [], expect]]);
+    });
+  });
+
   describe('.metric', () => {
     it('provides a whatever valid name you want, calling through to `logMetric()` when used', () => {
       const logger = new MockLogger();
