@@ -92,7 +92,9 @@ export default class BaseLogger extends CommonBase {
    * @param {string} name Event name.
    * @param {...*} args Event payload arguments. Recommended practice for
    *   metrics is that these arguments be simple atomic data, especially
-   *   numbers and booleans.
+   *   numbers and booleans. For a metric that represents an atomic occurrence
+   *   (with no salient data) to merely be counted / aggregated, it is valid to
+   *   pass no additional arguments.
    */
   logMetric(name, ...args) {
     this.logEvent(LogRecord.eventNameFromMetricName(name), ...args);
