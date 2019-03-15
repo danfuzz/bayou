@@ -173,13 +173,7 @@ export default class BaseDelta extends CommonBase {
       ? this._impl_compose(deltas[0], wantDocument)
       : this._impl_composeAll(deltas, wantDocument);
 
-    this.constructor.check(result);
-
-    if (wantDocument && !result.isDocument()) {
-      // This indicates a bug in the subclass.
-      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
-    }
-
+    this._checkResult(result, wantDocument);
     return result;
   }
 
@@ -314,13 +308,7 @@ export default class BaseDelta extends CommonBase {
 
     for (const d of deltas) {
       result = result._impl_compose(d, wantDocument);
-
-      this.constructor.check(result);
-
-      if (wantDocument && !result.isDocument()) {
-        // This indicates a bug in the subclass.
-        throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
-      }
+      this._checkResult(result, wantDocument);
     }
 
     return result;
@@ -335,6 +323,23 @@ export default class BaseDelta extends CommonBase {
    */
   _impl_isDocument() {
     return this._mustOverride();
+  }
+
+  /**
+   * Helper for validation of subclass behavior, which checks that the given
+   * value is an instance of the class, and optionally that it is a document
+   * delta. Throws an error if the check(s) fail.
+   *
+   * @param {*} result (Alleged) instance.
+   * @param {boolean} wantDocument Whether `result` must be a document delta.
+   */
+  _checkResult(result, wantDocument) {
+    this.constructor.check(result);
+
+    if (wantDocument && !result.isDocument()) {
+      // This indicates a bug in the subclass.
+      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
+    }
   }
 
   /**
