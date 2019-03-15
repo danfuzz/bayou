@@ -193,16 +193,77 @@ describe('@bayou/ot-common/BaseDelta', () => {
   });
 
   describe('composeAll()', () => {
-    it('returns `this` given an empty `deltas`', () => {
-      const docDelta    = new MockDelta([['x']]);
-      const nondocDelta = new MockDelta(MockDelta.NOT_DOCUMENT_OPS);
+    // Common tests for both sub-cases, none of which should call through to
+    // `_impl_*()` methods.
+    function commonTests(DeltaClass, checkCount) {
+      it('returns `this` given an empty `deltas`', () => {
+        const docDelta    = new DeltaClass([['x']]);
+        const nondocDelta = new DeltaClass(MockDelta.NOT_DOCUMENT_OPS);
 
-      assert.strictEqual(docDelta.composeAll([], true), docDelta);
-      assert.strictEqual(nondocDelta.composeAll([], false), nondocDelta);
-    });
+        assert.strictEqual(docDelta.composeAll([], true), docDelta);
+        assert.strictEqual(nondocDelta.composeAll([], false), nondocDelta);
+        checkCount();
+      });
 
-    it('calls through to `compose()` the appropriate number of times returning the expected ultimate result', () => {
+      it('rejects instances of the wrong delta class', () => {
+        const delta = new DeltaClass([['x']]);
+        const good  = new DeltaClass([['yes']]);
+        const bad   = AnotherDelta.EMPTY;
+
+        assert.throws(() => delta.composeAll([bad]), /badValue/);
+        assert.throws(() => delta.composeAll([bad, good]), /badValue/);
+        assert.throws(() => delta.composeAll([good, bad]), /badValue/);
+        checkCount();
+      });
+
+      it('rejects non-delta array elements', () => {
+        const delta = new DeltaClass([['x']]);
+        const other = new DeltaClass([['yes']]);
+
+        function test(v) {
+          assert.throws(() => delta.composeAll([v]), /badValue/);
+          assert.throws(() => delta.composeAll([v, other]), /badValue/);
+          assert.throws(() => delta.composeAll([other, v]), /badValue/);
+        }
+
+        test(undefined);
+        test(null);
+        test(false);
+        test(123);
+        test('blort');
+        test([]);
+        test(['florp']);
+        test({ x: 10 });
+        test(new Map());
+        test(new MockOp('x'));
+        checkCount();
+      });
+
+      it('rejects non-array arguments', () => {
+        const delta = new DeltaClass([['x']]);
+
+        function test(v) {
+          assert.throws(() => delta.composeAll(v), /badValue/);
+        }
+
+        test(undefined);
+        test(null);
+        test(false);
+        test(123);
+        test('blort');
+        test({ x: 10 });
+        test(new Map());
+        test(new MockOp('x'));
+        checkCount();
+      });
+    }
+
+    describe('subclass that does not override `_impl_composeAll()`', () => {
       let callCount = 0;
+
+      function resetCount() {
+        callCount = 0;
+      }
 
       class TestDelta extends MockDelta {
         _impl_compose(...args) {
@@ -211,89 +272,147 @@ describe('@bayou/ot-common/BaseDelta', () => {
         }
       }
 
-      const docDelta    = new TestDelta([['x']]);
-      const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
+      commonTests(TestDelta, () => assert.strictEqual(callCount, 0));
 
-      function test(count, emptyCount = 0) {
-        const deltas = [];
-        for (let i = 0; i < count; i++) {
-          deltas.push(new TestDelta([['yes', i + 101]]));
+      it('calls through to `_impl_compose()` the appropriate number of times, returning the expected ultimate result', () => {
+        const docDelta    = new TestDelta([['x']]);
+        const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
+
+        function test(count, emptyCount = 0) {
+          const deltas = [];
+          for (let i = 0; i < count; i++) {
+            deltas.push(new TestDelta([['yes', i + 101]]));
+          }
+          for (let i = 0, at = 5 % (count-1); i < emptyCount; i++, at = (at + 31) % (count-1)) {
+            deltas[at] = TestDelta.EMPTY;
+          }
+
+          resetCount();
+          const docResult = docDelta.composeAll(deltas, true);
+          assert.strictEqual(callCount, count);
+          assert.deepEqual(
+            docResult,
+            new TestDelta([['composedDoc', count], ['yes', count + 100]]));
+
+          resetCount();
+          const nondocResult = nondocDelta.composeAll(deltas, false);
+          assert.strictEqual(callCount, count);
+          assert.deepEqual(
+            nondocResult,
+            new TestDelta([['composedNotDoc', count], ['yes', count + 100]]));
         }
-        for (let i = 0, at = 5 % (count-1); i < emptyCount; i++, at = (at + 31) % (count-1)) {
-          deltas[at] = TestDelta.EMPTY;
+
+        test(1);
+        test(2);
+        test(10);
+
+        test(2, 1);
+        test(6, 2);
+        test(23, 7);
+      });
+    });
+
+    describe('subclass that overrides `_impl_composeAll()`', () => {
+      let composeCount    = 0;
+      let composeAllCount = 0;
+
+      function resetCount() {
+        composeCount    = 0;
+        composeAllCount = 0;
+      }
+
+      class TestDelta extends MockDelta {
+        _impl_compose(...args) {
+          composeCount++;
+          return super._impl_compose(...args);
         }
 
-        callCount = 0;
-        const docResult = docDelta.composeAll(deltas, true);
-        assert.strictEqual(callCount, count);
-        assert.deepEqual(
-          docResult,
-          new TestDelta([['composedDoc', count], ['yes', count + 100]]));
+        _impl_composeAll(deltas, wantDocument) {
+          composeAllCount++;
 
-        callCount = 0;
-        const nondocResult = nondocDelta.composeAll(deltas, false);
-        assert.strictEqual(callCount, count);
-        assert.deepEqual(
-          nondocResult,
-          new TestDelta([['composedNotDoc', count], ['yes', count + 100]]));
+          let result = this;
+
+          for (const d of deltas) {
+            result = result._impl_compose(d, wantDocument);
+            composeCount--; // Counteract the counting of the call just made.
+          }
+
+          return result;
+        }
       }
 
-      test(1);
-      test(2);
-      test(10);
+      commonTests(TestDelta, () => {
+        assert.strictEqual(composeCount, 0);
+        assert.strictEqual(composeAllCount, 0);
+      });
 
-      test(2, 1);
-      test(6, 2);
-      test(23, 7);
-    });
+      it('calls through to `_impl_compose()` when `deltas.length === 1`', () => {
+        const docDelta    = new TestDelta([['x']]);
+        const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
 
-    it('rejects instances of the wrong delta class', () => {
-      const delta = new MockDelta([['x']]);
-      const good  = new MockDelta([['yes']]);
-      const bad   = AnotherDelta.EMPTY;
+        resetCount();
+        const result1 = docDelta.composeAll([TestDelta.EMPTY], true);
+        assert.strictEqual(composeCount, 1);
+        assert.strictEqual(composeAllCount, 0);
+        assert.deepEqual(result1, new TestDelta([['composedDoc', 1]]));
 
-      assert.throws(() => delta.composeAll([bad]), /badValue/);
-      assert.throws(() => delta.composeAll([bad, good]), /badValue/);
-      assert.throws(() => delta.composeAll([good, bad]), /badValue/);
-    });
+        resetCount();
+        const result2 = nondocDelta.composeAll([TestDelta.EMPTY], false);
+        assert.strictEqual(composeCount, 1);
+        assert.strictEqual(composeAllCount, 0);
+        assert.deepEqual(result2, new TestDelta([['composedNotDoc', 1]]));
 
-    it('rejects non-delta array elements', () => {
-      const delta = new MockDelta([['x']]);
-      const other = new MockDelta([['yes']]);
+        resetCount();
+        const result3 = docDelta.composeAll([new TestDelta([['yes']])], true);
+        assert.strictEqual(composeCount, 1);
+        assert.strictEqual(composeAllCount, 0);
+        assert.deepEqual(result3, new TestDelta([['composedDoc', 1], ['yes']]));
 
-      function test(v) {
-        assert.throws(() => delta.composeAll([v]), /badValue/);
-        assert.throws(() => delta.composeAll([v, other]), /badValue/);
-        assert.throws(() => delta.composeAll([other, v]), /badValue/);
-      }
+        resetCount();
+        const result4 = nondocDelta.composeAll([new TestDelta([['yes']])], false);
+        assert.strictEqual(composeCount, 1);
+        assert.strictEqual(composeAllCount, 0);
+        assert.deepEqual(result4, new TestDelta([['composedNotDoc', 1], ['yes']]));
+      });
 
-      test(undefined);
-      test(null);
-      test(false);
-      test(123);
-      test('blort');
-      test([]);
-      test(['florp']);
-      test({ x: 10 });
-      test(new Map());
-      test(new MockOp('x'));
-    });
+      it('calls through to `_impl_composeAll()` exactly once, returning the expected ultimate result', () => {
+        const docDelta    = new TestDelta([['x']]);
+        const nondocDelta = new TestDelta(MockDelta.NOT_DOCUMENT_OPS);
 
-    it('rejects non-array arguments', () => {
-      const delta = new MockDelta([['x']]);
+        function test(count, emptyCount = 0) {
+          const deltas = [];
+          for (let i = 0; i < count; i++) {
+            deltas.push(new TestDelta([['yes', i + 101]]));
+          }
+          for (let i = 0, at = 5 % (count-1); i < emptyCount; i++, at = (at + 31) % (count-1)) {
+            deltas[at] = TestDelta.EMPTY;
+          }
 
-      function test(v) {
-        assert.throws(() => delta.composeAll(v), /badValue/);
-      }
+          resetCount();
+          const docResult = docDelta.composeAll(deltas, true);
+          assert.strictEqual(composeCount, 0);
+          assert.strictEqual(composeAllCount, 1);
+          assert.deepEqual(
+            docResult,
+            new TestDelta([['composedDoc', count], ['yes', count + 100]]));
 
-      test(undefined);
-      test(null);
-      test(false);
-      test(123);
-      test('blort');
-      test({ x: 10 });
-      test(new Map());
-      test(new MockOp('x'));
+          resetCount();
+          const nondocResult = nondocDelta.composeAll(deltas, false);
+          assert.strictEqual(composeCount, 0);
+          assert.strictEqual(composeAllCount, 1);
+          assert.deepEqual(
+            nondocResult,
+            new TestDelta([['composedNotDoc', count], ['yes', count + 100]]));
+        }
+
+        test(2);
+        test(3);
+        test(10);
+
+        test(2, 1);
+        test(6, 2);
+        test(23, 7);
+      });
     });
   });
 
