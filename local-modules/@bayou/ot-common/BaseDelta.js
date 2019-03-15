@@ -158,28 +158,26 @@ export default class BaseDelta extends CommonBase {
    *   same class as `this`.
    */
   composeAll(deltas, wantDocument) {
-    TArray.check(deltas);
+    TArray.check(deltas, d => this.constructor.check(d));
     TBoolean.check(wantDocument);
 
     if (wantDocument && !this.isDocument()) {
       throw Errors.badUse('`wantDocument === true` on non-document instance.');
     }
 
-    let result = this;
+    if (deltas.length === 0) {
+      return this;
+    }
 
-    // **TODO:** Make it possible for this to have a more efficient
-    // implementation in subclasses.
-    for (const d of deltas) {
-      this.constructor.check(d);
+    const result = (deltas.lenth === 1)
+      ? this._impl_compose(deltas[0], wantDocument)
+      : this._impl_composeAll(deltas, wantDocument);
 
-      result = result._impl_compose(d, wantDocument);
+    this.constructor.check(result);
 
-      this.constructor.check(result);
-
-      if (wantDocument && !result.isDocument()) {
-        // This indicates a bug in the subclass.
-        throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
-      }
+    if (wantDocument && !result.isDocument()) {
+      // This indicates a bug in the subclass.
+      throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
     }
 
     return result;
@@ -278,20 +276,55 @@ export default class BaseDelta extends CommonBase {
   }
 
   /**
-   * Main implementation of {@link #compose} and {@link #composeAll}. Subclasses
-   * must fill this in. If `wantDocument` is passed as `true`, `this` is
-   * guaranteed to be a document delta.
+   * Main implementation of {@link #compose} and {@link #composeAll} (the latter
+   * if {@link #_impl_composeAll} is not specialized). Subclasses must fill this
+   * in.
    *
    * @abstract
    * @param {BaseDelta} other Delta to compose with this instance. Guaranteed
    *   to be an instance of the same concrete class as `this`.
    * @param {boolean} wantDocument Whether the result of the operation should be
-   *   a document delta.
+   *   a document delta. If this is passed as `true`, this class guarantees that
+   *   `other` is also a document delta.
    * @returns {BaseDelta} Composed result. Must be an instance of the same
    *   concrete class as `this`.
    */
   _impl_compose(other, wantDocument) {
     return this._mustOverride(other, wantDocument);
+  }
+
+  /**
+   * Main implementation of {@link #composeAll}. Subclasses do not have to
+   * override this; if not, the default implementation calls through to
+   * {@link #_impl_compose} on individual deltas, producing a combined result.
+   * must fill this in. If `wantDocument` is passed as `true`, `this` is
+   * guaranteed to be a document delta.
+   *
+   * @abstract
+   * @param {array<BaseDelta>} deltas Instances to compose on top of this
+   *   instance. This is guaranteed to be an array consisting of instances of
+   *   the same concrete class as `this`.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta. If this is passed as `true`, this class guarantees that
+   *   `other` is also a document delta.
+   * @returns {BaseDelta} Composed result. Must be an instance of the same
+   *   concrete class as `this`.
+   */
+  _impl_composeAll(deltas, wantDocument) {
+    let result = this;
+
+    for (const d of deltas) {
+      result = result._impl_compose(d, wantDocument);
+
+      this.constructor.check(result);
+
+      if (wantDocument && !result.isDocument()) {
+        // This indicates a bug in the subclass.
+        throw Errors.wtf('Non-document return value when passed `true` for `wantDocument`.');
+      }
+    }
+
+    return result;
   }
 
   /**
