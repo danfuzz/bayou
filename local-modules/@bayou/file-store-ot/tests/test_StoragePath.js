@@ -64,7 +64,7 @@ const NON_STRINGS = [
 
 describe('@bayou/file-store-ot/StoragePath', () => {
   describe('allPrefixes()', () => {
-    it('should work as expected', () => {
+    it('works as expected', () => {
       function test(value, expected) {
         assert.deepEqual(StoragePath.allPrefixes(value), expected);
       }
@@ -77,19 +77,19 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('check()', () => {
-    it('should accept valid paths', () => {
+    it('accepts valid paths', () => {
       for (const value of VALID_PATHS) {
         assert.strictEqual(StoragePath.check(value), value);
       }
     });
 
-    it('should reject invalid paths', () => {
+    it('rejects invalid paths', () => {
       for (const value of INVALID_PATHS) {
         assert.throws(() => { StoragePath.check(value); });
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const value of NON_STRINGS) {
         assert.throws(() => { StoragePath.check(value); });
       }
@@ -97,7 +97,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('checkComponent()', () => {
-    it('should accept valid components', () => {
+    it('accepts valid components', () => {
       function test(value) {
         assert.strictEqual(StoragePath.checkComponent(value), value);
       }
@@ -111,7 +111,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
       test('TIMELINE_GOES_SIDEWAYS');
     });
 
-    it('should reject invalid components', () => {
+    it('rejects invalid components', () => {
       function test(value) {
         assert.throws(() => { StoragePath.checkComponent(value); });
       }
@@ -132,7 +132,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
       test('blort#d');
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const value of NON_STRINGS) {
         assert.throws(() => { StoragePath.checkComponent(value); });
       }
@@ -140,7 +140,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('getIndex()', () => {
-    it('should return the index from a valid index-bearing path', () => {
+    it('returns the index from a valid index-bearing path', () => {
       function test(value, expect) {
         const result = StoragePath.getIndex(value);
         assert.strictEqual(result, expect, value);
@@ -158,7 +158,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
       }
     });
 
-    it('should reject non-index-bearing paths', () => {
+    it('rejects non-index-bearing paths', () => {
       function test(value) {
         assert.throws(() => StoragePath.getIndex(value), /badValue/);
       }
@@ -181,7 +181,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
       test('/x/1/x');
     });
 
-    it('should reject entirely invalid path arguments', () => {
+    it('rejects entirely invalid path arguments', () => {
       for (const value of [...INVALID_PATHS, ...NON_STRINGS]) {
         assert.throws(() => StoragePath.getIndex(value), /badValue/);
       }
@@ -189,19 +189,19 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('isInstance()', () => {
-    it('should return `true` for valid paths', () => {
+    it('returns `true` for valid paths', () => {
       for (const value of VALID_PATHS) {
         assert.isTrue(StoragePath.isInstance(value), value);
       }
     });
 
-    it('should return `false` for invalid paths', () => {
+    it('returns `false` for invalid paths', () => {
       for (const value of INVALID_PATHS) {
         assert.isFalse(StoragePath.isInstance(value), value);
       }
     });
 
-    it('should return `false` for non-strings', () => {
+    it('returns `false` for non-strings', () => {
       for (const value of NON_STRINGS) {
         assert.isFalse(StoragePath.isInstance(value), value);
       }
@@ -216,7 +216,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
         return StoragePath[methodName](prefix, path);
       };
 
-      it('should return `true` for prefix relationships', () => {
+      it('returns `true` for prefix relationships', () => {
         function test(prefix, path) {
           assert.isTrue(func(prefix, path));
         }
@@ -232,7 +232,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
         test('/blort/florp', '/blort/florp/aa/bb');
       });
 
-      it(`should return \`${equalExpectation}\` when the two values are equal`, () => {
+      it(`returns \`${equalExpectation}\` when the two values are equal`, () => {
         function test(prefix, path) {
           assert.strictEqual(func(prefix, path), equalExpectation);
         }
@@ -242,7 +242,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
         test('/x/y/zz', '/x/y/zz');
       });
 
-      it('should return `false` for non-prefix, non-equal relationships', () => {
+      it('returns `false` for non-prefix, non-equal relationships', () => {
         function test(prefix, path) {
           assert.isFalse(func(prefix, path));
         }
@@ -257,7 +257,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
         test('/a/b', '/a/bb');
       });
 
-      it('should throw an error if either argument is not a valid absolute path', () => {
+      it('throws an error if either argument is not a valid absolute path', () => {
         function test(value) {
           assert.throws(() => func('/x', value));
           assert.throws(() => func(value, '/x'));
@@ -297,7 +297,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('join()', () => {
-    it('should join as expected', () => {
+    it('joins as expected', () => {
       function test(value, expected) {
         assert.strictEqual(StoragePath.join(value), expected);
       }
@@ -309,23 +309,23 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('orNull()', () => {
-    it('should accept `null`', () => {
+    it('accepts `null`', () => {
       assert.strictEqual(StoragePath.orNull(null), null);
     });
 
-    it('should accept valid paths', () => {
+    it('accepts valid paths', () => {
       for (const value of VALID_PATHS) {
         assert.strictEqual(StoragePath.orNull(value), value);
       }
     });
 
-    it('should reject invalid paths', () => {
+    it('rejects invalid paths', () => {
       for (const value of INVALID_PATHS) {
         assert.throws(() => { StoragePath.orNull(value); });
       }
     });
 
-    it('should reject non-null non-strings', () => {
+    it('rejects non-null non-strings', () => {
       for (const value of NON_STRINGS) {
         if (value === null) {
           continue;
@@ -336,7 +336,7 @@ describe('@bayou/file-store-ot/StoragePath', () => {
   });
 
   describe('split()', () => {
-    it('should split as expected', () => {
+    it('splits as expected', () => {
       function test(value, expected) {
         assert.deepEqual(StoragePath.split(value), expected);
       }
