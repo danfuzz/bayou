@@ -169,7 +169,7 @@ export default class BaseDelta extends CommonBase {
       return this;
     }
 
-    const result = (deltas.lenth === 1)
+    const result = (deltas.length === 1)
       ? this._impl_compose(deltas[0], wantDocument)
       : this._impl_composeAll(deltas, wantDocument);
 
@@ -300,7 +300,6 @@ export default class BaseDelta extends CommonBase {
    * must fill this in. If `wantDocument` is passed as `true`, `this` is
    * guaranteed to be a document delta.
    *
-   * @abstract
    * @param {array<BaseDelta>} deltas Instances to compose on top of this
    *   instance. This is guaranteed to be an array consisting of instances of
    *   the same concrete class as `this`.
