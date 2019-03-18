@@ -28,33 +28,33 @@ describe('@bayou/doc-server/BaseControl', () => {
   const FILE_ACCESS = new FileAccess(CODEC, 'doc-xyz', new MockFile('blort'));
 
   describe('.changeClass', () => {
-    it('should reflect the subclass\'s implementation', () => {
+    it('reflects the subclass\'s implementation', () => {
       const result = MockControl.changeClass;
       assert.strictEqual(result, MockSnapshot.changeClass);
     });
   });
 
   describe('.changePathPrefix', () => {
-    it('should reflect the subclass\'s implementation', () => {
+    it('reflects the subclass\'s implementation', () => {
       const result = MockControl.changePathPrefix;
       assert.strictEqual(result, '/mock_control/change');
     });
   });
 
   describe('.deltaClass', () => {
-    it('should reflect the subclass\'s implementation', () => {
+    it('reflects the subclass\'s implementation', () => {
       const result = MockControl.deltaClass;
       assert.strictEqual(result, MockSnapshot.deltaClass);
     });
   });
 
   describe('.pathPrefix', () => {
-    it('should reflect the subclass\'s implementation', () => {
+    it('reflects the subclass\'s implementation', () => {
       const result = MockControl.pathPrefix;
       assert.strictEqual(result, '/mock_control');
     });
 
-    it('should reject an improper subclass choice', () => {
+    it('rejects an improper subclass choice', () => {
       class HasBadPrefix extends DurableControl {
         static get _impl_pathPrefix() {
           return '//invalid/path_string!';
@@ -64,7 +64,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.throws(() => HasBadPrefix.pathPrefix);
     });
 
-    it('should only ever ask the subclass once', () => {
+    it('only ever asks the subclass once', () => {
       class GoodControl extends DurableControl {
         static get _impl_pathPrefix() {
           this.count++;
@@ -84,12 +84,12 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('.snapshotClass', () => {
-    it('should reflect the subclass\'s implementation', () => {
+    it('reflects the subclass\'s implementation', () => {
       const result = MockControl.snapshotClass;
       assert.strictEqual(result, MockSnapshot);
     });
 
-    it('should reject an improper subclass choice', () => {
+    it('rejects an improper subclass choice', () => {
       class HasBadSnapshot extends DurableControl {
         static get _impl_snapshotClass() {
           return Object;
@@ -99,7 +99,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.throws(() => HasBadSnapshot.snapshotClass);
     });
 
-    it('should only ever ask the subclass once', () => {
+    it('only ever asks the subclass once', () => {
       class GoodControl extends DurableControl {
         static get _impl_snapshotClass() {
           this.count++;
@@ -119,7 +119,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('pathForChange()', () => {
-    it('should return an appropriate path given a valid argument', () => {
+    it('returns an appropriate path given a valid argument', () => {
       function test(value) {
         const expect = `${MockControl.pathPrefix}/change/${value}`;
         assert.strictEqual(MockControl.pathForChange(value), expect);
@@ -131,7 +131,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       test(100000914);
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(value) {
         assert.throws(() => MockControl.pathForChange(value), /badValue/);
       }
@@ -147,7 +147,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('constructor()', () => {
-    it('should accept a `FileAccess` and reflect it in the inherited getters', () => {
+    it('accepts a `FileAccess` and reflect it in the inherited getters', () => {
       const fa     = FILE_ACCESS;
       const result = new MockControl(fa, 'boop');
 
@@ -160,14 +160,14 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.notStrictEqual(result.log, fa.log);
     });
 
-    it('should reject non-`FileAccess` arguments', () => {
+    it('rejects non-`FileAccess` arguments', () => {
       assert.throws(() => new MockControl(null,      'boop'));
       assert.throws(() => new MockControl({ x: 10 }, 'boop'));
     });
   });
 
   describe('appendChange()', () => {
-    it('should perform an appropriate operation given a valid change', async () => {
+    it('performs an appropriate operation given a valid change', async () => {
       const file = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control = new MockControl(fileAccess, 'boop');
@@ -202,7 +202,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.strictEqual(revNumWritePathOp.props.path, `/mock_control/revision_number`);
     });
 
-    it('should provide a default for `null` and clamp an out-of-range (but otherwise valid) timeout', async () => {
+    it('provides a default for `null` and clamps an out-of-range (but otherwise valid) timeout', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -247,7 +247,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it('should call the snapshot maybe-writer and html exporter, and return `true` if the operation succeeds', async () => {
+    it('calls the snapshot maybe-writer and html exporter, and returns `true` if the operation succeeds', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -265,7 +265,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.isTrue(storeSnapshotCalled);
     });
 
-    it('should return `false` if the operation fails due to a precondition failure', async () => {
+    it('returns `false` if the operation fails due to a precondition failure', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -289,7 +289,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(fileStoreOt_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
-    it('should rethrow any error other than a precondition failure and timeout', async () => {
+    it('rethrows any error other than a precondition failure and timeout', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -313,7 +313,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(Errors.badValue('foo', 'bar'));
     });
 
-    it('should reject an empty change', async () => {
+    it('rejects an empty change', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -322,7 +322,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.appendChange(change), /badValue/);
     });
 
-    it('should reject a change of the wrong type', async () => {
+    it('rejects a change of the wrong type', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -330,7 +330,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.appendChange('not_a_change'), /badValue/);
     });
 
-    it('should reject an invalid timeout value', async () => {
+    it('rejects an invalid timeout value', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -350,7 +350,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('currentRevNum()', () => {
-    it('should use the result of the operation it performed', async () => {
+    it('uses the result of the operation it performed', async () => {
       const file           = new MockFile('blort');
       const fileAccess     = new FileAccess(CODEC, 'doc-1', file);
       const control        = new MockControl(fileAccess, 'boop');
@@ -363,7 +363,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.eventually.strictEqual(control.currentRevNum(), expectedRevNum);
     });
 
-    it('should reject improper subclass results', async () => {
+    it('rejects improper subclass results', async () => {
       async function test(revNum) {
         const file       = new MockFile('blort');
         const fileAccess = new FileAccess(CODEC, 'doc-1', file);
@@ -399,7 +399,7 @@ describe('@bayou/doc-server/BaseControl', () => {
         return changeResult;
       };
 
-      it('should pass appropriate arguments to `_getChangeRange()`', async () => {
+      it('passes appropriate arguments to `_getChangeRange()`', async () => {
         async function test(n) {
           await control.getChange(n);
           assert.strictEqual(gotStart, n);
@@ -412,19 +412,19 @@ describe('@bayou/doc-server/BaseControl', () => {
         await test(914);
       });
 
-      it('should return the first element of the return value from `_getChangeRange()`', async () => {
+      it('returns the first element of the return value from `_getChangeRange()`', async () => {
         changeResult = ['foomp'];
         const result = await control.getChange(123);
         assert.strictEqual(result, 'foomp');
       });
 
-      it('should convert an empty result from `_getChangeRange()` a `revisionNotAvailable` error', async () => {
+      it('converts an empty result from `_getChangeRange()` a `revisionNotAvailable` error', async () => {
         changeResult = [];
         await assert.isRejected(control.getChange(1), /^revisionNotAvailable/);
       });
     });
 
-    it('should promptly reject blatantly invalid `revNum` values', async () => {
+    it('promptly rejects blatantly invalid `revNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control._getChangeRange = async (start_unused, end_unused, allow_unused) => {
         throw new Error('This should not have been called.');
@@ -444,7 +444,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('getChangeAfter()', () => {
-    it('should call through to `currentRevNum()` before anything else', async () => {
+    it('calls through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         throw new Error('Oy!');
@@ -459,7 +459,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.getChangeAfter(0), /^Oy!/);
     });
 
-    it('should check the validity of `baseRevNum` against the response from `currentRevNum()`', async () => {
+    it('checks the validity of `baseRevNum` against the response from `currentRevNum()`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -474,7 +474,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.getChangeAfter(11), /^badValue/);
     });
 
-    it('should reject blatantly invalid `baseRevNum` values', async () => {
+    it('rejects blatantly invalid `baseRevNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -499,7 +499,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test([10]);
     });
 
-    it('should appropriately clamp `timeoutMsec` values', async () => {
+    it('appropriately clamps `timeoutMsec` values', async () => {
       let gotTimeout = null;
 
       const control = new MockControl(FILE_ACCESS, 'boop');
@@ -529,7 +529,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it('should not call through to `whenRevNum()` if the requested revision is not the current one', async () => {
+    it('does not call through to `whenRevNum()` if the requested revision is not the current one', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -545,7 +545,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.strictEqual(result, 'diff 5 10');
     });
 
-    it('should call through to `whenRevNum()` if the requested revision is the current one', async () => {
+    it('calls through to `whenRevNum()` if the requested revision is the current one', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       let   rev     = 10;
       control.currentRevNum = async () => {
@@ -567,7 +567,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('getDiff()', () => {
-    it('should reject bad arguments', async () => {
+    it('rejects bad arguments', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
 
       async function test(base, newer) {
@@ -599,7 +599,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(914, 10);
     });
 
-    it('should produce a result in one of the two specified ways', async () => {
+    it('produces a result in one of the two specified ways', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       let reqBase, reqNewer;
 
@@ -660,7 +660,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('getSnapshot()', () => {
-    it('should call through to `currentRevNum()` before anything else', async () => {
+    it('calls through to `currentRevNum()` before anything else', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         throw new Error('Oy!');
@@ -673,7 +673,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.getSnapshot(), /^Oy!/);
     });
 
-    it('should check the validity of a non-`null` `revNum` against the response from `currentRevNum()`', async () => {
+    it('checks the validity of a non-`null` `revNum` against the response from `currentRevNum()`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -685,7 +685,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.getSnapshot(11), /^badValue/);
     });
 
-    it('should reject blatantly invalid `revNum` values', async () => {
+    it('rejects blatantly invalid `revNum` values', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -706,7 +706,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test([10]);
     });
 
-    it('should return back a valid non-`null` subclass response', async () => {
+    it('returns back a valid non-`null` subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -721,7 +721,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.deepEqual(result.contents.ops, [new MockOp('x', 5)]);
     });
 
-    it('should use the returned `currentRevNum` when `revNum` is passed asa `null`', async () => {
+    it('uses the returned `currentRevNum` when `revNum` is passed asa `null`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 37;
@@ -736,7 +736,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.deepEqual(result.contents.ops, [new MockOp('x', 37)]);
     });
 
-    it('should convert a `null` subclass response to a `revisionNotAvailable` error', async () => {
+    it('converts a `null` subclass response to a `revisionNotAvailable` error', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -748,7 +748,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.getSnapshot(1), /^revisionNotAvailable/);
     });
 
-    it('should reject a non-snapshot subclass response', async () => {
+    it('rejects a non-snapshot subclass response', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -770,7 +770,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('update()', () => {
-    it('should reject non-change first arguments', async () => {
+    it('rejects non-change first arguments', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
@@ -793,7 +793,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(['boop']);
     });
 
-    it('should reject change arguments with invalid fields', async () => {
+    it('rejects change arguments with invalid fields', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
@@ -816,7 +816,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(new MockChange(1, []));
     });
 
-    it('should reject an invalid timeout value', async () => {
+    it('rejects an invalid timeout value', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         throw new Error('This should not have been called.');
@@ -842,7 +842,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test({ florp: 12 });
     });
 
-    it('should reject a too-large `revNum` in valid nontrivial cases', async () => {
+    it('rejects a too-large `revNum` in valid nontrivial cases', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -858,7 +858,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.update(change), /^badValue/);
     });
 
-    it('should call through to `_attemptUpdate()` given an empty change', async () => {
+    it('calls through to `_attemptUpdate()` given an empty change', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       control.currentRevNum = async () => {
         return 10;
@@ -875,7 +875,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.isRejected(control.update(change), /expected/);
     });
 
-    it('should call through to `_attemptUpdate()` in valid nontrivial cases', async () => {
+    it('calls through to `_attemptUpdate()` in valid nontrivial cases', async () => {
       const control   = new MockControl(FILE_ACCESS, 'boop');
       const current   = new MockSnapshot(10, [new MockOp('x', 10)]);
       let callCount   = 0;
@@ -915,7 +915,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.deepEqual(result, new MockChange(14, [new MockOp('yes')]));
     });
 
-    it('should retry the `_attemptUpdate()` call if it returns `null`', async () => {
+    it('retries the `_attemptUpdate()` call if it returns `null`', async () => {
       const control = new MockControl(FILE_ACCESS, 'boop');
       let callCount = 0;
 
@@ -943,7 +943,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('whenRevNum()', () => {
-    it('should return promptly if the revision is already available', async () => {
+    it('returns promptly if the revision is already available', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');

@@ -32,7 +32,7 @@ function testHtml(ops, expectedHtml) {
 
 describe('@bayou/doc-server/BodyDeltaHtml', () => {
   describe('toHtmlForm()', () => {
-    it('should produce HTML string', () => {
+    it('produces an HTML string', () => {
       testHtml([], '');
       testHtml([BodyOp.op_embed('image', 'https://www.fakeimage.com')],
         '<p><img class="ql-image" src="https://www.fakeimage.com"/></p>');
@@ -44,15 +44,15 @@ describe('@bayou/doc-server/BodyDeltaHtml', () => {
       testHtml([BodyOp.op_text('bold text', { bold: true })], '<p><strong>bold text</strong></p>');
     });
 
-    it('should produce expected HTML string of a valid custom op', () => {
+    it('produces the expected HTML string of a valid custom op', () => {
       testHtml([BodyOp.op_embed('customTest')], `<p>${expectedCustomOpHtml}</p>`);
     });
 
-    it('should produce expected HTML string when invalid custom op', () => {
+    it('produces the expected HTML string when given an invalid custom op', () => {
       testHtml([BodyOp.op_embed('unregisteredCustomOp')], `<p>${expectedUnfoundCustomOpHtml}</p>`);
     });
 
-    it('should produce non-altered url', () => {
+    it('produces a non-altered url', () => {
       const unsafeLink = 'test.com';
       testHtml([BodyOp.op_text('unsafe link', { link: unsafeLink })], `<p><a href="${unsafeLink}" target="_blank">unsafe link</a></p>`);
     });

@@ -14,7 +14,7 @@ const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, 'doc-123', ne
 
 describe('@bayou/doc-server/BaseDataManager', () => {
   describe('afterInit()', () => {
-    it('should call through to the impl', async () => {
+    it('calls through to the impl', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');
 
       let callCount = 0;
@@ -28,7 +28,7 @@ describe('@bayou/doc-server/BaseDataManager', () => {
       assert.isUndefined(result);
     });
 
-    it('should throw whatever error is thrown by the impl', async () => {
+    it('throws whatever error is thrown by the impl', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_afterInit = async () => {
         throw new Error('oy');
@@ -39,7 +39,7 @@ describe('@bayou/doc-server/BaseDataManager', () => {
   });
 
   describe('validationStatus()', () => {
-    it('should call through to the impl', async () => {
+    it('calls through to the impl', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');
 
       let callCount = 0;
@@ -53,7 +53,7 @@ describe('@bayou/doc-server/BaseDataManager', () => {
       assert.strictEqual(result, ValidationStatus.STATUS_ok);
     });
 
-    it('should throw whatever error is thrown by the impl', async () => {
+    it('throws whatever error is thrown by the impl', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_validationStatus = async () => {
         throw new Error('oy');
@@ -62,7 +62,7 @@ describe('@bayou/doc-server/BaseDataManager', () => {
       await assert.isRejected(dm.validationStatus(), /^oy$/);
     });
 
-    it('should reject bogus impl return values', async () => {
+    it('rejects bogus impl return values', async () => {
       const dm = new BaseDataManager(FILE_ACCESS, 'boop');
       dm._impl_validationStatus = async () => {
         return ['not actually a validation status'];
