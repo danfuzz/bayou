@@ -112,6 +112,9 @@ export default class FileDelta extends BaseDelta {
         case FileOp.CODE_deletePathPrefix: {
           const prefix = opProps.path;
 
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
           for (const id of data.keys()) {
             if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
               data.delete(id);
@@ -165,8 +168,24 @@ export default class FileDelta extends BaseDelta {
    * @returns {FileDelta} Composed result.
    */
   _composeNonDocument(other) {
-    const data  = new Map();   // Single-target ops (writes and deletes).
-    const deletes = new Set(); // Multi-target deletes.
+    // Single-target ops (writes and deletes).
+    const data = new Map();
+
+    // Multi-target deletes. Unlike single-target deletes, which can be
+    // correctly handled in the `data` map including possibly getting
+    // overwritten by subsequent ops, multi-target deletes cannot in general
+    // get overwritten, as their existence can affect subsequent uses of the
+    // result in other `compose()` operations. **Note:** This implementation
+    // does not necessarily produce a "canonical" or maximally compact result,
+    // because (a) it does not try to remove redundancies from within the
+    // deletes other than recognizing `deleteAll` as mooting the whole set
+    // (e.g., `deletePathRange('/x', 1, 6)` and `deletePathRange('x/', 4, 10)`
+    // would ideally combine to `deletePathRange('/x', 1, 10)`); and (b) it does
+    // not trim / remove delete operations that intersect with subsequent writes
+    // (e.g., `deletePathRange('/x', 1, 10)` followed by `writePath('/x/1')`
+    // would ideally trim the resulting delete to
+    // `deletePathRange('/x', 2, 10)`).
+    const deletes = new Set();
 
     // Add / replace the ops, first from `this` and then from `other`, as a
     // mapping from the storage ID.
@@ -192,12 +211,11 @@ export default class FileDelta extends BaseDelta {
         }
 
         case FileOp.CODE_deletePathPrefix: {
-          // Delete any references in `data` to the prefix, but also remember
-          // the op (because it could end up affecting a subsequent
-          // `compose()`).
-
           const prefix = opProps.path;
 
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
           for (const id of data.keys()) {
             if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
               data.delete(id);
@@ -210,10 +228,6 @@ export default class FileDelta extends BaseDelta {
         }
 
         case FileOp.CODE_deletePathRange: {
-          // Delete any references in `data` to the range, but also remember
-          // the op (because it could end up affecting a subsequent
-          // `compose()`).
-
           const { path: prefix, startInclusive, endExclusive } = opProps;
 
           // **TODO:** This isn't necessarily the most efficient way to achieve

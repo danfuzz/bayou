@@ -137,8 +137,23 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const d2     = new FileDelta([op2, op3, op4]);
         const result = d1.compose(d2, false);
 
-        // Order of operations matters!
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
         assert.deepEqual(result.ops, [op3, op4]);
+      });
+
+      it('does not represent `delete*` ops that are mooted by a `deleteAll`', () => {
+        const op1    = FileOp.op_deleteBlob(FrozenBuffer.coerce('222'));
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_deletePathPrefix('/x/y');
+        const op4    = FileOp.op_deletePathRange('/florp/like', 10, 20);
+        const op5    = FileOp.op_deleteAll();
+        const op6    = FileOp.op_deletePath('/xyz');
+        const d1     = new FileDelta([op1, op2, op3]);
+        const d2     = new FileDelta([op4, op5, op6]);
+        const result = d1.compose(d2, false);
+
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
+        assert.deepEqual(result.ops, [op5, op6]);
       });
 
       it('handles `deleteBlob` ops', () => {
@@ -158,6 +173,18 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const result = d1.compose(d2, false);
 
         assert.sameMembers(result.ops, [op1, op3, op4, op6, op7]);
+      });
+
+      it('does not represent a redundant `deleteBlob` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_deleteBlob(blob1);
+        const op3    = FileOp.op_writeBlob(blob1);
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op1, op3]);
       });
 
       it('handles `deletePath` ops', () => {
@@ -181,6 +208,18 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         test([op_a2],          [op_a1, op_adel], [op_adel]);
         test([op_a2],          [op_adel],        [op_adel]);
         test([op_a1, op_b1],   [op_adel],        [op_adel, op_b1]);
+      });
+
+      it('does not represent a redundant `deletePath` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writeBlob(blob1);
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_writePath('/aaa', new FrozenBuffer('222'));
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op1, op3]);
       });
 
       it('handles `deletePathPrefix` ops', () => {
@@ -414,8 +453,24 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const d4     = new FileDelta([op7]);
         const result = d1.composeAll([d2, d3, d4], false);
 
-        // Order of operations matters!
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
         assert.deepEqual(result.ops, [op5, op6, op7]);
+      });
+
+      it('does not represent `delete*` ops that are mooted by a `deleteAll`', () => {
+        const op1    = FileOp.op_deleteBlob(FrozenBuffer.coerce('222'));
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_deletePathPrefix('/x/y');
+        const op4    = FileOp.op_deletePathRange('/florp/like', 10, 20);
+        const op5    = FileOp.op_deleteAll();
+        const op6    = FileOp.op_deletePath('/xyz');
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3, op4]);
+        const d3     = new FileDelta([op5, op6]);
+        const result = d1.composeAll([d2, d3], false);
+
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
+        assert.deepEqual(result.ops, [op5, op6]);
       });
 
       it('handles `deleteBlob` ops', () => {
@@ -437,6 +492,19 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const result = d1.composeAll([d2, d3, d4], false);
 
         assert.sameMembers(result.ops, [op1, op3, op4, op6, op7]);
+      });
+
+      it('does not represent a redundant `deleteBlob` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_writeBlob(blob1);
+        const op3    = FileOp.op_deleteBlob(blob1);
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const d3     = new FileDelta([op2]);
+        const result = d1.composeAll([d2, d3], false);
+
+        assert.sameMembers(result.ops, [op1, op2]);
       });
 
       it('handles `deletePath` ops', () => {
@@ -463,6 +531,20 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         test([[op_a1], [], [op_adel]],             [op_adel]);
         test([[op_a1], [op_b1], [op_adel]],        [op_adel, op_b1]);
         test([[op_a1], [op_a2], [op_adel, op_b1]], [op_adel, op_b1]);
+      });
+
+      it('does not represent a redundant `deletePath` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writeBlob(blob1);
+        const op2    = FileOp.op_writePath('/xyz', new FrozenBuffer('xyz'));
+        const op3    = FileOp.op_deletePath('/aaa');
+        const op4    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const d3     = new FileDelta([op4]);
+        const result = d1.composeAll([d2, d3], false);
+
+        assert.sameMembers(result.ops, [op1, op2, op4]);
       });
 
       it('handles `deletePathPrefix` ops', () => {
