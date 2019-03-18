@@ -45,8 +45,8 @@ export default class BaseFile extends CommonBase {
 
   /**
    * {Int|null} The maximum value allowed (inclusive) as the duration specified
-   * on `timeout` operations in transactions on this instance, or `null` if
-   * there is no limit. Out-of-range values are clamped to this limit.
+   * as the timeout for methods on this instance, or `null` if there is no
+   * limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
    */
@@ -56,7 +56,7 @@ export default class BaseFile extends CommonBase {
 
   /**
    * {Int|null} The minimum value allowed (inclusive) as the duration specified
-   * on `timeout` operations in transactions on this instance, or `null` if
+   * as the timeout for methods on this instance, or `null` if there is no
    * there is no limit. Out-of-range values are clamped to this limit.
    *
    * @abstract
@@ -103,9 +103,6 @@ export default class BaseFile extends CommonBase {
    * Creates this file if it does not already exist. This does nothing if the
    * file already exists. Immediately after this call returns successfully, the
    * file is guaranteed to exist but might not be empty.
-   *
-   * **Note:** To erase the contents of a file without deleting the file itself,
-   * use the `deleteAll` operation in a transaction.
    */
   async create() {
     await this._impl_create();

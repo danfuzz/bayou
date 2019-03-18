@@ -154,7 +154,8 @@ export default class LocalFile extends BaseFile {
    * completed and settled in the filesystem.
    *
    * **Note:** This method wouldn't be necessary if {@link #_impl_create},
-   * {@link #_impl_transact}, etc. were all more realistically transactional.
+   * {@link #_impl_appendChange}, etc. were all more realistically
+   * transactional.
    */
   async flush() {
     await this._flushPendingStorage();
@@ -356,7 +357,7 @@ export default class LocalFile extends BaseFile {
       throw Errors.fileNotFound(this.id);
     }
 
-    // It's a wait transaction, so we need to be prepared to loop / retry (until
+    // Set up a loop, because we need to be prepared to wait and retry (until
     // satisfaction or timeout).
     for (;;) {
       if (timeout) {
@@ -639,8 +640,8 @@ export default class LocalFile extends BaseFile {
     this._storageToWrite  = new Map();
     this._storageIsDirty  = false;
 
-    // This wakes up wait transactions, if any, which can then go about figuring
-    // out if they're satisfied.
+    // This wakes up change waiters, if any, which can then go about figuring
+    // out if their actual conditions are satisfied.
     this._changeCondition.value = true;
 
     return true;

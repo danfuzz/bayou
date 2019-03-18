@@ -22,11 +22,11 @@ const UPDATE_RETRY_GROWTH_FACTOR = 5;
 const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
 
 /**
- * {Int} Maximum number of document changes to request in a single transaction.
- * (The idea is to avoid making a request that would result in running into an
- * upper limit on transaction data size.)
+ * {Int} Maximum number of document changes to read in a single iteration over
+ * changes. (The idea is to avoid doing so much processing that the main Node
+ * event loop chokes up.)
  */
-const MAX_CHANGE_READS_PER_TRANSACTION = 20;
+const MAX_CHANGE_READS_PER_ITERATION = 1000;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
@@ -406,7 +406,7 @@ export default class BaseControl extends BaseDataManager {
     }
 
     let result = baseDelta;
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = MAX_CHANGE_READS_PER_ITERATION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end     = Math.min(i + MAX, endExclusive);
       const changes = await this._getChangeRange(i, end, false);
@@ -729,7 +729,7 @@ export default class BaseControl extends BaseDataManager {
     const timedOut = () => {
       // Log a message -- it's at least somewhat notable, though it does occur
       // regularly -- and throw `timedOut` with the original timeout value. (If
-      // called as a result of catching a timeout from a file transaction the
+      // called as a result of catching a timeout from a file operation the
       // timeout value in the error might not be the original `timeoutMsec`.)
 
       // TODO: Make log message more descriptive, have timeoutMsec be the
@@ -883,7 +883,7 @@ export default class BaseControl extends BaseDataManager {
 
     // Make sure all the changes can be read and decoded.
 
-    const MAX = MAX_CHANGE_READS_PER_TRANSACTION;
+    const MAX = MAX_CHANGE_READS_PER_ITERATION;
 
     // Ephemeral parts aren't expected to store any changes from before the
     // snapshot revision (when present). This definition marks the "inflection
@@ -1010,7 +1010,7 @@ export default class BaseControl extends BaseDataManager {
    * `endExclusive` to be `currentRevNum() + 1` but no greater. If
    * `startInclusive === endExclusive`, then this simply verifies that the
    * arguments are in range and returns an empty array. It is an error if
-   * `(endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION`.
+   * `(endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION`.
    *
    * For subclasses that are ephemeral (don't keep full change history) and
    * when `allowMissing` is passed as `true`, it is possible for the first
@@ -1019,8 +1019,8 @@ export default class BaseControl extends BaseDataManager {
    * even if a non-zero number of changes were requested.
    *
    * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
+   * performing an operation which could run so long as to clog Node's top-level
+   * event dispatch loop.
    *
    * @param {Int} startInclusive Start change number (inclusive) of changes to
    *   read.
@@ -1038,7 +1038,7 @@ export default class BaseControl extends BaseDataManager {
     RevisionNumber.min(endExclusive, startInclusive);
     TBoolean.check(allowMissing);
 
-    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_TRANSACTION) {
+    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
       throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
@@ -1067,7 +1067,7 @@ export default class BaseControl extends BaseDataManager {
 
       if (data.has(path)) {
         const encodedChange = data.get(path);
-        const change = codec.decodeJsonBuffer(encodedChange);
+        const change        = codec.decodeJsonBuffer(encodedChange);
 
         clazz.changeClass.check(change);
         result.push(change);

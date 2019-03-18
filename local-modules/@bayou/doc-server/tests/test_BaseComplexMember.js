@@ -14,7 +14,7 @@ import { MockLogger } from '@bayou/see-all/mocks';
 
 describe('@bayou/doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
-    it('should accept a `FileAccess` and reflect it in the getters', () => {
+    it('accepts a `FileAccess` and reflects it in the getters', () => {
       const codec  = appCommon_TheModule.modelCodec;
       const file   = new MockFile('blort');
       const fa     = new FileAccess(codec, 'x', file);
@@ -29,12 +29,12 @@ describe('@bayou/doc-server/BaseComplexMember', () => {
       assert.notStrictEqual(result.log, fa.log);
     });
 
-    it('should reject non-`FileAccess` arguments', () => {
+    it('rejects non-`FileAccess` arguments', () => {
       assert.throws(() => new BaseComplexMember(null,      'boop'));
       assert.throws(() => new BaseComplexMember({ x: 10 }, 'boop'));
     });
 
-    it('should use the `logLabel` to create an appropriate `log`', () => {
+    it('uses the `logLabel` to create an appropriate `log`', () => {
       const codec  = appCommon_TheModule.modelCodec;
       const log    = new MockLogger();
       const fa     = new FileAccess(codec, 'x', new MockFile('file-id'), log);

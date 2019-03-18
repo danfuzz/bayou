@@ -12,7 +12,7 @@ describe('@bayou/doc-server/DurableControl', () => {
   class SomeControl extends DurableControl { /*empty*/ }
 
   describe('.ephemeral', () => {
-    it('should be `false`', () => {
+    it('is `false`', () => {
       assert.isFalse(SomeControl.ephemeral);
     });
   });
