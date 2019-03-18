@@ -247,7 +247,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       }
     });
 
-    it('should call the snapshot maybe-writer and html exporter, and return `true` if the transaction succeeds', async () => {
+    it('should call the snapshot maybe-writer and html exporter, and return `true` if the operation succeeds', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -265,7 +265,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       assert.isTrue(storeSnapshotCalled);
     });
 
-    it('should return `false` if the transaction fails due to a precondition failure', async () => {
+    it('should return `false` if the operation fails due to a precondition failure', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -289,7 +289,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await test(fileStoreOt_Errors.pathNotAbsent('/mock_control/change/99'));
     });
 
-    it('should rethrow any transaction error other than a precondition failure and timeout', async () => {
+    it('should rethrow any error other than a precondition failure and timeout', async () => {
       const file       = new MockFile('blort');
       const fileAccess = new FileAccess(CODEC, 'doc-1', file);
       const control    = new MockControl(fileAccess, 'boop');
@@ -350,7 +350,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('currentRevNum()', () => {
-    it('should use the result of the transaction it performed', async () => {
+    it('should use the result of the operation it performed', async () => {
       const file           = new MockFile('blort');
       const fileAccess     = new FileAccess(CODEC, 'doc-1', file);
       const control        = new MockControl(fileAccess, 'boop');
@@ -363,7 +363,7 @@ describe('@bayou/doc-server/BaseControl', () => {
       await assert.eventually.strictEqual(control.currentRevNum(), expectedRevNum);
     });
 
-    it('should reject improper transaction results', async () => {
+    it('should reject improper subclass results', async () => {
       async function test(revNum) {
         const file       = new MockFile('blort');
         const fileAccess = new FileAccess(CODEC, 'doc-1', file);
