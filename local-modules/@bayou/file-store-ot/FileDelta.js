@@ -40,6 +40,27 @@ export default class FileDelta extends BaseDelta {
   }
 
   /**
+   * Implementation as suggested by the superclass.
+   *
+   * @override
+   * @param {array<FileDelta>} deltas Instances to compose on top of this one.
+   * @param {boolean} wantDocument Whether the result of the operation should be
+   *   a document delta.
+   * @returns {FileDelta} Composed result.
+   */
+  _impl_composeAll(deltas, wantDocument) {
+    const opMap     = new Map();
+    const deleteSet = wantDocument ? null : new Set;
+
+    FileDelta._composeOne(opMap, deleteSet, this);
+    for (const d of deltas) {
+      FileDelta._composeOne(opMap, deleteSet, d);
+    }
+
+    return FileDelta._composeResult(opMap, deleteSet);
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @override
