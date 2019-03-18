@@ -26,7 +26,7 @@ const MAX_UPDATE_RETRY_MSEC = 15 * 1000;
  * changes. (The idea is to avoid doing so much processing that the main Node
  * event loop chokes up.)
  */
-const MAX_CHANGE_READS_PER_ITERATION = 20;
+const MAX_CHANGE_READS_PER_ITERATION = 1000;
 
 /**
  * {Int} Maximum number of changes to compose in order to produce a result from
