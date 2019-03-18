@@ -137,8 +137,23 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const d2     = new FileDelta([op2, op3, op4]);
         const result = d1.compose(d2, false);
 
-        // Order of operations matters!
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
         assert.deepEqual(result.ops, [op3, op4]);
+      });
+
+      it('does not represent `delete*` ops that are mooted by a `deleteAll`', () => {
+        const op1    = FileOp.op_deleteBlob(FrozenBuffer.coerce('222'));
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_deletePathPrefix('/x/y');
+        const op4    = FileOp.op_deletePathRange('/florp/like', 10, 20);
+        const op5    = FileOp.op_deleteAll();
+        const op6    = FileOp.op_deletePath('/xyz');
+        const d1     = new FileDelta([op1, op2, op3]);
+        const d2     = new FileDelta([op4, op5, op6]);
+        const result = d1.compose(d2, false);
+
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
+        assert.deepEqual(result.ops, [op5, op6]);
       });
 
       it('handles `deleteBlob` ops', () => {
@@ -438,8 +453,24 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         const d4     = new FileDelta([op7]);
         const result = d1.composeAll([d2, d3, d4], false);
 
-        // Order of operations matters!
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
         assert.deepEqual(result.ops, [op5, op6, op7]);
+      });
+
+      it('does not represent `delete*` ops that are mooted by a `deleteAll`', () => {
+        const op1    = FileOp.op_deleteBlob(FrozenBuffer.coerce('222'));
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_deletePathPrefix('/x/y');
+        const op4    = FileOp.op_deletePathRange('/florp/like', 10, 20);
+        const op5    = FileOp.op_deleteAll();
+        const op6    = FileOp.op_deletePath('/xyz');
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3, op4]);
+        const d3     = new FileDelta([op5, op6]);
+        const result = d1.composeAll([d2, d3], false);
+
+        // Order of operations matters (so `deepEqual` and not `sameMembers`).
+        assert.deepEqual(result.ops, [op5, op6]);
       });
 
       it('handles `deleteBlob` ops', () => {
