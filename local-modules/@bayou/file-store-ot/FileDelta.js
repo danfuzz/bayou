@@ -112,6 +112,9 @@ export default class FileDelta extends BaseDelta {
         case FileOp.CODE_deletePathPrefix: {
           const prefix = opProps.path;
 
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
           for (const id of data.keys()) {
             if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
               data.delete(id);
@@ -210,6 +213,9 @@ export default class FileDelta extends BaseDelta {
         case FileOp.CODE_deletePathPrefix: {
           const prefix = opProps.path;
 
+          // **TODO:** This isn't necessarily the most efficient way to achieve
+          // the desired result. Consider a cleverer solution, should this turn
+          // out to be a performance issue.
           for (const id of data.keys()) {
             if (StoragePath.isInstance(id) && StoragePath.isPrefixOrSame(prefix, id)) {
               data.delete(id);
