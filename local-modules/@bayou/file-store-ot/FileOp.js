@@ -210,8 +210,9 @@ export default class FileOp extends BaseOp {
   }
 
   /**
-   * Subclass-specific implementation of {@link #isValidPayload}.
+   * Implementation as required by the superclass.
    *
+   * @override
    * @param {Functor} payload_unused The would-be payload for an instance.
    * @returns {boolean} `true` if `payload` is valid, or `false` if not.
    */

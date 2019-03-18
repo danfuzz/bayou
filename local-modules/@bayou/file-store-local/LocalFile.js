@@ -34,7 +34,7 @@ const MAX_PARALLEL_FS_CALLS = 20;
  * CPU-bound for an extended period of time. That is, we want to be a good
  * cooperative-multitasking citizen.
  */
-const MAX_ATOMIC_COMPOSED_CHANGES = 50;
+const MAX_ATOMIC_COMPOSED_CHANGES = 1000;
 
 /**
  * File implementation that stores everything in the locally-accessible
