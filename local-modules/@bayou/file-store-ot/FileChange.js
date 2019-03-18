@@ -12,11 +12,7 @@ import FileDelta from './FileDelta';
  * of {@link FileDelta}.
  */
 export default class FileChange extends BaseChange {
-  /**
-   * {class} Class (constructor function) of delta objects to be used with
-   * instances of this class.
-   * @override
-   */
+  /** @override */
   static get _impl_deltaClass() {
     return FileDelta;
   }

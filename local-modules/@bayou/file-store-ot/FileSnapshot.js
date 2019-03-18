@@ -364,11 +364,7 @@ export default class FileSnapshot extends BaseSnapshot {
     // **TODO:** Implement this!
   }
 
-  /**
-   * {class} Class (constructor function) of change objects to be used with
-   * instances of this class.
-   * @override
-   */
+  /** @override */
   static get _impl_changeClass() {
     return FileChange;
   }

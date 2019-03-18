@@ -84,11 +84,7 @@ export default class FileDelta extends BaseDelta {
     return true;
   }
 
-  /**
-   * {class} Class (constructor function) of operation objects to be used with
-   * instances of this class.
-   * @override
-   */
+  /** @override */
   static get _impl_opClass() {
     return FileOp;
   }
