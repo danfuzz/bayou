@@ -160,6 +160,18 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         assert.sameMembers(result.ops, [op1, op3, op4, op6, op7]);
       });
 
+      it('does not represent a redundant `deleteBlob` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_deleteBlob(blob1);
+        const op3    = FileOp.op_writeBlob(blob1);
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op1, op3]);
+      });
+
       it('handles `deletePath` ops', () => {
         function test(ops1, ops2, expectOps) {
           const d1     = new FileDelta(ops1);
@@ -181,6 +193,18 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         test([op_a2],          [op_a1, op_adel], [op_adel]);
         test([op_a2],          [op_adel],        [op_adel]);
         test([op_a1, op_b1],   [op_adel],        [op_adel, op_b1]);
+      });
+
+      it('does not represent a redundant `deletePath` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writeBlob(blob1);
+        const op2    = FileOp.op_deletePath('/aaa');
+        const op3    = FileOp.op_writePath('/aaa', new FrozenBuffer('222'));
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const result = d1.compose(d2, false);
+
+        assert.sameMembers(result.ops, [op1, op3]);
       });
 
       it('handles `deletePathPrefix` ops', () => {
@@ -439,6 +463,19 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         assert.sameMembers(result.ops, [op1, op3, op4, op6, op7]);
       });
 
+      it('does not represent a redundant `deleteBlob` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const op2    = FileOp.op_writeBlob(blob1);
+        const op3    = FileOp.op_deleteBlob(blob1);
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const d3     = new FileDelta([op2]);
+        const result = d1.composeAll([d2, d3], false);
+
+        assert.sameMembers(result.ops, [op1, op2]);
+      });
+
       it('handles `deletePath` ops', () => {
         function test(opses, expectOps) {
           const [delta, ...deltas] = opses.map(ops => new FileDelta(ops));
@@ -463,6 +500,20 @@ describe('@bayou/file-store-ot/FileDelta', () => {
         test([[op_a1], [], [op_adel]],             [op_adel]);
         test([[op_a1], [op_b1], [op_adel]],        [op_adel, op_b1]);
         test([[op_a1], [op_a2], [op_adel, op_b1]], [op_adel, op_b1]);
+      });
+
+      it('does not represent a redundant `deletePath` op', () => {
+        const blob1  = new FrozenBuffer('a1');
+        const op1    = FileOp.op_writeBlob(blob1);
+        const op2    = FileOp.op_writePath('/xyz', new FrozenBuffer('xyz'));
+        const op3    = FileOp.op_deletePath('/aaa');
+        const op4    = FileOp.op_writePath('/aaa', new FrozenBuffer('111'));
+        const d1     = new FileDelta([op1, op2]);
+        const d2     = new FileDelta([op3]);
+        const d3     = new FileDelta([op4]);
+        const result = d1.composeAll([d2, d3], false);
+
+        assert.sameMembers(result.ops, [op1, op2, op4]);
       });
 
       it('handles `deletePathPrefix` ops', () => {
