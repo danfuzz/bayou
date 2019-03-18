@@ -729,7 +729,7 @@ export default class BaseControl extends BaseDataManager {
     const timedOut = () => {
       // Log a message -- it's at least somewhat notable, though it does occur
       // regularly -- and throw `timedOut` with the original timeout value. (If
-      // called as a result of catching a timeout from a file transaction the
+      // called as a result of catching a timeout from a file operation the
       // timeout value in the error might not be the original `timeoutMsec`.)
 
       // TODO: Make log message more descriptive, have timeoutMsec be the
@@ -1019,8 +1019,8 @@ export default class BaseControl extends BaseDataManager {
    * even if a non-zero number of changes were requested.
    *
    * **Note:** The point of the max count limit is that we want to avoid
-   * creating a transaction which could run afoul of a limit on the amount of
-   * data returned by any one transaction.
+   * performing an operation which could run so long as to clog Node's top-level
+   * event dispatch loop.
    *
    * @param {Int} startInclusive Start change number (inclusive) of changes to
    *   read.
