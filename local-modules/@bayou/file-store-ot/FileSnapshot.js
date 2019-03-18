@@ -315,9 +315,9 @@ export default class FileSnapshot extends BaseSnapshot {
   }
 
   /**
-   * Main implementation of {@link #diff}, which produces a delta (not a
-   * change).
+   * Implementation as required by the superclass.
    *
+   * @override
    * @param {FileSnapshot} newerSnapshot Snapshot to take the difference from.
    * @returns {FileDelta} Delta which represents the difference between
    *   `newerSnapshot` and this instance.
@@ -355,6 +355,7 @@ export default class FileSnapshot extends BaseSnapshot {
   /**
    * Implementation as required by the superclass.
    *
+   * @override
    * @param {FileChange} change The change to be validated in the context of
    *   `this`.
    * @throws {Error} Thrown if `change` is not valid to compose with `this`.
@@ -366,6 +367,7 @@ export default class FileSnapshot extends BaseSnapshot {
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.
+   * @override
    */
   static get _impl_changeClass() {
     return FileChange;

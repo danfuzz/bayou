@@ -21,8 +21,9 @@ import StoragePath from './StoragePath';
  */
 export default class FileDelta extends BaseDelta {
   /**
-   * Main implementation of {@link #compose}.
+   * Implementation as required by the superclass.
    *
+   * @override
    * @param {FileDelta} other Delta to compose with this instance.
    * @param {boolean} wantDocument Whether the result of the operation should be
    *   a document delta.
@@ -39,8 +40,9 @@ export default class FileDelta extends BaseDelta {
   }
 
   /**
-   * Main implementation of {@link #isDocument}.
+   * Implementation as required by the superclass.
    *
+   * @override
    * @returns {boolean} `true` if this instance can be used as a document or
    *   `false` if not.
    */
@@ -85,6 +87,7 @@ export default class FileDelta extends BaseDelta {
   /**
    * {class} Class (constructor function) of operation objects to be used with
    * instances of this class.
+   * @override
    */
   static get _impl_opClass() {
     return FileOp;
