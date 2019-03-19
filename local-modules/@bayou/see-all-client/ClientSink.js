@@ -85,7 +85,7 @@ export default class ClientSink extends BaseSink {
         args.push(label);
 
         switch (metricArgs.length) {
-          case 0:  {                       break; }
+          case 0:  {                             break; }
           case 1:  { formatValue(metricArgs[0]); break; }
           default: { formatValue(metricArgs);    break; }
         }
