@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ansiHtml from 'ansi-html';
+import AnsiUp from 'ansi_up';
 import chalk from 'chalk';
-import { escape } from 'lodash';
+import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
@@ -32,11 +32,12 @@ export default class RecentSink extends BaseSink {
     /**
      * {Chalk} Chalk instance to use. We don't just use the global `chalk`, as
      * it gets configured for the observed TTY, and this class wants it to
-     * be at level `1`, which is what the `ansi-html` module supports.
-     * **TODO:** Update this when `ansi-html` gets level `4` support. See
-     * <https://github.com/Tjatse/ansi-html/issues/10>.
+     * be at level `3` for maximum fidelity when converting to HTML.
      */
-    this._chalk = new chalk.constructor({ level: 1 });
+    this._chalk = new chalk.constructor({ level: 3 });
+
+    /** {AnsiUp} ANSI-to-HTML converter to use. */
+    this._ansiUp = new AnsiUp();
 
     /** {array<object>} The log contents. */
     this._log = [];
@@ -92,42 +93,65 @@ export default class RecentSink extends BaseSink {
   }
 
   /**
+   * Converts the given ANSI-bearing string to HTML.
+   *
+   * @param {string} s String to convert.
+   * @returns {string} Converted form.
+   */
+  _fromAnsi(s) {
+    return this._ansiUp.ansi_to_html(s);
+  }
+
+  /**
    * Converts the given log line to HTML.
    *
    * @param {LogRecord} logRecord Log record.
    * @returns {string} HTML string form for the entry.
    */
   _htmlLine(logRecord) {
-    const ck      = this._chalk;
-    let   prefix  = logRecord.prefixString;
-    const context = logRecord.contextString || '';
+    const ck         = this._chalk;
+    let   prefix     = logRecord.prefixString;
+    const context    = logRecord.contextString || '';
+    const metricName = logRecord.metricName;
     let   body;
 
     if (logRecord.isTime()) {
       const [utc, local] = logRecord.timeStrings;
       const utcString    = ck.blue.bold(utc);
-      const localString  = ck.blue.dim.bold(local);
-      body = `${utcString} ${ck.dim.bold('/')} ${localString}`;
+      const localString  = ck.hex('#88f').bold(local);
+      body = `${utcString} ${ck.hex('#888').bold('/')} ${localString}`;
+    } else if (metricName !== null) {
+      const args  = logRecord.payload.args;
+      const label = `${metricName}${(args.length === 0) ? '' : ': '}`;
+      let   argString;
+
+      switch (args.length) {
+        case 0:  { argString = '';               break; }
+        case 1:  { argString = inspect(args[0]); break; }
+        default: { argString = inspect(args);    break; }
+      }
+
+      body = `${ck.hex('#503').bold(label)}${argString}`;
     } else {
       // Distill the message (or event) down to a single string, and trim
       // leading and trailing newlines.
       body = logRecord.messageString.replace(/(^\n+)|(\n+$)/g, '');
 
       if (logRecord.isEvent()) {
-        body = ck.dim.bold(body);
+        body = ck.hex('#884').bold(body);
       }
     }
 
     // Color the prefix depending on the event name / severity level.
     switch (logRecord.payload.name) {
-      case 'error': { prefix = ck.red.bold(prefix);    break; }
-      case 'warn':  { prefix = ck.yellow.bold(prefix); break; }
-      default:      { prefix = ck.dim.bold(prefix);    break; }
+      case 'error': { prefix = ck.red.bold(prefix);         break; }
+      case 'warn':  { prefix = ck.yellow.bold(prefix);      break; }
+      default:      { prefix = ck.hex('#888').bold(prefix); break; }
     }
 
-    const prefixHtml  = ansiHtml(escape(prefix));
-    const contextHtml = ansiHtml(escape(ck.blue.dim.bold(context)));
-    const bodyHtml    = ansiHtml(escape(body));
+    const prefixHtml  = this._fromAnsi(prefix);
+    const contextHtml = this._fromAnsi(ck.hex('#88f').bold(context));
+    const bodyHtml    = this._fromAnsi(body);
 
     return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }

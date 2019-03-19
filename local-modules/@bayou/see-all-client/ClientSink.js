@@ -71,9 +71,25 @@ export default class ClientSink extends BaseSink {
     }
 
     if (logRecord.isEvent()) {
-      formatStr.push('%c ');
-      args.push('color: #840; font-weight: bold');
-      formatValue(payload);
+      const metricName = logRecord.metricName;
+      if (metricName === null) {
+        formatStr.push('%c ');
+        args.push('color: #840; font-weight: bold');
+        formatValue(payload);
+      } else {
+        const metricArgs = logRecord.payload.args;
+        const label      = `${metricName}${(metricArgs.length === 0) ? '' : ': '}`;
+
+        formatStr.push('%c %s');
+        args.push('color: #503; font-weight: bold');
+        args.push(label);
+
+        switch (metricArgs.length) {
+          case 0:  {                             break; }
+          case 1:  { formatValue(metricArgs[0]); break; }
+          default: { formatValue(metricArgs);    break; }
+        }
+      }
     } else {
       for (const a of payload.args) {
         switch (typeof a) {

@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import stringLength from 'string-length';
 import stripAnsi from 'strip-ansi';
-import { format } from 'util';
+import { format, inspect } from 'util';
 import wrapAnsi from 'wrap-ansi';
 
 import { BaseSink, Logger, SeeAll } from '@bayou/see-all';
@@ -132,13 +132,27 @@ export default class HumanSink extends BaseSink {
   _impl_sinkLog(logRecord) {
     logRecord = Redactor.redact(logRecord);
 
-    const prefix = this._makePrefix(logRecord);
+    const ck         = this._chalk;
+    const prefix     = this._makePrefix(logRecord);
+    const metricName = logRecord.metricName;
 
     // Make a unified string of the entire message.
 
     let text;
     if (logRecord.isTime()) {
       text = this._timeString(logRecord);
+    } else if (metricName !== null) {
+      const args  = logRecord.payload.args;
+      const label = `${metricName}${(args.length === 0) ? '' : ': '}`;
+      let   argString;
+
+      switch (args.length) {
+        case 0:  { argString = '';               break; }
+        case 1:  { argString = inspect(args[0]); break; }
+        default: { argString = inspect(args);    break; }
+      }
+
+      text = `${ck.hex('#503').bold(label)}${argString}`;
     } else if (logRecord.isEvent()) {
       text = logRecord.messageString;
 
@@ -157,7 +171,7 @@ export default class HumanSink extends BaseSink {
         }
       }
 
-      text = this._chalk.hex('#430').bold(text);
+      text = ck.hex('#430').bold(text);
     } else {
       // It's an ad-hoc message.
       text = logRecord.messageString;
