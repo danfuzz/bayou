@@ -259,6 +259,7 @@ export default class Action extends CommonBase {
 
     // A little spew to identify the build and our environment.
 
+    log.metric.boot();
     log.event.buildInfo(ProductInfo.theOne.INFO);
     log.event.runtimeInfo(ServerEnv.theOne.info);
 
