@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@bayou/deps-ansi-color": "local",
-    "@bayou/deps-util-common": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"
   }

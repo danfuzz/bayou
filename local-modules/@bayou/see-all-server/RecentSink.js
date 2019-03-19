@@ -4,7 +4,6 @@
 
 import AnsiUp from 'ansi_up';
 import chalk from 'chalk';
-import { escape } from 'lodash';
 
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
@@ -38,7 +37,6 @@ export default class RecentSink extends BaseSink {
 
     /** {AnsiUp} ANSI-to-HTML converter to use. */
     this._ansiUp = new AnsiUp();
-    this._ansiUp.escape_for_html = false;
 
     /** {array<object>} The log contents. */
     this._log = [];
@@ -137,9 +135,9 @@ export default class RecentSink extends BaseSink {
       default:      { prefix = ck.hex('#888').bold(prefix); break; }
     }
 
-    const prefixHtml  = this._fromAnsi(escape(prefix));
-    const contextHtml = this._fromAnsi(escape(ck.hex('#88f').bold(context)));
-    const bodyHtml    = this._fromAnsi(escape(body));
+    const prefixHtml  = this._fromAnsi(prefix);
+    const contextHtml = this._fromAnsi(ck.hex('#88f').bold(context));
+    const bodyHtml    = this._fromAnsi(body);
 
     return `<tr><td>${prefixHtml}</td><td>${contextHtml}</td><td><pre>${bodyHtml}</pre></td>`;
   }
