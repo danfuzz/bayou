@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "ansi-html": "^0.0.7",
     "ansi_up": "^4.0.3",
     "chalk": "^2.4.1",
     "string-length": "^2.0.0",
