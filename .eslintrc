@@ -44,6 +44,7 @@
         "tabWidth": 8
       }
     ],
+    "new-parens": "error",
     "no-alert": "warn",
     "no-array-constructor": "error",
     "no-empty-function": "error",
