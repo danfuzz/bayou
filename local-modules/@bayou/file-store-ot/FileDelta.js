@@ -31,7 +31,7 @@ export default class FileDelta extends BaseDelta {
    */
   _impl_compose(other, wantDocument) {
     const opMap     = new Map();
-    const deleteSet = wantDocument ? null : new Set;
+    const deleteSet = wantDocument ? null : new Set();
 
     FileDelta._composeOne(opMap, deleteSet, this);
     FileDelta._composeOne(opMap, deleteSet, other);
@@ -50,7 +50,7 @@ export default class FileDelta extends BaseDelta {
    */
   _impl_composeAll(deltas, wantDocument) {
     const opMap     = new Map();
-    const deleteSet = wantDocument ? null : new Set;
+    const deleteSet = wantDocument ? null : new Set();
 
     FileDelta._composeOne(opMap, deleteSet, this);
     for (const d of deltas) {
