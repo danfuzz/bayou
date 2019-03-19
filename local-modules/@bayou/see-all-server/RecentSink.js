@@ -4,6 +4,7 @@
 
 import AnsiUp from 'ansi_up';
 import chalk from 'chalk';
+import { inspect } from 'util';
 
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
@@ -108,9 +109,10 @@ export default class RecentSink extends BaseSink {
    * @returns {string} HTML string form for the entry.
    */
   _htmlLine(logRecord) {
-    const ck      = this._chalk;
-    let   prefix  = logRecord.prefixString;
-    const context = logRecord.contextString || '';
+    const ck         = this._chalk;
+    let   prefix     = logRecord.prefixString;
+    const context    = logRecord.contextString || '';
+    const metricName = logRecord.metricName;
     let   body;
 
     if (logRecord.isTime()) {
@@ -118,6 +120,18 @@ export default class RecentSink extends BaseSink {
       const utcString    = ck.blue.bold(utc);
       const localString  = ck.hex('#88f').bold(local);
       body = `${utcString} ${ck.hex('#888').bold('/')} ${localString}`;
+    } else if (metricName !== null) {
+      const args  = logRecord.payload.args;
+      const label = `${metricName}${(args.length === 0) ? '' : ': '}`;
+      let   argString;
+
+      switch (args.length) {
+        case 0:  { argString = '';               break; }
+        case 1:  { argString = inspect(args[0]); break; }
+        default: { argString = inspect(args);    break; }
+      }
+
+      body = `${ck.hex('#503').bold(label)}${argString}`;
     } else {
       // Distill the message (or event) down to a single string, and trim
       // leading and trailing newlines.
