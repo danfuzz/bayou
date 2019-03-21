@@ -34,7 +34,7 @@ export default class FileCache extends BaseCache {
 
   /** @override */
   _impl_isValidId(id_unused) {
-    // **TODO:** Consider plumbing through the real ID syntax checker.
+    // **TODO:** Consider plumbing through an actual ID syntax checker.
     return true;
   }
 }
