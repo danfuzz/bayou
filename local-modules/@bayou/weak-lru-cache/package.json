@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@bayou/deps-util-server": "local",
+    "@bayou/see-all": "local",
+    "@bayou/typecheck": "local",
+    "@bayou/util-common": "local"
+  }
+}

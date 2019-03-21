@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@bayou/codec": "local",
-    "@bayou/deps-util-server": "local",
     "@bayou/file-store-ot": "local",
     "@bayou/promise-util": "local",
     "@bayou/typecheck": "local",
-    "@bayou/util-common": "local"
+    "@bayou/util-common": "local",
+    "@bayou/weak-lru-cache": "local"
   }
 }

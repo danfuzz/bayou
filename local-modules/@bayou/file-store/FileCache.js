@@ -2,128 +2,39 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import weak from 'weak';
-
-import { Logger } from '@bayou/see-all';
-import { TString } from '@bayou/typecheck';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { BaseCache } from '@bayou/weak-lru-cache';
 
 import BaseFile from './BaseFile';
 
+/** {Int} Maximum size of the LRU cache. */
+const MAX_LRU_CACHE_SIZE = 10;
 
 /**
- * Cache of active instances of {@link BaseFile}, built by using a `Map` with
- * weakly-held values.
+ * Cache of active instances of {@link BaseFile}.
  */
-export default class FileCache extends CommonBase {
+export default class FileCache extends BaseCache {
   /**
    * Constructs an instance.
    *
    * @param {Logger} log Logger instance to use.
    */
   constructor(log) {
-    super();
-
-    /**
-     * {Map<string, Weak<BaseFile>>} The cache, as a map from file IDs to
-     * weak file references.
-     */
-    this._cache = new Map();
-
-    /** {Logger} Logger instance to use. */
-    this._log = Logger.check(log).withAddedContext('cache');
-
-    Object.freeze(this);
+    super(log, MAX_LRU_CACHE_SIZE);
   }
 
-  /**
-   * Gets the file instance associated with the given ID, if any. Returns `null`
-   * if there is no such instance.
-   *
-   * @param {string} fileId The file ID to look up.
-   * @param {boolean} [quiet = false] If `true`, suppress log spew. (This is
-   *   meant for intra-class usage.)
-   * @returns {BaseFile|null} The corresponding file instance, or `null` if no
-   *   such instance is active.
-   */
-  getOrNull(fileId, quiet = false) {
-    TString.check(fileId);
-
-    const fileRef = this._cache.get(fileId);
-
-    if (!fileRef) {
-      if (!quiet) {
-        this._log.event.notCached(fileId);
-      }
-
-      return null;
-    }
-
-    if (weak.isDead(fileRef)) {
-      // We don't bother removing the dead entry, because in all likelihood the
-      // very next thing that will happen is that the calling code is going to
-      // re-instantiate the file and add it.
-
-      if (!quiet) {
-        this._log.event.foundDead(fileId);
-      }
-
-      return null;
-    }
-
-    // We've seen cases where a weakly-referenced object gets collected
-    // and replaced with an instance of a different class. If this check
-    // throws an error, that's what's going on here. (This is evidence of
-    // a bug in Node or in the `weak` package.)
-    const result = BaseFile.check(weak.get(fileRef));
-
-    if (!quiet) {
-      this._log.event.retrieved(fileId);
-    }
-
-    return result;
+  /** @override */
+  get _impl_cachedClass() {
+    return BaseFile;
   }
 
-  /**
-   * Adds the given file instance to the cache. It is an error to add an
-   * instance with an ID that is already represented in the cache (by a live
-   * object).
-   *
-   * @param {BaseFile} file File to add to the cache.
-   */
-  add(file) {
-    BaseFile.check(file);
-
-    const id      = file.id;
-    const already = this.getOrNull(id, true);
-
-    if (already !== null) {
-      throw Errors.badUse(`ID already present in cache: ${id}`);
-    }
-
-    const fileRef = weak(file, this._fileReaper(id));
-
-    this._cache.set(id, fileRef);
-    this._log.event.added(id);
+  /** @override */
+  _impl_idFromObject(file) {
+    return file.id;
   }
 
-  /**
-   * Constructs and returns a post-mortem finalizer (reaper) for a weak
-   * reference on the file with the given ID.
-   *
-   * @param {string} fileId ID of the file in question.
-   * @returns {function} Appropriately-constructed post-mortem finalizer.
-   */
-  _fileReaper(fileId) {
-    return () => {
-      this._log.event.reaped(fileId);
-
-      // Clear the cache entry, but only if it hasn't already been replaced with
-      // a new live reference. (Without the check, we'd have a concurrency
-      // hazard.)
-      if (this.getOrNull(fileId, true) === null) {
-        this._cache.delete(fileId);
-      }
-    };
+  /** @override */
+  _impl_isValidId(id_unused) {
+    // **TODO:** Consider plumbing through an actual ID syntax checker.
+    return true;
   }
 }

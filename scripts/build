@@ -382,7 +382,10 @@ function build-server {
     # Copy everything else over to the final `server` directory as-is. We use
     # the `--update` option to avoid clobbering those Babel-compiled files we
     # just went through all the trouble to make.
-    rsync-archive --delete --update "${fromDir}/" "${toDir}" || return 1
+    echo 'server: Copying final code...'
+    rsync-archive --delete --update "${fromDir}/" "${toDir}" \
+        || return 1
+    echo 'server: Copying final code... done.'
 }
 
 # Builds the client code.
@@ -393,8 +396,10 @@ function build-client {
     do-install client "${mainClient}" || return 1
 
     # Copy the built result into the final output.
+    echo 'client: Copying final code...'
     rsync-archive --delete "${outDir}/client/" "${toDir}" \
-    || return 1
+        || return 1
+    echo 'client: Copying final code... done'
 }
 
 # Builds the compiler (transpiler) code.

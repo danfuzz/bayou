@@ -115,14 +115,21 @@ function publishable-module-names {
 # **Note:** Trailing slashes on source directory names are significant to
 # `rsync`. This is salient at some of the use sites.
 function rsync-archive {
-    # **Note:** We turn off file-sameness checking, which is irrelevant for this
-    # use and is furthermore counterproductive, in that it can cause a failure
-    # to copy when two non-identical files happen to match in both size and
-    # timestamp. (This has happened in practice. When running a build on a
-    # freshly checked-out source tree, many many files have the same timestamps,
-    # so only the file sizes come into play, and it's very easy to have a file
-    # size coincidence.)
-    rsync --archive --ignore-times "$@"
+    # **Note:** We use checksum-based checking, because the default time-and-
+    # size method is counterproductive. Specifically, a time-and-size check will
+    # cause a failure to copy when two non-identical files happen to match in
+    # both size and timestamp, which does happen in practice specifically when
+    # running a build on a freshly checked-out source tree, wherein many many
+    # files have the same timestamps, which means that only the sizes come into
+    # play for the comparisons. And it's very easy to have a file size
+    # coincidence.)
+    #
+    # **Note:** An earlier version of this code used `--ignore-times` instead
+    # of `--checksum`. The former worked equally well for this use case, except
+    # because it would always write the target files (even if identical), it
+    # would take significantly more time in the no-op case. (Specifically, some
+    # virus checkers can seriously degrade write performance.)
+    rsync --archive --checksum "$@"
 }
 
 # Sets up the build output directory, including cleaning it out or creating it,
