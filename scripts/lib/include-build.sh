@@ -122,7 +122,7 @@ function rsync-archive {
     # running a build on a freshly checked-out source tree, wherein many many
     # files have the same timestamps, which means that only the sizes come into
     # play for the comparisons. And it's very easy to have a file size
-    # coincidence.)
+    # coincidence.
     #
     # **Note:** An earlier version of this code used `--ignore-times` instead
     # of `--checksum`. The former worked equally well for this use case, except
