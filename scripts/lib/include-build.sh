@@ -116,12 +116,12 @@ function publishable-module-names {
 # `rsync`. This is salient at some of the use sites.
 function rsync-archive {
     # **Note:** We use checksum-based checking, because the default time-and-
-    # size method is counterproductive. Specifically, a time-and-size check can
-    # will cause a failure to copy when two non-identical files happen to match
-    # in both size and timestamp, which does happen in practice specifically
-    # when running a build on a freshly checked-out source tree, wherein many
-    # many files have the same timestamps, which means that only the sizes come
-    # into play for the comparisons. And it's very easy to have a file size
+    # size method is counterproductive. Specifically, a time-and-size check will
+    # cause a failure to copy when two non-identical files happen to match in
+    # both size and timestamp, which does happen in practice specifically when
+    # running a build on a freshly checked-out source tree, wherein many many
+    # files have the same timestamps, which means that only the sizes come into
+    # play for the comparisons. And it's very easy to have a file size
     # coincidence.)
     #
     # **Note:** An earlier version of this code used `--ignore-times` instead
