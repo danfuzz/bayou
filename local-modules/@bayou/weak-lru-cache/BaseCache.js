@@ -238,13 +238,13 @@ export default class BaseCache extends CommonBase {
       cache.push(obj);
 
       if (!quiet) {
-        this._log.lruAdded(id);
+        this._log.event.lruAdded(id);
       }
 
       while (cache.length > this._maxLruSize) {
         const dropped = cache.shift();
         if (!quiet) {
-          this._log.lruDropped(this._idFromObject(dropped));
+          this._log.event.lruDropped(this._idFromObject(dropped));
         }
       }
     } else {
@@ -252,7 +252,7 @@ export default class BaseCache extends CommonBase {
       cache.push(obj);
 
       if (!quiet) {
-        this._log.lruPromoted(id);
+        this._log.event.lruPromoted(id);
       }
     }
   }
