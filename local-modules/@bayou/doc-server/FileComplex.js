@@ -2,14 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import weak from 'weak';
-
 import { Storage } from '@bayou/config-server';
-import { CaretId } from '@bayou/doc-common';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
 import DocSession from './DocSession';
+import DocSessionCache from './DocSessionCache';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
 
@@ -46,14 +44,8 @@ export default class FileComplex extends BaseComplexMember {
      */
     this._bootstrap = new FileBootstrap(this._fileAccess);
 
-    /**
-     * {Map<string, Weak<DocSession>>} Map from caret IDs to corresponding
-     * weak-reference-wrapped {@link DocSession} instances. The weak reference
-     * is made because we don't want a session's presence in the map to keep it
-     * from getting GC'ed. And we _need_ the map here, so that we can find
-     * existing active sessions.
-     */
-    this._sessions = new Map();
+    /** {DocSessionCache} Cache of session instances, mapped from caret IDs. */
+    this._sessions = new DocSessionCache(this.log);
 
     Object.freeze(this);
   }
@@ -102,34 +94,19 @@ export default class FileComplex extends BaseComplexMember {
     // the author really exists and is valid.
     Storage.dataStore.checkAuthorIdSyntax(authorId);
 
-    CaretId.check(caretId);
+    const already = this._sessions.getOrNull(caretId);
 
-    const foundWeak = this._sessions.get(caretId);
-
-    if (foundWeak) {
-      // Found in cache.
-      if (weak.isDead(foundWeak)) {
-        // ...but it's since been reaped. Fall through and search for the caret
-        // in the snapshot for same.
-        this.log.event.foundDead(authorId, caretId);
+    if (already !== null) {
+      if (authorId === already.getAuthorId()) {
+        // We found a pre-existing session for the caret, and the author ID
+        // matches. Bingo!
+        return already;
       } else {
-        // We've seen cases where a weakly-referenced object gets collected
-        // and replaced with an instance of a different class. If this check
-        // throws an error, that's what's going on here. (This is evidence of
-        // a bug in Node or in the `weak` package.)
-        const foundSession = DocSession.check(weak.get(foundWeak));
-
-        if (authorId === foundSession.getAuthorId()) {
-          // We found a pre-existing session for the caret, and the author ID
-          // matches. Bingo!
-          return foundSession;
-        } else {
-          // Existing caret but wrong author ID for it. Log it (could be useful
-          // in identifying a malicious actor or just a bug), but report it back
-          // to the caller as simply an invalid ID.
-          this.log.event.authorCaretMismatch(authorId, caretId);
-          throw Errors.badId(caretId);
-        }
+        // Existing caret but wrong author ID for it. Log it (could be useful
+        // in identifying a malicious actor or just a bug), but report it back
+        // to the caller as simply an invalid ID.
+        this.log.event.authorCaretMismatch(authorId, caretId);
+        throw Errors.badId(caretId);
       }
     }
 
@@ -203,35 +180,11 @@ export default class FileComplex extends BaseComplexMember {
    */
   _activateSession(authorId, caretId) {
     const result = new DocSession(this, authorId, caretId);
-    const reaper = this._sessionReaper(caretId);
     const fileId = this.file.id;
 
-    this._sessions.set(caretId, weak(result, reaper));
-
+    this._sessions.add(result);
     this.log.event.sessionNowActive({ fileId, authorId, caretId });
 
     return result;
-  }
-
-  /**
-   * Returns a weak reference callback function which reaps the
-   * {@link DocSession} associated with the indicate caret.
-   *
-   * **Note:** This does _not_ remove the caret info from the carets part of
-   * the document: Even though the session has become idle from the perspective
-   * of this server, the caret isn't necessarily totally idle / dead. For
-   * example, it might be the case that the client for the session happened to
-   * end up connecting to a different machine and is continuing to putter away
-   * at it.
-   *
-   * @param {string} caretId ID of the caret whose associated session is to be
-   *   removed.
-   * @returns {function} An appropriately-constructed function.
-   */
-  _sessionReaper(caretId) {
-    return () => {
-      this._sessions.delete(caretId);
-      this.log.event.reapedIdleSession(caretId);
-    };
   }
 }

@@ -12,6 +12,8 @@
     "@bayou/see-all": "local",
     "@bayou/typecheck": "local",
     "@bayou/util-common": "local",
+    "@bayou/weak-lru-cache": "local",
+
     "quill-delta-to-html": "0.10.6"
   }
 }
