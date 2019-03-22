@@ -5,8 +5,10 @@
 import weak from 'weak';
 
 import { BaseLogger } from '@bayou/see-all';
-import { TBoolean, TFunction, TInt, TString } from '@bayou/typecheck';
+import { TBoolean, TFunction, TInt, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
+
+import WeakCacheEntry from './WeakCacheEntry';
 
 /**
  * Weak-reference based cache, with LRU-based additional cache retention. This
@@ -14,7 +16,9 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * objects (a) held via weak references, such that they can be found again so
  * long as they're being kept alive by other means, and (b) held strongly in an
  * LRU cache, so as to avoid overzealous collection of objects during transient
- * disuse.
+ * disuse. Objects can be added synchronously or asynchronously. In the latter
+ * case, this class accepts a promise to add, reserves the ID for the result,
+ * and deals with both eventual resolution and rejection of the promise.
  *
  * This is an abstract base class. Subclasses must fill in a handful of methods
  * and synthetic properties to get a well-behaved instance.
@@ -43,8 +47,9 @@ export default class BaseCache extends CommonBase {
     this._cachedClass = TFunction.checkClass(this._impl_cachedClass);
 
     /**
-     * {Map<string, Weak>} The weak-reference cache, specifically, a map from
-     * IDs to weak references to associated objects.
+     * {Map<string, WeakCacheEntry>} The weak-reference cache, specifically, a
+     * map from each ID to an entry representing the associated object (in
+     * various ways, see {@link WeakCacheEntry} for some detail).
      */
     this._weakCache = new Map();
 
@@ -58,62 +63,6 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Gets the instance associated with the given ID, if any. Returns `null`
-   * if there is no such instance. If found, moves the instance to the front
-   * of the LRU cache (that is, marks it as the _most_ recently used instance).
-   *
-   * @param {string} id The ID to look up.
-   * @param {boolean} [quiet = false] If `true`, suppress log spew. (This is
-   *   meant for intra-class usage.)
-   * @returns {object|null} The corresponding instance, or `null` if no such
-   *   instance is active.
-   */
-  getOrNull(id, quiet = false) {
-    this._checkId(id);
-
-    const ref = this._weakCache.get(id);
-
-    if (!ref) {
-      if (!quiet) {
-        this._log.event.notCached(id);
-      }
-
-      return null;
-    }
-
-    const result = weak.get(ref);
-
-    if (!result) {
-      // `result` is `undefined`, which is to say, `ref` is a dead weak
-      // reference. We don't bother removing the dead entry from `_weakCache`,
-      // because in all likelihood the very next thing that will happen is that
-      // the calling code is going to re-instantiate the associated object and
-      // add it back. Also, a dead reference doesn't take up much space in
-      // memory.
-
-      if (!quiet) {
-        this._log.event.foundDead(id);
-      }
-
-      return null;
-    }
-
-    // We've seen cases where a weakly-referenced object gets collected and
-    // replaced with an instance of a different class. If this check throws an
-    // error, that's what's going on here. (This is evidence of a bug in Node or
-    // in the `weak` package.)
-    this._cachedClass.check(result);
-
-    this._mru(id, result, quiet);
-
-    if (!quiet) {
-      this._log.event.retrieved(id);
-    }
-
-    return result;
-  }
-
-  /**
    * Adds the given instance to the cache, both as a weak reference and strongly
    * at the head of the LRU cache (that is, as the _most_ recently referenced
    * object). It is an error to add an instance with an ID that is already
@@ -122,19 +71,116 @@ export default class BaseCache extends CommonBase {
    * @param {object} obj Object to add to the cache.
    */
   add(obj) {
-    const id      = this._idFromObject(obj);
-    const already = this.getOrNull(id, true);
+    const id = this._idFromObject(obj);
 
-    if (already !== null) {
+    if (this._isAlive(id)) {
       throw Errors.badUse(`ID already present in cache: ${id}`);
     }
 
     const ref = weak(obj, this._objectReaper(id));
 
-    this._weakCache.set(id, ref);
+    this._weakCache.set(id, new WeakCacheEntry(id, ref));
     this._mru(id, obj);
 
     this._log.event.added(id);
+  }
+
+  /**
+   * Adds the given instance to the cache, as if by {@link #add}, but only after
+   * the given value resolves as a promise. In the time after the call to this
+   * method and _before_ the promise resolves, the instance is treated as being
+   * in the cache (so, e.g., it is invalid to add another instance with the same
+   * ID), except that (synchronous) {@link #getOrNull} will report an error.
+   *
+   * Should the promise ultimately become rejected (not resolved), it will
+   * remain in the cache indefinitely as such, until and unless it is cleared
+   * out via a call to {@link #clearRejection}.
+   *
+   * @param {string} id The ID of the object. This parameter is needed because
+   *   a value needs to be added to the cache, but `objPromise` (it being a
+   *   promise) cannot be synchronously interrogated for the ID (unlike the
+   *   final resolved object).
+   * @param {Promise} objPromise Promise for the value which is to be added to
+   *   the cache.
+   * @returns {object} The resolved value of `objPromise`. This return value
+   *   becomes resolved _after_ the object has been added to the cache.
+   */
+  async addAfterResolving(id, objPromise) {
+    TObject.check(objPromise, Promise);
+
+    if (this._isAlive(id)) {
+      throw Errors.badUse(`ID already present in cache: ${id}`);
+    }
+
+    this._weakCache.set(id, new WeakCacheEntry(id, objPromise));
+
+    this._log.event.resolving(id);
+
+    try {
+      const obj = await objPromise;
+      this._log.event.resolved(id);
+
+      this._weakCache.delete(id); // Because otherwise `add()` will complain.
+      this.add(obj);
+
+      return obj;
+    } catch (e) {
+      this._log.event.rejected(id, e);
+      this._weakCache.set(id, new WeakCacheEntry(id, e));
+      throw e;
+    }
+  }
+
+  /**
+   * Removes a cache entry which indicates a rejected promise. It is an error if
+   * the given ID isn't associated with a promise rejection in the cache.
+   *
+   * @param {string} id ID to remove from the cache.
+   */
+  clearRejection(id) {
+    const entry  = this._getWeakCacheEntry(id);
+
+    if ((entry === null) || (entry.error === null)) {
+      throw Errors.badUse(`ID not rejected: ${id}`);
+    }
+
+    this._weakCache.delete(id);
+    this._log.event.clearedRejection(id);
+  }
+
+  /**
+   * Gets the instance associated with the given ID, if any. Returns `null`
+   * if there is no such instance. If found, moves the instance to the front
+   * of the LRU cache (that is, marks it as the _most_ recently used instance).
+   *
+   * In the case of an ID added via {@link #addAfterResolving} which is not yet
+   * resolved, this method will throw an error.
+   *
+   * @param {string} id The ID to look up.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  getOrNull(id) {
+    return this._getOrNull(id, false);
+  }
+
+  /**
+   * Get the resolved object for the given ID in the weak cache, if any. If the
+   * ID is associated with a (still alive and) resolved object or known
+   * rejection (either by being added directly or by virtue of a fully completed
+   * call to {@link #addAfterResolving}), this method returns promptly with that
+   * object. If the ID is in the process of getting initialized, this method
+   * eventually returns with the result (or rejection) of the promise which was
+   * added (via {@link #addAfterResolving}). If the ID never had an associated
+   * instance, or there was an instance but it is now dead, this method returns
+   * `null`,
+   *
+   * @param {string} id The ID to look up.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  async getOrNullAfterResolving(id) {
+    return this._getOrNullAfterResolving(id, true);
   }
 
   /**
@@ -146,6 +192,10 @@ export default class BaseCache extends CommonBase {
    */
   stillUsing(obj) {
     const id = this._idFromObject(obj);
+
+    if (!this._isAlive(id)) {
+      throw Errors.badUse(`ID not present in cache: ${id}`);
+    }
 
     this._mru(id, obj);
   }
@@ -207,6 +257,48 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
+   * Helper for the two `getOrNull*()` variants, which gets the instance
+   * associated with the given ID, if any, with optional erroring out in the
+   * case of promises.
+   *
+   * @param {string} id The ID to look up.
+   * @param {boolean} returnPromise If `true`, return a promise entry. If
+   *   `false`, throw an error for them.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  _getOrNull(id, returnPromise) {
+    const entry = this._getWeakCacheEntry(id, true);
+
+    if (entry === null) {
+      return null;
+    }
+
+    const result = entry.object;
+
+    if (result !== null) {
+      // We've seen cases where a weakly-referenced object gets collected and
+      // replaced with an instance of a different class. If this check throws an
+      // error, that's what's going on here. (This is evidence of a bug in Node
+      // or in the `weak` package.)
+      this._cachedClass.check(result);
+
+      this._mru(id, result);
+      return result;
+    } else if (entry.error) {
+      throw entry.error;
+    } else if (entry.promise) {
+      if (returnPromise) {
+        return entry.promise;
+      } else {
+        throw Errors.badUse(`Cannot synchronously get asynchronously-initializing ID: ${id}`);
+      }
+    } else {
+      throw Errors.wtf('Weird cache entry.');
+    }
+  }
+
+  /**
    * Gets the ID to use with the given cacheable object.
    *
    * @param {object} obj A cacheable object.
@@ -221,39 +313,92 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
+   * Indicates whether the given ID is currently represented by a live weak
+   * cache entry.
+   *
+   * @param {string} id The ID in question.
+   * @returns {boolean} `true` if `id` is currently associated with a live cache
+   *   entry, or `false` if not.
+   */
+  _isAlive(id) {
+    const entry = this._getWeakCacheEntry(id);
+
+    return (entry !== null) && entry.isAlive();
+  }
+
+  /**
+   * Gets the object directly present in the weak cache for the given ID, if
+   * any, or returning `null` if there is no entry. If there is an entry which
+   * turns out to be a dead weak reference, this method also returns `null`.
+   * That is, if this method returns non-`null`, then the entry is guaranteed
+   * _not_ to be a for a dead weak reference.
+   *
+   * @param {string} id ID in question.
+   * @param {boolean} [log = false] If `true`, logs the activity.
+   * @returns {WeakCacheEntry|null} The entry associated with `id` in the weak
+   *   cache, or `null` if either there is none or the entry represents a dead
+   *   weak reference.
+   */
+  _getWeakCacheEntry(id, log = false) {
+    this._checkId(id);
+
+    const entry = this._weakCache.get(id);
+
+    if (!entry) {
+      if (log) {
+        this._log.event.notCached(id);
+      }
+
+      return null;
+    }
+
+    if (!entry.isAlive()) {
+      // `entry` refers to a dead weak reference. We don't bother removing the
+      // dead entry from `_weakCache` here, because in all likelihood the very
+      // next thing that will happen is that the calling code is going to
+      // re-instantiate the associated object and add it back. Also, a dead
+      // entry doesn't take up much space in memory.
+
+      if (log) {
+        this._log.event.foundDead(id);
+      }
+
+      return null;
+    }
+
+    if (log) {
+      this._log.event.retrieved(id);
+    }
+
+    return entry;
+  }
+
+  /**
    * Makes the given object be in the _most_ recently used position in the LRU
    * cache, adding it if it was not already present or moving it if it was. If
    * the addition of the object would make the LRU cache too big, trims it.
    *
    * @param {string} id The ID of the object in question.
    * @param {object} obj Object to mark as _most_ recently used.
-   * @param {boolean} quiet If `true`, suppress log spew. (This is meant for
-   *   intra-class usage.)
    */
-  _mru(id, obj, quiet) {
+  _mru(id, obj) {
     const cache   = this._lruCache;
     const foundAt = cache.indexOf(obj);
 
     if (foundAt === -1) {
       cache.push(obj);
 
-      if (!quiet) {
-        this._log.event.lruAdded(id);
-      }
+      this._log.event.lruAdded(id);
 
       while (cache.length > this._maxLruSize) {
         const dropped = cache.shift();
-        if (!quiet) {
-          this._log.event.lruDropped(this._idFromObject(dropped));
-        }
+        this._log.event.lruDropped(this._idFromObject(dropped));
       }
     } else {
       cache.splice(foundAt, 1);
       cache.push(obj);
 
-      if (!quiet) {
-        this._log.event.lruPromoted(id);
-      }
+      this._log.event.lruPromoted(id);
     }
   }
 
@@ -269,9 +414,8 @@ export default class BaseCache extends CommonBase {
       this._log.event.reaped(id);
 
       // Clear the cache entry, but only if it hasn't already been replaced with
-      // a new live reference. (Without the check, we'd have a concurrency
-      // hazard.)
-      if (this.getOrNull(id, true) === null) {
+      // a new live entry. (Without the check, we'd have a concurrency hazard.)
+      if (!this._isAlive(id)) {
         this._weakCache.delete(id);
       }
     };
