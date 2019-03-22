@@ -63,45 +63,6 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Gets the instance associated with the given ID, if any. Returns `null`
-   * if there is no such instance. If found, moves the instance to the front
-   * of the LRU cache (that is, marks it as the _most_ recently used instance).
-   *
-   * In the case of an ID added via {@link #addAfterResolving} which is not yet
-   * resolved, this method will throw an error.
-   *
-   * @param {string} id The ID to look up.
-   * @returns {object|null} The corresponding instance, or `null` if no such
-   *   instance is active.
-   */
-  getOrNull(id) {
-    const entry  = this._getWeakCacheEntry(id, true);
-
-    if (entry === null) {
-      return null;
-    }
-
-    const result = entry.object;
-
-    if (result !== null) {
-      // We've seen cases where a weakly-referenced object gets collected and
-      // replaced with an instance of a different class. If this check throws an
-      // error, that's what's going on here. (This is evidence of a bug in Node
-      // or in the `weak` package.)
-      this._cachedClass.check(result);
-
-      this._mru(id, result);
-      return result;
-    } else if (entry.error) {
-      throw entry.error;
-    } else if (entry.promise) {
-      throw Errors.badUse(`Cannot synchronously get asynchronously-initializing ID: ${id}`);
-    } else {
-      throw Errors.wtf('Weird cache entry.');
-    }
-  }
-
-  /**
    * Adds the given instance to the cache, both as a weak reference and strongly
    * at the head of the LRU cache (that is, as the _most_ recently referenced
    * object). It is an error to add an instance with an ID that is already
@@ -185,6 +146,45 @@ export default class BaseCache extends CommonBase {
 
     this._weakCache.delete(id);
     this._log.event.clearedRejection(id);
+  }
+
+  /**
+   * Gets the instance associated with the given ID, if any. Returns `null`
+   * if there is no such instance. If found, moves the instance to the front
+   * of the LRU cache (that is, marks it as the _most_ recently used instance).
+   *
+   * In the case of an ID added via {@link #addAfterResolving} which is not yet
+   * resolved, this method will throw an error.
+   *
+   * @param {string} id The ID to look up.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  getOrNull(id) {
+    const entry  = this._getWeakCacheEntry(id, true);
+
+    if (entry === null) {
+      return null;
+    }
+
+    const result = entry.object;
+
+    if (result !== null) {
+      // We've seen cases where a weakly-referenced object gets collected and
+      // replaced with an instance of a different class. If this check throws an
+      // error, that's what's going on here. (This is evidence of a bug in Node
+      // or in the `weak` package.)
+      this._cachedClass.check(result);
+
+      this._mru(id, result);
+      return result;
+    } else if (entry.error) {
+      throw entry.error;
+    } else if (entry.promise) {
+      throw Errors.badUse(`Cannot synchronously get asynchronously-initializing ID: ${id}`);
+    } else {
+      throw Errors.wtf('Weird cache entry.');
+    }
   }
 
   /**
