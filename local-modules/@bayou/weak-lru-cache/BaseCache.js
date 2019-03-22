@@ -329,12 +329,15 @@ export default class BaseCache extends CommonBase {
   /**
    * Gets the object directly present in the weak cache for the given ID, if
    * any, or returning `null` if there is no entry. If there is an entry which
-   * turns out to be a dead weak reference, this method returns `null`.
+   * turns out to be a dead weak reference, this method also returns `null`.
+   * That is, if this method returns non-`null`, then the entry is guaranteed
+   * _not_ to be a for a dead weak reference.
    *
    * @param {string} id ID in question.
    * @param {boolean} [log = false] If `true`, logs the activity.
-   * @returns {object|null} The object associated with `id` in the weak cache,
-   *   or `null` if there is none.
+   * @returns {WeakCacheEntry|null} The entry associated with `id` in the weak
+   *   cache, or `null` if either there is none or the entry represents a dead
+   *   weak reference.
    */
   _getWeakCacheEntry(id, log = false) {
     this._checkId(id);
