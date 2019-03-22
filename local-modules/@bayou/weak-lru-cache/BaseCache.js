@@ -5,7 +5,7 @@
 import weak from 'weak';
 
 import { BaseLogger } from '@bayou/see-all';
-import { TBoolean, TFunction, TInt, TString } from '@bayou/typecheck';
+import { TBoolean, TFunction, TInt, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
@@ -63,51 +63,14 @@ export default class BaseCache extends CommonBase {
    * of the LRU cache (that is, marks it as the _most_ recently used instance).
    *
    * @param {string} id The ID to look up.
-   * @param {boolean} [quiet = false] If `true`, suppress log spew. (This is
-   *   meant for intra-class usage.)
    * @returns {object|null} The corresponding instance, or `null` if no such
    *   instance is active.
    */
-  getOrNull(id, quiet = false) {
-    this._checkId(id);
+  getOrNull(id) {
+    const result = this._getWeakCacheEntry(id, true);
 
-    const ref = this._weakCache.get(id);
-
-    if (!ref) {
-      if (!quiet) {
-        this._log.event.notCached(id);
-      }
-
-      return null;
-    }
-
-    const result = weak.get(ref);
-
-    if (!result) {
-      // `result` is `undefined`, which is to say, `ref` is a dead weak
-      // reference. We don't bother removing the dead entry from `_weakCache`,
-      // because in all likelihood the very next thing that will happen is that
-      // the calling code is going to re-instantiate the associated object and
-      // add it back. Also, a dead reference doesn't take up much space in
-      // memory.
-
-      if (!quiet) {
-        this._log.event.foundDead(id);
-      }
-
-      return null;
-    }
-
-    // We've seen cases where a weakly-referenced object gets collected and
-    // replaced with an instance of a different class. If this check throws an
-    // error, that's what's going on here. (This is evidence of a bug in Node or
-    // in the `weak` package.)
-    this._cachedClass.check(result);
-
-    this._mru(id, result, quiet);
-
-    if (!quiet) {
-      this._log.event.retrieved(id);
+    if (result !== null) {
+      this._mru(id, result);
     }
 
     return result;
@@ -122,10 +85,9 @@ export default class BaseCache extends CommonBase {
    * @param {object} obj Object to add to the cache.
    */
   add(obj) {
-    const id      = this._idFromObject(obj);
-    const already = this.getOrNull(id, true);
+    const id = this._idFromObject(obj);
 
-    if (already !== null) {
+    if (this._getWeakCacheEntry(id) !== null) {
       throw Errors.badUse(`ID already present in cache: ${id}`);
     }
 
@@ -221,39 +183,84 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
+   * Gets the object directly present in the weak cache for the given ID, if
+   * any, or returning `null` if there is no entry. If there is an entry which
+   * turns out to be a dead weak reference, this method returns `null`.
+   *
+   * @param {string} id ID in question.
+   * @param {boolean} [log = false] If `true`, logs the activity.
+   * @returns {object|null} The object associated with `id` in the weak cache,
+   *   or `null` if there is none.
+   */
+  _getWeakCacheEntry(id, log = false) {
+    this._checkId(id);
+
+    const ref = this._weakCache.get(id);
+
+    if (!ref) {
+      if (log) {
+        this._log.event.notCached(id);
+      }
+
+      return null;
+    }
+
+    const result = weak.get(ref);
+
+    if (!result) {
+      // `result` is `undefined`, which is to say, `ref` is a dead weak
+      // reference. We don't bother removing the dead entry from `_weakCache`,
+      // because in all likelihood the very next thing that will happen is that
+      // the calling code is going to re-instantiate the associated object and
+      // add it back. Also, a dead reference doesn't take up much space in
+      // memory.
+
+      if (log) {
+        this._log.event.foundDead(id);
+      }
+
+      return null;
+    }
+
+    // We've seen cases where a weakly-referenced object gets collected and
+    // replaced with an instance of a different class. If this check throws an
+    // error, that's what's going on here. (This is evidence of a bug in Node or
+    // in the `weak` package.)
+    this._cachedClass.check(result);
+
+    if (log) {
+      this._log.event.retrieved(id);
+    }
+
+    return result;
+  }
+
+  /**
    * Makes the given object be in the _most_ recently used position in the LRU
    * cache, adding it if it was not already present or moving it if it was. If
    * the addition of the object would make the LRU cache too big, trims it.
    *
    * @param {string} id The ID of the object in question.
    * @param {object} obj Object to mark as _most_ recently used.
-   * @param {boolean} quiet If `true`, suppress log spew. (This is meant for
-   *   intra-class usage.)
    */
-  _mru(id, obj, quiet) {
+  _mru(id, obj) {
     const cache   = this._lruCache;
     const foundAt = cache.indexOf(obj);
 
     if (foundAt === -1) {
       cache.push(obj);
 
-      if (!quiet) {
-        this._log.event.lruAdded(id);
-      }
+      this._log.event.lruAdded(id);
 
       while (cache.length > this._maxLruSize) {
         const dropped = cache.shift();
-        if (!quiet) {
-          this._log.event.lruDropped(this._idFromObject(dropped));
-        }
+        this._log.event.lruDropped(this._idFromObject(dropped));
       }
     } else {
       cache.splice(foundAt, 1);
       cache.push(obj);
 
-      if (!quiet) {
-        this._log.event.lruPromoted(id);
-      }
+      this._log.event.lruPromoted(id);
     }
   }
 
@@ -271,7 +278,7 @@ export default class BaseCache extends CommonBase {
       // Clear the cache entry, but only if it hasn't already been replaced with
       // a new live reference. (Without the check, we'd have a concurrency
       // hazard.)
-      if (this.getOrNull(id, true) === null) {
+      if (this._getWeakCacheEntry(id) === null) {
         this._weakCache.delete(id);
       }
     };
