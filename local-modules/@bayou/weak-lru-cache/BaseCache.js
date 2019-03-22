@@ -161,30 +161,26 @@ export default class BaseCache extends CommonBase {
    *   instance is active.
    */
   getOrNull(id) {
-    const entry  = this._getWeakCacheEntry(id, true);
+    return this._getOrNull(id, false);
+  }
 
-    if (entry === null) {
-      return null;
-    }
-
-    const result = entry.object;
-
-    if (result !== null) {
-      // We've seen cases where a weakly-referenced object gets collected and
-      // replaced with an instance of a different class. If this check throws an
-      // error, that's what's going on here. (This is evidence of a bug in Node
-      // or in the `weak` package.)
-      this._cachedClass.check(result);
-
-      this._mru(id, result);
-      return result;
-    } else if (entry.error) {
-      throw entry.error;
-    } else if (entry.promise) {
-      throw Errors.badUse(`Cannot synchronously get asynchronously-initializing ID: ${id}`);
-    } else {
-      throw Errors.wtf('Weird cache entry.');
-    }
+  /**
+   * Get the resolved object for the given ID in the weak cache, if any. If the
+   * ID is associated with a (still alive and) resolved object or known
+   * rejection (either by being added directly or by virtue of a fully completed
+   * call to {@link #addAfterResolving}), this method returns promptly with that
+   * object. If the ID is in the process of getting initialized, this method
+   * eventually returns with the result (or rejection) of the promise which was
+   * added (via {@link #addAfterResolving}). If the ID never had an associated
+   * instance, or there was an instance but it is now dead, this method returns
+   * `null`,
+   *
+   * @param {string} id The ID to look up.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  async getOrNullAfterResolving(id) {
+    return this._getOrNullAfterResolving(id, true);
   }
 
   /**
@@ -258,6 +254,48 @@ export default class BaseCache extends CommonBase {
     }
 
     throw Errors.badValue(id, String, 'ID syntax');
+  }
+
+  /**
+   * Helper for the two `getOrNull*()` variants, which gets the instance
+   * associated with the given ID, if any, with optional erroring out in the
+   * case of promises.
+   *
+   * @param {string} id The ID to look up.
+   * @param {boolean} returnPromise If `true`, return a promise entry. If
+   *   `false`, throw an error for them.
+   * @returns {object|null} The corresponding instance, or `null` if no such
+   *   instance is active.
+   */
+  _getOrNull(id, returnPromise) {
+    const entry = this._getWeakCacheEntry(id, true);
+
+    if (entry === null) {
+      return null;
+    }
+
+    const result = entry.object;
+
+    if (result !== null) {
+      // We've seen cases where a weakly-referenced object gets collected and
+      // replaced with an instance of a different class. If this check throws an
+      // error, that's what's going on here. (This is evidence of a bug in Node
+      // or in the `weak` package.)
+      this._cachedClass.check(result);
+
+      this._mru(id, result);
+      return result;
+    } else if (entry.error) {
+      throw entry.error;
+    } else if (entry.promise) {
+      if (returnPromise) {
+        return entry.promise;
+      } else {
+        throw Errors.badUse(`Cannot synchronously get asynchronously-initializing ID: ${id}`);
+      }
+    } else {
+      throw Errors.wtf('Weird cache entry.');
+    }
   }
 
   /**
