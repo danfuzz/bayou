@@ -36,6 +36,8 @@ export default class BuildInfo extends CommonBase {
 
     /** {object} Info object. */
     this._info = Object.freeze(info);
+
+    Object.freeze(this);
   }
 
   /**
