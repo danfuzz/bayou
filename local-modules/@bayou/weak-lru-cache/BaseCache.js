@@ -108,7 +108,7 @@ export default class BaseCache extends CommonBase {
    * if there is no such instance. If found, moves the instance to the front
    * of the LRU cache (that is, marks it as the _most_ recently used instance).
    *
-   * In the case of an ID added via {@link #addAfterResolving} which is not yet
+   * In the case of an ID added via {@link #resolveOrAdd} which is not yet
    * resolved, this method will throw an error.
    *
    * @param {string} id The ID to look up.
