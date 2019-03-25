@@ -7,9 +7,6 @@ import { BaseCache } from '@bayou/weak-lru-cache';
 
 import DocSession from './DocSession';
 
-/** {Int} Maximum size of the LRU cache. */
-const MAX_LRU_CACHE_SIZE = 10;
-
 /**
  * Cache of active instances of {@link DocSession}.
  */
@@ -20,12 +17,24 @@ export default class DocSessionCache extends BaseCache {
    * @param {Logger} log Logger instance to use.
    */
   constructor(log) {
-    super(log, MAX_LRU_CACHE_SIZE);
+    super(log);
   }
 
   /** @override */
   get _impl_cachedClass() {
     return DocSession;
+  }
+
+  /** @override */
+  get _impl_maxLruSize() {
+    return 10;
+  }
+
+  /** @override */
+  get _impl_maxRejectionAge() {
+    // Valid value so that the constructor won't complain, but note that this
+    // class isn't used asynchronously, so the actual value shouldn't matter.
+    return 1000;
   }
 
   /** @override */
