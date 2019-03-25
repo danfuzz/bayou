@@ -40,6 +40,9 @@ export default class BaseCache extends CommonBase {
     /** {Int} Maximum number of elements to keep in the LRU cache. */
     this._maxLruSize = TInt.nonNegative(maxLruSize);
 
+    /** {Int} Maximum age (msec) of rejection entries. */
+    this._maxRejectionAge = TInt.nonNegative(this._impl_maxRejectionAge);
+
     /**
      * {class} Class (constructor function) for objects to be stored in this
      * instance.
@@ -211,6 +214,16 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
+   * {Int} Maximum age (in msec) for a promise rejection cache entry, before it
+   * is discarded (literally, or effectively ignored). This class provides a
+   * default value of ten seconds for this property. Subclasses can choose to
+   * override it.
+   */
+  get _impl_maxRejectionAge() {
+    return 10 * 1000;
+  }
+
+  /**
    * Gets the ID to use with the given cacheable object. Subclasses must
    * override this method.
    *
@@ -361,6 +374,15 @@ export default class BaseCache extends CommonBase {
 
       if (log) {
         this._log.event.foundDead(id);
+      }
+
+      return null;
+    }
+
+    if (entry.error) {
+      if (entry.createTimeMsec < (this._now() - this._maxRejectionAge)) {
+        this._log.event.discardedError(id);
+        this._weakCache.delete(id);
       }
 
       return null;
