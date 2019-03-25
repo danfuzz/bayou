@@ -30,7 +30,13 @@ export default class BootInfo extends CommonBase {
     Object.freeze(this);
   }
 
-  /** {object} Ad-hoc object with the info from this instance. */
+  /**
+   * {object} Ad-hoc object with the info from this instance.
+   *
+   * **Note:** This isn't all-caps `INFO` because it's not necessarily expected
+   * to be a constant value in the long term (even though it happens to be so
+   * as of this writing).
+   */
   get info() {
     return {
       time:     this._bootTimeString,

@@ -41,14 +41,25 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
+   * {object} Ad-hoc object with generally-useful info about the booting of this
+   * server, intended for logging / debugging.
+   *
+   * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
+   * expected to be a constant value.
+   */
+  get bootInfo() {
+    return this._bootInfo.info;
+  }
+
+  /**
    * {object} Ad-hoc object with generally-useful runtime info, intended for
    * logging / debugging.
    *
-   * **Note:** This isn't all-caps `INFO` because it's not a constant value,
+   * **Note:** This isn't all-caps `*_INFO` because it's not a constant value,
    * due to the fact that `process.cwd()` and `process.ppid` could possibly
    * change.
    */
-  get info() {
+  get runtimeInfo() {
     return {
       nodeVersion: process.version.replace(/^v/, ''),
       platform:    process.platform,

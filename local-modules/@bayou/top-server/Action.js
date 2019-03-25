@@ -261,7 +261,8 @@ export default class Action extends CommonBase {
 
     log.metric.boot();
     log.event.buildInfo(ProductInfo.theOne.INFO);
-    log.event.runtimeInfo(ServerEnv.theOne.info);
+    log.event.runtimeInfo(ServerEnv.theOne.runtimeInfo);
+    log.event.bootInfo(ServerEnv.theOne.bootInfo);
 
     /** {Application} The main app server. */
     const theApp = new Application(devRoutes);
