@@ -36,7 +36,7 @@ export default class ServerEnv extends Singleton {
     this._bootInfo = new BootInfo();
 
     /** {ProductInfo} Info about the build. */
-    this._productInfo = new ProductInfo();
+    this._buildInfo = new ProductInfo();
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
@@ -59,14 +59,14 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
-   * {object} Ad-hoc object with metainformation about the product (that is,
-   * about the build), intended for logging / debugging.
+   * {object} Ad-hoc object with metainformation about the build (that is, about
+   * the product artifact), intended for logging / debugging.
    *
    * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
    * expected to be a constant value.
    */
-  get productInfo() {
-    return this._productInfo.info;
+  get buildInfo() {
+    return this._buildInfo.info;
   }
 
   /**

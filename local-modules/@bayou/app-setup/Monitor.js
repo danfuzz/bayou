@@ -80,7 +80,7 @@ export default class Monitor extends CommonBase {
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', ServerEnv.theOne.productInfo.buildId);
+      res.setHeader('X-Powered-By', ServerEnv.theOne.buildInfo.buildId);
       next();
     });
 
@@ -95,7 +95,7 @@ export default class Monitor extends CommonBase {
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {
         boot:    ServerEnv.theOne.bootInfo,
-        build:   ServerEnv.theOne.productInfo,
+        build:   ServerEnv.theOne.buildInfo,
         runtime: ServerEnv.theOne.runtimeInfo
       });
     });
