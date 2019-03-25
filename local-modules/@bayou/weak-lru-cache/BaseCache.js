@@ -367,7 +367,13 @@ export default class BaseCache extends CommonBase {
     }
 
     if (log) {
-      this._log.event.retrieved(id);
+      if (entry.error) {
+        this._log.event.retrievedError(id);
+      } else if (entry.promise) {
+        this._log.event.retrievedPromise(id);
+      } else {
+        this._log.event.retrievedObject(id);
+      }
     }
 
     return entry;
