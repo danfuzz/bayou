@@ -5,7 +5,7 @@
 import weak from 'weak';
 
 import { BaseLogger } from '@bayou/see-all';
-import { TBoolean, TFunction, TInt, TObject, TString } from '@bayou/typecheck';
+import { TBoolean, TFunction, TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import WeakCacheEntry from './WeakCacheEntry';
@@ -89,52 +89,6 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Adds the given instance to the cache, as if by {@link #add}, but only after
-   * the given value resolves as a promise. In the time after the call to this
-   * method and _before_ the promise resolves, the instance is treated as being
-   * in the cache (so, e.g., it is invalid to add another instance with the same
-   * ID), except that (synchronous) {@link #getOrNull} will report an error.
-   *
-   * Should the promise ultimately become rejected (not resolved), it will
-   * remain in the cache indefinitely as such, until and unless it is cleared
-   * out via a call to {@link #clearRejection}.
-   *
-   * @param {string} id The ID of the object. This parameter is needed because
-   *   a value needs to be added to the cache, but `objPromise` (it being a
-   *   promise) cannot be synchronously interrogated for the ID (unlike the
-   *   final resolved object).
-   * @param {Promise} objPromise Promise for the value which is to be added to
-   *   the cache.
-   * @returns {object} The resolved value of `objPromise`. This return value
-   *   becomes resolved _after_ the object has been added to the cache.
-   */
-  async addAfterResolving(id, objPromise) {
-    TObject.check(objPromise, Promise);
-
-    if (this._isAlive(id)) {
-      throw Errors.badUse(`ID already present in cache: ${id}`);
-    }
-
-    this._weakCache.set(id, new WeakCacheEntry(this._now(), id, objPromise));
-
-    this._log.event.resolving(id);
-
-    try {
-      const obj = await objPromise;
-      this._log.event.resolved(id);
-
-      this._weakCache.delete(id); // Because otherwise `add()` will complain.
-      this.add(obj);
-
-      return obj;
-    } catch (e) {
-      this._log.event.rejected(id, e);
-      this._weakCache.set(id, new WeakCacheEntry(this._now(), id, e));
-      throw e;
-    }
-  }
-
-  /**
    * Removes a cache entry which indicates a rejected promise. It is an error if
    * the given ID isn't associated with a promise rejection in the cache.
    *
@@ -171,10 +125,10 @@ export default class BaseCache extends CommonBase {
    * Get the resolved object for the given ID in the weak cache, if any. If the
    * ID is associated with a (still alive and) resolved object or known
    * rejection (either by being added directly or by virtue of a fully completed
-   * call to {@link #addAfterResolving}), this method returns promptly with that
+   * call to {@link #resolveOrAdd}), this method returns promptly with that
    * object. If the ID is in the process of getting initialized, this method
    * eventually returns with the result (or rejection) of the promise which was
-   * added (via {@link #addAfterResolving}). If the ID never had an associated
+   * added (via {@link #resolveOrAdd}). If the ID never had an associated
    * instance, or there was an instance but it is now dead, this method returns
    * `null`,
    *
@@ -184,6 +138,62 @@ export default class BaseCache extends CommonBase {
    */
   async getOrNullAfterResolving(id) {
     return this._getOrNull(id, true);
+  }
+
+  /**
+   * Gets the instance (or rejection) in the weak cache for the given ID, if
+   * there is any, as if by {@link #getOrNullAfterResolving}; or if there is no
+   * entry for the ID, adds it asynchronously by calling the given object maker
+   * function and calling {@link #add} on the result, with the ID reserved in
+   * the meantime (to avoid double initialization).
+   *
+   * In the case of an add, in the time after the call to this method and
+   * _before_ the promise resolves, the instance is treated as being in the
+   * cache (so, e.g., it is invalid to add another instance with the same ID),
+   * except that (synchronous) {@link #getOrNull} will report an error. Should
+   * the promise ultimately become rejected (not resolved), it will remain in
+   * the cache indefinitely as such, until and unless it is either cleared out
+   * explicitly via a call to {@link #clearRejection} or it "ages" out per this
+   * instance's configuration for same.
+   *
+   * @param {string} id The ID of the object.
+   * @param {function} objMaker Function which is expected to return a suitable
+   *   object (or promise) for storage in the cache at `id` if/when called.
+   * @returns {object} The retrieved or created object for `id`. This return
+   *   value becomes resolved _after_ the object has been added to the cache.
+   */
+  async resolveOrAdd(id, objMaker) {
+    // If `id` is bound to a rejected asynchronous add, then this method call
+    // will -- correctly -- throw an exception.
+    const already = this._getOrNull(id, true);
+
+    if (already !== null) {
+      return already;
+    }
+
+    // There is currently no binding for `id`. Reserve it by binding the result
+    // of an asynchronous call of `objMaker()` to a `WeakCacheEntry` for that
+    // `id`. And finally, arrange for the reservation to be replaced with a more
+    // direct result (object or error) once the call returns (or throws).
+
+    const objPromise = (async () => objMaker())();
+
+    this._weakCache.set(id, new WeakCacheEntry(this._now(), id, objPromise));
+    this._log.event.resolving(id);
+
+    try {
+      const obj = await objPromise;
+
+      this._log.event.resolved(id);
+      this._weakCache.delete(id); // Because otherwise `add()` will complain.
+      this.add(obj);
+
+      return obj;
+    } catch (e) {
+      this._log.event.rejected(id, e);
+      this._weakCache.set(id, new WeakCacheEntry(this._now(), id, e));
+      throw e;
+    }
   }
 
   /**
@@ -270,9 +280,9 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Helper for the two `getOrNull*()` variants, which gets the instance
-   * associated with the given ID, if any, with optional erroring out in the
-   * case of promises.
+   * Helper for {@link #getOrNull}, {@link #getOrNullAfterResolving}, and
+   * {@link #resolveOrAdd}, which gets the instance associated with the given
+   * ID, if any, with optional erroring out in the case of promises.
    *
    * @param {string} id The ID to look up.
    * @param {boolean} returnPromise If `true`, return a promise entry. If
