@@ -79,7 +79,7 @@ export default class BaseCache extends CommonBase {
 
     const ref = weak(obj, this._objectReaper(id));
 
-    this._weakCache.set(id, new WeakCacheEntry(id, ref));
+    this._weakCache.set(id, new WeakCacheEntry(this._now(), id, ref));
     this._mru(id, obj);
 
     this._log.event.added(id);
@@ -112,7 +112,7 @@ export default class BaseCache extends CommonBase {
       throw Errors.badUse(`ID already present in cache: ${id}`);
     }
 
-    this._weakCache.set(id, new WeakCacheEntry(id, objPromise));
+    this._weakCache.set(id, new WeakCacheEntry(this._now(), id, objPromise));
 
     this._log.event.resolving(id);
 
@@ -126,7 +126,7 @@ export default class BaseCache extends CommonBase {
       return obj;
     } catch (e) {
       this._log.event.rejected(id, e);
-      this._weakCache.set(id, new WeakCacheEntry(id, e));
+      this._weakCache.set(id, new WeakCacheEntry(this._now(), id, e));
       throw e;
     }
   }
@@ -400,6 +400,18 @@ export default class BaseCache extends CommonBase {
 
       this._log.event.lruPromoted(id);
     }
+  }
+
+  /**
+   * Gets the current time, in the usual Unix Epoch msec form.
+   *
+   * **TODO:** Make this configurable per subclass, especially to help with
+   * testing.
+   *
+   * @returns {Int} The current time in msec since the Unix Epoch.
+   */
+  _now() {
+    return Date.now();
   }
 
   /**

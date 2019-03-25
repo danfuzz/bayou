@@ -4,7 +4,7 @@
 
 import weak from 'weak';
 
-import { TString } from '@bayou/typecheck';
+import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
@@ -14,11 +14,16 @@ export default class WeakCacheEntry extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {Int} createTimeMsec The time (Unix Epoch msec) when this entry was
+   *   created.
    * @param {string} id The entry ID.
    * @param {Weak|Promise|Error} value The entry value.
    */
-  constructor(id, value) {
+  constructor(createTimeMsec, id, value) {
     super();
+
+    /** {Int} The time (Unix Epoch msec) when this entry was created. */
+    this._createTimeMsec = TInt.nonNegative(createTimeMsec);
 
     /** {string} The entry ID. */
     this._id = TString.check(id);
@@ -44,6 +49,11 @@ export default class WeakCacheEntry extends CommonBase {
     this._error = (kind === 'error') ? value : null;
 
     Object.freeze(this);
+  }
+
+  /** {Int} The time (Unix Epoch msec) when this entry was created. */
+  get createTimeMsec() {
+    return this._createTimeMsec;
   }
 
   /** {Error|null} The entry value, if it is an error. */
