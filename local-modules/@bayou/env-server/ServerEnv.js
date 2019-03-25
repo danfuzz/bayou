@@ -9,6 +9,7 @@ import { Network } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
+import BootInfo from './BootInfo';
 import Dirs from './Dirs';
 import PidFile from './PidFile';
 import ProductInfo from './ProductInfo';
@@ -27,6 +28,16 @@ export default class ServerEnv extends Singleton {
   constructor() {
     super();
 
+    // Make sure that the directories could be determined, before proceeding any
+    // further.
+    Dirs.theOne;
+
+    /** {BootInfo} Info about the booting of this server. */
+    this._bootInfo = new BootInfo();
+
+    /** {ProductInfo} Info about the build. */
+    this._productInfo = new ProductInfo();
+
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
 
@@ -37,14 +48,36 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
+   * {object} Ad-hoc object with generally-useful info about the booting of this
+   * server, intended for logging / debugging.
+   *
+   * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
+   * expected to be a constant value.
+   */
+  get bootInfo() {
+    return this._bootInfo.info;
+  }
+
+  /**
+   * {object} Ad-hoc object with metainformation about the product (that is,
+   * about the build), intended for logging / debugging.
+   *
+   * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
+   * expected to be a constant value.
+   */
+  get productInfo() {
+    return this._productInfo.info;
+  }
+
+  /**
    * {object} Ad-hoc object with generally-useful runtime info, intended for
    * logging / debugging.
    *
-   * **Note:** This isn't all-caps `INFO` because it's not a constant value,
+   * **Note:** This isn't all-caps `*_INFO` because it's not a constant value,
    * due to the fact that `process.cwd()` and `process.ppid` could possibly
    * change.
    */
-  get info() {
+  get runtimeInfo() {
     return {
       nodeVersion: process.version.replace(/^v/, ''),
       platform:    process.platform,
@@ -65,12 +98,10 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
-   * Initializes this module. This sets up the info for the `Dirs` class, sets
-   * up the PID file, and gathers the product metainfo.
+   * Initializes this module. This does everything that can't be done (or done
+   * safely) synchronously in the constructor.
    */
   async init() {
-    Dirs.theOne;
-
     this._shutdownManager.init();
     if (this._shutdownManager.shouldShutDown()) {
       log.error('Server found shutdown indicator(s) during startup.');
@@ -86,7 +117,6 @@ export default class ServerEnv extends Singleton {
     }
 
     this._pidFile.init();
-    ProductInfo.theOne;
   }
 
   /**

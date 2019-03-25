@@ -9,7 +9,7 @@ import { Application, Monitor } from '@bayou/app-setup';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { DevMode } from '@bayou/dev-mode';
-import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
+import { Dirs, ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { HumanSink, FileSink } from '@bayou/see-all-server';
@@ -260,8 +260,9 @@ export default class Action extends CommonBase {
     // A little spew to identify the build and our environment.
 
     log.metric.boot();
-    log.event.buildInfo(ProductInfo.theOne.INFO);
-    log.event.runtimeInfo(ServerEnv.theOne.info);
+    log.event.buildInfo(ServerEnv.theOne.productInfo);
+    log.event.runtimeInfo(ServerEnv.theOne.runtimeInfo);
+    log.event.bootInfo(ServerEnv.theOne.bootInfo);
 
     /** {Application} The main app server. */
     const theApp = new Application(devRoutes);

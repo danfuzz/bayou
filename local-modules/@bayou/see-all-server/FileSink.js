@@ -52,11 +52,8 @@ export default class FileSink extends BaseSink {
 
     if (metricName !== null) {
       // Metrics are pulled into the `details` directly with the same key as the
-      // metric name. Additionally, as a human-oriented convenience, if there is
-      // only one payload argument, it is represented directly instead of being
-      // represented as a one-element array.
-      const args = logRecord.payload.args;
-      details[metricName] = (args.length === 1) ? args[0] : args;
+      // metric name.
+      details[metricName] = FileSink._metricArgsFrom(logRecord);
     } else if (logRecord.isTime()) {
       // No need to log timestamp records. Those are only really useful for
       // human-oriented logging, because every log record builds in a timestamp
@@ -87,5 +84,26 @@ export default class FileSink extends BaseSink {
     }
 
     fs.appendFileSync(this._path, string);
+  }
+
+  /**
+   * Gets the arguments to represent in the logs for the given metric-bearing
+   * log record. Specifically, the "raw" arguments are always an array, but
+   * (a) for ease of human consumption, the single argument of a single-argument
+   * array is represented in the result directly, and (b) for minimal downstream
+   * confusion (human and code), a no-argument array gets converted to the
+   * boolean value `true`.
+   *
+   * @param {LogRecord} logRecord The record in question.
+   * @returns {*} The corresponding arguments to represent in the log.
+   */
+  static _metricArgsFrom(logRecord) {
+    const args = logRecord.payload.args;
+
+    switch (args.length) {
+      case 0:  { return true;    }
+      case 1:  { return args[0]; }
+      default: { return args;    }
+    }
   }
 }
