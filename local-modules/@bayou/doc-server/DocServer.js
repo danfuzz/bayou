@@ -42,6 +42,8 @@ export default class DocServer extends Singleton {
      * from getting GC'ed.
      */
     this._complexes = new Map();
+
+    Object.freeze(this);
   }
 
   /**
