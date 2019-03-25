@@ -31,6 +31,11 @@ export default class FileComplexCache extends BaseCache {
   }
 
   /** @override */
+  get _impl_maxRejectionAge() {
+    return 10 * 1000; // Ten seconds.
+  }
+
+  /** @override */
   _impl_idFromObject(fileComplex) {
     return fileComplex.fileAccess.documentId;
   }

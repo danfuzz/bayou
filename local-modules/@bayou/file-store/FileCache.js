@@ -30,6 +30,13 @@ export default class FileCache extends BaseCache {
   }
 
   /** @override */
+  get _impl_maxRejectionAge() {
+    // Valid value so that the constructor won't complain, but note that this
+    // class isn't used asynchronously, so the actual value shouldn't matter.
+    return 1000;
+  }
+
+  /** @override */
   _impl_idFromObject(file) {
     return file.id;
   }

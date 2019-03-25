@@ -233,12 +233,12 @@ export default class BaseCache extends CommonBase {
 
   /**
    * {Int} Maximum age (in msec) for a promise rejection cache entry, before it
-   * is discarded (literally, or effectively ignored). This class provides a
-   * default value of ten seconds for this property. Subclasses can choose to
-   * override it.
+   * is discarded (literally, or effectively ignored).
+   *
+   * @abstract
    */
   get _impl_maxRejectionAge() {
-    return 10 * 1000;
+    return this._mustOverride();
   }
 
   /**
