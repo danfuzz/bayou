@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import Dirs from './Dirs';
-import ProductInfo from './ProductInfo';
 import ServerEnv from './ServerEnv';
 
-export { Dirs, ProductInfo, ServerEnv };
+export { Dirs, ServerEnv };

@@ -11,7 +11,7 @@ import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { TheModule as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
-import { Dirs, ProductInfo, ServerEnv } from '@bayou/env-server';
+import { Dirs, ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
@@ -202,7 +202,7 @@ export default class Application extends CommonBase {
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', ProductInfo.theOne.INFO.buildId);
+      res.setHeader('X-Powered-By', ServerEnv.theOne.productInfo.buildId);
       next();
     });
 

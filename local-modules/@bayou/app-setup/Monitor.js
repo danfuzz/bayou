@@ -5,7 +5,7 @@
 import express from 'express';
 import http from 'http';
 
-import { ProductInfo, ServerEnv } from '@bayou/env-server';
+import { ServerEnv } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
@@ -80,7 +80,7 @@ export default class Monitor extends CommonBase {
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', ProductInfo.theOne.INFO.buildId);
+      res.setHeader('X-Powered-By', ServerEnv.theOne.productInfo.buildId);
       next();
     });
 
@@ -95,7 +95,7 @@ export default class Monitor extends CommonBase {
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {
         boot:    ServerEnv.theOne.buildInfo,
-        build:   ProductInfo.theOne.INFO,
+        build:   ServerEnv.theOne.productInfo.INFO,
         runtime: ServerEnv.theOne.runtimeInfo
       });
     });

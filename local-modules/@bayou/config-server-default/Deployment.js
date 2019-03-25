@@ -5,7 +5,7 @@
 import path from 'path';
 
 import { Assets } from '@bayou/assets-client';
-import { ProductInfo } from '@bayou/env-server';
+import { ServerEnv } from '@bayou/env-server';
 import { UtilityClass } from '@bayou/util-common';
 
 import Network from './Network';
@@ -78,7 +78,7 @@ export default class Deployment extends UtilityClass {
    */
   static serverInfo() {
     return {
-      buildId: ProductInfo.theOne.INFO.buildId,
+      buildId: ServerEnv.theOne.productInfo.buildId,
       baseUrl: Network.baseUrl
     };
   }

@@ -6,7 +6,7 @@ import { camelCase } from 'lodash';
 import path from 'path';
 
 import { Proppy } from '@bayou/proppy';
-import { Singleton } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 
@@ -14,7 +14,7 @@ import Dirs from './Dirs';
 /**
  * Product metainformation.
  */
-export default class ProductInfo extends Singleton {
+export default class ProductInfo extends CommonBase {
   /**
    * Constructs the instance.
    */
@@ -37,9 +37,9 @@ export default class ProductInfo extends Singleton {
   }
 
   /**
-   * The product info object, as parsed from `product-info.txt`.
+   * {object} The product info object, as parsed from `product-info.txt`.
    */
-  get INFO() {
+  get info() {
     return this._productInfo;
   }
 
