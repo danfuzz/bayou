@@ -12,7 +12,7 @@ import { Errors, Singleton } from '@bayou/util-common';
 import BootInfo from './BootInfo';
 import Dirs from './Dirs';
 import PidFile from './PidFile';
-import ProductInfo from './ProductInfo';
+import BuildInfo from './BuildInfo';
 import ShutdownManager from './ShutdownManager';
 
 /** {Logger} Logger. */
@@ -35,8 +35,8 @@ export default class ServerEnv extends Singleton {
     /** {BootInfo} Info about the booting of this server. */
     this._bootInfo = new BootInfo();
 
-    /** {ProductInfo} Info about the build. */
-    this._productInfo = new ProductInfo();
+    /** {BuildInfo} Info about the build. */
+    this._buildInfo = new BuildInfo();
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
@@ -59,14 +59,14 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
-   * {object} Ad-hoc object with metainformation about the product (that is,
-   * about the build), intended for logging / debugging.
+   * {object} Ad-hoc object with metainformation about the build (that is, about
+   * the product artifact), intended for logging / debugging.
    *
    * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
    * expected to be a constant value.
    */
-  get productInfo() {
-    return this._productInfo.info;
+  get buildInfo() {
+    return this._buildInfo.info;
   }
 
   /**

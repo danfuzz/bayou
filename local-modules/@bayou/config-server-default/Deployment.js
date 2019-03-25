@@ -78,7 +78,7 @@ export default class Deployment extends UtilityClass {
    */
   static serverInfo() {
     return {
-      buildId: ServerEnv.theOne.productInfo.buildId,
+      buildId: ServerEnv.theOne.buildInfo.buildId,
       baseUrl: Network.baseUrl
     };
   }

@@ -202,7 +202,7 @@ export default class Application extends CommonBase {
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
     app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', ServerEnv.theOne.productInfo.buildId);
+      res.setHeader('X-Powered-By', ServerEnv.theOne.buildInfo.buildId);
       next();
     });
 

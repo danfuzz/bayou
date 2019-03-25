@@ -5,18 +5,18 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import ProductInfo from '@bayou/env-server/ProductInfo';
+import BuildInfo from '@bayou/env-server/BuildInfo';
 
-describe('@bayou/env-server/ProductInfo', () => {
+describe('@bayou/env-server/BuildInfo', () => {
   describe('.info', () => {
     it('is a frozen value', () => {
-      const info = new ProductInfo().info;
+      const info = new BuildInfo().info;
 
       assert.isFrozen(info);
     });
 
     it('is an object full of the expected product info', () => {
-      const info = new ProductInfo().info;
+      const info = new BuildInfo().info;
       const requiredKeys = [
         'buildDate', 'buildId', 'buildNumber', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
