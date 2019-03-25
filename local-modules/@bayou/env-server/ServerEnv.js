@@ -66,7 +66,6 @@ export default class ServerEnv extends Singleton {
       arch:        process.arch,
       pid:         process.pid,
       ppid:        process.ppid,
-      bootInfo:    this._bootInfo.info,
       directories: {
         product: Dirs.theOne.BASE_DIR,
         var:     Dirs.theOne.VAR_DIR,
