@@ -180,7 +180,7 @@ export default class BaseCache extends CommonBase {
    *   instance is active.
    */
   async getOrNullAfterResolving(id) {
-    return this._getOrNullAfterResolving(id, true);
+    return this._getOrNull(id, true);
   }
 
   /**
