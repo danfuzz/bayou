@@ -9,6 +9,7 @@ import { Network } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
+import BootInfo from './BootInfo';
 import Dirs from './Dirs';
 import PidFile from './PidFile';
 import ProductInfo from './ProductInfo';
@@ -26,6 +27,9 @@ export default class ServerEnv extends Singleton {
    */
   constructor() {
     super();
+
+    /** {BootInfo} Info about the booting of this server. */
+    this._bootInfo = new BootInfo();
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
@@ -51,6 +55,7 @@ export default class ServerEnv extends Singleton {
       arch:        process.arch,
       pid:         process.pid,
       ppid:        process.ppid,
+      bootInfo:    this._bootInfo.info,
       directories: {
         product: Dirs.theOne.BASE_DIR,
         var:     Dirs.theOne.VAR_DIR,
