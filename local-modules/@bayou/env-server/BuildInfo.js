@@ -13,9 +13,10 @@ import Dirs from './Dirs';
 
 /**
  * Build / product metainformation. This is information about the built product
- * artifact.
+ * artifact, explicitly stored as a file at the top level of the product
+ * artifact directory.
  */
-export default class ProductInfo extends CommonBase {
+export default class BuildInfo extends CommonBase {
   /**
    * Constructs the instance.
    */
@@ -31,7 +32,7 @@ export default class ProductInfo extends CommonBase {
       info[camelCase(key)] = value;
     }
 
-    info.buildId = ProductInfo._makeBuildIdString(info);
+    info.buildId = BuildInfo._makeBuildIdString(info);
 
     /** {object} Info object. */
     this._info = Object.freeze(info);

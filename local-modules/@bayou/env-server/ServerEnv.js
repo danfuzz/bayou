@@ -12,7 +12,7 @@ import { Errors, Singleton } from '@bayou/util-common';
 import BootInfo from './BootInfo';
 import Dirs from './Dirs';
 import PidFile from './PidFile';
-import ProductInfo from './ProductInfo';
+import BuildInfo from './BuildInfo';
 import ShutdownManager from './ShutdownManager';
 
 /** {Logger} Logger. */
@@ -35,8 +35,8 @@ export default class ServerEnv extends Singleton {
     /** {BootInfo} Info about the booting of this server. */
     this._bootInfo = new BootInfo();
 
-    /** {ProductInfo} Info about the build. */
-    this._buildInfo = new ProductInfo();
+    /** {BuildInfo} Info about the build. */
+    this._buildInfo = new BuildInfo();
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
