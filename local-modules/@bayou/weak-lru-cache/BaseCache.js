@@ -28,17 +28,15 @@ export default class BaseCache extends CommonBase {
    * Constructs an instance.
    *
    * @param {BaseLogger} log Logger instance to use.
-   * @param {Int} maxLruSize Maximum number of elements to keep in the LRU
-   *   cache.
    */
-  constructor(log, maxLruSize) {
+  constructor(log) {
     super();
 
     /** {BaseLogger} Logger instance to use. */
     this._log = BaseLogger.check(log).withAddedContext('cache');
 
     /** {Int} Maximum number of elements to keep in the LRU cache. */
-    this._maxLruSize = TInt.nonNegative(maxLruSize);
+    this._maxLruSize = TInt.nonNegative(this._impl_maxLruSize);
 
     /** {Int} Maximum age (msec) of rejection entries. */
     this._maxRejectionAge = TInt.nonNegative(this._impl_maxRejectionAge);
@@ -220,6 +218,16 @@ export default class BaseCache extends CommonBase {
    * @abstract
    */
   get _impl_cachedClass() {
+    return this._mustOverride();
+  }
+
+  /**
+   * {Int} Maximum size (in entries) of the LRU cache. This many added object
+   * entries will be explicitly maintained in an alive state by this instance.
+   *
+   * @abstract
+   */
+  get _impl_maxLruSize() {
     return this._mustOverride();
   }
 
