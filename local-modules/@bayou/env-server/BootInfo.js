@@ -39,8 +39,14 @@ export default class BootInfo extends CommonBase {
    */
   get info() {
     return {
-      time:     this._bootTimeString,
-      timeMsec: this._bootTime
+      time:       this._bootTimeString,
+      timeMsec:   this._bootTime,
+      uptimeMsec: this.uptimeMsec
     };
+  }
+
+  /** {Int} The length of time this server has been running, in msec. */
+  get uptimeMsec() {
+    return Date.now() - this._bootTime;
   }
 }
