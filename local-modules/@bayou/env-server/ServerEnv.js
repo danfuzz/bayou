@@ -36,11 +36,11 @@ export default class ServerEnv extends Singleton {
     // further.
     Dirs.theOne;
 
-    /** {BootInfo} Info about the booting of this server. */
-    this._bootInfo = new BootInfo();
-
     /** {BuildInfo} Info about the build. */
     this._buildInfo = new BuildInfo();
+
+    /** {BootInfo} Info about the booting of this server. */
+    this._bootInfo = new BootInfo(this._buildInfo.info.buildId);
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
