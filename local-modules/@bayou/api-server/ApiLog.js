@@ -58,7 +58,7 @@ export default class ApiLog extends CommonBase {
     // Details to log. **TODO:** This will ultimately need to redact some
     // information in the response.
 
-    details.endTime = Date.now();
+    details.endTime = this._now();
 
     if (response.error) {
       details.ok     = false;
@@ -105,7 +105,7 @@ export default class ApiLog extends CommonBase {
    * @returns {object} Ad-hoc details object.
    */
   _initialDetails(msg) {
-    const now = Date.now();
+    const now = this._now();
 
     return {
       msg:       msg ? msg.logInfo : null,
@@ -131,5 +131,17 @@ export default class ApiLog extends CommonBase {
 
     // Log just the success and elapsed time as a metric.
     this._log.metric.apiCall({ ok, durationMsec });
+  }
+
+  /**
+   * Gets the current time, in the usual Unix Epoch msec form.
+   *
+   * **Note:** This method exists so as to make this class a little easier to
+   * test.
+   *
+   * @returns {Int} The current time in msec since the Unix Epoch.
+   */
+  _now() {
+    return Date.now();
   }
 }
