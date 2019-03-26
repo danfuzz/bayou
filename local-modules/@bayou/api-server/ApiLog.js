@@ -45,7 +45,7 @@ export default class ApiLog extends CommonBase {
       this._pending.delete(msg);
     } else {
       this._log.warning('Orphan message:', msg);
-      details = { msg, startTime: '<unknown>' };
+      details = this._initialDetails(msg);
     }
 
     if (response.error) {
@@ -55,20 +55,8 @@ export default class ApiLog extends CommonBase {
       this._log.error('Error from API call:', response.originalError);
     }
 
-    // Details to log. **TODO:** This will ultimately need to redact some
-    // information in the response.
-
-    details.endTime = Date.now();
-
-    if (response.error) {
-      details.ok     = false;
-      details.error  = response.originalError;
-    } else {
-      details.ok     = true;
-      details.result = response.result;
-    }
-
-    this._log.event.apiReturned(details);
+    this._finishDetails(details, response);
+    this._logCompletedCall(details);
   }
 
   /**
@@ -78,13 +66,9 @@ export default class ApiLog extends CommonBase {
    * @param {Message} msg Incoming message.
    */
   incomingMessage(msg) {
-    const details = {
-      msg:       msg.logInfo,
-      startTime: Date.now()
-    };
+    const details = this._initialDetails(msg);
 
     this._pending.set(msg, details);
-
     this._log.event.apiReceived(details);
   }
 
@@ -94,17 +78,80 @@ export default class ApiLog extends CommonBase {
    * @param {Response} response Response which was sent.
    */
   nonMessageResponse(response) {
-    const now = Date.now();
-    const details = {
-      msg:       null,
-      startTime: now,
-      endTime:   now,
-      ok:        false,
-      error:     response.originalError
-    };
+    const details = this._initialDetails(null);
 
-    // **TODO:** This will ultimately need to redact some information beyond
-    // what `msg.logInfo` might have done.
+    this._finishDetails(details, response);
+    this._logCompletedCall(details);
+  }
+
+  /**
+   * Modifies the given details object to represent a completed call.
+   *
+   * @param {object} details Ad-hoc details object to modify.
+   * @param {Response} response Response which is being sent to the caller.
+   */
+  _finishDetails(details, response) {
+    details.endTime = this._now();
+
+    if (response.error) {
+      details.ok     = false;
+      details.error  = response.originalError;
+    } else {
+      // **TODO:** This will ultimately need to redact some information in
+      // `response.result`.
+      details.ok     = true;
+      details.result = response.result;
+    }
+  }
+
+  /**
+   * Makes the initial details object to represent an incoming call.
+   *
+   * @param {Message|null} msg The incoming message, if any.
+   * @returns {object} Ad-hoc details object.
+   */
+  _initialDetails(msg) {
+    const now = this._now();
+
+    // **TODO:** This will ultimately need to redact some information in `msg`
+    // beyond what `msg.logInfo` might have done.
+
+    return {
+      msg:       msg ? msg.logInfo : null,
+      startTime: now,
+      ok:        false
+    };
+  }
+
+  /**
+   * Performs end-of-call logging.
+   *
+   * @param {object} details Ad-hoc object with call details.
+   */
+  _logCompletedCall(details) {
+    const msg          = details.msg;
+    const method       = msg ? msg.payload.name : '<unknown>';
+    const durationMsec = details.endTime - details.startTime;
+    const ok           = details.ok;
+
+    details.durationMsec = durationMsec;
+
     this._log.event.apiReturned(details);
+
+    // For easy downstream, log a metric of just the method name, success flag,
+    // and elapsed time.
+    this._log.metric.apiCall({ ok, durationMsec, method });
+  }
+
+  /**
+   * Gets the current time, in the usual Unix Epoch msec form.
+   *
+   * **Note:** This method exists so as to make this class a little easier to
+   * test.
+   *
+   * @returns {Int} The current time in msec since the Unix Epoch.
+   */
+  _now() {
+    return Date.now();
   }
 }

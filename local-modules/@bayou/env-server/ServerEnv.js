@@ -6,6 +6,7 @@ import is_running from 'is-running';
 import http from 'http';
 
 import { Network } from '@bayou/config-server';
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
@@ -14,6 +15,9 @@ import Dirs from './Dirs';
 import PidFile from './PidFile';
 import BuildInfo from './BuildInfo';
 import ShutdownManager from './ShutdownManager';
+
+/** {Int} Frequency of uptime metric logs, in msec per log. */
+const UPTIME_LOG_MSEC = 5 * 60 * 1000; // Five minutes.
 
 /** {Logger} Logger. */
 const log = new Logger('env-server');
@@ -32,11 +36,11 @@ export default class ServerEnv extends Singleton {
     // further.
     Dirs.theOne;
 
-    /** {BootInfo} Info about the booting of this server. */
-    this._bootInfo = new BootInfo();
-
     /** {BuildInfo} Info about the build. */
     this._buildInfo = new BuildInfo();
+
+    /** {BootInfo} Info about the booting of this server. */
+    this._bootInfo = new BootInfo(this._buildInfo.info.buildId);
 
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
@@ -117,6 +121,7 @@ export default class ServerEnv extends Singleton {
     }
 
     this._pidFile.init();
+    this._uptimeLoop();
   }
 
   /**
@@ -197,5 +202,26 @@ export default class ServerEnv extends Singleton {
     }
 
     return result;
+  }
+
+  /**
+   * Runs a loop which repeatedly logs a metric which includes the build ID and
+   * the uptime, with a reasonable delay between each iteration.
+   */
+  async _uptimeLoop() {
+    const buildId = this._buildInfo.info.buildId;
+
+    for (;;) {
+      // Round the current uptime up to a multiple of the desired frequency (ok
+      // ok ok, technically "wavelength"), delay until the time hits, and log
+      // it. We log the "clean" exact value of the multiple, for the sake of
+      // cleanliness, even though by the time the log happens it'll probably be
+      // a few msec beyond the logged uptime value.
+      const uptimeMsec = this._bootInfo.uptimeMsec;
+      const nextLogMsec = Math.round(Math.ceil(uptimeMsec / UPTIME_LOG_MSEC) * UPTIME_LOG_MSEC);
+
+      await Delay.resolve(nextLogMsec - uptimeMsec);
+      log.metric.running({ buildId, uptimeMsec: nextLogMsec });
+    }
   }
 }
