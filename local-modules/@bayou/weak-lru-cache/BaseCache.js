@@ -87,28 +87,11 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Removes a cache entry which indicates a rejected promise. It is an error if
-   * the given ID isn't associated with a promise rejection in the cache.
-   *
-   * @param {string} id ID to remove from the cache.
-   */
-  clearRejection(id) {
-    const entry  = this._getWeakCacheEntry(id);
-
-    if ((entry === null) || (entry.error === null)) {
-      throw Errors.badUse(`ID not rejected: ${id}`);
-    }
-
-    this._weakCache.delete(id);
-    this._log.event.clearedRejection(id);
-  }
-
-  /**
    * Gets the instance associated with the given ID, if any. Returns `null`
    * if there is no such instance. If found, moves the instance to the front
    * of the LRU cache (that is, marks it as the _most_ recently used instance).
    *
-   * In the case of an ID added via {@link #addAfterResolving} which is not yet
+   * In the case of an ID added via {@link #resolveOrAdd} which is not yet
    * resolved, this method will throw an error.
    *
    * @param {string} id The ID to look up.
@@ -150,9 +133,8 @@ export default class BaseCache extends CommonBase {
    * cache (so, e.g., it is invalid to add another instance with the same ID),
    * except that (synchronous) {@link #getOrNull} will report an error. Should
    * the promise ultimately become rejected (not resolved), it will remain in
-   * the cache indefinitely as such, until and unless it is either cleared out
-   * explicitly via a call to {@link #clearRejection} or it "ages" out per this
-   * instance's configuration for same.
+   * the cache until it "ages" out per this instance's configuration for same
+   * (see {@link #_impl_maxRejectionAge}).
    *
    * @param {string} id The ID of the object.
    * @param {function} objMaker Function which is expected to return a suitable
@@ -358,11 +340,11 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Gets the object directly present in the weak cache for the given ID, if
-   * any, or returning `null` if there is no entry. If there is an entry which
-   * turns out to be a dead weak reference, this method also returns `null`.
-   * That is, if this method returns non-`null`, then the entry is guaranteed
-   * _not_ to be a for a dead weak reference.
+   * Gets the entry in the weak cache for the given ID, if any, or returning
+   * `null` if there is no entry. If there is an entry which turns out to be a
+   * dead weak reference, this method also returns `null`. That is, if this
+   * method returns non-`null`, then the entry is guaranteed _not_ to be a dead
+   * weak reference.
    *
    * @param {string} id ID in question.
    * @param {boolean} [log = false] If `true`, logs the activity.

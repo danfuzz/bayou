@@ -17,7 +17,7 @@ export default class DocSessionCache extends BaseCache {
    * @param {Logger} log Logger instance to use.
    */
   constructor(log) {
-    super(log);
+    super(log.withAddedContext('session'));
   }
 
   /** @override */
