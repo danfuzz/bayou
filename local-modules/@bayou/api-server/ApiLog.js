@@ -129,6 +129,8 @@ export default class ApiLog extends CommonBase {
    * @param {object} details Ad-hoc object with call details.
    */
   _logCompletedCall(details) {
+    const msg          = details.msg;
+    const method       = msg ? msg.payload.name : '<unknown>';
     const durationMsec = details.endTime - details.startTime;
     const ok           = details.ok;
 
@@ -136,9 +138,9 @@ export default class ApiLog extends CommonBase {
 
     this._log.event.apiReturned(details);
 
-    // Log just the success and elapsed time as a metric, for easy downstream
-    // consumption.
-    this._log.metric.apiCall({ ok, durationMsec });
+    // For easy downstream, log a metric of just the method name, success flag,
+    // and elapsed time.
+    this._log.metric.apiCall({ ok, durationMsec, method });
   }
 
   /**
