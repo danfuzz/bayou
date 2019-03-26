@@ -68,7 +68,7 @@ export default class ApiLog extends CommonBase {
       details.result = response.result;
     }
 
-    this._log.event.apiReturned(details);
+    this._logCompletedCall(details);
   }
 
   /**
@@ -103,8 +103,23 @@ export default class ApiLog extends CommonBase {
       error:     response.originalError
     };
 
+    this._logCompletedCall(details);
+  }
+
+  /**
+   * Performs end-of-call logging.
+   *
+   * @param {object} details Ad-hoc object with call details.
+   */
+  _logCompletedCall(details) {
+    const durationMsec = details.endTime - details.startTime;
+    const ok           = details.ok;
+
     // **TODO:** This will ultimately need to redact some information beyond
     // what `msg.logInfo` might have done.
     this._log.event.apiReturned(details);
+
+    // Log just the success and elapsed time as a metric.
+    this._log.metric.apiCall({ ok, durationMsec });
   }
 }
