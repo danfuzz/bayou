@@ -44,10 +44,6 @@ export default class BootInfo extends CommonBase {
     /** {Int} Count of how many times this build has been booted. */
     this._bootCount = this._determineBootCount();
 
-    // **TODO:** Add other bits that are specific to this boot. Notably, we
-    // have discussed trying to count how many times a given build has been
-    // booted, and here is probably a reasonable place to have that.
-
     Object.freeze(this);
   }
 
