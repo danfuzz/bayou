@@ -55,19 +55,7 @@ export default class ApiLog extends CommonBase {
       this._log.error('Error from API call:', response.originalError);
     }
 
-    // Details to log. **TODO:** This will ultimately need to redact some
-    // information in the response.
-
-    details.endTime = this._now();
-
-    if (response.error) {
-      details.ok     = false;
-      details.error  = response.originalError;
-    } else {
-      details.ok     = true;
-      details.result = response.result;
-    }
-
+    this._finishDetails(details, response);
     this._logCompletedCall(details);
   }
 
@@ -92,10 +80,28 @@ export default class ApiLog extends CommonBase {
   nonMessageResponse(response) {
     const details = this._initialDetails(null);
 
-    details.endTime = details.startTime;
-    details.error   = response.originalError;
-
+    this._finishDetails(details, response);
     this._logCompletedCall(details);
+  }
+
+  /**
+   * Modifies the given details object to represent a completed call.
+   *
+   * @param {object} details Ad-hoc details object to modify.
+   * @param {Response} response Response which is being sent to the caller.
+   */
+  _finishDetails(details, response) {
+    details.endTime = this._now();
+
+    if (response.error) {
+      details.ok     = false;
+      details.error  = response.originalError;
+    } else {
+      // **TODO:** This will ultimately need to redact some information in
+      // `response.result`.
+      details.ok     = true;
+      details.result = response.result;
+    }
   }
 
   /**
@@ -106,6 +112,9 @@ export default class ApiLog extends CommonBase {
    */
   _initialDetails(msg) {
     const now = this._now();
+
+    // **TODO:** This will ultimately need to redact some information in `msg`
+    // beyond what `msg.logInfo` might have done.
 
     return {
       msg:       msg ? msg.logInfo : null,
@@ -125,11 +134,10 @@ export default class ApiLog extends CommonBase {
 
     details.durationMsec = durationMsec;
 
-    // **TODO:** This will ultimately need to redact some information beyond
-    // what `msg.logInfo` might have done.
     this._log.event.apiReturned(details);
 
-    // Log just the success and elapsed time as a metric.
+    // Log just the success and elapsed time as a metric, for easy downstream
+    // consumption.
     this._log.metric.apiCall({ ok, durationMsec });
   }
 
