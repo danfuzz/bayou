@@ -89,20 +89,4 @@ export default class WeakCacheEntry extends CommonBase {
   get weak() {
     return this._weak;
   }
-
-  /**
-   * Indicates whether this entry is "alive." An entry is alive in all cases
-   * _except_ when it holds a weak reference whose referent is dead.
-   *
-   * @returns {boolean} `true` if this entry is alive, or `false` if not.
-   */
-  isAlive() {
-    if (this._weak === null) {
-      return true;
-    }
-
-    const obj = weak.get(this._weak);
-
-    return (obj !== undefined);
-  }
 }
