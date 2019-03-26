@@ -87,23 +87,6 @@ export default class BaseCache extends CommonBase {
   }
 
   /**
-   * Removes a cache entry which indicates a rejected promise. It is an error if
-   * the given ID isn't associated with a promise rejection in the cache.
-   *
-   * @param {string} id ID to remove from the cache.
-   */
-  clearRejection(id) {
-    const entry  = this._getWeakCacheEntry(id);
-
-    if ((entry === null) || (entry.error === null)) {
-      throw Errors.badUse(`ID not rejected: ${id}`);
-    }
-
-    this._weakCache.delete(id);
-    this._log.event.clearedRejection(id);
-  }
-
-  /**
    * Gets the instance associated with the given ID, if any. Returns `null`
    * if there is no such instance. If found, moves the instance to the front
    * of the LRU cache (that is, marks it as the _most_ recently used instance).
@@ -150,9 +133,8 @@ export default class BaseCache extends CommonBase {
    * cache (so, e.g., it is invalid to add another instance with the same ID),
    * except that (synchronous) {@link #getOrNull} will report an error. Should
    * the promise ultimately become rejected (not resolved), it will remain in
-   * the cache indefinitely as such, until and unless it is either cleared out
-   * explicitly via a call to {@link #clearRejection} or it "ages" out per this
-   * instance's configuration for same.
+   * the cache until it "ages" out per this instance's configuration for same
+   * (see {@link #_impl_maxRejectionAge}).
    *
    * @param {string} id The ID of the object.
    * @param {function} objMaker Function which is expected to return a suitable
