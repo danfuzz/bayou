@@ -42,10 +42,10 @@ export default class FileComplex extends BaseComplexMember {
      * {FileBootstrap} Bootstrap handler, and also where the complex members are
      * most directly stored.
      */
-    this._bootstrap = new FileBootstrap(this._fileAccess);
+    this._bootstrap = new FileBootstrap(this.fileAccess);
 
     /** {DocSessionCache} Cache of session instances, mapped from caret IDs. */
-    this._sessions = new DocSessionCache(this.log);
+    this._sessions = new DocSessionCache(this.fileAccess.log);
 
     Object.freeze(this);
   }
