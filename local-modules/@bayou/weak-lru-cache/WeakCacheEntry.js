@@ -75,7 +75,7 @@ export default class WeakCacheEntry extends CommonBase {
       return null;
     }
 
-    const result = weak.get(this._week);
+    const result = weak.get(this._weak);
 
     return (result === undefined) ? null : result;
   }
