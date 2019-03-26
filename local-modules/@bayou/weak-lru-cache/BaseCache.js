@@ -281,23 +281,13 @@ export default class BaseCache extends CommonBase {
    *   instance is active.
    */
   _getOrNull(id, returnPromise) {
-    const entry = this._getWeakCacheEntry(id, true);
+    const { entry, obj } = this._getWeakCacheEntry(id, true);
 
-    if (entry === null) {
+    if (obj !== null) {
+      this._mru(id, obj);
+      return obj;
+    } else if (entry === null) {
       return null;
-    }
-
-    const result = entry.object;
-
-    if (result !== null) {
-      // We've seen cases where a weakly-referenced object gets collected and
-      // replaced with an instance of a different class. If this check throws an
-      // error, that's what's going on here. (This is evidence of a bug in Node
-      // or in the `weak` package.)
-      this._cachedClass.check(result);
-
-      this._mru(id, result);
-      return result;
     } else if (entry.error) {
       throw entry.error;
     } else if (entry.promise) {
@@ -334,71 +324,70 @@ export default class BaseCache extends CommonBase {
    *   entry, or `false` if not.
    */
   _isAlive(id) {
-    const entry = this._getWeakCacheEntry(id);
+    const { obj } = this._getWeakCacheEntry(id);
 
-    return (entry !== null) && entry.isAlive();
+    return (obj !== null);
   }
 
   /**
-   * Gets the entry in the weak cache for the given ID, if any, or returning
-   * `null` if there is no entry. If there is an entry which turns out to be a
-   * dead weak reference, this method also returns `null`. That is, if this
-   * method returns non-`null`, then the entry is guaranteed _not_ to be a dead
-   * weak reference.
+   * Gets the entry in the weak cache for the given ID along with a (strong)
+   * reference to the entry's otherwise weakly-held reference, with `null`
+   * bound as appropriate in case there is no entry at all and/or the entry has
+   * no associated strong reference (e.g. because it is a dead weak reference or
+   * is some other kind of entry).
    *
    * @param {string} id ID in question.
    * @param {boolean} [log = false] If `true`, logs the activity.
-   * @returns {WeakCacheEntry|null} The entry associated with `id` in the weak
-   *   cache, or `null` if either there is none or the entry represents a dead
-   *   weak reference.
+   * @returns {object} Ad-hoc plain object mapping `entry` to the
+   *   {@link WeakCacheEntry} if any (or `null`) and `obj` to a (strong)
+   *   reference to the cached object if any (or `null`).
    */
   _getWeakCacheEntry(id, log = false) {
     this._checkId(id);
 
-    const entry = this._weakCache.get(id);
+    const entry    = this._weakCache.get(id) || null;
+    let   obj      = null;
+    let   logEvent = null;
 
-    if (!entry) {
-      if (log) {
-        this._log.event.notCached(id);
+    if (entry === null) {
+      logEvent = 'notCached';
+    } else if (entry.weak !== null) {
+      obj = entry.object;
+      if (obj === null) {
+        // `entry` refers to a dead weak reference. We don't bother removing the
+        // dead entry from `_weakCache` here, because in all likelihood the very
+        // next thing that will happen is that the calling code is going to
+        // re-instantiate the associated object and add it back. Also, a dead
+        // entry doesn't take up much space in memory. Also, the reaper will
+        // ultimately remove the reference if warranted (and note it in the
+        // log).
+        logEvent = 'foundDead';
+      } else {
+        // We've seen cases where a weakly-referenced object gets collected and
+        // replaced with an instance of a different class. If this check throws
+        // an error, that's what's going on here. (This is evidence of a bug in
+        // Node or in the `weak` package.)
+        this._cachedClass.check(obj);
+        logEvent = 'retrievedObject';
       }
-
-      return null;
-    }
-
-    if (!entry.isAlive()) {
-      // `entry` refers to a dead weak reference. We don't bother removing the
-      // dead entry from `_weakCache` here, because in all likelihood the very
-      // next thing that will happen is that the calling code is going to
-      // re-instantiate the associated object and add it back. Also, a dead
-      // entry doesn't take up much space in memory.
-
-      if (log) {
-        this._log.event.foundDead(id);
-      }
-
-      return null;
-    }
-
-    if (entry.error) {
+    } else if (entry.promise !== null) {
+      logEvent = 'retrievedPromise';
+    } else if (entry.error !== null) {
+      // It's a promise rejection, but it might have aged out.
       if (entry.createTimeMsec < (this._now() - this._maxRejectionAge)) {
-        this._log.event.discardedError(id);
+        // Aged out.
         this._weakCache.delete(id);
+        logEvent = 'discardedError';
+      } else {
+        logEvent = 'retrievedError';
       }
-
-      return null;
     }
 
     if (log) {
-      if (entry.error) {
-        this._log.event.retrievedError(id);
-      } else if (entry.promise) {
-        this._log.event.retrievedPromise(id);
-      } else {
-        this._log.event.retrievedObject(id);
-      }
+      this._log.event[logEvent](id);
     }
 
-    return entry;
+    return { entry, obj };
   }
 
   /**
