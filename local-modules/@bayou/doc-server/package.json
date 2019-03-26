@@ -3,7 +3,6 @@
     "@bayou/app-common": "local",
     "@bayou/codec": "local",
     "@bayou/config-server": "local",
-    "@bayou/deps-util-server": "local",
     "@bayou/doc-common": "local",
     "@bayou/file-store": "local",
     "@bayou/file-store-ot": "local",
