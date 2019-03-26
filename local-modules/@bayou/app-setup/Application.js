@@ -392,7 +392,7 @@ export default class Application extends CommonBase {
         }
       }
 
-      log.event.activeConnections(connections.size);
+      log.metric.activeConnections(connections.size);
     }
   }
 }
