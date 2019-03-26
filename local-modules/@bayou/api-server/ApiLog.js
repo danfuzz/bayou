@@ -45,7 +45,7 @@ export default class ApiLog extends CommonBase {
       this._pending.delete(msg);
     } else {
       this._log.warning('Orphan message:', msg);
-      details = { msg, startTime: '<unknown>' };
+      details = this._initialDetails(msg);
     }
 
     if (response.error) {
@@ -78,13 +78,9 @@ export default class ApiLog extends CommonBase {
    * @param {Message} msg Incoming message.
    */
   incomingMessage(msg) {
-    const details = {
-      msg:       msg.logInfo,
-      startTime: Date.now()
-    };
+    const details = this._initialDetails(msg);
 
     this._pending.set(msg, details);
-
     this._log.event.apiReceived(details);
   }
 
@@ -94,16 +90,28 @@ export default class ApiLog extends CommonBase {
    * @param {Response} response Response which was sent.
    */
   nonMessageResponse(response) {
-    const now = Date.now();
-    const details = {
-      msg:       null,
-      startTime: now,
-      endTime:   now,
-      ok:        false,
-      error:     response.originalError
-    };
+    const details = this._initialDetails(null);
+
+    details.endTime = details.startTime;
+    details.error   = response.originalError;
 
     this._logCompletedCall(details);
+  }
+
+  /**
+   * Makes the initial details object to represent an incoming call.
+   *
+   * @param {Message|null} msg The incoming message, if any.
+   * @returns {object} Ad-hoc details object.
+   */
+  _initialDetails(msg) {
+    const now = Date.now();
+
+    return {
+      msg:       msg ? msg.logInfo : null,
+      startTime: now,
+      ok:        false
+    };
   }
 
   /**
@@ -114,6 +122,8 @@ export default class ApiLog extends CommonBase {
   _logCompletedCall(details) {
     const durationMsec = details.endTime - details.startTime;
     const ok           = details.ok;
+
+    details.durationMsec = durationMsec;
 
     // **TODO:** This will ultimately need to redact some information beyond
     // what `msg.logInfo` might have done.
