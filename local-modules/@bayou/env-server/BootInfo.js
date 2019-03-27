@@ -45,6 +45,8 @@ export default class BootInfo extends CommonBase {
     this._bootCount = this._determineBootCount();
 
     Object.freeze(this);
+
+    this._logBoot();
   }
 
   /** {Int}  Count of how many times this build has been booted. */
@@ -107,5 +109,13 @@ export default class BootInfo extends CommonBase {
     fs.writeFileSync(this._bootCountPath, newText, { encoding: 'utf8' });
 
     return bootCount;
+  }
+
+  /**
+   * Logs the `boot` metric.
+   */
+  _logBoot() {
+    const { bootCount, buildId } = this;
+    log.metric.boot({ buildId, bootCount });
   }
 }
