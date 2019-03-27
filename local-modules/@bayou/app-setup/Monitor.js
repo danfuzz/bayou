@@ -102,8 +102,9 @@ export default class Monitor extends CommonBase {
 
     app.get('/metrics', async (req_unused, res) => {
       // **TODO:** Real metrics, driven by the calls to `log.metric.*()` in the
-      // main code. NB: The following is in OpenMetrics format (a/k/a Prometheus
-      // format).
+      // main code. Also note the high degree of overlap with `VarInfo`, which
+      // perhaps should be merged with this (or retired). NB: The following is
+      // in OpenMetrics format (a/k/a Prometheus format).
       ServerUtil.sendPlainTextResponse(res,
         '# TYPE uptimeMsec counter\n' +
         `uptimeMsec ${ServerEnv.theOne.bootInfo.uptimeMsec}\n`);
