@@ -47,6 +47,16 @@ export default class BootInfo extends CommonBase {
     Object.freeze(this);
   }
 
+  /** {Int}  Count of how many times this build has been booted. */
+  get bootCount() {
+    return this._bootCount;
+  }
+
+  /** {string} The build ID. */
+  get buildId() {
+    return this._buildId;
+  }
+
   /**
    * {object} Ad-hoc object with the info from this instance.
    *

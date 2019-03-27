@@ -46,7 +46,7 @@ export default class ServerEnv extends Singleton {
     this._pidFile = new PidFile();
 
     /** {ShutdownManager} The shutdown manager. */
-    this._shutdownManager = new ShutdownManager();
+    this._shutdownManager = new ShutdownManager(this._bootInfo);
 
     Object.freeze(this);
   }
@@ -217,7 +217,7 @@ export default class ServerEnv extends Singleton {
       // it. We log the "clean" exact value of the multiple, for the sake of
       // cleanliness, even though by the time the log happens it'll probably be
       // a few msec beyond the logged uptime value.
-      const uptimeMsec = this._bootInfo.uptimeMsec;
+      const uptimeMsec  = this._bootInfo.uptimeMsec;
       const nextLogMsec = Math.round(Math.ceil(uptimeMsec / UPTIME_LOG_MSEC) * UPTIME_LOG_MSEC);
 
       await Delay.resolve(nextLogMsec - uptimeMsec);
