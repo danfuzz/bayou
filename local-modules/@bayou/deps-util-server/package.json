@@ -7,6 +7,6 @@
     "memory-fs": "^0.4.1",
     "minimist": "^1.2.0",
     "source-map-support": "^0.5.6",
-    "weak": "^1.0.1"
+    "weak-napi": "^1.0.2"
   }
 }

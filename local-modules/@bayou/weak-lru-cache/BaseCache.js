@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import weak from 'weak';
+import weak from 'weak-napi';
 
 import { BaseLogger } from '@bayou/see-all';
 import { TBoolean, TFunction, TInt, TString } from '@bayou/typecheck';
