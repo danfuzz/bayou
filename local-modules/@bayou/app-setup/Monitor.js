@@ -100,6 +100,14 @@ export default class Monitor extends CommonBase {
       });
     });
 
+    app.get('/metrics', async (req_unused, res) => {
+      // **TODO:** Real metrics. NB: The following is in OpenMetrics format
+      // (a/k/a Prometheus format).
+      ServerUtil.sendPlainTextResponse(res,
+        '# TYPE uptimeMsec counter\n' +
+        `uptimeMsec ${ServerEnv.theOne.bootInfo.uptimeMsec}\n`);
+    });
+
     const varInfo = mainApplication.varInfo;
     app.get('/var', async (req_unused, res) => {
       const info = await varInfo.get();
