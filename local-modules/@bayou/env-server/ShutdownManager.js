@@ -225,8 +225,10 @@ export default class ShutdownManager extends CommonBase {
     }
 
     const bootInfo = this._bootInfo;
-    const { bootCount, buildId, uptimeMsec } = bootInfo;
-    log.metric.shutdown({ buildId, uptimeMsec, bootCount, timedOut });
+
+    bootInfo.incrementShutdownCount();
+    const { bootCount, buildId, shutdownCount, uptimeMsec } = bootInfo;
+    log.metric.shutdown({ buildId, uptimeMsec, bootCount, shutdownCount, timedOut });
 
     log.event.shutdownComplete();
     process.exit(0);
