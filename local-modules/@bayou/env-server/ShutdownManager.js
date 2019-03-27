@@ -10,6 +10,7 @@ import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
+import BootInfo from './BootInfo';
 import Dirs from './Dirs';
 
 /**
@@ -44,11 +45,16 @@ export default class ShutdownManager extends CommonBase {
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (i.e. reacting to the control files); that stuff
    * happens in {@link #init}.
+   *
+   * @param {BootInfo} bootInfo Associated boot info manager.
    */
-  constructor() {
+  constructor(bootInfo) {
     super();
 
     const CONTROL_PATH = Dirs.theOne.CONTROL_DIR;
+
+    /** {BootInfo} Associated boot info manager. */
+    this._bootInfo = BootInfo.check(bootInfo);
 
     /** {string} Path for the shutdown-command file. */
     this._shutdownPath = path.resolve(CONTROL_PATH, 'shutdown');
@@ -217,6 +223,12 @@ export default class ShutdownManager extends CommonBase {
     if (timedOut) {
       log.event.shutdownTimedOut();
     }
+
+    const bootInfo = this._bootInfo;
+
+    bootInfo.incrementShutdownCount();
+    const { bootCount, buildId, shutdownCount, uptimeMsec } = bootInfo;
+    log.metric.shutdown({ buildId, uptimeMsec, bootCount, shutdownCount, timedOut });
 
     log.event.shutdownComplete();
     process.exit(0);
