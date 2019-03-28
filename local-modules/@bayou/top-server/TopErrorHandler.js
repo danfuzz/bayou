@@ -21,28 +21,7 @@ export default class TopErrorHandler extends UtilityClass {
    * Sets up error handling.
    */
   static init() {
-    process.on('unhandledRejection', (reason, promise_unused) => {
-      // Write to `stdout` directly first, because logging might be broken.
-      process.stderr.write('Unhandled promise rejection:\n');
-      if (reason instanceof Error) {
-        process.stderr.write(reason.stack);
-      } else {
-        process.stderr.write(inspect(reason));
-      }
-      process.stderr.write('\n');
-
-      if (SeeAll.theOne.canLog()) {
-        log.error('Unhandled promise rejection:', reason);
-      }
-
-      // Give the system a moment, so it has a chance to actually flush the log,
-      // and then exit.
-      (async () => {
-        await Delay.resolve(250); // 0.25 second.
-        process.exit(1);
-      })();
-    });
-
+    process.on('unhandledRejection', TopErrorHandler._unhandledRejection);
     process.on('uncaughtException', TopErrorHandler._uncaughtException);
   }
 
