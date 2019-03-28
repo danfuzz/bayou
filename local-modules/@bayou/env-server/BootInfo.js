@@ -42,7 +42,7 @@ export default class BootInfo extends CommonBase {
     this._bootTimeString = LogRecord.forTime(bootTime).timeStrings.join(' / ');
 
     /** {string} Path for the boot info file. */
-    this._bootCountPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'boot-count.txt');
+    this._bootInfoPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'boot-info.txt');
 
     /** {object} Plain object of durable boot info. */
     this._info = this._readFileWithDefaults();
@@ -159,7 +159,7 @@ export default class BootInfo extends CommonBase {
     const info    = { buildId, bootCount: 0, errors: '', shutdownCount: 0 };
 
     try {
-      const text = fs.readFileSync(this._bootCountPath, { encoding: 'utf8' });
+      const text = fs.readFileSync(this._bootInfoPath, { encoding: 'utf8' });
       const obj  = JSON.parse(text);
 
       if (obj.buildId === buildId) {
@@ -181,6 +181,6 @@ export default class BootInfo extends CommonBase {
    */
   _writeFile() {
     const text = `${JSON.stringify(this._info, null, 2)}\n`;
-    fs.writeFileSync(this._bootCountPath, text, { encoding: 'utf8' });
+    fs.writeFileSync(this._bootInfoPath, text, { encoding: 'utf8' });
   }
 }
