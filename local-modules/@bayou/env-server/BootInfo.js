@@ -11,6 +11,9 @@ import { CommonBase } from '@bayou/util-common';
 
 import Dirs from './Dirs';
 
+/** {Int} Maximum length of the `errors` string, in characters. */
+const MAX_ERRORS_LENGTH = 10000;
+
 /** {Logger} Logger for this class. */
 const log = new Logger('boot-info');
 
@@ -41,7 +44,7 @@ export default class BootInfo extends CommonBase {
     /** {string} Path for the boot count file. */
     this._bootCountPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'boot-count.txt');
 
-    const { bootCount, shutdownCount } = this._determineCounts();
+    const { bootCount, errors, shutdownCount } = this._determineCounts();
 
     /** {Int} Count of how many times this build has been booted. */
     this._bootCount = bootCount;
@@ -49,13 +52,18 @@ export default class BootInfo extends CommonBase {
     /** {Int} Count of how many times this build has been shut down cleanly. */
     this._shutdownCount = shutdownCount;
 
+    /**
+     * {string} All the shutdown-worthy errors ever experienced by this build.
+     */
+    this._errors = errors;
+
     Object.seal(this);
 
     this._logBoot();
     this._writeFile();
   }
 
-  /** {Int}  Count of how many times this build has been booted. */
+  /** {Int} Count of how many times this build has been booted. */
   get bootCount() {
     return this._bootCount;
   }
@@ -78,7 +86,8 @@ export default class BootInfo extends CommonBase {
       shutdownCount: this._shutdownCount,
       time:          this._bootTimeString,
       timeMsec:      this._bootTime,
-      uptimeMsec:    this.uptimeMsec
+      uptimeMsec:    this.uptimeMsec,
+      errors:        this._errors
     };
   }
 
@@ -102,6 +111,42 @@ export default class BootInfo extends CommonBase {
   }
 
   /**
+   * Records an error which caused server shutdown, for inclusion in the
+   * instance of this class upon the _next_ server start.
+   *
+   * @param {string} error Stringified error.
+   */
+  recordError(error) {
+    TString.check(error);
+
+    if (!error.endsWith('\n')) {
+      error += '\n';
+    }
+
+    const separator = this._errors.endsWith('\n') ? '' : '\n';
+    let   errors    = `${this._errors}${separator}${error}`;
+
+    // Truncate to the desired maximum length, by trimming off the initial
+    // portion, in units of whole lines.
+
+    while (errors.length > MAX_ERRORS_LENGTH) {
+      const lineEndAt = errors.indexOf('\n');
+      if ((lineEndAt < 0) || (lineEndAt === (errors.length - 1))) {
+        // The whole string is a single line, which shouldn't happen (/shrug).
+        // Just truncate the right number of characters and call it a day.
+        errors = errors.slice(errors.length - MAX_ERRORS_LENGTH);
+      } else {
+        // Trim away the line.
+        errors = errors.slice(lineEndAt + 1);
+      }
+    }
+
+    this._errors = errors;
+
+    this._writeFile();
+  }
+
+  /**
    * Returns the number of times that this build (by ID) has been started and
    * shut down on this server. It does this by reading the build ID file (if
    * present) and (re)writing it (to update the statistic).
@@ -113,6 +158,7 @@ export default class BootInfo extends CommonBase {
     const buildId     = this._buildId;
     let bootCount     = 1;
     let shutdownCount = 0;
+    let errors        = '';
 
     try {
       const text = fs.readFileSync(this._bootCountPath, { encoding: 'utf8' });
@@ -121,6 +167,7 @@ export default class BootInfo extends CommonBase {
       if (obj.buildId === buildId) {
         bootCount     = (obj.bootCount || 0) + 1;
         shutdownCount = obj.shutdownCount || 0;
+        errors        = obj.errors || '';
       }
     } catch (e) {
       // `ENOENT` is "file not found." Anything else is logworthy.
@@ -129,7 +176,7 @@ export default class BootInfo extends CommonBase {
       }
     }
 
-    return { bootCount, shutdownCount };
+    return { bootCount, errors, shutdownCount };
   }
 
   /**
@@ -145,7 +192,8 @@ export default class BootInfo extends CommonBase {
    */
   _writeFile() {
     const { buildId, bootCount, shutdownCount } = this;
-    const text = `${JSON.stringify({ buildId, bootCount, shutdownCount }, null, 2)}\n`;
+    const errors = this._errors;
+    const text = `${JSON.stringify({ buildId, bootCount, errors, shutdownCount }, null, 2)}\n`;
     fs.writeFileSync(this._bootCountPath, text, { encoding: 'utf8' });
   }
 }

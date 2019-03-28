@@ -4,6 +4,7 @@
 
 import { inspect } from 'util';
 
+import { ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger, SeeAll } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
@@ -35,19 +36,19 @@ export default class TopErrorHandler extends UtilityClass {
    *   Typically, but not necessarily, an `Error`.
    */
   static _handleProblem(eventName, label, problem) {
-    // Write to `stdout` directly first, because logging might be broken.
-    process.stderr.write(`${label}:\n`);
-    if (problem instanceof Error) {
-      process.stderr.write(problem.stack);
-    } else {
-      process.stderr.write(inspect(problem));
-    }
-    process.stderr.write('\n');
+    const problemString = (problem instanceof Error)
+      ? problem.stack
+      : inspect(problem);
+
+    // Write to `stderr` directly first, because logging might be broken.
+    process.stderr.write(`${label}:\n${problemString}\n`);
 
     if (SeeAll.theOne.canLog()) {
       log.error(`${label}:`, problem);
       log.event[eventName](problem);
     }
+
+    ServerEnv.theOne.recordError(problemString);
 
     // Give the system a moment, so it has a chance to actually flush the log,
     // and then exit.
