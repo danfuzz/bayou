@@ -12,7 +12,7 @@ import { CommonBase } from '@bayou/util-common';
 import Dirs from './Dirs';
 
 /** {Int} Maximum length of the `errors` string, in characters. */
-const MAX_ERRORS_LENGTH = 10000;
+const MAX_ERRORS_LENGTH = 5000;
 
 /** {Logger} Logger for this class. */
 const log = new Logger('boot-info');
@@ -41,21 +41,11 @@ export default class BootInfo extends CommonBase {
     /** {string} String form of the boot time. */
     this._bootTimeString = LogRecord.forTime(bootTime).timeStrings.join(' / ');
 
-    /** {string} Path for the boot count file. */
+    /** {string} Path for the boot info file. */
     this._bootCountPath = path.resolve(Dirs.theOne.CONTROL_DIR, 'boot-count.txt');
 
-    const { bootCount, errors, shutdownCount } = this._determineCounts();
-
-    /** {Int} Count of how many times this build has been booted. */
-    this._bootCount = bootCount;
-
-    /** {Int} Count of how many times this build has been shut down cleanly. */
-    this._shutdownCount = shutdownCount;
-
-    /**
-     * {string} All the shutdown-worthy errors ever experienced by this build.
-     */
-    this._errors = errors;
+    /** {object} Plain object of durable boot info. */
+    this._info = this._readFileWithDefaults();
 
     Object.seal(this);
 
@@ -65,12 +55,12 @@ export default class BootInfo extends CommonBase {
 
   /** {Int} Count of how many times this build has been booted. */
   get bootCount() {
-    return this._bootCount;
+    return this._info.bootCount;
   }
 
   /** {string} The build ID. */
   get buildId() {
-    return this._buildId;
+    return this._info.buildId;
   }
 
   /**
@@ -81,19 +71,18 @@ export default class BootInfo extends CommonBase {
    * as of this writing).
    */
   get info() {
-    return {
-      bootCount:     this._bootCount,
-      shutdownCount: this._shutdownCount,
-      time:          this._bootTimeString,
-      timeMsec:      this._bootTime,
-      uptimeMsec:    this.uptimeMsec,
-      errors:        this._errors
+    const extras = {
+      time:       this._bootTimeString,
+      timeMsec:   this._bootTime,
+      uptimeMsec: this.uptimeMsec
     };
+
+    return Object.assign(extras, this._info);
   }
 
   /** {Int} Count of how many times this build has been shut down cleanly. */
   get shutdownCount() {
-    return this._shutdownCount;
+    return this._info.shutdownCount;
   }
 
   /** {Int} The length of time this server has been running, in msec. */
@@ -123,8 +112,10 @@ export default class BootInfo extends CommonBase {
       error += '\n';
     }
 
-    const separator = this._errors.endsWith('\n') ? '' : '\n';
-    let   errors    = `${this._errors}${separator}${error}`;
+    let   errors    = this._info.errors;
+    const separator = errors.endsWith('\n') ? '' : '\n';
+
+    errors = `${errors}${separator}${error}`;
 
     // Truncate to the desired maximum length, by trimming off the initial
     // portion, in units of whole lines.
@@ -141,42 +132,9 @@ export default class BootInfo extends CommonBase {
       }
     }
 
-    this._errors = errors;
+    this._info.errors = errors;
 
     this._writeFile();
-  }
-
-  /**
-   * Returns the number of times that this build (by ID) has been started and
-   * shut down on this server. It does this by reading the build ID file (if
-   * present) and (re)writing it (to update the statistic).
-   *
-   * @returns {object} Ad-hoc plain object mapping `bootCount` and
-   *   `shutdownCount`, each an integer.
-   */
-  _determineCounts() {
-    const buildId     = this._buildId;
-    let bootCount     = 1;
-    let shutdownCount = 0;
-    let errors        = '';
-
-    try {
-      const text = fs.readFileSync(this._bootCountPath, { encoding: 'utf8' });
-      const obj  = JSON.parse(text);
-
-      if (obj.buildId === buildId) {
-        bootCount     = (obj.bootCount || 0) + 1;
-        shutdownCount = obj.shutdownCount || 0;
-        errors        = obj.errors || '';
-      }
-    } catch (e) {
-      // `ENOENT` is "file not found." Anything else is logworthy.
-      if (e.code !== 'ENOENT') {
-        log.error('Trouble reading boot-count file.', e);
-      }
-    }
-
-    return { bootCount, errors, shutdownCount };
   }
 
   /**
@@ -188,12 +146,41 @@ export default class BootInfo extends CommonBase {
   }
 
   /**
+   * Reads and parses the boot info file, returning its contents and/or
+   * replacement info. If the build ID matches, this fills in any missing info
+   * with defaults, and increments the boot count. If the build ID doesn't match
+   * (including if the file is not present at all), returns all defaults.
+   *
+   * @returns {object} Plain object with info file contents with defaults for
+   *   missing bits.
+   */
+  _readFileWithDefaults() {
+    const buildId = this._buildId;
+    const info    = { buildId, bootCount: 0, errors: '', shutdownCount: 0 };
+
+    try {
+      const text = fs.readFileSync(this._bootCountPath, { encoding: 'utf8' });
+      const obj  = JSON.parse(text);
+
+      if (obj.buildId === buildId) {
+        Object.assign(info, obj);
+      }
+    } catch (e) {
+      // `ENOENT` is "file not found." Anything else is logworthy.
+      if (e.code !== 'ENOENT') {
+        log.error('Trouble reading boot-count file.', e);
+      }
+    }
+
+    info.bootCount++;
+    return info;
+  }
+
+  /**
    * Writes the boot info file.
    */
   _writeFile() {
-    const { buildId, bootCount, shutdownCount } = this;
-    const errors = this._errors;
-    const text = `${JSON.stringify({ buildId, bootCount, errors, shutdownCount }, null, 2)}\n`;
+    const text = `${JSON.stringify(this._info, null, 2)}\n`;
     fs.writeFileSync(this._bootCountPath, text, { encoding: 'utf8' });
   }
 }
