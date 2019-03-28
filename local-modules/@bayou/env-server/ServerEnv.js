@@ -205,6 +205,16 @@ export default class ServerEnv extends Singleton {
   }
 
   /**
+   * Records an error which caused server shutdown, for ongoing inclusion in
+   * {@link #bootInfo}.
+   *
+   * @param {string} error Stringified error.
+   */
+  recordError(error) {
+    this._bootInfo.recordError(error);
+  }
+
+  /**
    * Runs a loop which repeatedly logs a metric which includes the build ID and
    * the uptime, with a reasonable delay between each iteration.
    */
