@@ -21,18 +21,20 @@ export default class TopErrorHandler extends UtilityClass {
    * Sets up error handling.
    */
   static init() {
-    process.on('unhandledRejection', TopErrorHandler._unhandledRejection);
+    process.on('unhandledRejection', TopErrorHandler._uncaughtRejection);
     process.on('uncaughtException', TopErrorHandler._uncaughtException);
   }
 
   /**
    * Handle either top-level problem, as indicated.
    *
-   * @param {string} label How to label the problem (in the logs).
+   * @param {string} eventName Event name to use for logging the problem.
+   * @param {string} label How to label the problem in a human-oriented `error`
+   *   log.
    * @param {*} problem The "problem" (uncaught exception or rejection reason).
    *   Typically, but not necessarily, an `Error`.
    */
-  static _handleProblem(label, problem) {
+  static _handleProblem(eventName, label, problem) {
     // Write to `stdout` directly first, because logging might be broken.
     process.stderr.write(`${label}:\n`);
     if (problem instanceof Error) {
@@ -44,6 +46,7 @@ export default class TopErrorHandler extends UtilityClass {
 
     if (SeeAll.theOne.canLog()) {
       log.error(`${label}:`, problem);
+      log.event[eventName](problem);
     }
 
     // Give the system a moment, so it has a chance to actually flush the log,
@@ -61,7 +64,7 @@ export default class TopErrorHandler extends UtilityClass {
    *   necessarily, an `Error`.
    */
   static _uncaughtException(error) {
-    TopErrorHandler._handleProblem('Uncaught exception', error);
+    TopErrorHandler._handleProblem('uncaughtException', 'Uncaught exception', error);
   }
 
   /**
@@ -71,7 +74,7 @@ export default class TopErrorHandler extends UtilityClass {
    *   necessarily, an `Error`.
    * @param {Promise} promise_unused The promise that was rejected.
    */
-  static _unhandledRejection(reason, promise_unused) {
-    TopErrorHandler._handleProblem('Unhandled promise rejection', reason);
+  static _uncaughtRejection(reason, promise_unused) {
+    TopErrorHandler._handleProblem('uncaughtRejection', 'Uncaught promise rejection', reason);
   }
 }
