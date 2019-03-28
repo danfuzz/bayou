@@ -168,7 +168,7 @@ export default class BootInfo extends CommonBase {
     } catch (e) {
       // `ENOENT` is "file not found." Anything else is logworthy.
       if (e.code !== 'ENOENT') {
-        log.error('Trouble reading boot-count file.', e);
+        log.error('Trouble reading boot-info file.', e);
       }
     }
 
