@@ -100,9 +100,8 @@ export default class Monitor extends CommonBase {
       });
     });
 
+    const register = mainApplication.metrics.register;
     app.get('/metrics', async (req_unused, res) => {
-      const register = mainApplication.metrics.register;
-
       ServerUtil.sendTextResponse(res, register.metrics(), register.contentType, 200);
     });
 
