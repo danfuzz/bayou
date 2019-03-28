@@ -11,6 +11,10 @@ import Application from './Application';
 /**
  * "Variable" info (like, it varies and isn't just static to the system), which
  * is provided via the internal monitoring server (see {@link Monitor}).
+ *
+ * **TODO:** The stuff collected and reported on here is highly-overlapping
+ * with what is (or ought to be) reported via `/metrics`. Look into combining
+ * these or at least moving as much as is sensible to {@link Metrics}.
  */
 export default class VarInfo extends CommonBase {
   /**
