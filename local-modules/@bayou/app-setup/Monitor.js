@@ -11,7 +11,6 @@ import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import Application from './Application';
-import { register } from './Metrics';
 import RequestLogger from './RequestLogger';
 import ServerUtil from './ServerUtil';
 
@@ -109,6 +108,8 @@ export default class Monitor extends CommonBase {
     });
 
     app.get('/metrics', async (req_unused, res) => {
+      const register = this._mainApplication.metrics.register;
+
       ServerUtil.sendTextResponse(res, register.metrics(), register.contentType, 200);
     });
   }

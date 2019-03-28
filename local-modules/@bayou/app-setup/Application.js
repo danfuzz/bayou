@@ -18,7 +18,7 @@ import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import AppAuthorizer from './AppAuthorizer';
 import DebugTools from './DebugTools';
-import { MetricsMiddleware } from './Metrics';
+import Metrics from './Metrics';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
@@ -64,6 +64,12 @@ export default class Application extends CommonBase {
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = this._makeRootAccess();
+
+    /**
+     * {Metrics} Metrics collector / reporter. This is what's responsible for
+     * collecting info for reporting on the `/metrics` monitor endpoint.
+     */
+    this._metrics = new Metrics();
 
     /**
      * {VarInfo} The "variable info" handler. This is what's responsible for
@@ -116,6 +122,11 @@ export default class Application extends CommonBase {
     return this._connectionCountTotal;
   }
 
+  /** {Metrics} The associated metrics collector / reporter. */
+  get metrics() {
+    return this._metrics;
+  }
+
   /**
    * {object} The "root access" object. This is the object which tokens bearing
    * {@link Auth#TYPE_root} authority grant access to.
@@ -124,10 +135,7 @@ export default class Application extends CommonBase {
     return this._rootAccess;
   }
 
-  /**
-   * {VarInfo} The "variable info" handler. This is what's responsible for
-   * producing the info sent back on the `/var` monitor endpoint.
-   */
+  /** {VarInfo} The "variable info" handler. */
   get varInfo() {
     return this._varInfo;
   }
@@ -199,7 +207,7 @@ export default class Application extends CommonBase {
 
     // Logging and metrics
     app.use(this._requestLogger.expressMiddleware);
-    app.use(MetricsMiddleware);
+    app.use(this._metrics.httpRequestMiddleware);
 
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
