@@ -18,6 +18,7 @@ import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import AppAuthorizer from './AppAuthorizer';
 import DebugTools from './DebugTools';
+import { MetricsMiddleware } from './Metrics';
 import RequestLogger from './RequestLogger';
 import RootAccess from './RootAccess';
 import ServerUtil from './ServerUtil';
@@ -196,8 +197,9 @@ export default class Application extends CommonBase {
   _addRoutes() {
     const app = this._app;
 
-    // Logging.
+    // Logging and metrics
     app.use(this._requestLogger.expressMiddleware);
+    app.use(MetricsMiddleware);
 
     // Thwack the `X-Powered-By` header that Express provides by default,
     // replacing it with something that identifies this product.
