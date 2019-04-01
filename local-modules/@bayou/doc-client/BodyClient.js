@@ -532,6 +532,8 @@ export default class BodyClient extends StateMachine {
    * @param {function} stateName The name of the state to transition into.
    */
   _handle_becomeDisabled_nextState(stateName) {
+    this.log.event.becameDisabled();
+
     if (this._manageEnabledState) {
       this._quill.disable();
     }
@@ -549,6 +551,8 @@ export default class BodyClient extends StateMachine {
    * transitions into the `idle` state after handling this event.
    */
   _handle_becomeEnabled_start() {
+    this.log.event.becameEnabled();
+
     if (this._manageEnabledState) {
       this._quill.enable();
 
