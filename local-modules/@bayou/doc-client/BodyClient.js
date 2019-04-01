@@ -4,7 +4,7 @@
 
 import { ConnectionError } from '@bayou/api-common';
 import { BodyChange, BodyDelta, BodyOp, BodySnapshot } from '@bayou/doc-common';
-import { Delay } from '@bayou/promise-util';
+import { Condition, Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { TInt, TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
@@ -130,6 +130,14 @@ export default class BodyClient extends StateMachine {
     this._running = false;
 
     /**
+     * {Condition} Whether this instance believes that editing "should" be
+     * enabled. This is based on what has been happening with the server
+     * connection (but is not simply the same as whether a server connection has
+     * been established).
+     */
+    this._shouldBeEnabled = new Condition();
+
+    /**
      * {Proxy|null} Local proxy for accessing the server session. Becomes
      * non-`null` during the handling of the `start` event.
      */
@@ -179,6 +187,20 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Gets this instance's instantaneously current view on whether editing should
+   * be enabled.
+   *
+   * @see {@link #whenShouldBeDisabled}
+   * @see {@link #whenShouldBeEnabled}
+   *
+   * @returns {boolean} `true` if this instance believes that editing should be
+   *   enabled, or `false` if not.
+   */
+  shouldBeEnabled() {
+    return this._shouldBeEnabled.value;
+  }
+
+  /**
    * Requests that this instance start interacting with its associated editor
    * and API handler. This method does nothing if the client is already in an
    * active state (including being in the middle of starting).
@@ -193,6 +215,38 @@ export default class BodyClient extends StateMachine {
    */
   stop() {
     this.q_stop();
+  }
+
+  /**
+   * As an asynchronous method, returns when editing "should" be disabled, from
+   * the perspective of this instance. This method is useful for users of this
+   * class which manage the editor's enabled state (that is, construct instances
+   * with `manageEnabledState` as `false`).
+   *
+   * @see {@link #shouldBeEnabled}
+   * @see {@link #whenShouldBeEnabled}
+   *
+   * @returns {boolean} `true` (always), asynchrounously when this instance
+   *   believes the editor should be in a disabled state.
+   */
+  async whenShouldBeDisabled() {
+    return this._shouldBeEnabled.whenFalse();
+  }
+
+  /**
+   * As an asynchronous method, returns when editing "should" be enabled, from
+   * the perspective of this instance. This method is useful for users of this
+   * class which manage the editor's enabled state (that is, construct instances
+   * with `manageEnabledState` as `false`).
+   *
+   * @see {@link #shouldBeEnabled}
+   * @see {@link #whenShouldBeDisabled}
+   *
+   * @returns {boolean} `true` (always), asynchrounously when this instance
+   *   believes the editor should be in an enabled state.
+   */
+  async whenShouldBeEnabled() {
+    return this._shouldBeEnabled.whenTrue();
   }
 
   //
@@ -484,10 +538,13 @@ export default class BodyClient extends StateMachine {
    * @param {function} stateName The name of the state to transition into.
    */
   _handle_becomeDisabled_nextState(stateName) {
+    this.log.event.becameDisabled();
+
     if (this._manageEnabledState) {
       this._quill.disable();
     }
 
+    this._shouldBeEnabled.value = false;
     this.state = stateName;
   }
 
@@ -500,6 +557,8 @@ export default class BodyClient extends StateMachine {
    * transitions into the `idle` state after handling this event.
    */
   _handle_becomeEnabled_start() {
+    this.log.event.becameEnabled();
+
     if (this._manageEnabledState) {
       this._quill.enable();
 
@@ -507,6 +566,8 @@ export default class BodyClient extends StateMachine {
       // rather than make them have to click-to-focus first.
       QuillUtil.editorDiv(this._quill).focus();
     }
+
+    this._shouldBeEnabled.value = true;
 
     // Head into our first post-connection iteration of idling while waiting for
     // changes coming in locally (from Quill) or from the server.
