@@ -225,6 +225,9 @@ export default class BodyClient extends StateMachine {
    *
    * @see {@link #shouldBeEnabled}
    * @see {@link #whenShouldBeEnabled}
+   *
+   * @returns {boolean} `true` (always), asynchrounously when this instance
+   *   believes the editor should be in a disabled state.
    */
   async whenShouldBeDisabled() {
     return this._shouldBeEnabled.whenFalse();
@@ -238,6 +241,9 @@ export default class BodyClient extends StateMachine {
    *
    * @see {@link #shouldBeEnabled}
    * @see {@link #whenShouldBeDisabled}
+   *
+   * @returns {boolean} `true` (always), asynchrounously when this instance
+   *   believes the editor should be in an enabled state.
    */
   async whenShouldBeEnabled() {
     return this._shouldBeEnabled.whenTrue();
