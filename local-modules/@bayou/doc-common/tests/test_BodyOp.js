@@ -19,7 +19,7 @@ describe('@bayou/doc-common/BodyOp', () => {
   describe('fromQuillForm()', () => {
     describe('invalid arguments', () => {
       function test(v) {
-        it(`should reject: ${inspect(v)}`, () => {
+        it(`rejects: ${inspect(v)}`, () => {
           assert.throws(() => BodyOp.fromQuillForm(v));
         });
       }
@@ -90,7 +90,7 @@ describe('@bayou/doc-common/BodyOp', () => {
 
   describe('fromQuillForm() / toQuillForm()', () => {
     function test(quillOp, bodyOp) {
-      it(`should handle op: ${inspect(bodyOp)}`, () => {
+      it(`handles op: ${inspect(bodyOp)}`, () => {
         const bodyResult = BodyOp.fromQuillForm(quillOp);
 
         assert.instanceOf(bodyResult, BodyOp);
@@ -126,14 +126,14 @@ describe('@bayou/doc-common/BodyOp', () => {
   });
 
   describe('op_delete()', () => {
-    it('should produce a value with expected payload', () => {
+    it('produces a value with expected payload', () => {
       const result = BodyOp.op_delete(123);
       assert.deepEqual(result.payload, new Functor('delete', 123));
     });
   });
 
   describe('op_embed()', () => {
-    it('should produce a value with expected payload', () => {
+    it('produces a value with expected payload', () => {
       const attrib = { bold: true };
 
       const result1 = BodyOp.op_embed('blort', { x: 10 });
@@ -143,7 +143,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       assert.deepEqual(result2.payload, new Functor('embed', 'florp', ['like'], attrib));
     });
 
-    it('should reject a non-identifier `type`', () => {
+    it('rejects a non-identifier `type`', () => {
       assert.throws(() => BodyOp.op_embed('', 1));
       assert.throws(() => BodyOp.op_embed('*', 1));
       assert.throws(() => BodyOp.op_embed(null, 1));
@@ -152,14 +152,14 @@ describe('@bayou/doc-common/BodyOp', () => {
       assert.throws(() => BodyOp.op_embed({ florp: 'like' }, 1));
     });
 
-    it('should reject a non-data `value`', () => {
+    it('rejects a non-data `value`', () => {
       assert.throws(() => BodyOp.op_embed('x', new Map()));
       assert.throws(() => BodyOp.op_embed('x', { get x() { return 10; } }));
     });
   });
 
   describe('op_retain()', () => {
-    it('should produce a value with expected payload', () => {
+    it('produces a value with expected payload', () => {
       const attrib = { header: 1 };
 
       const result1 = BodyOp.op_retain(123);
@@ -171,7 +171,7 @@ describe('@bayou/doc-common/BodyOp', () => {
   });
 
   describe('op_text()', () => {
-    it('should produce a value with expected payload', () => {
+    it('produces a value with expected payload', () => {
       const attrib = { italic: true, bold: null };
 
       const result1 = BodyOp.op_text('florp');
@@ -184,7 +184,7 @@ describe('@bayou/doc-common/BodyOp', () => {
 
   describe('.props', () => {
     function test(op, expected) {
-      it(`should provide expected bindings for: ${op}`, () => {
+      it(`provides expected bindings for: ${op}`, () => {
         const result = op.props;
         assert.isFrozen(result);
         assert.deepEqual(result, expected);
@@ -206,12 +206,12 @@ describe('@bayou/doc-common/BodyOp', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       const op = BodyOp.op_text('florp');
       assert.isTrue(op.equals(op));
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(method, ...args) {
         const op1 = BodyOp[method](...args);
         const op2 = BodyOp[method](...args);
@@ -229,7 +229,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       test('op_retain', 100, { header: 3 });
     });
 
-    it('should return `false` when type or any field differs', () => {
+    it('returns `false` when type or any field differs', () => {
       function test(op1, op2) {
         assert.isFalse(op1.equals(op2));
         assert.isFalse(op2.equals(op1));
@@ -252,7 +252,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       test(BodyOp.op_retain(1, at1),     BodyOp.op_retain(1, at2));
     });
 
-    it('should return `false` when passed a non-instance', () => {
+    it('returns `false` when passed a non-instance', () => {
       const op = BodyOp.op_text('zorch');
 
       assert.isFalse(op.equals(undefined));
@@ -264,7 +264,7 @@ describe('@bayou/doc-common/BodyOp', () => {
   });
 
   describe('isInsert()', () => {
-    it('should return `true` for inserts', () => {
+    it('returns `true` for inserts', () => {
       function test(v) {
         assert.isTrue(v.isInsert());
       }
@@ -275,7 +275,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       test(BodyOp.op_text('foo', { bold: true }));
     });
 
-    it('should return `false` for non-inserts', () => {
+    it('returns `false` for non-inserts', () => {
       function test(v) {
         assert.isFalse(v.isInsert());
       }
@@ -297,7 +297,7 @@ describe('@bayou/doc-common/BodyOp', () => {
 
     describe('text op', () => {
       describe('when `textOnly` is true', () => {
-        it('should return length of plaintext', () => {
+        it('returns length of plaintext', () => {
           const opLength = PLAIN_TEXT_OP.getLength(true);
 
           assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
@@ -305,7 +305,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       });
 
       describe('when `textOnly` is false', () => {
-        it('should return length of plaintext', () => {
+        it('returns length of plaintext', () => {
           const opLength = PLAIN_TEXT_OP.getLength(false);
 
           assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
@@ -313,13 +313,13 @@ describe('@bayou/doc-common/BodyOp', () => {
       });
 
       describe('when `textOnly` is not set', () => {
-        it('should return length of plaintext', () => {
+        it('returns length of plaintext', () => {
           const opLength = PLAIN_TEXT_OP.getLength();
 
           assert.strictEqual(opLength, PLAIN_TEXT_LENGTH);
         });
 
-        it('should return length of text with special chars', () => {
+        it('returns length of text with special chars', () => {
           const opLength = EMOJI_TEXT_OP.getLength();
 
           assert.strictEqual(opLength, EMOJI_TEXT_LENGTH);
@@ -329,7 +329,7 @@ describe('@bayou/doc-common/BodyOp', () => {
 
     describe('embed op', () => {
       describe('when `textOnly` is true', () => {
-        it('should return 0', () => {
+        it('returns `0`', () => {
           const opLength = EMBED_OP.getLength(true);
 
           assert.strictEqual(opLength, 0);
@@ -337,7 +337,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       });
 
       describe('when `textOnly` is false', () => {
-        it('should return 1', () => {
+        it('returns `1`', () => {
           const opLength = EMBED_OP.getLength(false);
 
           assert.strictEqual(opLength, 1);
@@ -345,7 +345,7 @@ describe('@bayou/doc-common/BodyOp', () => {
       });
 
       describe('when `textOnly` is not set', () => {
-        it('should return 1', () => {
+        it('returns `1`', () => {
           const opLength = EMBED_OP.getLength();
 
           assert.strictEqual(opLength, 1);
