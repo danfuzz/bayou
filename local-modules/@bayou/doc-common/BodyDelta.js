@@ -191,8 +191,13 @@ export default class BodyDelta extends BaseDelta {
     // The following check _just_ catches these sorts of problems, providing a
     // reasonably apt error message, so as to avoid confusing any of the higher
     // layers.
+    //
+    // **TODO:** This rejects document composition results that fail the
+    // stricter test defined by `endsWithNewlineOrIsEmpty()`. See discussion in
+    // that method about including its tests in `_impl_isDocument()` which would
+    // remove the need for explicitly performing this test here.
 
-    if (wantDocument && !result.isDocument()) {
+    if (wantDocument && !(result.isDocument() && result.endsWithNewlineOrIsEmpty())) {
       // **TODO:** Remove this logging once we track down why we're seeing this
       // error.
       log.event.badComposeOrig(this, other, result);

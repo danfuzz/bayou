@@ -207,33 +207,37 @@ describe('@bayou/doc-common/BodyDelta', () => {
       });
     }
 
-    test('full replacement',
-      [BodyOp.op_text('111')],
+    test('full replacement (except for required end-of-delta newline)',
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_text('222'), BodyOp.op_delete(3)],
-      [BodyOp.op_text('222')]);
+      [BodyOp.op_text('222\n')]);
     test('insert at start',
-      [BodyOp.op_text('111')],
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_text('222')],
-      [BodyOp.op_text('222111')]);
+      [BodyOp.op_text('222111\n')]);
     test('append at end',
-      [BodyOp.op_text('111')],
+      [BodyOp.op_text('111\n')],
+      [BodyOp.op_retain(4), BodyOp.op_text('222\n')],
+      [BodyOp.op_text('111\n222\n')]);
+    test('append just before end',
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_retain(3), BodyOp.op_text('222')],
-      [BodyOp.op_text('111222')]);
+      [BodyOp.op_text('111222\n')]);
     test('surround',
-      [BodyOp.op_text('111')],
-      [BodyOp.op_text('222'), BodyOp.op_retain(3), BodyOp.op_text('333')],
-      [BodyOp.op_text('222111333')]);
+      [BodyOp.op_text('111\n')],
+      [BodyOp.op_text('222'), BodyOp.op_retain(4), BodyOp.op_text('333\n')],
+      [BodyOp.op_text('222111\n333\n')]);
     test('replace one middle bit',
-      [BodyOp.op_text('Drink more Slurm.')],
+      [BodyOp.op_text('Drink more Slurm.\n')],
       [BodyOp.op_retain(6), BodyOp.op_text('LESS'), BodyOp.op_delete(4)],
-      [BodyOp.op_text('Drink LESS Slurm.')]);
+      [BodyOp.op_text('Drink LESS Slurm.\n')]);
     test('replace two middle bits',
-      [BodyOp.op_text('[[hello]] [[goodbye]]')],
+      [BodyOp.op_text('[[hello]] [[goodbye]]\n')],
       [
         BodyOp.op_retain(2), BodyOp.op_text('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
         BodyOp.op_text('LATER'), BodyOp.op_delete(7)
       ],
-      [BodyOp.op_text('[[YO]] [[LATER]]')]);
+      [BodyOp.op_text('[[YO]] [[LATER]]\n')]);
   });
 
   describe('endsWithNewlineOrIsEmpty()', () => {
