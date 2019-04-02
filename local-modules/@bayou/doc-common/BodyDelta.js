@@ -77,6 +77,42 @@ export default class BodyDelta extends BaseDelta {
   }
 
   /**
+   * Indicates whether this instance is ends with a newline character as a text
+   * insertion, _or_ if it is a totally empty instance (no ops).
+   *
+   * **Note:** A document delta is supposed to end with a newline, but this
+   * has not been enforced before. As things stand, it is not possible to
+   * consider completely empty (no ops) instances as being non-document,
+   * because the value {@link #EMPTY} is set up by the superclass and is always
+   * necessarily a no-op instance, and that in turn becomes the basis for
+   * {@link BodySnapshot#EMPTY}. However, so long as there is at least one op,
+   * it _may_ be reasonable to treat an instance of this class as non-document
+   * if the last op isn't a text insertion that ends with a newline. Rather than
+   * just implement that check in {@link #_impl_isDocument} and return `false`
+   * if it fails, we provide this method for use at call sites where a document
+   * is expected, so that those sites can log the would-be failure. Based on log
+   * analysis, we can get a sense of the scope of the problem, and based on that
+   * data decide whether or not to tighten the actual constraint in
+   * {@link #_impl_isDocument}.
+   *
+   * @returns {boolean} `true` if this instance meets the defined constraints,
+   *   or `false` if not.
+   */
+  endsWithNewlineOrIsEmpty() {
+    const ops = this.ops;
+
+    if (ops.length === 0) {
+      return true;
+    }
+
+    const lastOp = ops[ops.length - 1];
+    const props  = lastOp.props;
+
+    return (props.opName === BodyOp.CODE_text)
+      && props.text.endsWith('\n');
+  }
+
+  /**
    * Produces a Quill `Delta` (per se) with the same contents as this instance.
    *
    * @returns {Delta} A Quill `Delta` with the same contents as `this`.
@@ -155,8 +191,13 @@ export default class BodyDelta extends BaseDelta {
     // The following check _just_ catches these sorts of problems, providing a
     // reasonably apt error message, so as to avoid confusing any of the higher
     // layers.
+    //
+    // **TODO:** This rejects document composition results that fail the
+    // stricter test defined by `endsWithNewlineOrIsEmpty()`. See discussion in
+    // that method about including its tests in `_impl_isDocument()` which would
+    // remove the need for explicitly performing this test here.
 
-    if (wantDocument && !result.isDocument()) {
+    if (wantDocument && !(result.isDocument() && result.endsWithNewlineOrIsEmpty())) {
       // **TODO:** Remove this logging once we track down why we're seeing this
       // error.
       log.event.badComposeOrig(this, other, result);
@@ -175,6 +216,9 @@ export default class BodyDelta extends BaseDelta {
    *   `false` if not.
    */
   _impl_isDocument() {
+    // **TODO:** See note in `endsWithNewlineOrIsEmpty()` about possible changes
+    // to this method.
+
     for (const op of this.ops) {
       if (!op.isInsert()) {
         return false;

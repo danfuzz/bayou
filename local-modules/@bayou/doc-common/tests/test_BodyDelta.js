@@ -15,29 +15,29 @@ describe('@bayou/doc-common/BodyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = BodyDelta.EMPTY;
 
-    it('should be an instance of `BodyDelta`', () => {
+    it('is an instance of `BodyDelta`', () => {
       assert.instanceOf(EMPTY, BodyDelta);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(EMPTY);
     });
 
-    it('should have an empty `ops`', () => {
+    it('has an empty `ops`', () => {
       assert.strictEqual(EMPTY.ops.length, 0);
     });
 
-    it('should have a frozen `ops`', () => {
+    it('has a frozen `ops`', () => {
       assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `.isEmpty()`', () => {
+    it('returns `true` for `.isEmpty()`', () => {
       assert.isTrue(EMPTY.isEmpty());
     });
   });
 
   describe('fromQuillForm()', () => {
-    it('should return an instance with appropriately-converted `ops`', () => {
+    it('returns an instance with appropriately-converted `ops`', () => {
       const ops        = [{ insert: 'foo' }, { retain: 10 }, { insert: 'bar', attributes: { bold: true } }];
       const quillDelta = new Text.Delta(ops);
       const result     = BodyDelta.fromQuillForm(quillDelta);
@@ -49,7 +49,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ]);
     });
 
-    it('should reject non-quill-delta arguments', () => {
+    it('rejects non-quill-delta arguments', () => {
       function test(v) {
         assert.throws(() => { BodyDelta.fromQuillForm(v); });
       }
@@ -63,7 +63,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       test(BodyDelta.EMPTY);
     });
 
-    it('should reject arguments that are instances of the wrong `Delta` class', () => {
+    it('rejects arguments that are instances of the wrong `Delta` class', () => {
       // This test confirms that the code properly detects when there's more
       // than one class named `Delta` in the system and the one _not_ used by
       // this module is passed in here. Historically speaking, the check has
@@ -103,7 +103,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should succeed for: ${inspect(v)}`, () => {
+        it(`succeeds for: ${inspect(v)}`, () => {
           new BodyDelta(v);
         });
       }
@@ -126,7 +126,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should fail for: ${inspect(v)}`, () => {
+        it(`fails for: ${inspect(v)}`, () => {
           assert.throws(() => new BodyDelta(v));
         });
       }
@@ -134,7 +134,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
   });
 
   describe('compose()', () => {
-    it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
+    it('returns an empty result from `EMPTY.compose(EMPTY)`', () => {
       const result1 = BodyDelta.EMPTY.compose(BodyDelta.EMPTY, false);
       assert.instanceOf(result1, BodyDelta);
       assert.deepEqual(result1.ops, []);
@@ -144,7 +144,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       assert.deepEqual(result2.ops, []);
     });
 
-    it('should reject calls when `other` is not an instance of the class', () => {
+    it('rejects calls when `other` is not an instance of the class', () => {
       const delta = BodyDelta.EMPTY;
       const other = 'blort';
       assert.throws(() => delta.compose(other, true));
@@ -152,25 +152,25 @@ describe('@bayou/doc-common/BodyDelta', () => {
   });
 
   describe('diff()', () => {
-    it('should return an empty result from `EMPTY.diff(EMPTY)`', () => {
+    it('returns an empty result from `EMPTY.diff(EMPTY)`', () => {
       const result = BodyDelta.EMPTY.diff(BodyDelta.EMPTY);
       assert.instanceOf(result, BodyDelta);
       assert.deepEqual(result.ops, []);
     });
 
-    it('should reject calls when `this` is not a document', () => {
+    it('rejects calls when `this` is not a document', () => {
       const delta = new BodyDelta([BodyOp.op_retain(10)]);
       const other = BodyDelta.EMPTY;
       assert.throws(() => delta.diff(other));
     });
 
-    it('should reject calls when `other` is not a document', () => {
+    it('rejects calls when `other` is not a document', () => {
       const delta = BodyDelta.EMPTY;
       const other = new BodyDelta([BodyOp.op_retain(10)]);
       assert.throws(() => delta.diff(other));
     });
 
-    it('should reject calls when `other` is not an instance of the class', () => {
+    it('rejects calls when `other` is not an instance of the class', () => {
       const delta = BodyDelta.EMPTY;
       const other = 'blort';
       assert.throws(() => delta.diff(other));
@@ -186,19 +186,19 @@ describe('@bayou/doc-common/BodyDelta', () => {
       newDoc  = new BodyDelta(newDoc);
 
       describe(label, () => {
-        it('should produce the expected composition', () => {
+        it('produces the expected composition', () => {
           const result = origDoc.compose(change, true);
           assert.instanceOf(result, BodyDelta);
           assert.deepEqual(result.ops, newDoc.ops);
         });
 
-        it('should produce the expected diff', () => {
+        it('produces the expected diff', () => {
           const result = origDoc.diff(newDoc);
           assert.instanceOf(result, BodyDelta);
           assert.deepEqual(result.ops, change.ops);
         });
 
-        it('should produce the new document when composing the orig document with the diff', () => {
+        it('produces the new document when composing the orig document with the diff', () => {
           const diff   = origDoc.diff(newDoc);
           const result = origDoc.compose(diff, true);
           assert.instanceOf(result, BodyDelta);
@@ -207,37 +207,99 @@ describe('@bayou/doc-common/BodyDelta', () => {
       });
     }
 
-    test('full replacement',
-      [BodyOp.op_text('111')],
+    test('full replacement (except for required end-of-delta newline)',
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_text('222'), BodyOp.op_delete(3)],
-      [BodyOp.op_text('222')]);
+      [BodyOp.op_text('222\n')]);
     test('insert at start',
-      [BodyOp.op_text('111')],
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_text('222')],
-      [BodyOp.op_text('222111')]);
+      [BodyOp.op_text('222111\n')]);
     test('append at end',
-      [BodyOp.op_text('111')],
+      [BodyOp.op_text('111\n')],
+      [BodyOp.op_retain(4), BodyOp.op_text('222\n')],
+      [BodyOp.op_text('111\n222\n')]);
+    test('append just before end',
+      [BodyOp.op_text('111\n')],
       [BodyOp.op_retain(3), BodyOp.op_text('222')],
-      [BodyOp.op_text('111222')]);
+      [BodyOp.op_text('111222\n')]);
     test('surround',
-      [BodyOp.op_text('111')],
-      [BodyOp.op_text('222'), BodyOp.op_retain(3), BodyOp.op_text('333')],
-      [BodyOp.op_text('222111333')]);
+      [BodyOp.op_text('111\n')],
+      [BodyOp.op_text('222'), BodyOp.op_retain(4), BodyOp.op_text('333\n')],
+      [BodyOp.op_text('222111\n333\n')]);
     test('replace one middle bit',
-      [BodyOp.op_text('Drink more Slurm.')],
+      [BodyOp.op_text('Drink more Slurm.\n')],
       [BodyOp.op_retain(6), BodyOp.op_text('LESS'), BodyOp.op_delete(4)],
-      [BodyOp.op_text('Drink LESS Slurm.')]);
+      [BodyOp.op_text('Drink LESS Slurm.\n')]);
     test('replace two middle bits',
-      [BodyOp.op_text('[[hello]] [[goodbye]]')],
+      [BodyOp.op_text('[[hello]] [[goodbye]]\n')],
       [
         BodyOp.op_retain(2), BodyOp.op_text('YO'), BodyOp.op_delete(5), BodyOp.op_retain(5),
         BodyOp.op_text('LATER'), BodyOp.op_delete(7)
       ],
-      [BodyOp.op_text('[[YO]] [[LATER]]')]);
+      [BodyOp.op_text('[[YO]] [[LATER]]\n')]);
+  });
+
+  describe('endsWithNewlineOrIsEmpty()', () => {
+    it('returns `true` for `EMPTY`', () => {
+      assert.isTrue(BodyDelta.EMPTY.endsWithNewlineOrIsEmpty());
+    });
+
+    it('returns `true` for instances that have a text final op with a newline at the end', () => {
+      function test(...ops) {
+        const delta = new BodyDelta(ops);
+        assert.isTrue(delta.endsWithNewlineOrIsEmpty());
+      }
+
+      test(BodyOp.op_text('\n'));
+      test(BodyOp.op_text('x\n'));
+      test(BodyOp.op_text('xyz\n'));
+      test(BodyOp.op_text('x\ny\nz\n'));
+
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('\n'));
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\n'));
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz\n'));
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz\n'));
+
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('\n'));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\n'));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz\n'));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz\n'));
+    });
+
+    it('returns `false` for instances that have a text final op without a newline at the end', () => {
+      function test(...ops) {
+        const delta = new BodyDelta(ops);
+        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
+      }
+
+      test(BodyOp.op_text('x'));
+      test(BodyOp.op_text('xyz'));
+      test(BodyOp.op_text('x\ny\nz'));
+
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x'));
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz'));
+      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz'));
+
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x'));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz'));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz'));
+    });
+
+    it('returns `false` for instances that do not have a text final op', () => {
+      function test(...ops) {
+        const delta = new BodyDelta(ops);
+        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
+      }
+
+      test(BodyOp.op_embed('florp', 914));
+      test(BodyOp.op_text('Boop!'), BodyOp.op_embed('florp', 914));
+      test(BodyOp.op_embed('florp', 914), BodyOp.op_embed('florp', 914));
+    });
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       function test(ops) {
         const delta = new BodyDelta(ops);
         assert.isTrue(delta.equals(delta));
@@ -248,7 +310,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       test([BodyOp.op_text('aaa'), BodyOp.op_text('bbb')]);
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(ops) {
         const d1 = new BodyDelta(ops);
         const d2 = new BodyDelta(ops);
@@ -261,7 +323,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       test([BodyOp.op_text('aaa'), BodyOp.op_text('bbb')]);
     });
 
-    it('should return `true` when equal ops are not also `===`', () => {
+    it('returns `true` when equal ops are not also `===`', () => {
       const ops1 = [BodyOp.op_text('aaa'), BodyOp.op_text('bbb')];
       const ops2 = [BodyOp.op_text('aaa'), BodyOp.op_text('bbb')];
       const d1 = new BodyDelta(ops1);
@@ -271,7 +333,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       assert.isTrue(d2.equals(d1));
     });
 
-    it('should return `false` when array lengths differ', () => {
+    it('returns `false` when array lengths differ', () => {
       const op1 = BodyOp.op_text('aaa');
       const op2 = BodyOp.op_text('bbb');
       const d1 = new BodyDelta([op1]);
@@ -281,7 +343,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       assert.isFalse(d2.equals(d1));
     });
 
-    it('should return `false` when corresponding ops differ', () => {
+    it('returns `false` when corresponding ops differ', () => {
       function test(ops1, ops2) {
         const d1 = new BodyDelta(ops1);
         const d2 = new BodyDelta(ops2);
@@ -306,7 +368,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       test([op1, op2, op3, op4, op5], [op1, op2, op3, op4, op1]);
     });
 
-    it('should return `false` when passed a non-instance or an instance of a different class', () => {
+    it('returns `false` when passed a non-instance or an instance of a different class', () => {
       const delta = new BodyDelta([]);
 
       assert.isFalse(delta.equals(undefined));
@@ -330,7 +392,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
+        it(`returns \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(new BodyDelta(v).isDocument());
         });
       }
@@ -347,7 +409,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${inspect(v)}`, () => {
+        it(`returns \`false\` for: ${inspect(v)}`, () => {
           assert.isFalse(new BodyDelta(v).isDocument());
         });
       }
@@ -362,7 +424,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`true\` for: ${inspect(v)}`, () => {
+        it(`returns \`true\` for: ${inspect(v)}`, () => {
           assert.isTrue(v.isEmpty());
         });
       }
@@ -376,7 +438,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
       ];
 
       for (const v of values) {
-        it(`should return \`false\` for: ${inspect(v)}`, () => {
+        it(`returns \`false\` for: ${inspect(v)}`, () => {
           const delta = new BodyDelta(v);
           assert.isFalse(delta.isEmpty());
         });
@@ -385,7 +447,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
   });
 
   describe('toQuillForm()', () => {
-    it('should produce `Delta` instances with appropriately-converted ops', () => {
+    it('produces `Delta` instances with appropriately-converted ops', () => {
       function test(ops) {
         const delta  = new BodyDelta(ops);
         const result = delta.toQuillForm();
@@ -415,7 +477,7 @@ describe('@bayou/doc-common/BodyDelta', () => {
   });
 
   describe('transform()', () => {
-    it('should return an empty result from `EMPTY.transform(EMPTY, *)`', () => {
+    it('returns an empty result from `EMPTY.transform(EMPTY, *)`', () => {
       const result1 = BodyDelta.EMPTY.transform(BodyDelta.EMPTY, false);
       assert.instanceOf(result1, BodyDelta);
       assert.deepEqual(result1.ops, []);
@@ -425,18 +487,18 @@ describe('@bayou/doc-common/BodyDelta', () => {
       assert.deepEqual(result2.ops, []);
     });
 
-    it('should reject calls when `other` is not an instance of the class', () => {
+    it('rejects calls when `other` is not an instance of the class', () => {
       const delta = BodyDelta.EMPTY;
       const other = 'blort';
       assert.throws(() => delta.transform(other, true));
     });
 
-    it('should reject calls when `thisIsFirst` is not a boolean', () => {
+    it('rejects calls when `thisIsFirst` is not a boolean', () => {
       const delta = BodyDelta.EMPTY;
       assert.throws(() => delta.transform(delta, 'blort'));
     });
 
-    it('should produce the expected transformations', () => {
+    it('produces the expected transformations', () => {
       function test(d1, d2, expectedTrue, expectedFalse = expectedTrue) {
         d1 = new BodyDelta(d1);
         d2 = new BodyDelta(d2);

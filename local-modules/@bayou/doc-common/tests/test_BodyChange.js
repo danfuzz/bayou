@@ -13,15 +13,15 @@ describe('@bayou/doc-common/BodyChange', () => {
   describe('.FIRST', () => {
     const first = BodyChange.FIRST;
 
-    it('should be an instance of `BodyChange`', () => {
+    it('is an instance of `BodyChange`', () => {
       assert.instanceOf(first, BodyChange);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(first);
     });
 
-    it('should have the expected properties', () => {
+    it('has the expected properties', () => {
       assert.deepEqual(first.delta, BodyDelta.EMPTY);
       assert.strictEqual(first.revNum, 0);
       assert.isNull(first.authorId);
@@ -30,12 +30,12 @@ describe('@bayou/doc-common/BodyChange', () => {
   });
 
   describe('constructor()', () => {
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const result = new BodyChange(0, BodyDelta.EMPTY);
       assert.isFrozen(result);
     });
 
-    it('should accept valid arguments, which should be reflected in the accessors', () => {
+    it('accepts valid arguments, which are reflected in the accessors', () => {
       function test(...args) {
         const [revNum, delta, timestamp = null, authorId = null] = args;
         const result = new BodyChange(...args);
@@ -53,14 +53,14 @@ describe('@bayou/doc-common/BodyChange', () => {
       test(242, BodyDelta.EMPTY,                      null, 'florp9019');
     });
 
-    it('should accept an array for the `delta`, which should get passed to the `BodyDelta` constructor', () => {
+    it('accepts an array for the `delta`, which get passed to the `BodyDelta` constructor', () => {
       const ops    = [BodyOp.op_retain(100)];
       const result = new BodyChange(0, ops);
 
       assert.deepEqual(result.delta.ops, ops);
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new BodyChange(...args));
       }
