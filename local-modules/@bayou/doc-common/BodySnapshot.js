@@ -35,7 +35,7 @@ export default class BodySnapshot extends BaseSnapshot {
     // discussion about making `BodyDelta.isDocument()` check for this, in which
     // case this test becomes moot and can be removed.
     if (!this.contents.endsWithNewlineOrIsEmpty()) {
-      const ops    = contents.ops;
+      const ops    = this.contents.ops;
       const length = ops.length;
       log.event.strictDocumentViolation(length, ops[length - 1]);
     }
