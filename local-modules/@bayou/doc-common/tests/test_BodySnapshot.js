@@ -13,9 +13,9 @@ import { BodyOp, BodySnapshot } from '@bayou/doc-common';
 // special characters, such as emojis.
 const splitter = new GraphemeSplitter();
 
-const PLAIN_TEXT = 'plain text';
+const PLAIN_TEXT = 'plain text\n';
 const PLAIN_TEXT_LENGTH = PLAIN_TEXT.length;
-const EMOJI_TEXT = '😀 smile!';
+const EMOJI_TEXT = '😀 smile!\n';
 const EMOJI_TEXT_LENGTH = splitter.countGraphemes(EMOJI_TEXT);
 
 const PLAIN_TEXT_OP = BodyOp.op_text(PLAIN_TEXT);
