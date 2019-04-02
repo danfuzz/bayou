@@ -3,10 +3,16 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseSnapshot } from '@bayou/ot-common';
+import { Logger } from '@bayou/see-all';
 import { Errors } from '@bayou/util-common';
 
 import BodyChange from './BodyChange';
 
+/**
+ * {Logger} Logger for this module. **Note:** Just used for some temporary
+ * debugging stuff.
+ */
+const log = new Logger('body-snapshot');
 
 /**
  * Snapshot of main document body contents.
@@ -23,6 +29,17 @@ export default class BodySnapshot extends BaseSnapshot {
    */
   constructor(revNum, contents) {
     super(revNum, contents);
+
+    // Check for the more strict document requirement, but only log a failure.
+    // **TODO:** See documentation of `endsWithNewlineOrIsEmpty()` for
+    // discussion about making `BodyDelta.isDocument()` check for this, in which
+    // case this test becomes moot and can be removed.
+    if (!this.contents.endsWithNewlineOrIsEmpty()) {
+      const ops    = contents.ops;
+      const length = ops.length;
+      log.event.strictDocumentViolation(length, ops[length - 1]);
+    }
+
     Object.freeze(this);
   }
 
