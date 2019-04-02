@@ -95,7 +95,7 @@ export default class BootInfo extends CommonBase {
    * the boot info file.
    */
   incrementShutdownCount() {
-    this._shutdownCount++;
+    this._info.shutdownCount++;
     this._writeFile();
   }
 
