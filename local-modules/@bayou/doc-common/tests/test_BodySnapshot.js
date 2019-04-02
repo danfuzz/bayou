@@ -29,31 +29,31 @@ const EMBED_TEXT_BODY_SNAPSHOT = new BodySnapshot(0, [EMBED_OP, EMOJI_TEXT_OP]);
 
 describe('@bayou/doc-common/BodySnapshot', () => {
   describe('.length', () => {
-    it('should return 0 for empty body', () => {
+    it('returns `0` for empty body', () => {
       const bodySnapshotLength = EMPTY_BODY_SNAPSHOT.length;
 
       assert.strictEqual(bodySnapshotLength, 0);
     });
 
-    it('should return length of plain text for plain text body', () => {
+    it('returns length of plain text for plain text body', () => {
       const bodySnapshotLength = PLAIN_TEXT_BODY_SNAPSHOT.length;
 
       assert.strictEqual(bodySnapshotLength, PLAIN_TEXT_LENGTH);
     });
 
-    it('should return length of special text for special text body', () => {
+    it('returns length of special text for special text body', () => {
       const bodySnapshotLength = EMOJI_BODY_SNAPSHOT.length;
 
       assert.strictEqual(bodySnapshotLength, EMOJI_TEXT_LENGTH);
     });
 
-    it('should return length of total text for mixed text body', () => {
+    it('returns length of total text for mixed text body', () => {
       const bodySnapshotLength = MIXED_BODY_SNAPSHOT.length;
 
       assert.strictEqual(bodySnapshotLength, PLAIN_TEXT_LENGTH + EMOJI_TEXT_LENGTH);
     });
 
-    it('should return 1 + text length for body with one embed and text', () => {
+    it('returns `1 + text.length` for body with one embed and text', () => {
       // **Note:** We can't test an embed-only snapshot, because those are (or
       // should soon be) invalid, because they can't possibly end with a
       // newline.
