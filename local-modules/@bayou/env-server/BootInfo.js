@@ -53,11 +53,6 @@ export default class BootInfo extends CommonBase {
     this._writeFile();
   }
 
-  /** {Int} Count of how many times this build has been booted. */
-  get bootCount() {
-    return this._info.bootCount;
-  }
-
   /** {string} The build ID. */
   get buildId() {
     return this._info.buildId;
