@@ -61,10 +61,15 @@ export default class BootInfo extends CommonBase {
    * as of this writing).
    */
   get info() {
+    // **Note:** The `- 1` drops _this_ process's boot from the count.
+    const { bootCount, cleanShutdownCount, errorShutdownCount } = this._info;
+    const crashCount = bootCount - 1 - cleanShutdownCount - errorShutdownCount;
+
     const extras = {
       time:       this._bootTimeString,
       timeMsec:   this._bootTime,
-      uptimeMsec: this.uptimeMsec
+      uptimeMsec: this.uptimeMsec,
+      crashCount
     };
 
     return Object.assign(extras, this._info);
