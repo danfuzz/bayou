@@ -98,14 +98,11 @@ export default class BootInfo extends CommonBase {
   recordError(error) {
     TString.check(error);
 
-    if (!error.endsWith('\n')) {
-      error += '\n';
-    }
-
     let   errors    = this._info.errors;
-    const separator = errors.endsWith('\n') ? '' : '\n';
+    const separator = ((errors === '') || errors.endsWith('\n')) ? '' : '\n';
+    const endNl     = error.endsWith('\n') ? '' : '\n';
 
-    errors = `${errors}${separator}${error}`;
+    errors = `${errors}${separator}${error}${endNl}`;
 
     // Truncate to the desired maximum length, by trimming off the initial
     // portion, in units of whole lines.
