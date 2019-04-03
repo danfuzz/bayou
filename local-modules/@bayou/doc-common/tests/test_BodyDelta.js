@@ -388,7 +388,8 @@ describe('@bayou/doc-common/BodyDelta', () => {
         [],
         [BodyOp.op_text('line 1')],
         [BodyOp.op_text('line 1'), BodyOp.op_text('\n')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')]
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_text('\n')],
       ];
 
       for (const v of values) {
@@ -405,7 +406,9 @@ describe('@bayou/doc-common/BodyDelta', () => {
         [BodyOp.op_retain(37, { bold: true })],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(9)],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(14), BodyOp.op_text('\n')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')]
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_retain(10), BodyOp.op_text('\n')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123)]
       ];
 
       for (const v of values) {
