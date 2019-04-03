@@ -53,11 +53,6 @@ export default class BootInfo extends CommonBase {
     this._writeFile();
   }
 
-  /** {string} The build ID. */
-  get buildId() {
-    return this._info.buildId;
-  }
-
   /**
    * {object} Ad-hoc object with the info from this instance.
    *
