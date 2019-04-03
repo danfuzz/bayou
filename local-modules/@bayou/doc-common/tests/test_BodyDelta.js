@@ -240,64 +240,6 @@ describe('@bayou/doc-common/BodyDelta', () => {
       [BodyOp.op_text('[[YO]] [[LATER]]\n')]);
   });
 
-  describe('endsWithNewlineOrIsEmpty()', () => {
-    it('returns `true` for `EMPTY`', () => {
-      assert.isTrue(BodyDelta.EMPTY.endsWithNewlineOrIsEmpty());
-    });
-
-    it('returns `true` for instances that have a text final op with a newline at the end', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isTrue(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_text('\n'));
-      test(BodyOp.op_text('x\n'));
-      test(BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_text('x\ny\nz\n'));
-
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz\n'));
-
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz\n'));
-    });
-
-    it('returns `false` for instances that have a text final op without a newline at the end', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_text('x'));
-      test(BodyOp.op_text('xyz'));
-      test(BodyOp.op_text('x\ny\nz'));
-
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz'));
-
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz'));
-    });
-
-    it('returns `false` for instances that do not have a text final op', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_embed('florp', 914));
-      test(BodyOp.op_text('Boop!'), BodyOp.op_embed('florp', 914));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_embed('florp', 914));
-    });
-  });
-
   describe('equals()', () => {
     it('returns `true` when passed itself', () => {
       function test(ops) {
@@ -386,9 +328,11 @@ describe('@bayou/doc-common/BodyDelta', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [BodyOp.op_text('line 1')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')]
+        [BodyOp.op_text('line 1\n')],
+        [BodyOp.op_text('line 1', { bold: true }), BodyOp.op_text('\n')],
+        [BodyOp.op_text('line 1', { bold: true }), BodyOp.op_text('\n'), BodyOp.op_text('line 2\n')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_text('\n')],
+        [BodyOp.op_text('woop'), BodyOp.op_embed('blort', 123), BodyOp.op_text('\n')]
       ];
 
       for (const v of values) {
@@ -400,12 +344,22 @@ describe('@bayou/doc-common/BodyDelta', () => {
 
     describe('`false` cases', () => {
       const values = [
+        [BodyOp.op_text('line 1')],      // No final newline.
+        [BodyOp.op_embed('blort', 123)], // No final newline. (Not further noted.)
         [BodyOp.op_retain(37)],
+        [BodyOp.op_retain(37), BodyOp.op_text('\n')],
         [BodyOp.op_delete(914)],
+        [BodyOp.op_delete(914), BodyOp.op_text('\n')],
         [BodyOp.op_retain(37, { bold: true })],
+        [BodyOp.op_retain(37, { bold: true }), BodyOp.op_text('\n')],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(9)],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(14), BodyOp.op_text('\n')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')]
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2\n')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_retain(10)],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_retain(10), BodyOp.op_text('\n')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123)],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123), BodyOp.op_text('\n')]
       ];
 
       for (const v of values) {
