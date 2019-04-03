@@ -230,8 +230,13 @@ export default class BodyDelta extends BaseDelta {
   _impl_isDocument() {
     // **TODO:** See note in `endsWithNewlineOrIsEmpty()` about possible changes
     // to this method.
+    const ops = this.ops;
 
-    for (const op of this.ops) {
+    if (ops.length === 0) {
+      return true;
+    }
+
+    for (const op of ops) {
       if (!op.isInsert()) {
         return false;
       }
