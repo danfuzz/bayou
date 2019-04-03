@@ -53,16 +53,6 @@ export default class BootInfo extends CommonBase {
     this._writeFile();
   }
 
-  /** {Int} Count of how many times this build has been booted. */
-  get bootCount() {
-    return this._info.bootCount;
-  }
-
-  /** {string} The build ID. */
-  get buildId() {
-    return this._info.buildId;
-  }
-
   /**
    * {object} Ad-hoc object with the info from this instance.
    *
@@ -71,18 +61,18 @@ export default class BootInfo extends CommonBase {
    * as of this writing).
    */
   get info() {
+    // **Note:** The `- 1` drops _this_ process's boot from the count.
+    const { bootCount, cleanShutdownCount, errorShutdownCount } = this._info;
+    const crashCount = bootCount - 1 - cleanShutdownCount - errorShutdownCount;
+
     const extras = {
       time:       this._bootTimeString,
       timeMsec:   this._bootTime,
-      uptimeMsec: this.uptimeMsec
+      uptimeMsec: this.uptimeMsec,
+      crashCount
     };
 
     return Object.assign(extras, this._info);
-  }
-
-  /** {Int} Count of how many times this build has been shut down cleanly. */
-  get shutdownCount() {
-    return this._info.shutdownCount;
   }
 
   /** {Int} The length of time this server has been running, in msec. */
@@ -95,7 +85,7 @@ export default class BootInfo extends CommonBase {
    * the boot info file.
    */
   incrementShutdownCount() {
-    this._info.shutdownCount++;
+    this._info.cleanShutdownCount++;
     this._writeFile();
   }
 
@@ -108,14 +98,11 @@ export default class BootInfo extends CommonBase {
   recordError(error) {
     TString.check(error);
 
-    if (!error.endsWith('\n')) {
-      error += '\n';
-    }
-
     let   errors    = this._info.errors;
-    const separator = errors.endsWith('\n') ? '' : '\n';
+    const separator = ((errors === '') || errors.endsWith('\n')) ? '' : '\n';
+    const endNl     = error.endsWith('\n') ? '' : '\n';
 
-    errors = `${errors}${separator}${error}`;
+    errors = `${errors}${separator}${error}${endNl}`;
 
     // Truncate to the desired maximum length, by trimming off the initial
     // portion, in units of whole lines.
@@ -133,6 +120,7 @@ export default class BootInfo extends CommonBase {
     }
 
     this._info.errors = errors;
+    this._info.errorShutdownCount++;
 
     this._writeFile();
   }
@@ -141,8 +129,8 @@ export default class BootInfo extends CommonBase {
    * Logs the `boot` metric.
    */
   _logBoot() {
-    const { bootCount, buildId, shutdownCount } = this;
-    log.metric.boot({ buildId, bootCount, shutdownCount });
+    const { bootCount, buildId, cleanShutdownCount, errorShutdownCount } = this._info;
+    log.metric.boot({ buildId, bootCount, cleanShutdownCount, errorShutdownCount });
   }
 
   /**
@@ -156,7 +144,13 @@ export default class BootInfo extends CommonBase {
    */
   _readFileWithDefaults() {
     const buildId = this._buildId;
-    const info    = { buildId, bootCount: 0, errors: '', shutdownCount: 0 };
+    const info    = {
+      buildId,
+      bootCount: 0,
+      cleanShutdownCount: 0,
+      errorShutdownCount: 0,
+      errors: ''
+    };
 
     try {
       const text = fs.readFileSync(this._bootInfoPath, { encoding: 'utf8' });
