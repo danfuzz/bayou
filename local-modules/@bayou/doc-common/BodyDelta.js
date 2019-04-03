@@ -23,6 +23,18 @@ const log = new Logger('body-delta');
  * and high-level semantics, the _types_ of the arguments and results are not
  * actually the same. The methods `toQuillForm()` and `fromQuillForm()` can be
  * used to convert back and forth as needed.
+ *
+ * As a document delta, instances of this class must either be totally empty (no
+ * ops) or consist only of text insertion and embed ops with the final op always
+ * a text insertion op with text payload that ends with a newline.
+ *
+ * **Note:** It is _arguably_ the case that a completely empty delta shouldn't
+ * be considered a document, because the basic constraint is "ends with
+ * newline." However, making this a requirement is problematic in the current
+ * implementation, specifically because there is a single `EMPTY` instance per
+ * concrete class which is set up by the base class to always be a no-ops
+ * instance, and this `EMPTY` instance is in turn used to make the contents for
+ * a no-ops snapshot.
  */
 export default class BodyDelta extends BaseDelta {
   /**
