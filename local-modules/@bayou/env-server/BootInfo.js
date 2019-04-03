@@ -123,6 +123,7 @@ export default class BootInfo extends CommonBase {
     }
 
     this._info.errors = errors;
+    this._info.errorShutdownCount++;
 
     this._writeFile();
   }
