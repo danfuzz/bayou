@@ -240,64 +240,6 @@ describe('@bayou/doc-common/BodyDelta', () => {
       [BodyOp.op_text('[[YO]] [[LATER]]\n')]);
   });
 
-  describe('endsWithNewlineOrIsEmpty()', () => {
-    it('returns `true` for `EMPTY`', () => {
-      assert.isTrue(BodyDelta.EMPTY.endsWithNewlineOrIsEmpty());
-    });
-
-    it('returns `true` for instances that have a text final op with a newline at the end', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isTrue(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_text('\n'));
-      test(BodyOp.op_text('x\n'));
-      test(BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_text('x\ny\nz\n'));
-
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz\n'));
-
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz\n'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz\n'));
-    });
-
-    it('returns `false` for instances that have a text final op without a newline at the end', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_text('x'));
-      test(BodyOp.op_text('xyz'));
-      test(BodyOp.op_text('x\ny\nz'));
-
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('xyz'));
-      test(BodyOp.op_text('Boop! '), BodyOp.op_text('x\ny\nz'));
-
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('xyz'));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_text('x\ny\nz'));
-    });
-
-    it('returns `false` for instances that do not have a text final op', () => {
-      function test(...ops) {
-        const delta = new BodyDelta(ops);
-        assert.isFalse(delta.endsWithNewlineOrIsEmpty());
-      }
-
-      test(BodyOp.op_embed('florp', 914));
-      test(BodyOp.op_text('Boop!'), BodyOp.op_embed('florp', 914));
-      test(BodyOp.op_embed('florp', 914), BodyOp.op_embed('florp', 914));
-    });
-  });
-
   describe('equals()', () => {
     it('returns `true` when passed itself', () => {
       function test(ops) {
