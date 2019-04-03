@@ -80,11 +80,6 @@ export default class BootInfo extends CommonBase {
     return Object.assign(extras, this._info);
   }
 
-  /** {Int} Count of how many times this build has been shut down cleanly. */
-  get shutdownCount() {
-    return this._info.shutdownCount;
-  }
-
   /** {Int} The length of time this server has been running, in msec. */
   get uptimeMsec() {
     return Date.now() - this._bootTime;
@@ -95,7 +90,7 @@ export default class BootInfo extends CommonBase {
    * the boot info file.
    */
   incrementShutdownCount() {
-    this._info.shutdownCount++;
+    this._info.cleanShutdownCount++;
     this._writeFile();
   }
 
@@ -141,8 +136,8 @@ export default class BootInfo extends CommonBase {
    * Logs the `boot` metric.
    */
   _logBoot() {
-    const { bootCount, buildId, shutdownCount } = this;
-    log.metric.boot({ buildId, bootCount, shutdownCount });
+    const { bootCount, buildId, cleanShutdownCount, errorShutdownCount } = this._info;
+    log.metric.boot({ buildId, bootCount, cleanShutdownCount, errorShutdownCount });
   }
 
   /**
@@ -156,7 +151,13 @@ export default class BootInfo extends CommonBase {
    */
   _readFileWithDefaults() {
     const buildId = this._buildId;
-    const info    = { buildId, bootCount: 0, errors: '', shutdownCount: 0 };
+    const info    = {
+      buildId,
+      bootCount: 0,
+      cleanShutdownCount: 0,
+      errorShutdownCount: 0,
+      errors: ''
+    };
 
     try {
       const text = fs.readFileSync(this._bootInfoPath, { encoding: 'utf8' });
