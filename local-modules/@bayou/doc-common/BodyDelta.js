@@ -222,18 +222,25 @@ export default class BodyDelta extends BaseDelta {
   }
 
   /**
-   * Main implementation of {@link #isDocument}.
+   * Main implementation of {@link #isDocument}. See the class header comment
+   * for details about the constraints that define document deltas for this
+   * class.
    *
    * @returns {boolean} `true` if this instance can be used as a document or
    *   `false` if not.
    */
   _impl_isDocument() {
-    // **TODO:** See note in `endsWithNewlineOrIsEmpty()` about possible changes
-    // to this method.
     const ops = this.ops;
 
     if (ops.length === 0) {
       return true;
+    }
+
+    const lastOp = ops[ops.length - 1];
+    const props  = lastOp.props;
+
+    if ((props.opName !== BodyOp.CODE_text) || !props.text.endsWith('\n')) {
+      return false;
     }
 
     for (const op of ops) {

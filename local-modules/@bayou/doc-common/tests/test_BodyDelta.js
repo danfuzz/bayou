@@ -386,10 +386,11 @@ describe('@bayou/doc-common/BodyDelta', () => {
     describe('`true` cases', () => {
       const values = [
         [],
-        [BodyOp.op_text('line 1')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n')],
-        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_text('line 2')],
+        [BodyOp.op_text('line 1\n')],
+        [BodyOp.op_text('line 1', { bold: true }), BodyOp.op_text('\n')],
+        [BodyOp.op_text('line 1', { bold: true }), BodyOp.op_text('\n'), BodyOp.op_text('line 2\n')],
         [BodyOp.op_embed('blort', 123), BodyOp.op_text('\n')],
+        [BodyOp.op_text('woop'), BodyOp.op_embed('blort', 123), BodyOp.op_text('\n')]
       ];
 
       for (const v of values) {
@@ -401,14 +402,22 @@ describe('@bayou/doc-common/BodyDelta', () => {
 
     describe('`false` cases', () => {
       const values = [
+        [BodyOp.op_text('line 1')],      // No final newline.
+        [BodyOp.op_embed('blort', 123)], // No final newline. (Not further noted.)
         [BodyOp.op_retain(37)],
+        [BodyOp.op_retain(37), BodyOp.op_text('\n')],
         [BodyOp.op_delete(914)],
+        [BodyOp.op_delete(914), BodyOp.op_text('\n')],
         [BodyOp.op_retain(37, { bold: true })],
+        [BodyOp.op_retain(37, { bold: true }), BodyOp.op_text('\n')],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(9)],
         [BodyOp.op_text('line 1'), BodyOp.op_retain(14), BodyOp.op_text('\n')],
         [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2')],
+        [BodyOp.op_text('line 1'), BodyOp.op_text('\n'), BodyOp.op_retain(23), BodyOp.op_text('line 2\n')],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_retain(10)],
         [BodyOp.op_embed('blort', 123), BodyOp.op_retain(10), BodyOp.op_text('\n')],
-        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123)]
+        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123)],
+        [BodyOp.op_embed('blort', 123), BodyOp.op_delete(123), BodyOp.op_text('\n')]
       ];
 
       for (const v of values) {
