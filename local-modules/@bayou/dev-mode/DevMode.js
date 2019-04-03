@@ -341,7 +341,7 @@ export default class DevMode extends Singleton {
     // Log a note after everything is ready.
     await clientReady;
     await serverReady;
-    log.info('Now monitoring for changes.');
+    log.event.running();
   }
 
   /**
