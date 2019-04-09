@@ -773,7 +773,6 @@ export default class BodyClient extends StateMachine {
       // situation arises, in case it is a harbinger of some other nascent new
       // problem.
       if (this._isQuillChangePending()) {
-        // **TODO:** Log in such a way that the server sees it.
         const thisSnap   = this._snapshot;
         const quillDelta = BodyDelta.fromQuillForm(this._quill.getContents());
         const quillSnap  = new BodySnapshot(thisSnap.revNum + 1, quillDelta);
