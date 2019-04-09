@@ -1193,22 +1193,23 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Updates `_snapshot` to be the given revision by applying the indicated
-   * change to the current revision, and tells the attached Quill instance to
-   * update itself accordingly.
+   * Updates {@link #_snapshot} to be the given revision by applying the
+   * indicated change to the current revision, and tells the attached `Quill`
+   * instance to update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
-   * is the same as what is represented in `_snapshot` _or_ if `quillDelta` is
-   * passed as an empty delta. That is, this is only valid when Quill's revision
-   * of the document doesn't need to be updated. If that isn't the case, then
-   * this method will throw an error.
+   * is the same as what is represented in {@link #_snapshot} _or_ if
+   * `quillDelta` is passed as an empty delta. That is, this is only valid when
+   * the `Quill` instance's revision of the document doesn't need to be updated.
+   * If that isn't the case, then this method will throw an error.
    *
-   * @param {BodyChange} change Change from the current `_snapshot` contents.
-   * @param {BodyDelta} [quillDelta = change.delta] Delta from Quill's
-   *   current state, which is expected to preserve any state that Quill has
-   *   that isn't yet represented in `_snapshot`. This must be used in cases
-   *   where Quill's state has progressed ahead of `_snapshot` due to local
-   *   activity.
+   * @param {BodyChange} change Change from the current {@link #_snapshot}
+   *   contents.
+   * @param {BodyDelta} [quillDelta = change.delta] Delta from the `Quill`
+   *   instance's current state, which is expected to preserve any state that
+   *   Quill has that isn't yet represented in {@link #_snapshot}. This must be
+   *   used in cases where the `Quill` instance state has progressed ahead of
+   *   {@link #_snapshot} due to local activity.
    */
   _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
