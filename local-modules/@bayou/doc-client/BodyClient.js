@@ -959,7 +959,7 @@ export default class BodyClient extends StateMachine {
     // the server's state.
     const correctedDelta = delta.compose(dCorrection, false);
 
-    if (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) === null) {
+    if (!this._isQuillChangePending()) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
@@ -1180,6 +1180,19 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Determines if there is at least one change to the document which the
+   * associated `Quill` instance has made and which this instance has not yet
+   * processed into its local snapshot.
+   *
+   * @returns {boolean} `true` if there is a pending (as-yet unprocessed) change
+   *   in the `Quill` instance, or `false` if not.
+   */
+  _isQuillChangePending() {
+    // This asks: Is there an unprocessed `textChange` event on the event chain?
+    return this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null;
+  }
+
+  /**
    * Updates `_snapshot` to be the given revision by applying the indicated
    * change to the current revision, and tells the attached Quill instance to
    * update itself accordingly.
@@ -1200,8 +1213,7 @@ export default class BodyClient extends StateMachine {
   _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
-    if (   (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null)
-        && needQuillUpdate) {
+    if (this._isQuillChangePending() && needQuillUpdate) {
       // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
       throw Errors.badUse('Cannot apply change due to revision skew.');
