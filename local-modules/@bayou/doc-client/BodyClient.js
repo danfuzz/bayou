@@ -754,12 +754,34 @@ export default class BodyClient extends StateMachine {
    *   document revision.
    */
   _handle_idle_gotChangeAfter(baseRevNum, result) {
-    // We only take action if the result's base (what the change is with regard
-    // to) is the current `_snapshot`. If that _isn't_ the case, then what we
-    // have here is a stale response of one sort or another. For example (and
-    // most likely), it might be the delayed result from an earlier iteration.
+    // We only take action if (a) the result's base (what the change is with
+    // regard to) is the current `_snapshot`, _and_ (b) if the `Quill` instance
+    // has no additional changes to its document state beyond what's in
+    // `_snapshot`. If (a) _isn't_ the case, then what we have here is a stale
+    // response of one sort or another. For example (and most likely), it might
+    // be the delayed result from an earlier iteration. If (b) isn't the case,
+    // then there will soon be a `gotQuillEvent` event to be handled by this
+    // instance, and after that gets done, it will once again be okay to
+    // integrate changes from the server.
     if (this._snapshot.revNum === baseRevNum) {
-      this._updateWithChange(result);
+      // **TODO:** For now, we make the check for `_isQuillChangePending()`
+      // separately (instead of making the outer if have an `&&`), so that we
+      // can explicitly do some logging around the is-pending case. This is
+      // because (historically speaking) while always arguably incorrect to fail
+      // to perform this check, it only recently started causing problems in
+      // practice. We want to log in order to understand more about when the
+      // situation arises, in case it is a harbinger of some other nascent new
+      // problem.
+      if (this._isQuillChangePending()) {
+        const thisSnap   = this._snapshot;
+        const quillDelta = BodyDelta.fromQuillForm(this._quill.getContents());
+        const quillSnap  = new BodySnapshot(thisSnap.revNum + 1, quillDelta);
+        const diff       = thisSnap.diff(quillSnap);
+        this.log.event.quillChangePending(diff);
+        this._sessionProxy.logEvent('quillChangePending', diff); // Log it on the server too.
+      } else {
+        this._updateWithChange(result);
+      }
     }
 
     // Fire off the next iteration of requesting server changes, after a short
@@ -959,7 +981,7 @@ export default class BodyClient extends StateMachine {
     // the server's state.
     const correctedDelta = delta.compose(dCorrection, false);
 
-    if (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) === null) {
+    if (!this._isQuillChangePending()) {
       // Thanfully, the local user hasn't made any other changes while we
       // were waiting for the server to get back to us, which means we can
       // cleanly apply the correction on top of Quill's current state.
@@ -1180,28 +1202,41 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
-   * Updates `_snapshot` to be the given revision by applying the indicated
-   * change to the current revision, and tells the attached Quill instance to
-   * update itself accordingly.
+   * Determines if there is at least one change to the document which the
+   * associated `Quill` instance has made and which this instance has not yet
+   * processed into its local snapshot.
+   *
+   * @returns {boolean} `true` if there is a pending (as-yet unprocessed) change
+   *   in the `Quill` instance, or `false` if not.
+   */
+  _isQuillChangePending() {
+    // This asks: Is there an unprocessed `textChange` event on the event chain?
+    return this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null;
+  }
+
+  /**
+   * Updates {@link #_snapshot} to be the given revision by applying the
+   * indicated change to the current revision, and tells the attached `Quill`
+   * instance to update itself accordingly.
    *
    * This is only valid to call when the revision of the document that Quill has
-   * is the same as what is represented in `_snapshot` _or_ if `quillDelta` is
-   * passed as an empty delta. That is, this is only valid when Quill's revision
-   * of the document doesn't need to be updated. If that isn't the case, then
-   * this method will throw an error.
+   * is the same as what is represented in {@link #_snapshot} _or_ if
+   * `quillDelta` is passed as an empty delta. That is, this is only valid when
+   * the `Quill` instance's revision of the document doesn't need to be updated.
+   * If that isn't the case, then this method will throw an error.
    *
-   * @param {BodyChange} change Change from the current `_snapshot` contents.
-   * @param {BodyDelta} [quillDelta = change.delta] Delta from Quill's
-   *   current state, which is expected to preserve any state that Quill has
-   *   that isn't yet represented in `_snapshot`. This must be used in cases
-   *   where Quill's state has progressed ahead of `_snapshot` due to local
-   *   activity.
+   * @param {BodyChange} change Change from the current {@link #_snapshot}
+   *   contents.
+   * @param {BodyDelta} [quillDelta = change.delta] Delta from the `Quill`
+   *   instance's current state, which is expected to preserve any state that
+   *   Quill has that isn't yet represented in {@link #_snapshot}. This must be
+   *   used in cases where the `Quill` instance state has progressed ahead of
+   *   {@link #_snapshot} due to local activity.
    */
   _updateWithChange(change, quillDelta = change.delta) {
     const needQuillUpdate = !quillDelta.isEmpty();
 
-    if (   (this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null)
-        && needQuillUpdate) {
+    if (this._isQuillChangePending() && needQuillUpdate) {
       // It is unsafe to apply the change as-is, because we know that Quill's
       // revision of the document has diverged.
       throw Errors.badUse('Cannot apply change due to revision skew.');

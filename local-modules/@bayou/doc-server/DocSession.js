@@ -47,6 +47,9 @@ export default class DocSession extends CommonBase {
 
     /** {PropertyControl} The underlying property (metadata) controller. */
     this._propertyControl = fileComplex.propertyControl;
+
+    /** {Logger} Logger to use to relay events coming from the client. */
+    this._clientLog = this._fileComplex.fileAccess.log.withAddedContext('client');
   }
 
   /**
@@ -333,5 +336,19 @@ export default class DocSession extends CommonBase {
    */
   getFileId() {
     return this._fileComplex.fileAccess.file.id;
+  }
+
+  /**
+   * Causes an event (which will come from the client) to be logged here on the
+   * server. This is useful for tactical debugging, moreso than intended for
+   * long-term use.
+   *
+   * **TODO:** Consider removing this.
+   *
+   * @param {string} name The event name to log.
+   * @param {...*} args Arbitrary arguments to log.
+   */
+  logEvent(name, ...args) {
+    this._clientLog.event[name](...args);
   }
 }
