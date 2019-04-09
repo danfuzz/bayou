@@ -777,7 +777,9 @@ export default class BodyClient extends StateMachine {
         const thisSnap   = this._snapshot;
         const quillDelta = BodyDelta.fromQuillForm(this._quill.getContents());
         const quillSnap  = new BodySnapshot(thisSnap.revNum + 1, quillDelta);
-        this.log.event.quillChangePending(thisSnap.diff(quillSnap));
+        const diff       = thisSnap.diff(quillSnap);
+        this.log.event.quillChangePending(diff);
+        this._sessionProxy.logEvent('quillChangePending', diff); // Log it on the server too.
       } else {
         this._updateWithChange(result);
       }
