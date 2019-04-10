@@ -13,13 +13,14 @@ import { Errors, Functor, InfoError } from '@bayou/util-common';
 import DocSession from './DocSession';
 
 /**
- * {Int} Minimum amount of time to wait (and continue to retry connections)
- * before deciding that an instance is in an "unrecoverable" error state.
+ * {Int} Minimum amount of time (in msec) to wait (and continue to retry
+ * connections) before deciding that an instance is in an "unrecoverable" error
+ * state.
  */
 const ERROR_STATE_MIN_TIME_MSEC = 45 * 1000; // 45 seconds.
 
 /**
- * {Int} Amount of time in msec over which errors are counted, in order to
+ * {Int} Amount of time (in msec) over which errors are counted, in order to
  * determine that an instance is in an "unrecoverable" error state.
  */
 const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
