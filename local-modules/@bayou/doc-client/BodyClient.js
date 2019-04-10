@@ -13,6 +13,12 @@ import { Errors, Functor, InfoError } from '@bayou/util-common';
 import DocSession from './DocSession';
 
 /**
+ * {Int} Minimum amount of time to wait (and continue to retry connections)
+ * before deciding that an instance is in an "unrecoverable" error state.
+ */
+const ERROR_STATE_MIN_TIME_MSEC = 45 * 1000; // 45 seconds.
+
+/**
  * {Int} Amount of time in msec over which errors are counted, in order to
  * determine that an instance is in an "unrecoverable" error state.
  */
@@ -1098,7 +1104,7 @@ export default class BodyClient extends StateMachine {
    * a new one for the current moment in time.
    */
   _addErrorStamp() {
-    const now = Date.now();
+    const now     = Date.now();
     const agedOut = now - ERROR_WINDOW_MSEC;
 
     this._errorStamps = this._errorStamps.filter(value => (value >= agedOut));
@@ -1190,15 +1196,26 @@ export default class BodyClient extends StateMachine {
    * @returns {boolean} `true` iff the instance is unrecoverably errored.
    */
   _isUnrecoverablyErrored() {
-    const errorCount      = this._errorStamps.length;
-    const errorsPerMinute = (errorCount / ERROR_WINDOW_MSEC) * 60 * 1000;
+    const stamps       = this._errorStamps;
+    const total        = stamps.length;
+    const perMinuteRaw = (total / ERROR_WINDOW_MSEC) * 60 * 1000;
+    const perMinute    = Math.round(perMinuteRaw * 100) / 100;
 
-    this.log.event.errorWindow({
-      total:     errorCount,
-      perMinute: Math.round(errorsPerMinute * 100) / 100
-    });
+    if (total === 0) {
+      // Shouldn't happen, but might as well just avoid weird math below in case
+      // it does.
+      return false;
+    }
 
-    return errorsPerMinute >= ERROR_MAX_PER_MINUTE;
+    const startTime = stamps[0];
+    const endTime   = stamps[total - 1];
+    const period    = endTime - startTime;
+    const periodSec = Math.floor(period / 1000);
+
+    this.log.event.errorWindow({ periodSec, total, perMinute });
+
+    return (perMinute >= ERROR_MAX_PER_MINUTE)
+      && (period >= ERROR_STATE_MIN_TIME_MSEC);
   }
 
   /**
