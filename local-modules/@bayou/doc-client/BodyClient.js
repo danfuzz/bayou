@@ -28,7 +28,7 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
  * {number} Error rate, expressed in errors per minute, above which constitutes
  * sufficient evidence that the instance is in an "unrecoverable" error state.
  */
-const ERROR_MAX_PER_MINUTE = 2.25;
+const ERROR_MAX_PER_MINUTE = 3.00;
 
 /**
  * {Int} How long to wait (in msec) after receiving a local change (to allow
