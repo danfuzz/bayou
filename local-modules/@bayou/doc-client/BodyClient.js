@@ -14,7 +14,7 @@ import DocSession from './DocSession';
 
 /**
  * {Int} Minimum amount of time (in msec) to wait (and continue to retry
- * connections) before deciding that an instance is in an "unrecoverable" error
+ * connecting) before deciding that an instance is in an "unrecoverable" error
  * state.
  */
 const ERROR_STATE_MIN_TIME_MSEC = 45 * 1000; // 45 seconds.
