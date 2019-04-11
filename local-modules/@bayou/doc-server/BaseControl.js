@@ -492,11 +492,15 @@ export default class BaseControl extends BaseDataManager {
    *   the asynchronous nature of the system, when passed as `null` the
    *   resulting revision might already have been superseded by the time it is
    *   returned to the caller.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot} Snapshot of the indicated revision. Always an
    *   instance of the concrete snapshot type appropriate for this instance.
    */
-  async getSnapshot(revNum = null) {
-    const currentRevNum = await this.currentRevNum();
+  async getSnapshot(revNum = null, timeoutMsec = null) {
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
 
     if (revNum === null) {
       this.log.info(`Getting most recent snapshot with revNum ${currentRevNum}`);
