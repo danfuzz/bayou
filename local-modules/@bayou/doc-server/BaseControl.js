@@ -1061,12 +1061,16 @@ export default class BaseControl extends BaseDataManager {
    * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
    *   there to be missing changes from the range. If `false`, the result is
    *   always an array of length `endExclusive - startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async _getChangeRange(startInclusive, endExclusive, allowMissing) {
+  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec) {
     TBoolean.check(allowMissing);
 
-    await this._checkRevNumRange(startInclusive, endExclusive);
+    await this._checkRevNumRange(startInclusive, endExclusive, timeoutMsec);
 
     if (startInclusive === endExclusive) {
       // Per docs, this is valid and has an empty result.
@@ -1080,7 +1084,7 @@ export default class BaseControl extends BaseDataManager {
     const clazz           = this.constructor;
     const result          = [];
     const { file, codec } = this.fileCodec;
-    const snapshot        = await file.getSnapshot();
+    const snapshot        = await file.getSnapshot(null, timeoutMsec);
     const prefix          = this.constructor.changePathPrefix;
     const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
 
