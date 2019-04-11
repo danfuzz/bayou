@@ -15,7 +15,7 @@ export default class MockControl extends DurableControl {
     this.revNum = 0;
   }
 
-  _impl_getSnapshot(revNum) {
+  _impl_getSnapshot(revNum, timeoutMsec_unused) {
     return new MockSnapshot(revNum, [['snap', revNum]]);
   }
 

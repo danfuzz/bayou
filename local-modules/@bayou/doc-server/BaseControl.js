@@ -214,7 +214,7 @@ export default class BaseControl extends BaseDataManager {
       FileOp.op_writePath(revisionPath, codec.encodeJsonBuffer(revNum))
     ];
 
-    const snapshot   = await file.getSnapshot();
+    const snapshot   = await file.getSnapshot(null, timeoutMsec);
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
     try {
@@ -268,17 +268,17 @@ export default class BaseControl extends BaseDataManager {
    * but has been kept `async` and takes an (unused) timeout in anticipation
    * of a future state where it will deal with data that it has to page in.
    *
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {Int} The instantaneously-current revision number.
    */
-  async currentRevNum(timeoutMsec_unused = null) {
+  async currentRevNum(timeoutMsec = null) {
     const { file, codec }   = this.fileCodec;
     const clazz             = this.constructor;
     const revNumStoragePath = clazz.revisionNumberPath;
-    const fileSnapshot      = await file.getSnapshot();
+    const fileSnapshot      = await file.getSnapshot(null, timeoutMsec);
 
     fileSnapshot.checkPathPresent(revNumStoragePath);
 
@@ -298,11 +298,15 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BodyChange} The requested change.
    */
-  async getChange(revNum) {
+  async getChange(revNum, timeoutMsec = null) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this._getChangeRange(revNum, revNum + 1, true);
+    const changes = await this._getChangeRange(revNum, revNum + 1, true, timeoutMsec);
 
     if (changes.length === 0) {
       throw Errors.revisionNotAvailable(revNum);
@@ -346,7 +350,7 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChangeAfter(baseRevNum, timeoutMsec = null) {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
-    let currentRevNum = await this.currentRevNum();
+    let currentRevNum = await this.currentRevNum(timeoutMsec);
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
     if (currentRevNum === baseRevNum) {
@@ -381,11 +385,15 @@ export default class BaseControl extends BaseDataManager {
    *   a document delta. When `true`, `baseDelta` must be passed as a document
    *   delta. In addition, _some_ subclasses operate differently when asked to
    *   produce a document vs. not.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
    *   with the deltas of revisions `startInclusive` through but not including
    *  `endExclusive`.
    */
-  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument) {
+  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument, timeoutMsec = null) {
     const clazz = this.constructor;
 
     clazz.deltaClass.check(baseDelta);
@@ -401,7 +409,7 @@ export default class BaseControl extends BaseDataManager {
         throw Errors.badValue(baseDelta, 'document delta');
       }
 
-      await this._getChangeRange(startInclusive, startInclusive, false);
+      await this._getChangeRange(startInclusive, startInclusive, false, timeoutMsec);
       return baseDelta;
     }
 
@@ -409,7 +417,7 @@ export default class BaseControl extends BaseDataManager {
     const MAX = MAX_CHANGE_READS_PER_ITERATION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end     = Math.min(i + MAX, endExclusive);
-      const changes = await this._getChangeRange(i, end, false);
+      const changes = await this._getChangeRange(i, end, false, timeoutMsec);
       const deltas  = changes.map(c => c.delta);
 
       result = result.composeAll(deltas, wantDocument);
@@ -484,25 +492,30 @@ export default class BaseControl extends BaseDataManager {
    *   the asynchronous nature of the system, when passed as `null` the
    *   resulting revision might already have been superseded by the time it is
    *   returned to the caller.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot} Snapshot of the indicated revision. Always an
    *   instance of the concrete snapshot type appropriate for this instance.
    */
-  async getSnapshot(revNum = null) {
-    const currentRevNum = await this.currentRevNum();
-
-    if (revNum === null) {
-      this.log.info(`Getting most recent snapshot with revNum ${currentRevNum}`);
-    }
+  async getSnapshot(revNum = null, timeoutMsec = null) {
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
 
     revNum = (revNum === null)
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
 
-    const result = await this._impl_getSnapshot(revNum);
+    this.log.event.gettingSnapshot(revNum);
+
+    const result = await this._impl_getSnapshot(revNum, timeoutMsec);
 
     if (result === null) {
+      this.log.event.snapshotNotAvailable(revNum);
       throw Errors.revisionNotAvailable(revNum);
     }
+
+    this.log.event.gotSnapshot(revNum);
 
     return this.constructor.snapshotClass.check(result);
   }
@@ -522,14 +535,14 @@ export default class BaseControl extends BaseDataManager {
    *   read.
    * @param {Int} endExclusive End change number (exclusive) of changes to read.
    *   Must be `>= startInclusive`.
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {array<Int>} Array of the revision numbers of existing changes, in
    *   order by revision number.
    */
-  async listChangeRange(startInclusive, endExclusive, timeoutMsec_unused = null) {
+  async listChangeRange(startInclusive, endExclusive, timeoutMsec = null) {
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
 
@@ -538,7 +551,7 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const snapshot = await this.fileCodec.file.getSnapshot();
+    const snapshot = await this.fileCodec.file.getSnapshot(null, timeoutMsec);
     const prefix   = this.constructor.changePathPrefix;
     const paths    = snapshot.getPathRange(prefix, startInclusive, endExclusive);
     const result   = [];
@@ -560,29 +573,29 @@ export default class BaseControl extends BaseDataManager {
    * but has been kept `async` and takes an (unused) timeout in anticipation
    * of a future state where it will deal with data that it has to page in.
    *
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
    *   was ever stored.
    */
-  async readStoredSnapshotOrNull(timeoutMsec_unused = null) {
+  async readStoredSnapshotOrNull(timeoutMsec = null) {
     const clazz                 = this.constructor;
     const storedSnapshotPath    = clazz.storedSnapshotPath;
     const { file, codec }       = this.fileCodec;
-    const fileSnapshot          = await file.getSnapshot();
+    const fileSnapshot          = await file.getSnapshot(null, timeoutMsec);
     const encodedStoredSnapshot = fileSnapshot.getOrNull(storedSnapshotPath);
 
     if (encodedStoredSnapshot === null) {
-      this.log.info('Failed to find stored snapshot.');
+      this.log.event.noStoredSnapshot();
 
       return null;
     }
 
     const storedSnapshot = codec.decodeJsonBuffer(encodedStoredSnapshot);
     clazz.snapshotClass.check(storedSnapshot);
-    this.log.info(`Read stored snapshot for revision: r${storedSnapshot.revNum}`);
+    this.log.event.gotStoredSnapshot(`r${storedSnapshot.revNum}`);
 
     return storedSnapshot;
   }
@@ -645,7 +658,7 @@ export default class BaseControl extends BaseDataManager {
     // Snapshot of the base revision. The `getSnapshot()` call effectively
     // validates `change.revNum` as a legit value for the current document
     // state.
-    const baseSnapshot = await this.getSnapshot(baseRevNum);
+    const baseSnapshot = await this.getSnapshot(baseRevNum, timeoutMsec);
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
@@ -745,7 +758,7 @@ export default class BaseControl extends BaseDataManager {
         timedOut();
       }
 
-      const currentRevNum = await this.currentRevNum();
+      const currentRevNum = await this.currentRevNum(timeoutTime - now);
       if (currentRevNum >= revNum) {
         // No more need to wait or, if this is the first iteration, no need to
         // wait at all.
@@ -807,13 +820,17 @@ export default class BaseControl extends BaseDataManager {
    * @abstract
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot|null} Snapshot of the indicated revision. Must
    *   either be an instance of the concrete snapshot type appropriate for this
    *   instance or `null`. `null` specifically indicates that `revNum` is a
    *   revision older than what this instance can provide.
    */
-  async _impl_getSnapshot(revNum) {
-    return this._mustOverride(revNum);
+  async _impl_getSnapshot(revNum, timeoutMsec = null) {
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**
@@ -839,6 +856,20 @@ export default class BaseControl extends BaseDataManager {
    */
   async _impl_rebase(change, baseSnapshot, expectedSnapshot, currentSnapshot) {
     return this._mustOverride(change, baseSnapshot, expectedSnapshot, currentSnapshot);
+  }
+
+  /**
+   * Subclass-specific change validation. Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BaseChange} change Change to apply.
+   * @param {BaseSnapshot} baseSnapshot The base snapshot the change is being
+   *   applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
+   */
+  _impl_validateChange(change, baseSnapshot) {
+    this._mustOverride(change, baseSnapshot);
   }
 
   /**
@@ -960,9 +991,7 @@ export default class BaseControl extends BaseDataManager {
 
     this.log.event.attemptUpdate(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
 
-    // **TODO:** Consider whether we should make this call have an explicit
-    // timeout. (It would require adding an argument to the method.)
-    const currentSnapshot = await this.getSnapshot();
+    const currentSnapshot = await this.getSnapshot(null, timeoutMsec);
 
     const changeToAppend = (baseSnapshot.revNum === currentSnapshot.revNum)
       ? change
@@ -985,7 +1014,7 @@ export default class BaseControl extends BaseDataManager {
         // the change as-is. No correction!
         return new changeClass(change.revNum, deltaClass.EMPTY);
       } else {
-        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
+        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum, timeoutMsec);
         const correction     = expectedSnapshot.diff(resultSnapshot);
 
         this.log.event.updateSucceeded(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
@@ -1002,6 +1031,30 @@ export default class BaseControl extends BaseDataManager {
     // #update}.
 
     return null;
+  }
+
+  /**
+   * Checks the validity of a (possibly empty) range of revision numbers, where
+   * both arguments must be syntactically correct revision numbers, where the
+   * second must be no less than the first, and where the second must correspond
+   * to a revision (change record) that exists in the document part or be no
+   * more than one revision number beyond the end.
+   *
+   * @param {Int} startInclusive First revision number (inclusive).
+   * @param {Int} endExclusive Last revision number (exclusive).
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @throws {Error} Thrown if the constraints as described above are violated.
+   */
+  async _checkRevNumRange(startInclusive, endExclusive, timeoutMsec = null) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
+
+    RevisionNumber.maxInc(endExclusive, currentRevNum + 1);
   }
 
   /**
@@ -1029,34 +1082,30 @@ export default class BaseControl extends BaseDataManager {
    * @param {boolean} allowMissing Whether (`true`) or not (`false`) to allow
    *   there to be missing changes from the range. If `false`, the result is
    *   always an array of length `endExclusive - startInclusive`.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async _getChangeRange(startInclusive, endExclusive, allowMissing) {
-    const clazz = this.constructor;
-
-    RevisionNumber.check(startInclusive);
-    RevisionNumber.min(endExclusive, startInclusive);
+  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec) {
     TBoolean.check(allowMissing);
 
-    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION) {
+    await this._checkRevNumRange(startInclusive, endExclusive, timeoutMsec);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    } else if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
       throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
-    // Per docs, reject a start (and implicitly an end) that would try to read
-    // a never-possibly-written change.
-    const revNum = await this.currentRevNum();
-    RevisionNumber.maxInc(startInclusive, revNum + 1);
-
-    if (startInclusive === endExclusive) {
-      // Per docs, this is valid and has an empty result.
-      return [];
-    }
-
+    const clazz           = this.constructor;
     const result          = [];
     const { file, codec } = this.fileCodec;
-    const snapshot        = await file.getSnapshot();
+    const snapshot        = await file.getSnapshot(null, timeoutMsec);
     const prefix          = this.constructor.changePathPrefix;
     const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
 
@@ -1163,21 +1212,7 @@ export default class BaseControl extends BaseDataManager {
 
     await this._appendChangeWithRetry(fileChange, timeoutMsec);
 
-    this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
-  }
-
-  /**
-   * Subclass-specific change validation. Subclasses must override this method.
-   *
-   * @abstract
-   * @param {BaseChange} change Change to apply.
-   * @param {BaseSnapshot} baseSnapshot The base snapshot the change is being
-   *   applied to.
-   * @throws {Error} Thrown if `change` is not valid as a change to
-   *   `baseSnapshot`.
-   */
-  _impl_validateChange(change, baseSnapshot) {
-    this._mustOverride(change, baseSnapshot);
+    this.log.event.wroteStoredSnapshot(`r${snapshot.revNum}`);
   }
 
   /**

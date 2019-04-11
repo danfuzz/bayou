@@ -41,11 +41,15 @@ export default class PropertyControl extends DurableControl {
    *
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {PropertySnapshot|null} Snapshot of the indicated revision, or
    *   `null` to indicate that the revision is not available.
    */
-  async _impl_getSnapshot(revNum) {
-    return this._snapshots.getSnapshot(revNum);
+  async _impl_getSnapshot(revNum, timeoutMsec = null) {
+    return this._snapshots.getSnapshot(revNum, timeoutMsec);
   }
 
   /**
