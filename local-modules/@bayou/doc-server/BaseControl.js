@@ -350,7 +350,7 @@ export default class BaseControl extends BaseDataManager {
    */
   async getChangeAfter(baseRevNum, timeoutMsec = null) {
     timeoutMsec = Timeouts.clamp(timeoutMsec);
-    let currentRevNum = await this.currentRevNum();
+    let currentRevNum = await this.currentRevNum(timeoutMsec);
     RevisionNumber.maxInc(baseRevNum, currentRevNum);
 
     if (currentRevNum === baseRevNum) {
@@ -753,7 +753,7 @@ export default class BaseControl extends BaseDataManager {
         timedOut();
       }
 
-      const currentRevNum = await this.currentRevNum();
+      const currentRevNum = await this.currentRevNum(timeoutTime - now);
       if (currentRevNum >= revNum) {
         // No more need to wait or, if this is the first iteration, no need to
         // wait at all.
