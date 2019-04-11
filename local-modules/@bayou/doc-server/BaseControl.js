@@ -268,17 +268,17 @@ export default class BaseControl extends BaseDataManager {
    * but has been kept `async` and takes an (unused) timeout in anticipation
    * of a future state where it will deal with data that it has to page in.
    *
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {Int} The instantaneously-current revision number.
    */
-  async currentRevNum(timeoutMsec_unused = null) {
+  async currentRevNum(timeoutMsec = null) {
     const { file, codec }   = this.fileCodec;
     const clazz             = this.constructor;
     const revNumStoragePath = clazz.revisionNumberPath;
-    const fileSnapshot      = await file.getSnapshot();
+    const fileSnapshot      = await file.getSnapshot(null, timeoutMsec);
 
     fileSnapshot.checkPathPresent(revNumStoragePath);
 
