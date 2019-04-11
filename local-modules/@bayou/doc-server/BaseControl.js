@@ -298,15 +298,15 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BodyChange} The requested change.
    */
-  async getChange(revNum, timeoutMsec_unused = null) {
+  async getChange(revNum, timeoutMsec = null) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
-    const changes = await this._getChangeRange(revNum, revNum + 1, true);
+    const changes = await this._getChangeRange(revNum, revNum + 1, true, timeoutMsec);
 
     if (changes.length === 0) {
       throw Errors.revisionNotAvailable(revNum);
@@ -385,15 +385,15 @@ export default class BaseControl extends BaseDataManager {
    *   a document delta. When `true`, `baseDelta` must be passed as a document
    *   delta. In addition, _some_ subclasses operate differently when asked to
    *   produce a document vs. not.
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
    *   with the deltas of revisions `startInclusive` through but not including
    *  `endExclusive`.
    */
-  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument, timeoutMsec_unused = null) {
+  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument, timeoutMsec = null) {
     const clazz = this.constructor;
 
     clazz.deltaClass.check(baseDelta);
@@ -409,7 +409,7 @@ export default class BaseControl extends BaseDataManager {
         throw Errors.badValue(baseDelta, 'document delta');
       }
 
-      await this._getChangeRange(startInclusive, startInclusive, false);
+      await this._getChangeRange(startInclusive, startInclusive, false, timeoutMsec);
       return baseDelta;
     }
 
@@ -417,7 +417,7 @@ export default class BaseControl extends BaseDataManager {
     const MAX = MAX_CHANGE_READS_PER_ITERATION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
       const end     = Math.min(i + MAX, endExclusive);
-      const changes = await this._getChangeRange(i, end, false);
+      const changes = await this._getChangeRange(i, end, false, timeoutMsec);
       const deltas  = changes.map(c => c.delta);
 
       result = result.composeAll(deltas, wantDocument);
