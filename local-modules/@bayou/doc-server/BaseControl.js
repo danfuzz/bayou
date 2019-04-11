@@ -298,9 +298,13 @@ export default class BaseControl extends BaseDataManager {
    * @param {Int} revNum The revision number of the change. The result is the
    *   change which produced that revision. E.g., `0` is a request for the first
    *   change (the change from the empty document).
+   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {BodyChange} The requested change.
    */
-  async getChange(revNum) {
+  async getChange(revNum, timeoutMsec_unused = null) {
     RevisionNumber.check(revNum); // So we know we can `+1` without weirdness.
     const changes = await this._getChangeRange(revNum, revNum + 1, true);
 
@@ -381,11 +385,15 @@ export default class BaseControl extends BaseDataManager {
    *   a document delta. When `true`, `baseDelta` must be passed as a document
    *   delta. In addition, _some_ subclasses operate differently when asked to
    *   produce a document vs. not.
+   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
+   *   allow in this call, in msec. This value will be silently clamped to the
+   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
+   *   maximum allowed value.
    * @returns {BaseDelta} The composed result consisting of `baseDelta` composed
    *   with the deltas of revisions `startInclusive` through but not including
    *  `endExclusive`.
    */
-  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument) {
+  async getComposedChanges(baseDelta, startInclusive, endExclusive, wantDocument, timeoutMsec_unused = null) {
     const clazz = this.constructor;
 
     clazz.deltaClass.check(baseDelta);
