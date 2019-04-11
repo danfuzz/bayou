@@ -1005,6 +1005,30 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Checks the validity of a (possibly empty) range of revision numbers, where
+   * both arguments must be syntactically correct revision numbers, where the
+   * second must be no less than the first, and where the second must correspond
+   * to a revision (change record) that exists in the document part or be no
+   * more than one revision number beyond the end.
+   *
+   * @param {Int} startInclusive First revision number (inclusive).
+   * @param {Int} endExclusive Last revision number (exclusive).
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
+   * @throws {Error} Thrown if the constraints as described above are violated.
+   */
+  async _checkRevNumRange(startInclusive, endExclusive, timeoutMsec = null) {
+    RevisionNumber.check(startInclusive);
+    RevisionNumber.min(endExclusive, startInclusive);
+
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
+
+    RevisionNumber.maxInc(endExclusive, currentRevNum + 1);
+  }
+
+  /**
    * Reads a sequential chunk of changes. It is an error to request a change
    * beyond the current revision; it is valid for either `startInclusive` or
    * `endExclusive` to be `currentRevNum() + 1` but no greater. If
