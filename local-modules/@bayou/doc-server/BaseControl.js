@@ -502,19 +502,20 @@ export default class BaseControl extends BaseDataManager {
   async getSnapshot(revNum = null, timeoutMsec = null) {
     const currentRevNum = await this.currentRevNum(timeoutMsec);
 
-    if (revNum === null) {
-      this.log.info(`Getting most recent snapshot with revNum ${currentRevNum}`);
-    }
-
     revNum = (revNum === null)
       ? currentRevNum
       : RevisionNumber.maxInc(revNum, currentRevNum);
 
+    this.log.event.gettingSnapshot(revNum);
+
     const result = await this._impl_getSnapshot(revNum);
 
     if (result === null) {
+      this.log.event.snapshotNotAvailable(revNum);
       throw Errors.revisionNotAvailable(revNum);
     }
+
+    this.log.event.gotSnapshot(revNum);
 
     return this.constructor.snapshotClass.check(result);
   }
@@ -587,14 +588,14 @@ export default class BaseControl extends BaseDataManager {
     const encodedStoredSnapshot = fileSnapshot.getOrNull(storedSnapshotPath);
 
     if (encodedStoredSnapshot === null) {
-      this.log.info('Failed to find stored snapshot.');
+      this.log.event.noStoredSnapshot();
 
       return null;
     }
 
     const storedSnapshot = codec.decodeJsonBuffer(encodedStoredSnapshot);
     clazz.snapshotClass.check(storedSnapshot);
-    this.log.info(`Read stored snapshot for revision: r${storedSnapshot.revNum}`);
+    this.log.event.gotStoredSnapshot(`r${storedSnapshot.revNum}`);
 
     return storedSnapshot;
   }
@@ -1209,7 +1210,7 @@ export default class BaseControl extends BaseDataManager {
 
     await this._appendChangeWithRetry(fileChange, timeoutMsec);
 
-    this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
+    this.log.event.wroteStoredSnapshot(`r${snapshot.revNum}`);
   }
 
   /**
