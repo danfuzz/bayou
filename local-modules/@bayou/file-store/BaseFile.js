@@ -198,7 +198,7 @@ export default class BaseFile extends CommonBase {
    * @returns {FileChange} The requested change.
    */
   async getChange(revNum, timeoutMsec) {
-    const currentRevNum = await this.currentRevNum();
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
 
     RevisionNumber.maxInc(revNum, currentRevNum);
 
@@ -230,7 +230,7 @@ export default class BaseFile extends CommonBase {
    * @returns {FileSnapshot} Snapshot of the indicated revision.
    */
   async getSnapshot(revNum = null, timeoutMsec = null) {
-    const currentRevNum = await this.currentRevNum();
+    const currentRevNum = await this.currentRevNum(timeoutMsec);
 
     revNum = (revNum === null)
       ? currentRevNum
