@@ -854,6 +854,20 @@ export default class BaseControl extends BaseDataManager {
   }
 
   /**
+   * Subclass-specific change validation. Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BaseChange} change Change to apply.
+   * @param {BaseSnapshot} baseSnapshot The base snapshot the change is being
+   *   applied to.
+   * @throws {Error} Thrown if `change` is not valid as a change to
+   *   `baseSnapshot`.
+   */
+  _impl_validateChange(change, baseSnapshot) {
+    this._mustOverride(change, baseSnapshot);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #validationStatus}. This works
    * for all concrete subclasses of this class. (It builds in knowledge of the
    * difference between durable and ephemeral parts, because it's easier to
@@ -1196,20 +1210,6 @@ export default class BaseControl extends BaseDataManager {
     await this._appendChangeWithRetry(fileChange, timeoutMsec);
 
     this.log.info('Wrote stored snapshot for revision:', snapshot.revNum);
-  }
-
-  /**
-   * Subclass-specific change validation. Subclasses must override this method.
-   *
-   * @abstract
-   * @param {BaseChange} change Change to apply.
-   * @param {BaseSnapshot} baseSnapshot The base snapshot the change is being
-   *   applied to.
-   * @throws {Error} Thrown if `change` is not valid as a change to
-   *   `baseSnapshot`.
-   */
-  _impl_validateChange(change, baseSnapshot) {
-    this._mustOverride(change, baseSnapshot);
   }
 
   /**
