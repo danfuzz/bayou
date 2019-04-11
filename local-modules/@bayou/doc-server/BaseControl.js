@@ -1056,28 +1056,20 @@ export default class BaseControl extends BaseDataManager {
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
   async _getChangeRange(startInclusive, endExclusive, allowMissing) {
-    const clazz = this.constructor;
-
-    RevisionNumber.check(startInclusive);
-    RevisionNumber.min(endExclusive, startInclusive);
     TBoolean.check(allowMissing);
 
-    if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION) {
+    await this._checkRevNumRange(startInclusive, endExclusive);
+
+    if (startInclusive === endExclusive) {
+      // Per docs, this is valid and has an empty result.
+      return [];
+    } else if ((endExclusive - startInclusive) > MAX_CHANGE_READS_PER_ITERATION) {
       // The calling code (in this class) should have made sure we weren't
       // violating this restriction.
       throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
-    // Per docs, reject a start (and implicitly an end) that would try to read
-    // a never-possibly-written change.
-    const revNum = await this.currentRevNum();
-    RevisionNumber.maxInc(startInclusive, revNum + 1);
-
-    if (startInclusive === endExclusive) {
-      // Per docs, this is valid and has an empty result.
-      return [];
-    }
-
+    const clazz           = this.constructor;
     const result          = [];
     const { file, codec } = this.fileCodec;
     const snapshot        = await file.getSnapshot();
