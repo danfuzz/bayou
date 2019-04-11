@@ -508,7 +508,7 @@ export default class BaseControl extends BaseDataManager {
 
     this.log.event.gettingSnapshot(revNum);
 
-    const result = await this._impl_getSnapshot(revNum);
+    const result = await this._impl_getSnapshot(revNum, timeoutMsec);
 
     if (result === null) {
       this.log.event.snapshotNotAvailable(revNum);
@@ -820,13 +820,17 @@ export default class BaseControl extends BaseDataManager {
    * @abstract
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot|null} Snapshot of the indicated revision. Must
    *   either be an instance of the concrete snapshot type appropriate for this
    *   instance or `null`. `null` specifically indicates that `revNum` is a
    *   revision older than what this instance can provide.
    */
-  async _impl_getSnapshot(revNum) {
-    return this._mustOverride(revNum);
+  async _impl_getSnapshot(revNum, timeoutMsec = null) {
+    return this._mustOverride(revNum, timeoutMsec);
   }
 
   /**
