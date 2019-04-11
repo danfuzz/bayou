@@ -535,14 +535,14 @@ export default class BaseControl extends BaseDataManager {
    *   read.
    * @param {Int} endExclusive End change number (exclusive) of changes to read.
    *   Must be `>= startInclusive`.
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {array<Int>} Array of the revision numbers of existing changes, in
    *   order by revision number.
    */
-  async listChangeRange(startInclusive, endExclusive, timeoutMsec_unused = null) {
+  async listChangeRange(startInclusive, endExclusive, timeoutMsec = null) {
     RevisionNumber.check(startInclusive);
     RevisionNumber.min(endExclusive, startInclusive);
 
@@ -551,7 +551,7 @@ export default class BaseControl extends BaseDataManager {
       return [];
     }
 
-    const snapshot = await this.fileCodec.file.getSnapshot();
+    const snapshot = await this.fileCodec.file.getSnapshot(null, timeoutMsec);
     const prefix   = this.constructor.changePathPrefix;
     const paths    = snapshot.getPathRange(prefix, startInclusive, endExclusive);
     const result   = [];
@@ -573,18 +573,18 @@ export default class BaseControl extends BaseDataManager {
    * but has been kept `async` and takes an (unused) timeout in anticipation
    * of a future state where it will deal with data that it has to page in.
    *
-   * @param {Int|null} [timeoutMsec_unused = null] Maximum amount of time to
-   *   allow in this call, in msec. This value will be silently clamped to the
-   *   allowable range as defined by {@link Timeouts}. `null` is treated as the
-   *   maximum allowed value.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot|null} The stored snapshot, or `null` if no snapshot
    *   was ever stored.
    */
-  async readStoredSnapshotOrNull(timeoutMsec_unused = null) {
+  async readStoredSnapshotOrNull(timeoutMsec = null) {
     const clazz                 = this.constructor;
     const storedSnapshotPath    = clazz.storedSnapshotPath;
     const { file, codec }       = this.fileCodec;
-    const fileSnapshot          = await file.getSnapshot();
+    const fileSnapshot          = await file.getSnapshot(null, timeoutMsec);
     const encodedStoredSnapshot = fileSnapshot.getOrNull(storedSnapshotPath);
 
     if (encodedStoredSnapshot === null) {
