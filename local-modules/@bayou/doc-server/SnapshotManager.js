@@ -64,9 +64,13 @@ export default class SnapshotManager extends CommonBase {
    *
    * @param {Int} revNum Which revision to get. Guaranteed to be a revision
    *   number for the instantaneously-current revision or earlier.
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range as defined by {@link Timeouts}. `null` is treated as the maximum
+   *   allowed value.
    * @returns {BaseSnapshot} Snapshot of the indicated revision.
    */
-  async getSnapshot(revNum) {
+  async getSnapshot(revNum, timeoutMsec) {
     if (this._snapshots.size === 0) {
       // The cache doesn't have anything in it yet.
       if (this._storedSnapshotRetrieved === null) {
@@ -77,7 +81,7 @@ export default class SnapshotManager extends CommonBase {
         // used to satisfy this call. At the same time (well, right after), also
         // set up an entry for revision 0 if in fact change 0 exists.
         this._storedSnapshotRetrieved = (async () => {
-          const storedSnapshot = await this._control.readStoredSnapshotOrNull();
+          const storedSnapshot = await this._control.readStoredSnapshotOrNull(timeoutMsec);
 
           if (storedSnapshot !== null) {
             this._snapshots.set(storedSnapshot.revNum, storedSnapshot);

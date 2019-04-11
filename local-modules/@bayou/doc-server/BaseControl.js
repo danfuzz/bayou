@@ -214,7 +214,7 @@ export default class BaseControl extends BaseDataManager {
       FileOp.op_writePath(revisionPath, codec.encodeJsonBuffer(revNum))
     ];
 
-    const snapshot   = await file.getSnapshot();
+    const snapshot   = await file.getSnapshot(null, timeoutMsec);
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
     try {
@@ -658,7 +658,7 @@ export default class BaseControl extends BaseDataManager {
     // Snapshot of the base revision. The `getSnapshot()` call effectively
     // validates `change.revNum` as a legit value for the current document
     // state.
-    const baseSnapshot = await this.getSnapshot(baseRevNum);
+    const baseSnapshot = await this.getSnapshot(baseRevNum, timeoutMsec);
 
     // Compose the implied expected result. This has the effect of validating
     // the contents of `delta`.
@@ -987,9 +987,7 @@ export default class BaseControl extends BaseDataManager {
 
     this.log.event.attemptUpdate(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
 
-    // **TODO:** Consider whether we should make this call have an explicit
-    // timeout. (It would require adding an argument to the method.)
-    const currentSnapshot = await this.getSnapshot();
+    const currentSnapshot = await this.getSnapshot(null, timeoutMsec);
 
     const changeToAppend = (baseSnapshot.revNum === currentSnapshot.revNum)
       ? change
@@ -1012,7 +1010,7 @@ export default class BaseControl extends BaseDataManager {
         // the change as-is. No correction!
         return new changeClass(change.revNum, deltaClass.EMPTY);
       } else {
-        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum);
+        const resultSnapshot = await this.getSnapshot(changeToAppend.revNum, timeoutMsec);
         const correction     = expectedSnapshot.diff(resultSnapshot);
 
         this.log.event.updateSucceeded(change.revNum, baseSnapshot.revNum, expectedSnapshot.revNum);
