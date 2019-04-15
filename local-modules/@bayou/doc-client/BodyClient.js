@@ -133,7 +133,13 @@ export default class BodyClient extends StateMachine {
     this._pollingDelayMsec = pollingDelayMsec;
 
     /**
-     * {boolean} Whether the instance supposed to be running right now. This
+     * {boolean} Whether the instance is aiming to be fully detached. See
+     * {@link #detached} and {@link #_handle_detached_start}.
+     */
+    this._permanentlyDetached = false;
+
+    /**
+     * {boolean} Whether the instance is supposed to be running right now. This
      * starts out `false`, becomes `true` in response to {@link #start}, and
      * becomes `false` in response to {@link #stop}.
      */
@@ -204,18 +210,27 @@ export default class BodyClient extends StateMachine {
    * `detached` state nor try to do any further server interaction.
    */
   async detach() {
+    this.log.event.permanentlyDetaching();
+
     // Issue a `stop` event, which should eventually land the instance in the
     // `detached` state.
     this.q_stop();
 
-    // **TODO:** Set things up so that we won't leave the `detached` state.
+    // Set things up so that we won't leave the `detached` state.
+    this._permanentlyDetached = true;
 
     // Wait until we actually land in the `detached` state.
     await this.when_detached();
 
-    // Guarantee that we won't try to fire up server communication again.
+    // Guarantee that we won't try to fire up server communication again. The
+    // setting of `_permanentlyDetached` above is the main preventantive in this
+    // regard. What's done here is just an extra layer of protection which will
+    // make bugs show up as very-noticeable failed method calls instead of
+    // silently and incorrectly succeeding in talking to a server.
     this._docSession   = null;
     this._sessionProxy = null;
+
+    this.log.event.permanentlyDetached();
   }
 
   /**
@@ -682,6 +697,12 @@ export default class BodyClient extends StateMachine {
    * This is the kickoff event.
    */
   async _handle_detached_start() {
+    if (this._permanentlyDetached) {
+      // Avoid restarting, because of an earlier call to `detach()`.
+      this.log.event.notStartingBecausePermanentlyDetached();
+      return;
+    }
+
     // **TODO:** This whole flow should probably be protected by a timeout.
 
     this._running = true;
