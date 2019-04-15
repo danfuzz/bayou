@@ -201,7 +201,14 @@ export default class BodyClient extends StateMachine {
    * `detached` state nor try to do any further server interaction.
    */
   async detach() {
-    throw Errors.wtf('TODO');
+    // Issue a `stop` event, which should eventually land the instance in the
+    // `detached` state.
+    this.q_stop();
+
+    // **TODO:** Set things up so that we won't leave the `detached` state.
+
+    // Wait until we actually land in the `detached` state.
+    await this.when_detached();
   }
 
   /**
