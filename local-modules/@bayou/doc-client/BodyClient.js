@@ -117,7 +117,10 @@ export default class BodyClient extends StateMachine {
     /** {Quill} Editor object. */
     this._quill = quill;
 
-    /** {DocSession} Server session control / manager. */
+    /**
+     * {DocSession|null} Server session control / manager, or `null` if this
+     * instance has been told to {@link #detach}.
+     */
     this._docSession = DocSession.check(docSession);
 
     /**
@@ -209,6 +212,10 @@ export default class BodyClient extends StateMachine {
 
     // Wait until we actually land in the `detached` state.
     await this.when_detached();
+
+    // Guarantee that we won't try to fire up server communication again.
+    this._docSession   = null;
+    this._sessionProxy = null;
   }
 
   /**
