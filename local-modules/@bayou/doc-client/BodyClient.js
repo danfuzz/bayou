@@ -194,6 +194,17 @@ export default class BodyClient extends StateMachine {
   }
 
   /**
+   * Detaches this instance. When this method (asynchronously) returns, the
+   * instance is guaranteed to be quiescent; specifically, it will not be in the
+   * middle of any server operations, and it will be in the `detached` state.
+   * Furthermore, this will guarantee that the instance will never leave the
+   * `detached` state nor try to do any further server interaction.
+   */
+  async detach() {
+    throw Errors.wtf('TODO');
+  }
+
+  /**
    * Gets this instance's instantaneously current view on whether editing should
    * be enabled.
    *
