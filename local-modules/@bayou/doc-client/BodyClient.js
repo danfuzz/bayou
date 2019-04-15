@@ -229,7 +229,9 @@ export default class BodyClient extends StateMachine {
 
   /**
    * Requests that this instance stop running. This method does nothing if the
-   * client is already stopped (or in the process of stopping).
+   * client is already stopped (or in the process of stopping). Once stopped,
+   * this instance is in the `detached` state, which is the same state a
+   * newly-constructed instance is in.
    */
   stop() {
     this.q_stop();
