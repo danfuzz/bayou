@@ -10,7 +10,7 @@ import DocSession from './DocSession';
 /**
  * Cache of active instances of {@link DocSession}.
  */
-export default class DocSessionCache extends BaseCache {
+export default class SessionCache extends BaseCache {
   /**
    * Constructs an instance.
    *

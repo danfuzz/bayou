@@ -8,9 +8,9 @@ import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
 import DocSession from './DocSession';
-import DocSessionCache from './DocSessionCache';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
+import SessionCache from './SessionCache';
 
 /**
  * {Int} Maximum amount of time (in msec) to allow for the creation of new
@@ -45,8 +45,8 @@ export default class FileComplex extends BaseComplexMember {
      */
     this._bootstrap = new FileBootstrap(this.fileAccess);
 
-    /** {DocSessionCache} Cache of session instances, mapped from caret IDs. */
-    this._sessions = new DocSessionCache(this.fileAccess.log);
+    /** {SessionCache} Cache of session instances, mapped from caret IDs. */
+    this._sessions = new SessionCache(this.fileAccess.log);
 
     Object.freeze(this);
   }
