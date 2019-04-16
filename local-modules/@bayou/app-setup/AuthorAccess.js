@@ -60,20 +60,17 @@ export default class AuthorAccess extends CommonBase {
    *   such pre-existing caret.
    */
   async findExistingSession(documentId, caretId) {
-    // We only check the document ID syntax here, because we can count on the
-    // call to `getFileComplex()` to do a full validity check as part of its
-    // work.
+    // Basic typechecks as a preflight before doing anything more serious.
     Storage.dataStore.checkDocumentIdSyntax(documentId);
-
     CaretId.check(caretId);
 
-    const canEdit = true; // **TODO:** Should be a permission check!
-
+    const authorId    = this._authorId;
+    const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
 
     let session;
     try {
-      session = await fileComplex.findExistingSession(this._authorId, caretId, canEdit);
+      session = await fileComplex.findExistingSession(authorId, caretId, canEdit);
     } catch (e) {
       if (Errors.is_badId(e)) {
         // Per method header doc, this isn't considered a throwable offense.
@@ -81,9 +78,8 @@ export default class AuthorAccess extends CommonBase {
       }
     }
 
-    const authorId = this._authorId;
 
-    log.event.foundSession({ authorId, documentId, caretId });
+    log.event.foundSession({ authorId, documentId, caretId, canEdit });
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
@@ -101,6 +97,9 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeNewSession(documentId) {
+    // Basic typecheck as a preflight before doing anything more serious.
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
+
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
