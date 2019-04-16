@@ -317,7 +317,8 @@ export default class DocSession extends CommonBase {
       authorId:   this.getAuthorId(),
       caretId:    this.getCaretId(),
       documentId: this.getDocumentId(),
-      fileId:     this.getFileId()
+      fileId:     this.getFileId(),
+      canEdit:    this.canEdit()
     };
 
     // Only include the file ID if it's not the same as the document ID.
