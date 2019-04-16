@@ -30,7 +30,7 @@ export default class UseHandler extends BaseProxyHandler {
    * if an attempt is made to get a property name that was never stored to.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property The property name.
+   * @param {string|Symbol} property The property name.
    * @param {object} receiver_unused The original receiver of the request.
    * @returns {*} The property, or `undefined` if there is no such property
    *   defined.

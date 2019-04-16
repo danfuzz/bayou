@@ -54,7 +54,7 @@ export default class MethodCacheProxyHandler extends BaseProxyHandler {
    * to generate method handlers that aren't yet cached.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property The property name.
+   * @param {string|Symbol} property The property name.
    * @param {object} receiver_unused The original receiver of the request.
    * @returns {*} The property, or `undefined` if there is no such property
    *   defined.
@@ -81,7 +81,7 @@ export default class MethodCacheProxyHandler extends BaseProxyHandler {
    * ultimately get called by client code as a method on a proxy instance.
    *
    * @abstract
-   * @param {string} name The method name.
+   * @param {string|Symbol} name The method name.
    * @returns {function} An appropriately-constructed handler.
    */
   _impl_methodFor(name) {

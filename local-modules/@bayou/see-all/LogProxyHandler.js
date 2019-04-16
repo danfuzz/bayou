@@ -33,7 +33,7 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
   /**
    * Makes a method handler for the given method name.
    *
-   * @param {string} name The method name.
+   * @param {string|Symbol} name The method name.
    * @returns {function} An appropriately-constructed handler.
    */
   _impl_methodFor(name) {
