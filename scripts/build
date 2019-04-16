@@ -537,7 +537,7 @@ function avoid-simultaneous-builds {
             return 1
         elif [[ ${alreadyPid} != ${lastPid} ]]; then
             echo ''
-            echo 'A different build started running in the mean time.'
+            echo 'A different build started running in the meantime.'
             echo "  pid:       ${alreadyPid}"
             echo ''
         elif (( (${waitSecs} % 20) == 0 )); then

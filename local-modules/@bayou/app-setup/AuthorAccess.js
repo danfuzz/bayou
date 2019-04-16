@@ -128,7 +128,7 @@ export default class AuthorAccess extends CommonBase {
 
     // Ensure (to the extent possible) that both salient IDs are valid the
     // moment before we ask for a permission check. (There is a chance that one
-    // or the other could become invalid in the mean time. In those cases, the
+    // or the other could become invalid in the meantime. In those cases, the
     // permission call will properly fail, but nonetheless we're better off
     // trying to get a probably-less-obscure error to happen up front in the
     // usual case.)

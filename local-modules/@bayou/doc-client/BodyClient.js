@@ -457,7 +457,7 @@ export default class BodyClient extends StateMachine {
       this._becomeUnrecoverable();
     } else {
       // Wait an appropriate amount of time and then try starting again (unless
-      // the instance got `stop()`ed in the mean time). The `start` event will
+      // the instance got `stop()`ed in the meantime). The `start` event will
       // be received in the `errorWait` state, and as such will be handled
       // differently than a clean start from scratch.
 
@@ -890,7 +890,7 @@ export default class BodyClient extends StateMachine {
         // It's a document modification. Go into state `collecting`, leaving the
         // event chain alone for now. After the prescribed amount of time, the
         // `collecting` handler will hoover up the event with any other edits
-        // that happened in the mean time.
+        // that happened in the meantime.
         (async () => {
           await Delay.resolve(PUSH_DELAY_MSEC);
           this.q_wantToUpdate(baseRevNum);
@@ -1048,7 +1048,7 @@ export default class BodyClient extends StateMachine {
 
     // The hard case, a/k/a "Several people are typing." The server got back
     // to us with a response that included changes we didn't know about, *and*
-    // in the mean time the local user has been busy making changes of their
+    // in the meantime the local user has been busy making changes of their
     // own. We need to "transform" (in OT terms) or "rebase" (in git terms) the
     // the local changes to be on top of the new base document as provided by
     // the server.
@@ -1422,7 +1422,7 @@ export default class BodyClient extends StateMachine {
   _waitThenStop() {
     // **Note:** We do this in an immediate-async block so as to make this
     // method return promptly. Its callers in fact want to be able to proceed
-    // with event processing in the mean time.
+    // with event processing in the meantime.
     (async () => {
       this.log.event.waitingBeforeStopping();
       await Delay.resolve(STOP_POLL_DELAY_MSEC);
