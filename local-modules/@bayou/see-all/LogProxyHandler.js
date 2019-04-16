@@ -37,6 +37,11 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
    * @returns {function} An appropriately-constructed handler.
    */
   _impl_methodFor(name) {
+    if (typeof name === 'symbol') {
+      const rawName = name.toString().replace(/^Symbol\(|\)$/g, '');
+      name = `symbol-${rawName}`;
+    }
+
     return (...args) => {
       this._logFunction(name, ...args);
     };
