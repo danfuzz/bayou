@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { MethodCacheProxyHandler } from '@bayou/util-common';
 
@@ -65,6 +66,14 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
       const prom = new Promise(() => { /*empty*/ });
       assert.isUndefined(th.get(prom, 'then'));
       assert.isUndefined(th.get(prom, 'catch'));
+    });
+
+    it('returns the expected special-case `inspect.custom` implementation', () => {
+      const handler    = new MethodCacheProxyHandler();
+      const proxy      = new Proxy({}, handler);
+      const customFunc = proxy[inspect.custom];
+
+      assert.strictEqual(customFunc(), '[object Proxy]');
     });
 
     it('should return a function gotten from a call to the `_impl`', () => {

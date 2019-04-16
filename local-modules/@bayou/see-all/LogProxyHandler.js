@@ -39,16 +39,7 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
    * @returns {function} An appropriately-constructed handler.
    */
   _impl_methodFor(name) {
-    if (name === inspect.custom) {
-      // Very special case: We're being asked for the method for the standard
-      // "custom inspector" function. Return a straightforward implementation.
-      // This makes it possible to call `util.inspect` on a proxy made from an
-      // instance of this class and get a reasonably useful result (instead of
-      // calling through to the `_logFunction` and logging something
-      // inscrutable), which is a case that _has_ arisen in practice (while
-      // debugging).
-      return () => '[object LogProxy]';
-    } else if (typeof name === 'symbol') {
+    if (typeof name === 'symbol') {
       // Make a valid label out of the symbol's name.
       const rawName = name.toString().replace(/^Symbol\(|\)$/g, '');
       name = `symbol-${rawName}`;
