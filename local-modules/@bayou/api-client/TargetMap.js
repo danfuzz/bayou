@@ -51,7 +51,7 @@ export default class TargetMap extends CommonBase {
   /**
    * Creates and binds a proxy for the target with the given ID. Returns the
    * so-created proxy. It is an error to try to add the same `idOrToken` more
-   * than once (except if {@link #clear} is called in the mean time).
+   * than once (except if {@link #clear} is called in the meantime).
    *
    * **Note:** This class doesn't care (or notice) if multiple `BearerToken`s
    * with the same _token_ ID get added, nor if a `BearerToken` gets added whose

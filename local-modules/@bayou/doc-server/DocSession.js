@@ -5,7 +5,8 @@
 import { Storage } from '@bayou/config-server';
 import { BodyChange, CaretId, PropertyChange } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
-import { CommonBase } from '@bayou/util-common';
+import { TBoolean } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
 
@@ -26,8 +27,11 @@ export default class DocSession extends CommonBase {
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
+   * @param {boolean} canEdit Whether (`true`) or not (`false`) the instance is
+   *   to allow editing to happen through it. That is, `false` indicates a
+   *   view-only session.
    */
-  constructor(fileComplex, authorId, caretId) {
+  constructor(fileComplex, authorId, caretId, canEdit) {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
@@ -38,6 +42,14 @@ export default class DocSession extends CommonBase {
 
     /** {string} Caret ID. */
     this._caretId = CaretId.check(caretId);
+
+    /** {boolean} Whether or not this instance allows edits. */
+    this._canEdit = TBoolean.check(canEdit);
+
+    // **TODO:** Remove this restriction!
+    if (!canEdit) {
+      throw Errors.wtf('View-only sessions not yet supported!');
+    }
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
@@ -127,7 +139,7 @@ export default class DocSession extends CommonBase {
    * in which case the client will likely want to use `caret_getSnapshot()` to
    * get back in synch.
    *
-   * **Note:** Caret information and the main document have _separate_ revision
+   * **Note:** Caret information and the document body have _separate_ revision
    * numbers. `CaretSnapshot` instances have information about both revision
    * numbers.
    *
@@ -280,6 +292,20 @@ export default class DocSession extends CommonBase {
   }
 
   /**
+   * Indicates whether (`true`) or not (`false`) this instance allows editing to
+   * be performed through it.
+   *
+   * **Note:** This is a method and not just a property, specifically so that
+   * clients (via the API) can make this determination.
+   *
+   * @returns {boolean} `true` if this instance allows editing, or `false` if it
+   *   is view-only.
+   */
+  canEdit() {
+    return this._canEdit;
+  }
+
+  /**
    * Returns a bit of identifying info about this instance, for the purposes of
    * logging. Specifically, the client will call this method and log the result
    * during session initiation.
@@ -291,7 +317,8 @@ export default class DocSession extends CommonBase {
       authorId:   this.getAuthorId(),
       caretId:    this.getCaretId(),
       documentId: this.getDocumentId(),
-      fileId:     this.getFileId()
+      fileId:     this.getFileId(),
+      canEdit:    this.canEdit()
     };
 
     // Only include the file ID if it's not the same as the document ID.

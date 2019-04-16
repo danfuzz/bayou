@@ -60,18 +60,17 @@ export default class AuthorAccess extends CommonBase {
    *   such pre-existing caret.
    */
   async findExistingSession(documentId, caretId) {
-    // We only check the document ID syntax here, because we can count on the
-    // call to `getFileComplex()` to do a full validity check as part of its
-    // work.
+    // Basic typechecks as a preflight before doing anything more serious.
     Storage.dataStore.checkDocumentIdSyntax(documentId);
-
     CaretId.check(caretId);
 
+    const authorId    = this._authorId;
+    const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
 
     let session;
     try {
-      session = await fileComplex.findExistingSession(this._authorId, caretId);
+      session = await fileComplex.findExistingSession(authorId, caretId, canEdit);
     } catch (e) {
       if (Errors.is_badId(e)) {
         // Per method header doc, this isn't considered a throwable offense.
@@ -79,9 +78,8 @@ export default class AuthorAccess extends CommonBase {
       }
     }
 
-    const authorId = this._authorId;
 
-    log.event.foundSession({ authorId, documentId, caretId });
+    log.event.foundSession({ authorId, documentId, caretId, canEdit });
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
@@ -99,11 +97,38 @@ export default class AuthorAccess extends CommonBase {
    *   newly-created session.
    */
   async makeNewSession(documentId) {
+    // Basic typecheck as a preflight before doing anything more serious.
+    Storage.dataStore.checkDocumentIdSyntax(documentId);
+
+    const authorId    = this._authorId;
+    const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
+    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
+    const session     = await fileComplex.makeNewSession(authorId, canEdit);
+    const caretId     = session.getCaretId();
+
+    log.event.madeSession({ authorId, documentId, caretId, canEdit });
+
+    // The `ProxiedObject` wrapper tells the API to return this to the far side
+    // of the connection as a reference, instead of by encoding its contents.
+    return new ProxiedObject(session);
+  }
+
+  /**
+   * Helper for {@link #findExistingSession} and {@link #makeNewSession}, which
+   * performs full validity checks on the IDs, does a permission check, and, if
+   * all is well, returns the permissions in the usual form.
+   *
+   * @param {string} documentId ID of the document which the session in question
+   *   is to access.
+   * @returns {object} Ad-hoc permissions object, in the same form as
+   *   {@link DataStore#getPermissions}.
+   */
+  async _checkIdsAndGetPermissions(documentId) {
     const authorId = this._authorId;
 
     // Ensure (to the extent possible) that both salient IDs are valid the
     // moment before we ask for a permission check. (There is a chance that one
-    // or the other could become invalid in the mean time. In those cases, the
+    // or the other could become invalid in the meantime. In those cases, the
     // permission call will properly fail, but nonetheless we're better off
     // trying to get a probably-less-obscure error to happen up front in the
     // usual case.)
@@ -112,28 +137,15 @@ export default class AuthorAccess extends CommonBase {
       Storage.dataStore.checkExistingDocumentId(documentId)
     ]);
 
-    const { canEdit, canView } = await Storage.dataStore.getPermissions(authorId, documentId);
+    const result = await Storage.dataStore.getPermissions(authorId, documentId);
 
-    if (!(canEdit || canView)) {
+    if (!(result.canEdit || result.canView)) {
       // Though technically you could say that the file is "found," we report it
       // as a `fileNotFound` to avoid leaking the fact of the file's existence
       // to a user who shouldn't even be able to figure that out.
       throw Errors.fileNotFound(documentId);
     }
 
-    if (!canEdit) {
-      // **TODO:** Support view-only session creation.
-      throw Errors.wtf('View-only sessions not yet supported.');
-    }
-
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const session     = await fileComplex.makeNewSession(authorId);
-    const caretId     = session.getCaretId();
-
-    log.event.madeSession({ authorId, documentId, caretId });
-
-    // The `ProxiedObject` wrapper tells the API to return this to the far side
-    // of the connection as a reference, instead of by encoding its contents.
-    return new ProxiedObject(session);
+    return result;
   }
 }
