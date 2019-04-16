@@ -255,12 +255,15 @@ describe('@bayou/util-core/CoreTypecheck', () => {
       test('A');
       test('_');
       test('-');
+      test('.');
       test('blort');
       test('florp_like');
       test('florp-like');
+      test('florp.like');
       test('x9');
       test('_0123456789_');
       test('-0123456789-');
+      test('.0123456789.');
       test('abcdefghijklmnopqrstuvwxyz');
       test('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     });

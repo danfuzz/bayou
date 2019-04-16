@@ -20,7 +20,7 @@ export default class CoreTypecheck extends UtilityClass {
    */
   static checkIdentifier(value) {
     try {
-      return CoreTypecheck.checkString(value, /^[a-zA-Z_][a-zA-Z_0-9]*$/);
+      return CoreTypecheck.checkString(value, /^[_a-zA-Z][_a-zA-Z0-9]*$/);
     } catch (e) {
       // More accurate error.
       throw Errors.badValue(value, String, 'identifier syntax');
@@ -72,14 +72,14 @@ export default class CoreTypecheck extends UtilityClass {
   /**
    * Checks that a value is of type `string` and has the usual form of a
    * "label-like thing" in programming. This is the same as an identifier,
-   * except that dashes are allowed throughout.
+   * except that dashes and periods are allowed throughout.
    *
    * @param {*} value Value to check.
    * @returns {string} `value`.
    */
   static checkLabel(value) {
     try {
-      return CoreTypecheck.checkString(value, /^[-a-zA-Z_][-a-zA-Z_0-9]*$/);
+      return CoreTypecheck.checkString(value, /^[-._a-zA-Z][-._a-zA-Z0-9]*$/);
     } catch (e) {
       // More accurate error.
       throw Errors.badValue(value, String, 'label syntax');
