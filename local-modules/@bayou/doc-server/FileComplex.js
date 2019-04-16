@@ -7,7 +7,7 @@ import { TBoolean, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
-import DocSession from './DocSession';
+import EditSession from './EditSession';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
 import SessionCache from './SessionCache';
@@ -203,7 +203,7 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {BaseSession} A newly-constructed session.
    */
   _activateSession(authorId, caretId, canEdit) {
-    const result = new DocSession(this, authorId, caretId, canEdit);
+    const result = new EditSession(this, authorId, caretId, canEdit);
     const fileId = this.file.id;
 
     this._sessions.add(result);

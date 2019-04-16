@@ -9,7 +9,7 @@ import BodyControl from './BodyControl';
 import BodyDeltaHtml from './BodyDeltaHtml';
 import CaretControl from './CaretControl';
 import DocServer from './DocServer';
-import DocSession from './DocSession';
+import EditSession from './EditSession';
 import DurableControl from './DurableControl';
 import EphemeralControl from './EphemeralControl';
 import FileAccess from './FileAccess';
@@ -26,7 +26,7 @@ export {
   BodyDeltaHtml,
   CaretControl,
   DocServer,
-  DocSession,
+  EditSession,
   DurableControl,
   EphemeralControl,
   FileAccess,

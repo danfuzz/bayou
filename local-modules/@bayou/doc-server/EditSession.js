@@ -8,15 +8,14 @@ import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import BaseSession from './BaseSession';
 
 /**
- * Server side representative of an editing session for a specific document,
- * author, and caret. Instances of this class are exposed across the API
- * boundary, and as such all public methods are available for client use.
+ * Server side representative of a session which allows editing (and temporarily
+ * has an affordance for disabling editing to make a view-only session).
  *
  * For access methods, this passes non-mutating methods through to the
  * underlying `*Control` instances, while implicitly adding author ID and/or
  * caret ID as appropriate to methods that perform modifications.
  */
-export default class DocSession extends BaseSession {
+export default class EditSession extends BaseSession {
   /**
    * Constructs an instance.
    *
