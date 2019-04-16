@@ -89,6 +89,8 @@ export default class FileComplex extends BaseComplexMember {
    *   author).
    */
   async findExistingSession(authorId, caretId) {
+    const canEdit = true; // **TODO:** Should be an argument.
+
     // **Note:** We only need to validate syntax, because if we actually find
     // the session, we can match the author ID and (if it does match) know that
     // the author really exists and is valid.
@@ -97,16 +99,22 @@ export default class FileComplex extends BaseComplexMember {
     const already = this._sessions.getOrNull(caretId);
 
     if (already !== null) {
-      if (authorId === already.getAuthorId()) {
-        // We found a pre-existing session for the caret, and the author ID
-        // matches. Bingo!
-        return already;
-      } else {
-        // Existing caret but wrong author ID for it. Log it (could be useful
-        // in identifying a malicious actor or just a bug), but report it back
-        // to the caller as simply an invalid ID.
+      // We found a pre-existing session for the caret...
+      if (authorId !== already.getAuthorId()) {
+        // Wrong author, though. Log it (could be useful in identifying a
+        // malicious actor or just a bug), but report it back to the caller as
+        // simply an invalid ID.
         this.log.event.authorCaretMismatch(authorId, caretId);
         throw Errors.badId(caretId);
+      } else if (canEdit !== already.canEdit()) {
+        // Editability is different. What probably happened is that permissions
+        // changed between when the session was first set up and now. Log it
+        // (as it's at least mildly interesting), and then just fall through and
+        // let a new properly-permissioned session get created.
+        this.log.event.canEditMismatch(canEdit);
+      } else {
+        // The session looks good. Yay!
+        return already;
       }
     }
 
@@ -125,7 +133,7 @@ export default class FileComplex extends BaseComplexMember {
       throw Errors.badId(caretId);
     }
 
-    return this._activateSession(authorId, caretId);
+    return this._activateSession(authorId, caretId, canEdit);
   }
 
   /**
@@ -137,6 +145,7 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {DocSession} A newly-constructed session.
    */
   async makeNewSession(authorId) {
+    const canEdit = true; // **TODO:** Should be an argument.
     const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
 
     // This validates the ID with the back end.
@@ -162,7 +171,7 @@ export default class FileComplex extends BaseComplexMember {
       if (appendResult) {
         // There was no append race, or we won it.
         this.log.event.establishedNewCaret(authorId, caretId, newCaretChange.revNum);
-        return this._activateSession(authorId, caretId);
+        return this._activateSession(authorId, caretId, canEdit);
       }
 
       // We lost an append race, but the session introduction might still be
@@ -178,8 +187,8 @@ export default class FileComplex extends BaseComplexMember {
    * @param {string} caretId ID of the caret.
    * @returns {DocSession} A newly-constructed session.
    */
-  _activateSession(authorId, caretId) {
-    const result = new DocSession(this, authorId, caretId, true); // **TODO:** Not always `true`.
+  _activateSession(authorId, caretId, canEdit) {
+    const result = new DocSession(this, authorId, caretId, canEdit);
     const fileId = this.file.id;
 
     this._sessions.add(result);
