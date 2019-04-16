@@ -47,7 +47,7 @@ export default class LogProxyHandler extends MethodCacheProxyHandler {
       // calling through to the `_logFunction` and logging something
       // inscrutable), which is a case that _has_ arisen in practice (while
       // debugging).
-      return '[object LogProxy]';
+      return () => '[object LogProxy]';
     } else if (typeof name === 'symbol') {
       // Make a valid label out of the symbol's name.
       const rawName = name.toString().replace(/^Symbol\(|\)$/g, '');
