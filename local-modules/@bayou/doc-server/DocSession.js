@@ -5,7 +5,8 @@
 import { Storage } from '@bayou/config-server';
 import { BodyChange, CaretId, PropertyChange } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
-import { CommonBase } from '@bayou/util-common';
+import { TBoolean } from '@bayou/typecheck';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
 
@@ -26,8 +27,11 @@ export default class DocSession extends CommonBase {
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
+   * @param {boolean} canEdit Whether (`true`) or not (`false`) the instance is
+   *   to allow editing to happen through it. That is, `false` indicates a
+   *   view-only session.
    */
-  constructor(fileComplex, authorId, caretId) {
+  constructor(fileComplex, authorId, caretId, canEdit) {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
@@ -38,6 +42,14 @@ export default class DocSession extends CommonBase {
 
     /** {string} Caret ID. */
     this._caretId = CaretId.check(caretId);
+
+    /** {boolean} Whether or not this instance allows edits. */
+    this._canEdit = TBoolean.check(canEdit);
+
+    // **TODO:** Remove this restriction!
+    if (!canEdit) {
+      throw Errors.wtf('View-only sessions not yet supported!');
+    }
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
@@ -277,6 +289,20 @@ export default class DocSession extends CommonBase {
     const change = new PropertyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
 
     return this._propertyControl.update(change);
+  }
+
+  /**
+   * Indicates whether (`true`) or not (`false`) this instance allows editing to
+   * be performed through it.
+   *
+   * **Note:** This is a method and not just a property, specifically so that
+   * clients (via the API) can make this determination.
+   *
+   * @returns {boolean} `true` if this instance allows editing, or `false` if it
+   *   is view-only.
+   */
+  canEdit() {
+    return this._canEdit;
   }
 
   /**

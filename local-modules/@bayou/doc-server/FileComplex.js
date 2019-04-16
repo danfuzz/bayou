@@ -179,7 +179,7 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {DocSession} A newly-constructed session.
    */
   _activateSession(authorId, caretId) {
-    const result = new DocSession(this, authorId, caretId);
+    const result = new DocSession(this, authorId, caretId, true); // **TODO:** Not always `true`.
     const fileId = this.file.id;
 
     this._sessions.add(result);
