@@ -67,11 +67,13 @@ export default class AuthorAccess extends CommonBase {
 
     CaretId.check(caretId);
 
+    const canEdit = true; // **TODO:** Should be a permission check!
+
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
 
     let session;
     try {
-      session = await fileComplex.findExistingSession(this._authorId, caretId);
+      session = await fileComplex.findExistingSession(this._authorId, caretId, canEdit);
     } catch (e) {
       if (Errors.is_badId(e)) {
         // Per method header doc, this isn't considered a throwable offense.
@@ -121,13 +123,8 @@ export default class AuthorAccess extends CommonBase {
       throw Errors.fileNotFound(documentId);
     }
 
-    if (!canEdit) {
-      // **TODO:** Support view-only session creation.
-      throw Errors.wtf('View-only sessions not yet supported.');
-    }
-
     const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const session     = await fileComplex.makeNewSession(authorId);
+    const session     = await fileComplex.makeNewSession(authorId, canEdit);
     const caretId     = session.getCaretId();
 
     log.event.madeSession({ authorId, documentId, caretId });

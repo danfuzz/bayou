@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Storage } from '@bayou/config-server';
+import { TBoolean, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
@@ -82,14 +83,19 @@ export default class FileComplex extends BaseComplexMember {
    *
    * @param {string} authorId ID of the author.
    * @param {string} caretId ID of the caret.
+   * @param {boolean} canEdit `true` if the session is to allow changes to be
+   *   made through it, or `false` if not (that is, `false` for a view-only
+   *   session).
    * @returns {DocSession} A session object to control the indicated
    *   pre-existing caret.
    * @throws {InfoError} Thrown with name `badId` specifically if the caret is
    *   not found (including if it exists but is controlled by a different
    *   author).
    */
-  async findExistingSession(authorId, caretId) {
-    const canEdit = true; // **TODO:** Should be an argument.
+  async findExistingSession(authorId, caretId, canEdit) {
+    TString.check(authorId); // Basic type check.
+    TString.check(caretId);  // Basic type check.
+    TBoolean.check(canEdit);
 
     // **Note:** We only need to validate syntax, because if we actually find
     // the session, we can match the author ID and (if it does match) know that
@@ -139,13 +145,19 @@ export default class FileComplex extends BaseComplexMember {
   /**
    * Makes and returns a new session for the document controlled by this
    * instance, which allows the indicated author to control a newly-instantiated
-   * caret.
+   * session. Depending on the value of `canEdit`, the session will (`true`) or
+   * won't (`false`) allow editing operations to happen through it.
    *
    * @param {string} authorId ID for the author.
+   * @param {boolean} canEdit `true` if the session is to allow changes to be
+   *   made through it, or `false` if not (that is, `false` for a view-only
+   *   session).
    * @returns {DocSession} A newly-constructed session.
    */
-  async makeNewSession(authorId) {
-    const canEdit = true; // **TODO:** Should be an argument.
+  async makeNewSession(authorId, canEdit) {
+    TString.check(authorId); // Basic type check.
+    TBoolean.check(canEdit);
+
     const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
 
     // This validates the ID with the back end.
@@ -185,6 +197,9 @@ export default class FileComplex extends BaseComplexMember {
    *
    * @param {string} authorId ID of the author.
    * @param {string} caretId ID of the caret.
+   * @param {boolean} canEdit `true` if the session is to allow changes to be
+   *   made through it, or `false` if not (that is, `false` for a view-only
+   *   session).
    * @returns {DocSession} A newly-constructed session.
    */
   _activateSession(authorId, caretId, canEdit) {
