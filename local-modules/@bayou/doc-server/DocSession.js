@@ -139,7 +139,7 @@ export default class DocSession extends CommonBase {
    * in which case the client will likely want to use `caret_getSnapshot()` to
    * get back in synch.
    *
-   * **Note:** Caret information and the main document have _separate_ revision
+   * **Note:** Caret information and the document body have _separate_ revision
    * numbers. `CaretSnapshot` instances have information about both revision
    * numbers.
    *
