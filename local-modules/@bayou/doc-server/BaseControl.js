@@ -1207,8 +1207,13 @@ export default class BaseControl extends BaseDataManager {
     }
 
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
+    const success    = await file.appendChange(fileChange, timeoutMsec);
 
-    await file.appendChange(fileChange, timeoutMsec);
+    // `success === false` indicates a lost append race. Turn it into an
+    // exception here, so that our caller can react appropriately.
+    if (!success) {
+      throw Errors.revisionNotAvailable(fileChange.revNum);
+    }
   }
 
   /**
