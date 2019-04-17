@@ -11,6 +11,7 @@ import EditSession from './EditSession';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
 import SessionCache from './SessionCache';
+import ViewSession from './ViewSession';
 
 /**
  * {Int} Maximum amount of time (in msec) to allow for the creation of new
@@ -203,7 +204,9 @@ export default class FileComplex extends BaseComplexMember {
    * @returns {BaseSession} A newly-constructed session.
    */
   _activateSession(authorId, caretId, canEdit) {
-    const result = new EditSession(this, authorId, caretId, canEdit);
+    const result = canEdit
+      ? new EditSession(this, authorId, caretId)
+      : new ViewSession(this, authorId, caretId);
     const fileId = this.file.id;
 
     this._sessions.add(result);
