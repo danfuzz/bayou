@@ -51,7 +51,7 @@ export default class DeferredLoader extends BaseProxyHandler {
    *
    * @param {object} target_unused The proxy's target (which is always a frozen
    *   empty object in this case).
-   * @param {string} property Name of the property (or method) to get.
+   * @param {string|Symbol} property Name of the property (or method) to get.
    * @param {object} receiver_unused The original message receiver (which is
    *   always `this` in this case).
    * @returns {*} The value of the named property in the target object.

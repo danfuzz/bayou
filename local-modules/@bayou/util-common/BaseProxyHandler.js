@@ -86,7 +86,7 @@ export default class BaseProxyHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property_unused The property name.
+   * @param {string|Symbol} property_unused The property name.
    * @param {object} descriptor_unused The property descriptor.
    * @returns {boolean} `false`, always.
    */
@@ -109,7 +109,7 @@ export default class BaseProxyHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property_unused The property name.
+   * @param {string|Symbol} property_unused The property name.
    * @param {object} receiver_unused The original receiver of the request.
    * @returns {undefined} `undefined`, always.
    */
@@ -121,7 +121,7 @@ export default class BaseProxyHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property_unused The property name.
+   * @param {string|Symbol} property_unused The property name.
    */
   getOwnPropertyDescriptor(target_unused, property_unused) {
     throw Errors.badUse('Unsupported proxy operation.');
@@ -155,7 +155,7 @@ export default class BaseProxyHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property_unused The property name.
+   * @param {string|Symbol} property_unused The property name.
    * @returns {boolean} `false`, always.
    */
   has(target_unused, property_unused) {
@@ -196,7 +196,7 @@ export default class BaseProxyHandler extends CommonBase {
    * Standard `Proxy` handler method.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property_unused The property name.
+   * @param {string|Symbol} property_unused The property name.
    * @param {*} value_unused The new property value.
    * @param {object} receiver_unused The original receiver of the request.
    * @returns {boolean} `false`, always.

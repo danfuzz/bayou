@@ -7,10 +7,10 @@ import { TBoolean, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import BaseComplexMember from './BaseComplexMember';
-import DocSession from './DocSession';
-import DocSessionCache from './DocSessionCache';
+import EditSession from './EditSession';
 import FileAccess from './FileAccess';
 import FileBootstrap from './FileBootstrap';
+import SessionCache from './SessionCache';
 
 /**
  * {Int} Maximum amount of time (in msec) to allow for the creation of new
@@ -45,8 +45,8 @@ export default class FileComplex extends BaseComplexMember {
      */
     this._bootstrap = new FileBootstrap(this.fileAccess);
 
-    /** {DocSessionCache} Cache of session instances, mapped from caret IDs. */
-    this._sessions = new DocSessionCache(this.fileAccess.log);
+    /** {SessionCache} Cache of session instances, mapped from caret IDs. */
+    this._sessions = new SessionCache(this.fileAccess.log);
 
     Object.freeze(this);
   }
@@ -79,14 +79,14 @@ export default class FileComplex extends BaseComplexMember {
    * Finds and returns a session to control a pre-existing caret on the document
    * managed by this instance. More specifically, the caret has to exist in the
    * caret part of the file, but there doesn't have to already be a
-   * {@link DocSession} object in this process which represents it.
+   * {@link BaseSession} object in this process which represents it.
    *
    * @param {string} authorId ID of the author.
    * @param {string} caretId ID of the caret.
    * @param {boolean} canEdit `true` if the session is to allow changes to be
    *   made through it, or `false` if not (that is, `false` for a view-only
    *   session).
-   * @returns {DocSession} A session object to control the indicated
+   * @returns {BaseSession} A session object to control the indicated
    *   pre-existing caret.
    * @throws {InfoError} Thrown with name `badId` specifically if the caret is
    *   not found (including if it exists but is controlled by a different
@@ -152,7 +152,7 @@ export default class FileComplex extends BaseComplexMember {
    * @param {boolean} canEdit `true` if the session is to allow changes to be
    *   made through it, or `false` if not (that is, `false` for a view-only
    *   session).
-   * @returns {DocSession} A newly-constructed session.
+   * @returns {BaseSession} A newly-constructed session.
    */
   async makeNewSession(authorId, canEdit) {
     TString.check(authorId); // Basic type check.
@@ -193,17 +193,17 @@ export default class FileComplex extends BaseComplexMember {
 
   /**
    * Helper for {@link #makeNewSession} and {@link #findExistingSession}, which
-   * does the final setup of a new {@link DocSession} instance.
+   * does the final setup of a new session instance.
    *
    * @param {string} authorId ID of the author.
    * @param {string} caretId ID of the caret.
    * @param {boolean} canEdit `true` if the session is to allow changes to be
    *   made through it, or `false` if not (that is, `false` for a view-only
    *   session).
-   * @returns {DocSession} A newly-constructed session.
+   * @returns {BaseSession} A newly-constructed session.
    */
   _activateSession(authorId, caretId, canEdit) {
-    const result = new DocSession(this, authorId, caretId, canEdit);
+    const result = new EditSession(this, authorId, caretId, canEdit);
     const fileId = this.file.id;
 
     this._sessions.add(result);

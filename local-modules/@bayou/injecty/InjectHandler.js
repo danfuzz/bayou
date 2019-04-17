@@ -30,7 +30,7 @@ export default class InjectHandler extends BaseProxyHandler {
    * if an attempt is made to store to a given name more than once.
    *
    * @param {object} target_unused The proxy target.
-   * @param {string} property The property name.
+   * @param {string|Symbol} property The property name.
    * @param {*} value The new property value.
    * @param {object} receiver_unused The original receiver of the request.
    * @returns {boolean} `true`, always.

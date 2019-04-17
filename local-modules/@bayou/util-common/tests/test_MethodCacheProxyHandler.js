@@ -4,6 +4,7 @@
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
+import { inspect } from 'util';
 
 import { MethodCacheProxyHandler } from '@bayou/util-common';
 
@@ -19,13 +20,13 @@ class ThrowingHandler extends MethodCacheProxyHandler {
 
 describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   describe('constructor', () => {
-    it('should construct an instance', () => {
+    it('constructs an instance', () => {
       assert.doesNotThrow(() => new MethodCacheProxyHandler());
     });
   });
 
   describe('apply()', () => {
-    it('should always throw', () => {
+    it('throws', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new ThrowingHandler();
       const proxy = new Proxy(func, th);
@@ -34,7 +35,7 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   });
 
   describe('construct()', () => {
-    it('should always throw', () => {
+    it('throws', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new ThrowingHandler();
       const proxy = new Proxy(func, th);
@@ -43,21 +44,21 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   });
 
   describe('defineProperty()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const th = new ThrowingHandler();
       assert.isFalse(th.defineProperty({}, 'blort', { value: 123 }));
     });
   });
 
   describe('deleteProperty()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const th = new ThrowingHandler();
       assert.isFalse(th.deleteProperty({ blort: 10 }, 'blort'));
     });
   });
 
   describe('get()', () => {
-    it('should return `undefined` for verboten property names', () => {
+    it('returns `undefined` for verboten property names', () => {
       const th = new ThrowingHandler();
 
       assert.isUndefined(th.get(Map, 'constructor'));
@@ -67,7 +68,19 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
       assert.isUndefined(th.get(prom, 'catch'));
     });
 
-    it('should return a function gotten from a call to the `_impl`', () => {
+    // `if` to prevent this test from being active on the browser client,
+    // because the `util.inspect` shim doesn't deal properly with `custom`.
+    if (typeof inspect.custom === 'symbol') {
+      it('returns the expected special-case `inspect.custom` implementation', () => {
+        const handler    = new MethodCacheProxyHandler();
+        const proxy      = new Proxy({}, handler);
+        const customFunc = proxy[inspect.custom];
+
+        assert.strictEqual(customFunc(), '[object Proxy]');
+      });
+    }
+
+    it('returns a function gotten from a call to the `_impl`', () => {
       const handler = new MethodCacheProxyHandler();
       const proxy   = new Proxy({}, handler);
 
@@ -81,7 +94,7 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
       assert.strictEqual(result.blorp, 'blorp-bloop');
     });
 
-    it('should return the same function upon a second-or-more call with the same name', () => {
+    it('returns the same function upon a second-or-more call with the same name', () => {
       const handler = new MethodCacheProxyHandler();
       const proxy   = new Proxy({}, handler);
 
@@ -104,14 +117,14 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   });
 
   describe('getOwnPropertyDescriptor()', () => {
-    it('should always throw', () => {
+    it('throws', () => {
       const th = new ThrowingHandler();
       assert.throws(() => th.getOwnPropertyDescriptor({ blort: 123 }, 'blort'));
     });
   });
 
   describe('getPrototypeOf()', () => {
-    it('should return the target\'s prototype', () => {
+    it('returns the target\'s prototype', () => {
       const th = new ThrowingHandler();
       const obj = new Map();
       assert.strictEqual(th.getPrototypeOf(obj), Object.getPrototypeOf(obj));
@@ -119,35 +132,35 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   });
 
   describe('has()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const th = new ThrowingHandler();
       assert.isFalse(th.has({ blort: 10 }, 'blort'));
     });
   });
 
   describe('isExtensible()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const th = new ThrowingHandler();
       assert.isFalse(th.isExtensible({}));
     });
   });
 
   describe('ownKeys()', () => {
-    it('should always return `[]`', () => {
+    it('returns `[]`', () => {
       const th = new ThrowingHandler();
       assert.deepEqual(th.ownKeys({ a: 10, b: 20 }), []);
     });
   });
 
   describe('preventExstensions()', () => {
-    it('should always return `true`', () => {
+    it('returns `true`', () => {
       const th = new ThrowingHandler();
       assert.isTrue(th.preventExtensions({}));
     });
   });
 
   describe('set()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const func = () => { throw new Error('should not have been called'); };
       const th = new ThrowingHandler();
       const proxy = new Proxy(func, th);
@@ -156,7 +169,7 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
   });
 
   describe('setPrototypeOf()', () => {
-    it('should always return `false`', () => {
+    it('returns `false`', () => {
       const th = new ThrowingHandler();
 
       assert.isFalse(th.setPrototypeOf({}, null));

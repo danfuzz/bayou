@@ -5,12 +5,12 @@
 import { CaretId } from '@bayou/doc-common';
 import { BaseCache } from '@bayou/weak-lru-cache';
 
-import DocSession from './DocSession';
+import BaseSession from './BaseSession';
 
 /**
- * Cache of active instances of {@link DocSession}.
+ * Cache of active instances of {@link BaseSession}.
  */
-export default class DocSessionCache extends BaseCache {
+export default class SessionCache extends BaseCache {
   /**
    * Constructs an instance.
    *
@@ -22,7 +22,7 @@ export default class DocSessionCache extends BaseCache {
 
   /** @override */
   get _impl_cachedClass() {
-    return DocSession;
+    return BaseSession;
   }
 
   /** @override */
