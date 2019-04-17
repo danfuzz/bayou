@@ -40,7 +40,7 @@ const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
  * snapshots will always have a revision number that is an integral multiple of
  * this value.
  */
-const CHANGES_PER_STORED_SNAPSHOT = 100;
+const CHANGES_PER_STORED_SNAPSHOT = 1000;
 
 /**
  * Base class for document part controllers. There is one instance of each
