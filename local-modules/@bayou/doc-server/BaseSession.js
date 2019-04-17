@@ -5,7 +5,7 @@
 import { Storage } from '@bayou/config-server';
 import { CaretId } from '@bayou/doc-common';
 import { TBoolean } from '@bayou/typecheck';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
 
@@ -38,11 +38,6 @@ export default class BaseSession extends CommonBase {
 
     /** {boolean} Whether or not this instance allows edits. */
     this._canEdit = TBoolean.check(this._impl_canEdit());
-
-    // **TODO:** Remove this restriction!
-    if (!this._canEdit) {
-      throw Errors.wtf('View-only sessions not yet supported!');
-    }
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
