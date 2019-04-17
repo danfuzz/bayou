@@ -23,12 +23,10 @@ export default class EditSession extends BaseSession {
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
-   * @param {boolean} canEdit Whether (`true`) or not (`false`) the instance is
-   *   to allow editing to happen through it. That is, `false` indicates a
-   *   view-only session.
+   * @param {boolean} canEdit_unused About to go away.
    */
-  constructor(fileComplex, authorId, caretId, canEdit) {
-    super(fileComplex, authorId, caretId, canEdit);
+  constructor(fileComplex, authorId, caretId, canEdit_unused) {
+    super(fileComplex, authorId, caretId);
 
     Object.freeze(this);
   }
@@ -258,5 +256,14 @@ export default class EditSession extends BaseSession {
     const change = new PropertyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
 
     return this._propertyControl.update(change);
+  }
+
+  /**
+   * Subclass-specific implementation which underlies {@link #canEdit}.
+   *
+   * @returns {boolean} `true`, always.
+   */
+  _impl_canEdit() {
+    return true;
   }
 }
