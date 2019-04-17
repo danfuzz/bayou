@@ -1165,9 +1165,7 @@ export default class BaseControl extends BaseDataManager {
       // a best-effort basis. To the extent that they're required, it's only for
       // "ephemeral" document parts that don't keep full history, and such parts
       // only ever arrange for earlier changes to be erased after a later
-      // snapshot is _known_ to be written. (**Note::** As of this writing,
-      // there aren't yet any ephemeral document parts, though the caret info is
-      // slated to become one.)
+      // snapshot is _known_ to be written.
       this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
     }
 
