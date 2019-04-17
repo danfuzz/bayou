@@ -68,13 +68,17 @@ describe('@bayou/util-common/MethodCacheProxyHandler', () => {
       assert.isUndefined(th.get(prom, 'catch'));
     });
 
-    it('returns the expected special-case `inspect.custom` implementation', () => {
-      const handler    = new MethodCacheProxyHandler();
-      const proxy      = new Proxy({}, handler);
-      const customFunc = proxy[inspect.custom];
+    // `if` to prevent this test from being active on the browser client,
+    // because the `util.inspect` shim doesn't deal properly with `custom`.
+    if (typeof inspect.custom === 'symbol') {
+      it('returns the expected special-case `inspect.custom` implementation', () => {
+        const handler    = new MethodCacheProxyHandler();
+        const proxy      = new Proxy({}, handler);
+        const customFunc = proxy[inspect.custom];
 
-      assert.strictEqual(customFunc(), '[object Proxy]');
-    });
+        assert.strictEqual(customFunc(), '[object Proxy]');
+      });
+    }
 
     it('returns a function gotten from a call to the `_impl`', () => {
       const handler = new MethodCacheProxyHandler();
