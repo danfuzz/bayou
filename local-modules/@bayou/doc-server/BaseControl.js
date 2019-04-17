@@ -1159,6 +1159,7 @@ export default class BaseControl extends BaseDataManager {
       this.log.event.writingStoredSnapshot(revNum);
 
       const snapshot = await this.getSnapshot(revNum);
+
       await this._writeStoredSnapshot(snapshot);
       this.log.event.wroteStoredSnapshot(revNum);
     } catch (e) {
@@ -1206,7 +1207,8 @@ export default class BaseControl extends BaseDataManager {
       fileOps.push(FileOp.op_deletePathRange(this.constructor.changePathPrefix, 0, deleteBefore));
     }
 
-    const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
+    const fileRevNum = await file.currentRevNum(timeoutMsec);
+    const fileChange = new FileChange(fileRevNum.revNum + 1, fileOps);
     const success    = await file.appendChange(fileChange, timeoutMsec);
 
     // `success === false` indicates a lost append race. Turn it into an
