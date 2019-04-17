@@ -1210,8 +1210,6 @@ export default class BaseControl extends BaseDataManager {
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
     await file.appendChange(fileChange, timeoutMsec);
-
-    this.log.event.wroteStoredSnapshot(`r${snapshot.revNum}`);
   }
 
   /**
