@@ -5,7 +5,7 @@
 import { Storage } from '@bayou/config-server';
 import { CaretId } from '@bayou/doc-common';
 import { TBoolean } from '@bayou/typecheck';
-import { CommonBase, Errors } from '@bayou/util-common';
+import { CommonBase } from '@bayou/util-common';
 
 import FileComplex from './FileComplex';
 
@@ -23,11 +23,8 @@ export default class BaseSession extends CommonBase {
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
-   * @param {boolean} canEdit Whether (`true`) or not (`false`) the instance is
-   *   to allow editing to happen through it. That is, `false` indicates a
-   *   view-only session.
    */
-  constructor(fileComplex, authorId, caretId, canEdit) {
+  constructor(fileComplex, authorId, caretId) {
     super();
 
     /** {FileComplex} File complex that this instance is part of. */
@@ -40,12 +37,7 @@ export default class BaseSession extends CommonBase {
     this._caretId = CaretId.check(caretId);
 
     /** {boolean} Whether or not this instance allows edits. */
-    this._canEdit = TBoolean.check(canEdit);
-
-    // **TODO:** Remove this restriction!
-    if (!canEdit) {
-      throw Errors.wtf('View-only sessions not yet supported!');
-    }
+    this._canEdit = TBoolean.check(this._impl_canEdit());
 
     /** {BodyControl} The underlying body content controller. */
     this._bodyControl = fileComplex.bodyControl;
@@ -183,5 +175,18 @@ export default class BaseSession extends CommonBase {
    */
   logEvent(name, ...args) {
     this._clientLog.event[name](...args);
+  }
+
+  /**
+   * Subclass-specific implementation which underlies {@link #canEdit}. This
+   * method is called exactly once during instance construction. Subclasses must
+   * override this method.
+   *
+   * @abstract
+   * @returns {boolean} `true` if the instance allows editing, or `false` if
+   *   not.
+   */
+  _impl_canEdit() {
+    return this._mustOverride();
   }
 }
