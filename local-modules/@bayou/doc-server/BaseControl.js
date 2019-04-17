@@ -1188,7 +1188,8 @@ export default class BaseControl extends BaseDataManager {
    */
   async _writeStoredSnapshot(snapshot, timeoutMsec = null) {
     const clazz = this.constructor;
-    const path = clazz.storedSnapshotPath;
+    const path  = clazz.storedSnapshotPath;
+    const file  = this.fileCodec.file;
     const codec = this.fileCodec.codec;
 
     clazz.snapshotClass.check(snapshot);
@@ -1210,7 +1211,7 @@ export default class BaseControl extends BaseDataManager {
 
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
-    await this._appendChangeWithRetry(fileChange, timeoutMsec);
+    await file.appendChange(fileChange, timeoutMsec);
 
     this.log.event.wroteStoredSnapshot(`r${snapshot.revNum}`);
   }
