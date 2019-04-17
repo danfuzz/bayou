@@ -40,7 +40,7 @@ const MAX_COMPOSED_CHANGES_FOR_DIFF = 100;
  * snapshots will always have a revision number that is an integral multiple of
  * this value.
  */
-const CHANGES_PER_STORED_SNAPSHOT = 100;
+const CHANGES_PER_STORED_SNAPSHOT = 1000;
 
 /**
  * Base class for document part controllers. There is one instance of each
@@ -595,7 +595,7 @@ export default class BaseControl extends BaseDataManager {
 
     const storedSnapshot = codec.decodeJsonBuffer(encodedStoredSnapshot);
     clazz.snapshotClass.check(storedSnapshot);
-    this.log.event.gotStoredSnapshot(`r${storedSnapshot.revNum}`);
+    this.log.event.gotStoredSnapshot(storedSnapshot.revNum);
 
     return storedSnapshot;
   }
@@ -1159,19 +1159,17 @@ export default class BaseControl extends BaseDataManager {
       this.log.event.writingStoredSnapshot(revNum);
 
       const snapshot = await this.getSnapshot(revNum);
+
       await this._writeStoredSnapshot(snapshot);
+      this.log.event.wroteStoredSnapshot(revNum);
     } catch (e) {
       // Though unfortunate, this isn't tragic: Stored snapshots are created on
       // a best-effort basis. To the extent that they're required, it's only for
       // "ephemeral" document parts that don't keep full history, and such parts
       // only ever arrange for earlier changes to be erased after a later
-      // snapshot is _known_ to be written. (**Note::** As of this writing,
-      // there aren't yet any ephemeral document parts, though the caret info is
-      // slated to become one.)
-      this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
+      // snapshot is _known_ to be written.
+      this.log.event.failedToWriteStoredSnapshot(revNum, e);
     }
-
-    this.log.event.wroteStoredSnapshot(revNum);
   }
 
   /**
@@ -1188,7 +1186,8 @@ export default class BaseControl extends BaseDataManager {
    */
   async _writeStoredSnapshot(snapshot, timeoutMsec = null) {
     const clazz = this.constructor;
-    const path = clazz.storedSnapshotPath;
+    const path  = clazz.storedSnapshotPath;
+    const file  = this.fileCodec.file;
     const codec = this.fileCodec.codec;
 
     clazz.snapshotClass.check(snapshot);
@@ -1208,11 +1207,15 @@ export default class BaseControl extends BaseDataManager {
       fileOps.push(FileOp.op_deletePathRange(this.constructor.changePathPrefix, 0, deleteBefore));
     }
 
-    const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
+    const fileRevNum = await file.currentRevNum(timeoutMsec);
+    const fileChange = new FileChange(fileRevNum + 1, fileOps);
+    const success    = await file.appendChange(fileChange, timeoutMsec);
 
-    await this._appendChangeWithRetry(fileChange, timeoutMsec);
-
-    this.log.event.wroteStoredSnapshot(`r${snapshot.revNum}`);
+    // `success === false` indicates a lost append race. Turn it into an
+    // exception here, so that our caller can react appropriately.
+    if (!success) {
+      throw Errors.revisionNotAvailable(fileChange.revNum);
+    }
   }
 
   /**
