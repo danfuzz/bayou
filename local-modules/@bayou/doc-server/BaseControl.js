@@ -1208,7 +1208,7 @@ export default class BaseControl extends BaseDataManager {
     }
 
     const fileRevNum = await file.currentRevNum(timeoutMsec);
-    const fileChange = new FileChange(fileRevNum.revNum + 1, fileOps);
+    const fileChange = new FileChange(fileRevNum + 1, fileOps);
     const success    = await file.appendChange(fileChange, timeoutMsec);
 
     // `success === false` indicates a lost append race. Turn it into an
