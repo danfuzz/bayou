@@ -1166,7 +1166,7 @@ export default class BaseControl extends BaseDataManager {
       // "ephemeral" document parts that don't keep full history, and such parts
       // only ever arrange for earlier changes to be erased after a later
       // snapshot is _known_ to be written.
-      this.log.warn(`Trouble writing stored snapshot for revision: r${revNum}`, e);
+      this.log.event.failedToWriteStoredSnapshot(revNum, e);
     }
 
     this.log.event.wroteStoredSnapshot(revNum);
