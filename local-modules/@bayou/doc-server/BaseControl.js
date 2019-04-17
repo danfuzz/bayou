@@ -595,7 +595,7 @@ export default class BaseControl extends BaseDataManager {
 
     const storedSnapshot = codec.decodeJsonBuffer(encodedStoredSnapshot);
     clazz.snapshotClass.check(storedSnapshot);
-    this.log.event.gotStoredSnapshot(`r${storedSnapshot.revNum}`);
+    this.log.event.gotStoredSnapshot(storedSnapshot.revNum);
 
     return storedSnapshot;
   }
@@ -1160,6 +1160,7 @@ export default class BaseControl extends BaseDataManager {
 
       const snapshot = await this.getSnapshot(revNum);
       await this._writeStoredSnapshot(snapshot);
+      this.log.event.wroteStoredSnapshot(revNum);
     } catch (e) {
       // Though unfortunate, this isn't tragic: Stored snapshots are created on
       // a best-effort basis. To the extent that they're required, it's only for
@@ -1168,8 +1169,6 @@ export default class BaseControl extends BaseDataManager {
       // snapshot is _known_ to be written.
       this.log.event.failedToWriteStoredSnapshot(revNum, e);
     }
-
-    this.log.event.wroteStoredSnapshot(revNum);
   }
 
   /**
