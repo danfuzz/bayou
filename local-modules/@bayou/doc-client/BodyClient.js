@@ -120,7 +120,10 @@ export default class BodyClient extends StateMachine {
   constructor(quill, docSession, manageEnabledState = true, pollingDelayMsec = 0) {
     super('detached', docSession.log);
 
-    /** {Quill} Editor object. */
+    /**
+     * {Quill|null} Editor object, or `null` if this instance has been told to
+     * detach.
+     */
     this._quill = quill;
 
     /**
@@ -233,6 +236,7 @@ export default class BodyClient extends StateMachine {
     // regard. What's done here is just an extra layer of protection which will
     // make bugs show up as very-noticeable failed method calls instead of
     // silently and incorrectly succeeding in talking to a server.
+    this._quill        = null;
     this._docSession   = null;
     this._sessionProxy = null;
 
