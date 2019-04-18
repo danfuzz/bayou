@@ -75,6 +75,15 @@ const STOP_POLL_DELAY_MSEC = 500; // Half a second.
 const CLIENT_SOURCE = 'doc-client';
 
 /**
+ * {WeakMap<Quill, BodyClient>} Map that keeps track of which instance of this
+ * class is associated with each `Quill` instance. This is used to actively
+ * prevent two or more instances of this class from all operating on the same
+ * `Quill` instance. (This would be bad, because they would interfere with each
+ * other's operations.)
+ */
+const bindMap = new WeakMap();
+
+/**
  * Plumbing between Quill on the client and the document model on the server.
  * It is structured as a state machine, which maintains a current named state
  * along with a few other bits of information, and takes action upon receipt of
@@ -573,6 +582,10 @@ export default class BodyClient extends StateMachine {
       this._running = false;
     }
 
+    // If another instance of this class comes along, it will now be okay for it
+    // to attach to the same `Quill` instance that this one was using.
+    this._quillBinding(false);
+
     // As soon as we're trying to stop, we should prevent the user from doing
     // any editing. And having disabled editing, we should just go back to being
     // in the `detached` state. In that state, additional incoming events will
@@ -738,6 +751,10 @@ export default class BodyClient extends StateMachine {
       this.log.event.notStartingBecausePermanentlyDetached();
       return;
     }
+
+    // This guarantees that there is no other instance of this class currently
+    // operating on the same `Quill` instance.
+    this._quillBinding(true);
 
     // **TODO:** This whole flow should probably be protected by a timeout.
 
@@ -1175,6 +1192,10 @@ export default class BodyClient extends StateMachine {
   _handle_unrecoverableError_stop() {
     this.log.event.nowUnrecoverable();
 
+    // If another instance of this class comes along, it will now be okay for it
+    // to attach to the same `Quill` instance that this one was using.
+    this._quillBinding(false);
+
     // Stop the user from trying to do more edits, as they'd get lost, and then
     // transition into `detached`.
     this._becomeDisabled('detached');
@@ -1314,6 +1335,38 @@ export default class BodyClient extends StateMachine {
   _isQuillChangePending() {
     // This asks: Is there an unprocessed `textChange` event on the event chain?
     return this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null;
+  }
+
+  /**
+   * Causes this instance to be bound or unbound to its `Quill` instance, such
+   * that there can only ever be at most one instance of this class associated
+   * with any given `Quill` instance.
+   *
+   * @param {boolean} shouldBeBound Whether (`true`) or not (`false`) this
+   *   instance and its associated `Quill` instance should be bound.
+   */
+  _quillBinding(shouldBeBound) {
+    const quill   = this._quill;
+    const already = bindMap.get(quill);
+
+    if (shouldBeBound) {
+      // Bind if not already bound. Error if already bound to a different
+      // instance.
+      if (quill === null) {
+        throw Errors.badUse('Cannot bind after detaching.');
+      } else if (already === undefined) {
+        bindMap.set(quill, this);
+        this.log.event.quillBound();
+      } else if (already !== this) {
+        throw Errors.badUse('Quill instance already bound to a different client.');
+      }
+    } else {
+      // Unbind if bound. Do nothing if not.
+      if ((quill !== null) && (already === this)) {
+        bindMap.delete(quill);
+        this.log.event.quillUnbound();
+      }
+    }
   }
 
   /**
