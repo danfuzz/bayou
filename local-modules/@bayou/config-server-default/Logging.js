@@ -6,6 +6,9 @@ import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utility functionality regarding log handling.
+ *
+ * This (default) implementation treats redaction as a no-op, which is of course
+ * inappropriate for a production configuration.
  */
 export default class Logging extends UtilityClass {
   /**
@@ -42,5 +45,16 @@ export default class Logging extends UtilityClass {
    */
   static redactTag(tag) {
     return tag;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation always returns `false`.
+   *
+   * @returns {boolean} `false`, always.
+   */
+  static shouldRedact() {
+    return false;
   }
 }

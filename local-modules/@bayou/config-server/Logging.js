@@ -42,4 +42,16 @@ export default class Logging extends UtilityClass {
   static redactTag(tag) {
     return use.Logging.redactTag(tag);
   }
+
+  /**
+   * Indicates whether this configuration wants logs to be redacted, generally
+   * speaking. This is meant to be used in places where the to-be-logged content
+   * isn't sufficiently unambiguous such that the `redact*()` methods on this
+   * class could be used.
+   *
+   * @returns {boolean} `true` if logs are to be redacted, or `false` if not.
+   */
+  static shouldRedact() {
+    return use.Logging.shouldRedact();
+  }
 }
