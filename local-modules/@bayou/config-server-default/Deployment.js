@@ -86,6 +86,18 @@ export default class Deployment extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation always returns `false`. This is of course inappropriate
+   * for a production build.
+   *
+   * @returns {boolean} `false`, always.
+   */
+  static shouldRedactLogs() {
+    return false;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation always returns `true`.
    *
    * @returns {boolean} `true`, always.

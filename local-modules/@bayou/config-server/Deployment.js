@@ -94,6 +94,19 @@ export default class Deployment extends UtilityClass {
   }
 
   /**
+   * Indicates whether this configuration wants logs to be redacted, e.g. to
+   * avoid writing user-private information to logs.
+   *
+   * **Note:** Even when this is `false`, there are some items which will
+   * nonetheless be redacted out of an abundance of caution.
+   *
+   * @returns {boolean} `true` if logs are to be redacted, or `false` if not.
+   */
+  static shouldRedactLogs() {
+    return use.Deployment.shouldRedactLogs();
+  }
+
+  /**
    * Checks to see if this server should serve code assets (most notably client
    * JavaScript bundles). It is typical (but not necessary) for this to be
    * `true` in development environments and `false` in production environments.
