@@ -50,6 +50,13 @@ export default class Redactor extends UtilityClass {
       if (!Redactor._arrayEquals(message, newMessage)) {
         logRecord = logRecord.withMessage(...newMessage);
       }
+    } else if (logRecord.metricName !== null) {
+      const payload    = logRecord.payload;
+      const newPayload = Logging.redactMetric(payload);
+
+      if (payload !== newPayload) {
+        logRecord = logRecord.withEvent(newPayload);
+      }
     } else if (logRecord.isEvent()) {
       const payload    = logRecord.payload;
       const newPayload = Logging.redactEvent(payload);
