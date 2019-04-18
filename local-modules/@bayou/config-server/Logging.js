@@ -33,6 +33,18 @@ export default class Logging extends UtilityClass {
   }
 
   /**
+   * Performs redaction on a metric (that is, an event which is meant to be
+   * exported as a metric per se).
+   *
+   * @param {Functor} payload Original event payload.
+   * @returns {Functor} Redacted replacement payload, or `payload` as given if
+   *   no redaction is necessary.
+   */
+  static redactMetric(payload) {
+    return use.Logging.redactMetric(payload);
+  }
+
+  /**
    * Performs redaction on a logging tag.
    *
    * @param {LogTag} tag Original tag.

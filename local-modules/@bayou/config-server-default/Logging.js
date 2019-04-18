@@ -38,6 +38,19 @@ export default class Logging extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation is a no-op, always returning its arguments unchanged.
+   *
+   * @param {Functor} payload Original event payload.
+   * @returns {Functor} Redacted replacement payload, or `payload` as given if
+   *   no redaction is necessary.
+   */
+  static redactMetric(payload) {
+    return payload;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation is a no-op, always returning its argument unchanged.
    *
    * @param {LogTag} tag Original tag.
