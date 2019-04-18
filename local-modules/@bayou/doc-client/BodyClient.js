@@ -32,6 +32,12 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
 const ERROR_MAX_PER_MINUTE = 3.00;
 
 /**
+ * {Int} Amount of time since last error, during which instances consider
+ * themselves to have had a "recent" error. See {@link #hadRecentError}.
+ */
+const RECENT_ERROR_TIME_MSEC = 10 * 1000; // Ten seconds.
+
+/**
  * {Int} How long to wait (in msec) after receiving a local change (to allow
  * time for other changes to get coalesced) before pushing a change up to the
  * server.
@@ -231,6 +237,32 @@ export default class BodyClient extends StateMachine {
     this._sessionProxy = null;
 
     this.log.event.permanentlyDetached();
+  }
+
+  /**
+   * Gets an indication of whether or not this instance has "recently"
+   * experienced an error. This is defined as an error having occurred within
+   * the last {@link #RECENT_ERROR_TIME_MSEC} msec, or if the instance is
+   * _currently_ in one of the error states.
+   *
+   * @returns {boolean} `true` if this instance has recently had an error, or
+   *   `false` if not.
+   */
+  hadRecentError() {
+    const now         = Date.now();
+    const state       = this.state;
+    const errorStamps = this._errorStamps;
+
+    const latestStamp = (errorStamps.length === 0)
+      ? 0
+      : errorStamps[errorStamps.length - 1];
+
+    const result = (state === 'errorWait')
+      || (state === 'unrecoverableError')
+      || (latestStamp > (now - RECENT_ERROR_TIME_MSEC));
+
+    this.log.event.hadRecentError(result);
+    return result;
   }
 
   /**
