@@ -32,6 +32,12 @@ const ERROR_WINDOW_MSEC = 3 * 60 * 1000; // Three minutes.
 const ERROR_MAX_PER_MINUTE = 3.00;
 
 /**
+ * {Int} Amount of time since last error, during which instances consider
+ * themselves to have had a "recent" error. See {@link #hadRecentError}.
+ */
+const RECENT_ERROR_TIME_MSEC = 10 * 1000; // Ten seconds.
+
+/**
  * {Int} How long to wait (in msec) after receiving a local change (to allow
  * time for other changes to get coalesced) before pushing a change up to the
  * server.
@@ -67,6 +73,15 @@ const STOP_POLL_DELAY_MSEC = 500; // Half a second.
  * Tag used to identify this module as the source of a Quill event or action.
  */
 const CLIENT_SOURCE = 'doc-client';
+
+/**
+ * {WeakMap<Quill, BodyClient>} Map that keeps track of which instance of this
+ * class is associated with each `Quill` instance. This is used to actively
+ * prevent two or more instances of this class from all operating on the same
+ * `Quill` instance. (This would be bad, because they would interfere with each
+ * other's operations.)
+ */
+const bindMap = new WeakMap();
 
 /**
  * Plumbing between Quill on the client and the document model on the server.
@@ -114,7 +129,10 @@ export default class BodyClient extends StateMachine {
   constructor(quill, docSession, manageEnabledState = true, pollingDelayMsec = 0) {
     super('detached', docSession.log);
 
-    /** {Quill} Editor object. */
+    /**
+     * {Quill|null} Editor object, or `null` if this instance has been told to
+     * detach.
+     */
     this._quill = quill;
 
     /**
@@ -227,10 +245,37 @@ export default class BodyClient extends StateMachine {
     // regard. What's done here is just an extra layer of protection which will
     // make bugs show up as very-noticeable failed method calls instead of
     // silently and incorrectly succeeding in talking to a server.
+    this._quill        = null;
     this._docSession   = null;
     this._sessionProxy = null;
 
     this.log.event.permanentlyDetached();
+  }
+
+  /**
+   * Gets an indication of whether or not this instance has "recently"
+   * experienced an error. This is defined as an error having occurred within
+   * the last {@link #RECENT_ERROR_TIME_MSEC} msec, or if the instance is
+   * _currently_ in one of the error states.
+   *
+   * @returns {boolean} `true` if this instance has recently had an error, or
+   *   `false` if not.
+   */
+  hadRecentError() {
+    const now         = Date.now();
+    const state       = this.state;
+    const errorStamps = this._errorStamps;
+
+    const latestStamp = (errorStamps.length === 0)
+      ? 0
+      : errorStamps[errorStamps.length - 1];
+
+    const result = (state === 'errorWait')
+      || (state === 'unrecoverableError')
+      || (latestStamp > (now - RECENT_ERROR_TIME_MSEC));
+
+    this.log.event.hadRecentError(result);
+    return result;
   }
 
   /**
@@ -537,6 +582,10 @@ export default class BodyClient extends StateMachine {
       this._running = false;
     }
 
+    // If another instance of this class comes along, it will now be okay for it
+    // to attach to the same `Quill` instance that this one was using.
+    this._quillBinding(false);
+
     // As soon as we're trying to stop, we should prevent the user from doing
     // any editing. And having disabled editing, we should just go back to being
     // in the `detached` state. In that state, additional incoming events will
@@ -702,6 +751,10 @@ export default class BodyClient extends StateMachine {
       this.log.event.notStartingBecausePermanentlyDetached();
       return;
     }
+
+    // This guarantees that there is no other instance of this class currently
+    // operating on the same `Quill` instance.
+    this._quillBinding(true);
 
     // **TODO:** This whole flow should probably be protected by a timeout.
 
@@ -1139,6 +1192,10 @@ export default class BodyClient extends StateMachine {
   _handle_unrecoverableError_stop() {
     this.log.event.nowUnrecoverable();
 
+    // If another instance of this class comes along, it will now be okay for it
+    // to attach to the same `Quill` instance that this one was using.
+    this._quillBinding(false);
+
     // Stop the user from trying to do more edits, as they'd get lost, and then
     // transition into `detached`.
     this._becomeDisabled('detached');
@@ -1278,6 +1335,38 @@ export default class BodyClient extends StateMachine {
   _isQuillChangePending() {
     // This asks: Is there an unprocessed `textChange` event on the event chain?
     return this._currentEvent.nextOfNow(QuillEvents.TYPE_textChange) !== null;
+  }
+
+  /**
+   * Causes this instance to be bound or unbound to its `Quill` instance, such
+   * that there can only ever be at most one instance of this class associated
+   * with any given `Quill` instance.
+   *
+   * @param {boolean} shouldBeBound Whether (`true`) or not (`false`) this
+   *   instance and its associated `Quill` instance should be bound.
+   */
+  _quillBinding(shouldBeBound) {
+    const quill   = this._quill;
+    const already = bindMap.get(quill);
+
+    if (shouldBeBound) {
+      // Bind if not already bound. Error if already bound to a different
+      // instance.
+      if (quill === null) {
+        throw Errors.badUse('Cannot bind after detaching.');
+      } else if (already === undefined) {
+        bindMap.set(quill, this);
+        this.log.event.quillBound();
+      } else if (already !== this) {
+        throw Errors.badUse('Quill instance already bound to a different client.');
+      }
+    } else {
+      // Unbind if bound. Do nothing if not.
+      if ((quill !== null) && (already === this)) {
+        bindMap.delete(quill);
+        this.log.event.quillUnbound();
+      }
+    }
   }
 
   /**
