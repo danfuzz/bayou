@@ -210,12 +210,21 @@ describe('@bayou/see-all/RedactUtils', () => {
         }
       });
 
+      it('indicates the count of extra elements of too-large arrays (basic case)', () => {
+        const orig   = [null, null, null, null, null, null, null, null, null, null, 1, 2, 345];
+        const expect = [null, null, null, null, null, null, null, null, null, null, '... 3 more'];
+
+        assert.deepEqual(RedactUtils.redactValues(orig, 1), expect);
+        assert.deepEqual(RedactUtils.redactValues(orig, 2), expect);
+        assert.deepEqual(RedactUtils.redactValues(orig, 5), expect);
+      });
+
       it('indicates the count of extra elements of too-large arrays', () => {
         const MAX        = 10;
         const orig       = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         const baseExpect = RedactUtils.redactValues(orig, 1);
 
-        for (let len = 11; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
+        for (let len = MAX + 1; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
           const expect = [...baseExpect, `... ${len - MAX} more`];
 
           while (orig.length < len) {
@@ -228,7 +237,132 @@ describe('@bayou/see-all/RedactUtils', () => {
         }
       });
 
-      // **TODO:** Test plain objects.
+      it('represents all elements of small-enough plain objects', () => {
+        const orig = {
+          a: { b: { c: { d: { e: { f: 'boop' } } } } },
+          bb: 1,
+          cc: false,
+          dd: undefined,
+          ee: new Map(),
+          ff: [[[1, 2, 3]]],
+          gg: { x: 123 },
+          hh: { y: [], z: 'xyz' },
+          ii: { z: new Map() },
+          jj: { x: 'x', y: 'y', z: 'z' },
+          x1: 123,
+          x2: 456,
+          x3: 789,
+          x4: 'beep',
+          x5: 'boop',
+          x6: 'beep',
+          x7: 'boop',
+          x8: 'beep',
+          x9: 'boop',
+          bongo: Symbol('drum')
+        };
+        const origEntries = Object.entries(orig);
+
+        for (let len = 0; len <= origEntries.length; len++) {
+          const obj = {};
+          for (let i = 0; i < len; i++) {
+            const [k, v] = origEntries[i];
+            obj[k] = v;
+          }
+
+          for (let d = 1; d <= 6; d++) {
+            const expect = {};
+            for (const [k, v] of Object.entries(obj)) {
+              expect[k] = RedactUtils.redactValues(v, d - 1);
+            }
+            assert.deepEqual(RedactUtils.redactValues(obj, d), expect, `${len}, ${d}`);
+          }
+        }
+      });
+
+      it('indicates the count of extra elements of too-large objects (basic case)', () => {
+        const orig = {
+          x01: null,
+          x02: null,
+          x03: null,
+          x04: null,
+          x05: null,
+          x06: null,
+          x07: null,
+          x08: null,
+          x09: null,
+          x10: null,
+          x11: null,
+          x12: null,
+          x13: null,
+          x14: null,
+          x15: null,
+          x16: null,
+          x17: null,
+          x18: null,
+          x19: null,
+          x20: null,
+          z1:  1,
+          z2:  2,
+          z3:  3,
+          z4:  456
+        };
+
+        const expect = {
+          x01: null,
+          x02: null,
+          x03: null,
+          x04: null,
+          x05: null,
+          x06: null,
+          x07: null,
+          x08: null,
+          x09: null,
+          x10: null,
+          x11: null,
+          x12: null,
+          x13: null,
+          x14: null,
+          x15: null,
+          x16: null,
+          x17: null,
+          x18: null,
+          x19: null,
+          x20: null,
+          '...': '... 4 more'
+        };
+
+        assert.deepEqual(RedactUtils.redactValues(orig, 1), expect);
+        assert.deepEqual(RedactUtils.redactValues(orig, 2), expect);
+        assert.deepEqual(RedactUtils.redactValues(orig, 5), expect);
+      });
+
+      it('indicates the count of extra elements of too-large objects', () => {
+        const MAX        = 20;
+        const orig       = {};
+        let   origLen    = 0;
+
+        function makeLen(len) {
+          while (origLen < len) {
+            const lenStr = `000${origLen}`;
+            orig[`x${lenStr.slice(lenStr.length - 3)}`] = 1;
+            origLen++;
+          }
+        }
+
+        makeLen(MAX);
+
+        const baseExpect = RedactUtils.redactValues(orig, 1);
+
+        for (let len = MAX + 1; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
+          const expect = Object.assign({ '...': `... ${len - MAX} more` }, baseExpect);
+
+          makeLen(len);
+
+          for (let d = 1; d <= 6; d++) {
+            assert.deepEqual(RedactUtils.redactValues(orig, d), expect, `${len}, ${d}`);
+          }
+        }
+      });
     });
   });
 });
