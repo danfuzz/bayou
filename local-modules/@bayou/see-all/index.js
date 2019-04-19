@@ -8,6 +8,7 @@ import LogRecord from './LogRecord';
 import LogStream from './LogStream';
 import LogTag from './LogTag';
 import Logger from './Logger';
+import RedactUtils from './RedactUtils';
 import SeeAll from './SeeAll';
 
-export { BaseLogger, BaseSink, LogRecord, LogStream, LogTag, Logger, SeeAll };
+export { BaseLogger, BaseSink, LogRecord, LogStream, LogTag, Logger, RedactUtils, SeeAll };
