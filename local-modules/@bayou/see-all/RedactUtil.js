@@ -152,4 +152,26 @@ export default class RedactUtil extends UtilityClass {
       }
     }
   }
+
+  /**
+   * Wrap the given value in a `redacted(...)` functor, as a way to indicate
+   * that the value is indeed redacted in some way.
+   *
+   * @param {*} value Value to wrap.
+   * @returns {Functor} Appropriately-wrapped form.
+   */
+  static wrapRedacted(value) {
+    return new Functor('redacted', value);
+  }
+
+  /**
+   * Wrap the given value in a `truncated(...)` functor, as a way to indicate
+   * that the value is indeed truncated in some way.
+   *
+   * @param {*} value Value to wrap.
+   * @returns {Functor} Appropriately-wrapped form.
+   */
+  static wrapTruncated(value) {
+    return new Functor('truncated', value);
+  }
 }

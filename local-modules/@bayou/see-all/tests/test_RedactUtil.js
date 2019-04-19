@@ -365,4 +365,34 @@ describe('@bayou/see-all/RedactUtil', () => {
       });
     });
   });
+
+  describe('wrapRedacted()', () => {
+    it('wraps as expected', () => {
+      function test(v) {
+        const expect = new Functor('redacted', v);
+        const got    = RedactUtil.wrapRedacted(v);
+        assert.deepEqual(got, expect);
+      }
+
+      test(true);
+      test('foo');
+      test([1, 2, 3]);
+      test(new Map());
+    });
+  });
+
+  describe('wrapTruncated()', () => {
+    it('wraps as expected', () => {
+      function test(v) {
+        const expect = new Functor('truncated', v);
+        const got    = RedactUtil.wrapTruncated(v);
+        assert.deepEqual(got, expect);
+      }
+
+      test(false);
+      test('blort');
+      test(['x']);
+      test(/boop/);
+    });
+  });
 });
