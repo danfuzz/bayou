@@ -130,8 +130,8 @@ export default class BodyClient extends StateMachine {
     super('detached', docSession.log);
 
     /**
-     * {Quill|null} Editor object, or `null` if this instance has been told to
-     * detach.
+     * {QuillProm|null} Editor object, or `null` if this instance has been told
+     * to detach.
      */
     this._quill = quill;
 
