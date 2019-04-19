@@ -195,7 +195,40 @@ describe('@bayou/see-all/RedactUtils', () => {
         }
       });
 
-      // **TODO:** Test arrays and plain objects.
+      it('represents all elements of small-enough arrays', () => {
+        const orig = [[[[[['boop']]]]], 'a', true, null, undefined, 123, /x/, [], [1], { a: 'florp' }];
+
+        for (let len = 0; len <= orig.length; len++) {
+          const arr = orig.slice(0, len);
+          for (let d = 1; d <= 6; d++) {
+            const expect = [];
+            for (const v of arr) {
+              expect.push(RedactUtils.redactValues(v, d - 1));
+            }
+            assert.deepEqual(RedactUtils.redactValues(arr, d), expect, `${len}, ${d}`);
+          }
+        }
+      });
+
+      it('indicates the count of extra elements of too-large arrays', () => {
+        const MAX        = 10;
+        const orig       = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const baseExpect = RedactUtils.redactValues(orig, 1);
+
+        for (let len = 11; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
+          const expect = [...baseExpect, `... ${len - MAX} more`];
+
+          while (orig.length < len) {
+            orig.push('x');
+          }
+
+          for (let d = 1; d <= 6; d++) {
+            assert.deepEqual(RedactUtils.redactValues(orig, d), expect, `${len}, ${d}`);
+          }
+        }
+      });
+
+      // **TODO:** Test plain objects.
     });
   });
 });
