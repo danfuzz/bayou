@@ -137,8 +137,9 @@ export default class DebugTools extends CommonBase {
   _check_authorId(req_unused, value) {
     try {
       Storage.dataStore.checkAuthorIdSyntax(value);
-    } catch (error) {
-      // Augment error and rethrow.
+    } catch (e) {
+      // Rethrow with better message.
+      const error = new Error();
       error.debugMsg = 'Bad value for `authorId`.';
       throw error;
     }
@@ -153,8 +154,9 @@ export default class DebugTools extends CommonBase {
   _check_documentId(req_unused, value) {
     try {
       Storage.dataStore.checkDocumentIdSyntax(value);
-    } catch (error) {
-      // Augment error and rethrow.
+    } catch (e) {
+      // Rethrow with better message.
+      const error = new Error();
       error.debugMsg = 'Bad value for `documentId`.';
       throw error;
     }
@@ -187,8 +189,9 @@ export default class DebugTools extends CommonBase {
   _check_testFilter(req_unused, value) {
     try {
       new RegExp(value);
-    } catch (error) {
-      // Augment error and rethrow.
+    } catch (e) {
+      // Rethrow with better message.
+      const error = new Error();
       error.debugMsg = 'Bad value for `testFilter`.';
       throw error;
     }
