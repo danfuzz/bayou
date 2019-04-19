@@ -21,7 +21,7 @@ const MAX_OBJECT_KEYS = 20;
  * Performer of various kinds of redaction on {@link LogRecord} instances and
  * their constituent parts.
  */
-export default class RedactUtils extends UtilityClass {
+export default class RedactUtil extends UtilityClass {
   /**
    * Truncates a string to be no more than the given number of characters,
    * including the truncation-indicating ellipsis, if truncated.
@@ -96,7 +96,7 @@ export default class RedactUtils extends UtilityClass {
     TInt.nonNegative(maxDepth);
 
     if (maxDepth === 0) {
-      return RedactUtils.fullyRedact(value);
+      return RedactUtil.fullyRedact(value);
     }
 
     const nextDepth = maxDepth - 1;
@@ -114,7 +114,7 @@ export default class RedactUtils extends UtilityClass {
               result.push(`... ${value.length - MAX_ARRAY_ELEMENTS} more`);
               break;
             }
-            result.push(RedactUtils.redactValues(v, nextDepth));
+            result.push(RedactUtil.redactValues(v, nextDepth));
             count++;
           }
           return result;
@@ -132,7 +132,7 @@ export default class RedactUtils extends UtilityClass {
               result['...'] = `... ${keys.length - MAX_OBJECT_KEYS} more`;
               break;
             }
-            result[k] = RedactUtils.redactValues(value[k], nextDepth);
+            result[k] = RedactUtil.redactValues(value[k], nextDepth);
             count++;
           }
           return result;

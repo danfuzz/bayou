@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { RedactUtils } from '@bayou/see-all';
+import { RedactUtil } from '@bayou/see-all';
 import { Functor } from '@bayou/util-common';
 
 /**
@@ -24,11 +24,11 @@ function makeString(len) {
   return s.slice(0, len);
 }
 
-describe('@bayou/see-all/RedactUtils', () => {
+describe('@bayou/see-all/RedactUtil', () => {
   describe('truncateString()', () => {
     it('rejects non-string `value` arguments', () => {
       function test(v) {
-        assert.throws(() => RedactUtils.truncateString(v, 100), /badValue/);
+        assert.throws(() => RedactUtil.truncateString(v, 100), /badValue/);
       }
 
       test(undefined);
@@ -40,7 +40,7 @@ describe('@bayou/see-all/RedactUtils', () => {
 
     it('rejects invalud `maxLength` arguments', () => {
       function test(m) {
-        assert.throws(() => RedactUtils.truncateString('xyzabc', m), /badValue/);
+        assert.throws(() => RedactUtil.truncateString('xyzabc', m), /badValue/);
       }
 
       test(undefined);
@@ -62,7 +62,7 @@ describe('@bayou/see-all/RedactUtils', () => {
 
         for (let j = 0; j <= 10; j++) {
           if ((i + j) < 3) continue;
-          assert.strictEqual(RedactUtils.truncateString(s, i + j), s, `${i}, ${j}`);
+          assert.strictEqual(RedactUtil.truncateString(s, i + j), s, `${i}, ${j}`);
         }
       }
     });
@@ -73,7 +73,7 @@ describe('@bayou/see-all/RedactUtils', () => {
 
         for (let j = 3 + (i % 7); j < i; j += 11) {
           const expect = `${s.slice(0, j - 3)}...`;
-          assert.strictEqual(RedactUtils.truncateString(s, j), expect, `${i}, ${j}`);
+          assert.strictEqual(RedactUtil.truncateString(s, j), expect, `${i}, ${j}`);
         }
       }
     });
@@ -155,13 +155,13 @@ describe('@bayou/see-all/RedactUtils', () => {
   }
 
   describe('fullyRedact()', () => {
-    testFullRedaction(v => RedactUtils.fullyRedact(v));
+    testFullRedaction(v => RedactUtil.fullyRedact(v));
   });
 
   describe('redactValues()', () => {
     it('rejects bad values for `maxDepth`', () => {
       function test(m) {
-        assert.throws(() => RedactUtils.redactValues('x', m), /badValue/);
+        assert.throws(() => RedactUtil.redactValues('x', m), /badValue/);
       }
 
       test(undefined);
@@ -172,16 +172,16 @@ describe('@bayou/see-all/RedactUtils', () => {
     });
 
     describe('when `maxDepth === 0`', () => {
-      testFullRedaction(v => RedactUtils.redactValues(v, 0));
+      testFullRedaction(v => RedactUtil.redactValues(v, 0));
     });
 
     describe('when `maxDepth !== 0` and is valid', () => {
       describe('common cases for `maxDepth === 1`', () => {
-        testCommonRedaction(v => RedactUtils.redactValues(v, 1));
+        testCommonRedaction(v => RedactUtil.redactValues(v, 1));
       });
 
       describe('common cases for `maxDepth === 2`', () => {
-        testCommonRedaction(v => RedactUtils.redactValues(v, 2));
+        testCommonRedaction(v => RedactUtil.redactValues(v, 2));
       });
 
       it('indicates the lengths of strings', () => {
@@ -190,7 +190,7 @@ describe('@bayou/see-all/RedactUtils', () => {
           const expect = `... length ${i}`;
 
           for (let d = 1; d < 5; d++) {
-            assert.strictEqual(RedactUtils.redactValues(s, d), expect, `${i}, ${d}`);
+            assert.strictEqual(RedactUtil.redactValues(s, d), expect, `${i}, ${d}`);
           }
         }
       });
@@ -203,9 +203,9 @@ describe('@bayou/see-all/RedactUtils', () => {
           for (let d = 1; d <= 6; d++) {
             const expect = [];
             for (const v of arr) {
-              expect.push(RedactUtils.redactValues(v, d - 1));
+              expect.push(RedactUtil.redactValues(v, d - 1));
             }
-            assert.deepEqual(RedactUtils.redactValues(arr, d), expect, `${len}, ${d}`);
+            assert.deepEqual(RedactUtil.redactValues(arr, d), expect, `${len}, ${d}`);
           }
         }
       });
@@ -214,15 +214,15 @@ describe('@bayou/see-all/RedactUtils', () => {
         const orig   = [null, null, null, null, null, null, null, null, null, null, 1, 2, 345];
         const expect = [null, null, null, null, null, null, null, null, null, null, '... 3 more'];
 
-        assert.deepEqual(RedactUtils.redactValues(orig, 1), expect);
-        assert.deepEqual(RedactUtils.redactValues(orig, 2), expect);
-        assert.deepEqual(RedactUtils.redactValues(orig, 5), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 1), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 2), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 5), expect);
       });
 
       it('indicates the count of extra elements of too-large arrays', () => {
         const MAX        = 10;
         const orig       = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        const baseExpect = RedactUtils.redactValues(orig, 1);
+        const baseExpect = RedactUtil.redactValues(orig, 1);
 
         for (let len = MAX + 1; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
           const expect = [...baseExpect, `... ${len - MAX} more`];
@@ -232,7 +232,7 @@ describe('@bayou/see-all/RedactUtils', () => {
           }
 
           for (let d = 1; d <= 6; d++) {
-            assert.deepEqual(RedactUtils.redactValues(orig, d), expect, `${len}, ${d}`);
+            assert.deepEqual(RedactUtil.redactValues(orig, d), expect, `${len}, ${d}`);
           }
         }
       });
@@ -272,9 +272,9 @@ describe('@bayou/see-all/RedactUtils', () => {
           for (let d = 1; d <= 6; d++) {
             const expect = {};
             for (const [k, v] of Object.entries(obj)) {
-              expect[k] = RedactUtils.redactValues(v, d - 1);
+              expect[k] = RedactUtil.redactValues(v, d - 1);
             }
-            assert.deepEqual(RedactUtils.redactValues(obj, d), expect, `${len}, ${d}`);
+            assert.deepEqual(RedactUtil.redactValues(obj, d), expect, `${len}, ${d}`);
           }
         }
       });
@@ -331,9 +331,9 @@ describe('@bayou/see-all/RedactUtils', () => {
           '...': '... 4 more'
         };
 
-        assert.deepEqual(RedactUtils.redactValues(orig, 1), expect);
-        assert.deepEqual(RedactUtils.redactValues(orig, 2), expect);
-        assert.deepEqual(RedactUtils.redactValues(orig, 5), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 1), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 2), expect);
+        assert.deepEqual(RedactUtil.redactValues(orig, 5), expect);
       });
 
       it('indicates the count of extra elements of too-large objects', () => {
@@ -351,7 +351,7 @@ describe('@bayou/see-all/RedactUtils', () => {
 
         makeLen(MAX);
 
-        const baseExpect = RedactUtils.redactValues(orig, 1);
+        const baseExpect = RedactUtil.redactValues(orig, 1);
 
         for (let len = MAX + 1; len < 1000; len = Math.floor((len + 10) * 3 / 2)) {
           const expect = Object.assign({ '...': `... ${len - MAX} more` }, baseExpect);
@@ -359,7 +359,7 @@ describe('@bayou/see-all/RedactUtils', () => {
           makeLen(len);
 
           for (let d = 1; d <= 6; d++) {
-            assert.deepEqual(RedactUtils.redactValues(orig, d), expect, `${len}, ${d}`);
+            assert.deepEqual(RedactUtil.redactValues(orig, d), expect, `${len}, ${d}`);
           }
         }
       });
