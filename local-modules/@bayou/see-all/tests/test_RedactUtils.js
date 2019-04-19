@@ -8,18 +8,24 @@ import { describe, it } from 'mocha';
 import { RedactUtils } from '@bayou/see-all';
 import { Functor } from '@bayou/util-common';
 
+/**
+ * Makes a string of a specified length.
+ *
+ * @param {Int} len String length.
+ * @returns {string} An appropriately-constructed string.
+ */
+function makeString(len) {
+  let s = 'florp-';
+
+  while (s.length < len) {
+    s = `${s}-${s.length}-bloop`;
+  }
+
+  return s.slice(0, len);
+}
+
 describe('@bayou/see-all/RedactUtils', () => {
   describe('truncateString()', () => {
-    function makeString(len) {
-      let s = 'florp-';
-
-      while (s.length < len) {
-        s = `${s}-${s.length}-bloop`;
-      }
-
-      return s.slice(0, len);
-    }
-
     it('rejects non-string `value` arguments', () => {
       function test(v) {
         assert.throws(() => RedactUtils.truncateString(v, 100), /badValue/);
@@ -170,9 +176,26 @@ describe('@bayou/see-all/RedactUtils', () => {
     });
 
     describe('when `maxDepth !== 0` and is valid', () => {
-      testCommonRedaction(v => RedactUtils.redactValues(v, 0));
+      describe('common cases for `maxDepth === 1`', () => {
+        testCommonRedaction(v => RedactUtils.redactValues(v, 1));
+      });
 
-      // **TODO:** Test strings, arrays, and plain objects.
+      describe('common cases for `maxDepth === 2`', () => {
+        testCommonRedaction(v => RedactUtils.redactValues(v, 2));
+      });
+
+      it('indicates the lengths of strings', () => {
+        for (let i = 0; i < 1000; i = Math.floor((i + 10) * 3 / 2)) {
+          const s      = makeString(i);
+          const expect = `... length ${i}`;
+
+          for (let d = 1; d < 5; d++) {
+            assert.strictEqual(RedactUtils.redactValues(s, d), expect, `${i}, ${d}`);
+          }
+        }
+      });
+
+      // **TODO:** Test arrays and plain objects.
     });
   });
 });
