@@ -73,39 +73,21 @@ describe('@bayou/see-all/RedactUtils', () => {
     });
   });
 
-  describe('fullyRedact()', () => {
+  // Common tests for `fullyRedact()` and `redactValues()`, specifically for the
+  // behavior of the latter which is _not_ depth-dependent.
+  function testCommonRedaction(redact) {
     it('passes `undefined` through as-is', () => {
-      assert.strictEqual(RedactUtils.fullyRedact(undefined), undefined);
+      assert.strictEqual(redact(undefined), undefined);
     });
 
     it('passes `null` through as-is', () => {
-      assert.strictEqual(RedactUtils.fullyRedact(null), null);
-    });
-
-    it('converts all strings to `...`', () => {
-      const expect = '...';
-
-      assert.strictEqual(RedactUtils.fullyRedact(''), expect);
-      assert.strictEqual(RedactUtils.fullyRedact('a'), expect);
-      assert.strictEqual(RedactUtils.fullyRedact('bc'), expect);
-      assert.strictEqual(RedactUtils.fullyRedact('def'), expect);
-      assert.strictEqual(RedactUtils.fullyRedact('ghij'), expect);
-      assert.strictEqual(RedactUtils.fullyRedact('floop-de-doop'), expect);
-    });
-
-    it('converts all arrays to `[\'...\']`', () => {
-      const expect = ['...'];
-
-      assert.deepEqual(RedactUtils.fullyRedact([]), expect);
-      assert.deepEqual(RedactUtils.fullyRedact([1]), expect);
-      assert.deepEqual(RedactUtils.fullyRedact(['a', 'b']), expect);
-      assert.deepEqual(RedactUtils.fullyRedact([null, null, undefined]), expect);
+      assert.strictEqual(redact(null), null);
     });
 
     it('converts instances to `new_name(\'...\')`', () => {
       function test(name, obj) {
         const expect = new Functor(`new_${name}`, '...');
-        assert.deepEqual(RedactUtils.fullyRedact(obj), expect);
+        assert.deepEqual(redact(obj), expect);
       }
 
       class Beep {}
@@ -118,18 +100,10 @@ describe('@bayou/see-all/RedactUtils', () => {
       test(RegExp.name, /florp/);
     });
 
-    it('converts all plain objects to `{ \'...\': \'...\' }`', () => {
-      const expect = { '...': '...' };
-
-      assert.deepEqual(RedactUtils.fullyRedact({}), expect);
-      assert.deepEqual(RedactUtils.fullyRedact({ a: 1 }), expect);
-      assert.deepEqual(RedactUtils.fullyRedact({ foo: 'bar', florp: 'like' }), expect);
-    });
-
-    it('converts other primitive types to `type(\'...\')`', () => {
+    it('converts other atomic primitive types to `type(\'...\')`', () => {
       function test(v) {
         const expect = new Functor(`${typeof v}`, '...');
-        assert.deepEqual(RedactUtils.fullyRedact(v), expect);
+        assert.deepEqual(redact(v), expect);
       }
 
       test(false);
@@ -137,6 +111,68 @@ describe('@bayou/see-all/RedactUtils', () => {
       test(123);
       test(123.456);
       test(Symbol('x'));
+    });
+  }
+
+  // Tests for `fullyRedact()` which are also used to test `redactValues()` when
+  // `maxDepth === 0`.
+  function testFullRedaction(redact) {
+    testCommonRedaction(redact);
+
+    it('converts all strings to `...`', () => {
+      const expect = '...';
+
+      assert.strictEqual(redact(''), expect);
+      assert.strictEqual(redact('a'), expect);
+      assert.strictEqual(redact('bc'), expect);
+      assert.strictEqual(redact('def'), expect);
+      assert.strictEqual(redact('ghij'), expect);
+      assert.strictEqual(redact('floop-de-doop'), expect);
+    });
+
+    it('converts all arrays to `[\'...\']`', () => {
+      const expect = ['...'];
+
+      assert.deepEqual(redact([]), expect);
+      assert.deepEqual(redact([1]), expect);
+      assert.deepEqual(redact(['a', 'b']), expect);
+      assert.deepEqual(redact([null, null, undefined]), expect);
+    });
+
+    it('converts all plain objects to `{ \'...\': \'...\' }`', () => {
+      const expect = { '...': '...' };
+
+      assert.deepEqual(redact({}), expect);
+      assert.deepEqual(redact({ a: 1 }), expect);
+      assert.deepEqual(redact({ foo: 'bar', florp: 'like' }), expect);
+    });
+  }
+
+  describe('fullyRedact()', () => {
+    testFullRedaction(v => RedactUtils.fullyRedact(v));
+  });
+
+  describe('redactValues()', () => {
+    it('rejects bad values for `maxDepth`', () => {
+      function test(m) {
+        assert.throws(() => RedactUtils.redactValues('x', m), /badValue/);
+      }
+
+      test(undefined);
+      test(null);
+      test('florp');
+      test(-1);
+      test(2.4);
+    });
+
+    describe('when `maxDepth === 0`', () => {
+      testFullRedaction(v => RedactUtils.redactValues(v, 0));
+    });
+
+    describe('when `maxDepth !== 0` and is valid', () => {
+      testCommonRedaction(v => RedactUtils.redactValues(v, 0));
+
+      // **TODO:** Test strings, arrays, and plain objects.
     });
   });
 });

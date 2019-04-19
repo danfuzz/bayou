@@ -6,10 +6,22 @@ import { Functor, UtilityClass } from '@bayou/util-common';
 import { TInt, TString } from '@bayou/typecheck';
 
 /**
+ * {Int} Maximum number of array elements to show in a structure-preserving
+ * redaction.
+ */
+const MAX_ARRAY_ELEMENTS = 10;
+
+/**
+ * {Int} Maximum number of plain-object keys to show in a structure-preserving
+ * redaction.
+ */
+const MAX_OBJECT_KEYS = 20;
+
+/**
  * Performer of various kinds of redaction on {@link LogRecord} instances and
  * their constituent parts.
  */
-export default class LogRedactor extends UtilityClass {
+export default class RedactUtils extends UtilityClass {
   /**
    * Truncates a string to be no more than the given number of characters,
    * including the truncation-indicating ellipsis, if truncated.
@@ -59,6 +71,76 @@ export default class LogRedactor extends UtilityClass {
 
       case 'string': {
         return '...';
+      }
+
+      case 'undefined': {
+        return undefined;
+      }
+
+      default: {
+        return new Functor(type, '...');
+      }
+    }
+  }
+
+  /**
+   * Redacts the values within the given (top) value, leaving the structure
+   * apparent, to an indicated depth.
+   *
+   * @param {*} value Original value.
+   * @param {Int} maxDepth Maximum depth to preserve; below that, values are
+   *   fully redacted (see {@link #fullyRedact}).
+   * @returns {*} Structure-preserving redacted form.
+   */
+  static redactValues(value, maxDepth) {
+    TInt.nonNegative(maxDepth);
+
+    if (maxDepth === 0) {
+      return RedactUtils.fullyRedact(value);
+    }
+
+    const nextDepth = maxDepth - 1;
+    const type      = typeof value;
+
+    switch (type) {
+      case 'object': {
+        if (value === null) {
+          return null;
+        } else if (Array.isArray(value)) {
+          const result = [];
+          let   count  = 0;
+          for (const v of value) {
+            if (count === MAX_ARRAY_ELEMENTS) {
+              result.push(`... ${value.length - MAX_ARRAY_ELEMENTS} more`);
+              break;
+            }
+            result.push(RedactUtils.redactValues(v, nextDepth));
+            count++;
+          }
+          return result;
+        }
+
+        const name = value.constructor ? value.constructor.name : null;
+        if ((typeof name === 'string') && (Object.getPrototypeOf(value) !== Object.prototype)) {
+          return new Functor(`new_${name}`, '...');
+        } else {
+          const keys   = Object.keys(value).sort();
+          const result = {};
+          let   count  = 0;
+          for (const k of keys) {
+            if (count === MAX_OBJECT_KEYS) {
+              result['...'] = `... ${keys.length - MAX_OBJECT_KEYS} more`;
+              break;
+            }
+            result[k] = RedactUtils.redactValues(value[k], nextDepth);
+            count++;
+          }
+          return result;
+        }
+      }
+
+      case 'string': {
+        return `... length ${value.length}`;
       }
 
       case 'undefined': {
