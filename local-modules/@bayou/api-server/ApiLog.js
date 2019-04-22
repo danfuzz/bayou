@@ -101,7 +101,8 @@ export default class ApiLog extends CommonBase {
    * @param {Response} response Response which is being sent to the caller.
    */
   _finishDetails(details, response) {
-    details.endTime = this._now();
+    details.endTime      = this._now();
+    details.durationMsec = details.endTime - details.startTime;
 
     if (response.error) {
       details.ok     = false;
@@ -139,12 +140,8 @@ export default class ApiLog extends CommonBase {
    * @param {object} details Ad-hoc object with call details.
    */
   _logCompletedCall(details) {
-    const msg          = details.msg;
-    const method       = msg ? msg.payload.name : '<unknown>';
-    const durationMsec = details.endTime - details.startTime;
-    const ok           = details.ok;
-
-    details.durationMsec = durationMsec;
+    const { durationMsec, msg, ok } = details;
+    const method = msg ? msg.payload.name : '<unknown>';
 
     this._log.event.apiReturned(this._redactFullDetails(details));
 
