@@ -2,8 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseLogger } from '@bayou/see-all';
+import { BaseLogger, RedactUtil } from '@bayou/see-all';
+import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
+
+/** {Int} Maximum depth to produce when redacting values. */
+const MAX_REDACTION_DEPTH = 4;
 
 /**
  * Handler of the logging of API calls.
@@ -13,12 +17,18 @@ export default class ApiLog extends CommonBase {
    * Constructs an instance.
    *
    * @param {Logger} log Logger to use.
+   * @param {boolean} shouldRedact Whether the logs should be redacted,
+   *   generally speaking. Even when `false`, this will typically end up doing
+   *   _some_ redaction (out of an abundance of caution).
    */
-  constructor(log) {
+  constructor(log, shouldRedact) {
     super();
 
     /** {BaseLogger} Logger to use. */
     this._log = BaseLogger.check(log);
+
+    /** {boolean} Whether the logs should be redacted, generally speaking. */
+    this._shouldRedact = TBoolean.check(shouldRedact);
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
@@ -69,7 +79,7 @@ export default class ApiLog extends CommonBase {
     const details = this._initialDetails(msg);
 
     this._pending.set(msg, details);
-    this._log.event.apiReceived(details);
+    this._log.event.apiReceived(this._redactInitialDetails(details));
   }
 
   /**
@@ -136,7 +146,7 @@ export default class ApiLog extends CommonBase {
 
     details.durationMsec = durationMsec;
 
-    this._log.event.apiReturned(details);
+    this._log.event.apiReturned(this._redactFullDetails(details));
 
     // For easy downstream, log a metric of just the method name, success flag,
     // and elapsed time.
@@ -153,5 +163,65 @@ export default class ApiLog extends CommonBase {
    */
   _now() {
     return Date.now();
+  }
+
+  /**
+   * Gets the value-redacted form of the given ad-hoc call details object, which
+   * should be the _complete_ post-call form, if redaction is required by the
+   * configuration of this instance. If not, this returns the `details` as-is.
+   *
+   * **Note:** This only possibly affects the `msg` binding of the details;
+   * everything else will always get passed through as-is.
+   *
+   * @param {object} details Ad-hoc object will call details.
+   * @returns {object} Possibly value-redacted form of `details`, or `details`
+   *   itself if this instance is not performing redaction.
+   */
+  _redactFullDetails(details) {
+    const origMsg = details.msg;
+
+    if ((origMsg === null) || !this._shouldRedact) {
+      return details;
+    }
+
+    // **TODO:** Use metadata to drive selective redaction of the message
+    // payload.
+
+    const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
+    const msg     = Object.assign({}, origMsg, { payload });
+
+    return Object.assign({}, details, { msg });
+  }
+
+  /**
+   * Gets the value-redacted form of the given ad-hoc call details object as
+   * produced by {@link #_initialDetails}, if redaction is required by the
+   * configuration of this instance. If not, this returns the `details` as-is.
+   *
+   * **Note:** This only possibly affects the `msg` binding of the details;
+   * everything else will always get passed through as-is.
+   *
+   * @param {object} details Ad-hoc object will call details.
+   * @returns {object} Possibly value-redacted form of `details`, or `details`
+   *   itself if this instance is not performing redaction.
+   */
+  _redactInitialDetails(details) {
+    const origMsg = details.msg;
+
+    if ((origMsg === null) || !this._shouldRedact) {
+      return details;
+    }
+
+    // When redacting the incoming details, we are not selective (that is, we
+    // don't use metadata to drive redaction) because at this point in the API
+    // handling process we don't have enough information to do so. That is, this
+    // call is made before the target of the message is known as an actual
+    // object, and it is only after the target is so known that we can use it to
+    // do selective redaction.
+
+    const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
+    const msg     = Object.assign({}, origMsg, { payload });
+
+    return Object.assign({}, details, { msg });
   }
 }
