@@ -145,6 +145,13 @@ describe('@bayou/see-all/RedactUtil', () => {
       assert.deepEqual(redact([null, null, undefined]), expect);
     });
 
+    it('converts all functors to ones with the same name but with `...` for args', () => {
+      const orig   = new Functor('blort', 1, 2, 3);
+      const expect = new Functor('blort', '...');
+
+      assert.deepEqual(redact(orig), expect);
+    });
+
     it('converts all plain objects to `{ \'...\': \'...\' }`', () => {
       const expect = { '...': '...' };
 
@@ -237,6 +244,16 @@ describe('@bayou/see-all/RedactUtil', () => {
         }
       });
 
+      it('recursively redacts functor arguments', () => {
+        const orig = new Functor('blort', 'a', 123, new Functor('zorch', [[[[[123]]]]]));
+
+        for (let d = 1; d <= 6; d++) {
+          const args   = orig.args.map(a => RedactUtil.redactValues(a, d - 1));
+          const expect = new Functor(orig.name, ...args);
+          assert.deepEqual(RedactUtil.redactValues(orig, d), expect, `${d}`);
+        }
+      });
+
       it('represents all elements of small-enough plain objects', () => {
         const orig = {
           a: { b: { c: { d: { e: { f: 'boop' } } } } },
@@ -249,7 +266,7 @@ describe('@bayou/see-all/RedactUtil', () => {
           hh: { y: [], z: 'xyz' },
           ii: { z: new Map() },
           jj: { x: 'x', y: 'y', z: 'z' },
-          x1: 123,
+          x1: new Functor('whee', 'yo', 'yo', 'yo'),
           x2: 456,
           x3: 789,
           x4: 'beep',
