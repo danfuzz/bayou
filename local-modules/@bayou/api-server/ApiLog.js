@@ -170,20 +170,28 @@ export default class ApiLog extends CommonBase {
    *   itself if this instance is not performing redaction.
    */
   _redactFullDetails(details) {
-    const origMsg = details.msg;
-
-    if ((origMsg === null) || !this._shouldRedact) {
+    if (!this._shouldRedact) {
       return details;
     }
 
     // **TODO:** Use metadata to drive selective redaction of the message
     // payload.
 
-    const result  = RedactUtil.wrapRedacted(RedactUtil.redactValues(details.result, MAX_REDACTION_DEPTH));
-    const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
-    const msg     = Object.assign({}, origMsg, { payload });
+    const { msg: origMsg, result: origResult } = details;
+    const replacements = {};
 
-    return Object.assign({}, details, { msg, result });
+    if (origResult) {
+      replacements.result =
+        RedactUtil.wrapRedacted(RedactUtil.redactValues(origResult, MAX_REDACTION_DEPTH));
+    }
+
+    if (origMsg) {
+      const payload =
+        RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
+      replacements.msg = Object.assign({}, origMsg, { payload });
+    }
+
+    return Object.assign({}, details, replacements);
   }
 
   /**
