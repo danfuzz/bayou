@@ -124,8 +124,7 @@ export default class ApiLog extends CommonBase {
 
     return {
       msg:       msg ? msg.logInfo : null,
-      startTime: now,
-      ok:        false
+      startTime: now
     };
   }
 
