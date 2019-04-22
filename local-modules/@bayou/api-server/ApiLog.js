@@ -179,10 +179,11 @@ export default class ApiLog extends CommonBase {
     // **TODO:** Use metadata to drive selective redaction of the message
     // payload.
 
+    const result  = RedactUtil.wrapRedacted(RedactUtil.redactValues(details.result, MAX_REDACTION_DEPTH));
     const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
     const msg     = Object.assign({}, origMsg, { payload });
 
-    return Object.assign({}, details, { msg });
+    return Object.assign({}, details, { msg, result });
   }
 
   /**
