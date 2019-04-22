@@ -871,25 +871,8 @@ export default class BodyClient extends StateMachine {
     // then there will soon be a `gotQuillEvent` event to be handled by this
     // instance, and after that gets done, it will once again be okay to
     // integrate changes from the server.
-    if (this._snapshot.revNum === baseRevNum) {
-      // **TODO:** For now, we make the check for `_isQuillChangePending()`
-      // separately (instead of making the outer if have an `&&`), so that we
-      // can explicitly do some logging around the is-pending case. This is
-      // because (historically speaking) while always arguably incorrect to fail
-      // to perform this check, it only recently started causing problems in
-      // practice. We want to log in order to understand more about when the
-      // situation arises, in case it is a harbinger of some other nascent new
-      // problem.
-      if (this._isQuillChangePending()) {
-        const thisSnap   = this._snapshot;
-        const quillDelta = BodyDelta.fromQuillForm(this._quill.getContents());
-        const quillSnap  = new BodySnapshot(thisSnap.revNum + 1, quillDelta);
-        const diff       = thisSnap.diff(quillSnap);
-        this.log.event.quillChangePending(diff);
-        this._sessionProxy.logEvent('quillChangePending', diff); // Log it on the server too.
-      } else {
-        this._updateWithChange(result);
-      }
+    if ((this._snapshot.revNum === baseRevNum) || !this._isQuillChangePending()) {
+      this._updateWithChange(result);
     }
 
     // Fire off the next iteration of requesting server changes, after a short
