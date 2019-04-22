@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ConnectionError, Message, Response } from '@bayou/api-common';
+import { Logging } from '@bayou/config-server';
 import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
@@ -55,7 +56,7 @@ export default class BaseConnection extends CommonBase {
     this._codec = this._context.codec;
 
     /** {ApiLog} The API logger to use. */
-    this._apiLog = new ApiLog(this._log);
+    this._apiLog = new ApiLog(this._log, Logging.shouldRedact());
 
     /** {boolean} Whether the connection should be aiming to become closed. */
     this._closing = false;

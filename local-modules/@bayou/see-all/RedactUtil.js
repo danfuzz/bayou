@@ -59,6 +59,10 @@ export default class RedactUtil extends UtilityClass {
           return null;
         } else if (Array.isArray(value)) {
           return ['...'];
+        } else if (value instanceof Functor) {
+          // Treat this analogously to a constructed object: Show the name but
+          // no arguments.
+          return new Functor(value.name, '...');
         }
 
         const name = value.constructor ? value.constructor.name : null;
@@ -118,10 +122,16 @@ export default class RedactUtil extends UtilityClass {
             count++;
           }
           return result;
+        } else if (value instanceof Functor) {
+          // Show the name and recursively redact arguments.
+          const args = value.args.map(a => RedactUtil.redactValues(a, nextDepth));
+          return new Functor(value.name, ...args);
         }
 
         const name = value.constructor ? value.constructor.name : null;
         if ((typeof name === 'string') && (Object.getPrototypeOf(value) !== Object.prototype)) {
+          // **TODO:** Consider redacting the result of `deconstruct()` when
+          // that method is available on `value`.
           return new Functor(`new_${name}`, '...');
         } else {
           const keys   = Object.keys(value).sort();
