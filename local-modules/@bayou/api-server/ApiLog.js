@@ -59,7 +59,7 @@ export default class ApiLog extends CommonBase {
     }
 
     if (response.error) {
-      // TODO: Ultimately _some_ errors coming back from API calls shouldn't
+      // **TODO:** Ultimately _some_ errors coming back from API calls shouldn't
       // be considered console-log-worthy server errors. We will need to
       // differentiate them at some point.
       this._log.error('Error from API call:', response.originalError);
@@ -108,8 +108,6 @@ export default class ApiLog extends CommonBase {
       details.ok     = false;
       details.error  = response.originalError;
     } else {
-      // **TODO:** This will ultimately need to redact some information in
-      // `response.result`.
       details.ok     = true;
       details.result = response.result;
     }
@@ -123,9 +121,6 @@ export default class ApiLog extends CommonBase {
    */
   _initialDetails(msg) {
     const now = this._now();
-
-    // **TODO:** This will ultimately need to redact some information in `msg`
-    // beyond what `msg.logInfo` might have done.
 
     return {
       msg:       msg ? msg.logInfo : null,
@@ -145,8 +140,8 @@ export default class ApiLog extends CommonBase {
 
     this._log.event.apiReturned(this._redactFullDetails(details));
 
-    // For easy downstream, log a metric of just the method name, success flag,
-    // and elapsed time.
+    // For ease of downstream handling (especially graphing), log a metric of
+    // just the method name, success flag, and elapsed time.
     this._log.metric.apiCall({ ok, durationMsec, method });
   }
 
