@@ -54,8 +54,8 @@ export default class ApiLog extends CommonBase {
     if (details) {
       this._pending.delete(msg);
     } else {
-      this._log.warning('Orphan message:', msg);
       details = this._initialDetails(msg);
+      this._log.event.orphanMessage(this._redactInitialDetails(details));
     }
 
     if (response.error) {
