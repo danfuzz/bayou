@@ -16,7 +16,7 @@ describe('@bayou/api-server/ApiLog', () => {
   describe('incomingMessage()', () => {
     // Common tests for both values of `shouldRedact`.
     function testCommon(shouldRedact) {
-      it('should log the redacted form of target when the target is a token', () => {
+      it('logs the redacted form of target when the target is a token', () => {
         const logger = new MockLogger();
         const apiLog = new ApiLog(logger, shouldRedact);
         const token  = new BearerToken('foo', 'foo-bar');
