@@ -66,14 +66,15 @@ export default class Message extends CommonBase {
    * {object} Ad-hoc object with the contents of this instance, suitable for
    * logging. In particular, the {@link #targetId} is represented in redacted
    * form if this instance was constructed with a {@link BearerToken}.
+   *
+   * **Note:** The {@link #payload} is _not_ redacted, as doing so requires
+   * information not present in this class (namely, the actual object to which
+   * the {@link #targetId} is bound).
    */
   get logInfo() {
     const id       = this._id;
     const targetId = TargetId.safeString(this._targetId);
     const payload  = this._payload;
-
-    // **TODO:** Ultimately, we probably want to perform redaction on the
-    // `payload`.
 
     return { id, targetId, payload };
   }
