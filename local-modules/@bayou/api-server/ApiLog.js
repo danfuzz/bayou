@@ -3,14 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Message, Response } from '@bayou/api-common';
-import { BaseLogger, RedactUtil } from '@bayou/see-all';
+import { BaseLogger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import Target from './Target';
-
-/** {Int} Maximum depth to produce when redacting values. */
-const MAX_REDACTION_DEPTH = 4;
 
 /**
  * Handler of the logging of API calls.
@@ -179,8 +176,14 @@ export default class ApiLog extends CommonBase {
     }
 
     if (msg !== null) {
-      // A non-`null` `msg` typically gets updated, so clone it proactively.
-      details.msg = Object.assign({}, details.msg);
+      const payload    = msg.payload;
+      const newPayload = (target === null)
+        ? Target.logInfoFromPayloadForNullTarget(payload, this._shouldRedact)
+        : target.logInfoFromPayload(payload, this._shouldRedact);
+
+      if (payload !== newPayload) {
+        details.msg = Object.assign({}, details.msg, { payload });
+      }
     }
 
     return details;
@@ -197,23 +200,16 @@ export default class ApiLog extends CommonBase {
    *   itself if this instance is not performing redaction.
    */
   _logInfoFull(details) {
-    const { msg, result, target: target_unused } = details;
+    const { msg, result, target } = details;
 
     details = this._logInfoCommon(details);
 
-    if (this._shouldRedact) {
-      // **TODO:** Use `target` to drive selective redaction of the message
-      // payload.
+    if (result !== undefined) {
+      const payload = (msg !== null) ? msg.payload : null;
 
-      if (result) {
-        details.result =
-          RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
-      }
-
-      if (msg !== null) {
-        details.msg.payload =
-          RedactUtil.wrapRedacted(RedactUtil.redactValues(msg.payload, MAX_REDACTION_DEPTH));
-      }
+      details.result = (target === null)
+        ? Target.logInfoFromResultForNullTarget(result, this._shouldRedact)
+        : target.logInfoFromResult(result, payload, this._shouldRedact);
     }
 
     return details;
@@ -230,21 +226,10 @@ export default class ApiLog extends CommonBase {
    * @returns {object} Logging-appropriate form of `detail`.
    */
   _logInfoInitial(details) {
-    const { msg, target: target_unused } = details;
-
-    details = this._logInfoCommon(details);
-
-    if ((msg !== null) && this._shouldRedact) {
-      // When redacting the incoming details, we are not selective (that is, we
-      // don't use metadata to drive redaction) because at this point in the API
-      // handling process we don't have enough information to do so. That is,
-      // this call is made before the target of the message is known as an
-      // actual object, and it is only after the target is so known that we can
-      // use it to do selective redaction. **TODO:** Not actually true anymore!
-      details.msg.payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(msg.payload, MAX_REDACTION_DEPTH));
-    }
-
-    return details;
+    // Just pass through to the common handler method. (In the past, this method
+    // did more stuff, and it might do so again in the future. In the meantime,
+    // it serves as a clear indicator of caller intent.)
+    return this._logInfoCommon(details);
   }
 
   /**
