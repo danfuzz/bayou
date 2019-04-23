@@ -344,7 +344,7 @@ export default class BaseConnection extends CommonBase {
    * determine the authority of a token.
    *
    * @param {Message} msg The message whose target is to be determined.
-   * @returns {Target} The target object that is associated with `idOrToken`.
+   * @returns {Target} The target object that is associated with `msg`.
    */
   async _getTarget(msg) {
     Message.check(msg);
@@ -356,6 +356,8 @@ export default class BaseConnection extends CommonBase {
       throw ConnectionError.connectionClosed(this._connectionId, 'Connection closed.');
     }
 
-    return context.getAuthorizedTarget(targetId);
+    const result = await context.getAuthorizedTarget(targetId);
+
+    return Target.check(result);
   }
 }
