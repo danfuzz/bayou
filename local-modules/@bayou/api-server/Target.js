@@ -191,8 +191,9 @@ export default class Target extends CommonBase {
       return payload;
     }
 
-    // **TODO:** Fill me in.
-    return payload;
+    // **TODO:** Redaction should be driven by target-specific metadata.
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
   }
 
   /**
