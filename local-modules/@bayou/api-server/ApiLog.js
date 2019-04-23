@@ -2,9 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Message, Response } from '@bayou/api-common';
 import { BaseLogger, RedactUtil } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
+
+import Target from './Target';
 
 /** {Int} Maximum depth to produce when redacting values. */
 const MAX_REDACTION_DEPTH = 4;
@@ -47,8 +50,13 @@ export default class ApiLog extends CommonBase {
    *
    * @param {Message} msg Incoming message.
    * @param {Response} response Response to the message.
+   * @param {Target} target The target that produced the response.
    */
-  fullCall(msg, response) {
+  fullCall(msg, response, target) {
+    Message.check(msg);
+    Response.check(response);
+    Target.check(target);
+
     let details = this._pending.get(msg);
 
     if (details) {

@@ -164,7 +164,7 @@ export default class BaseConnection extends CommonBase {
     if (msg === null) {
       this._apiLog.nonMessageResponse(response);
     } else {
-      this._apiLog.fullCall(msg, response);
+      this._apiLog.fullCall(msg, response, target);
     }
 
     return encodedResponse;
