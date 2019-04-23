@@ -67,7 +67,7 @@ export default class ApiLog extends CommonBase {
       // This is indicative of a bug in this module. The user of `ApiLog` should
       // have called `incomingMessage(msg)` but apparently didn't.
       details = this._initialDetails(msg);
-      this._log.event.orphanMessage(this._redactInitialDetails(details));
+      this._log.event.orphanMessage(this._logInfoInitial(details));
     }
 
     if (response.error) {
@@ -98,7 +98,7 @@ export default class ApiLog extends CommonBase {
     const details = this._initialDetails(msg, target);
 
     this._pending.set(msg, details);
-    this._log.event.apiReceived(this._redactInitialDetails(details));
+    this._log.event.apiReceived(this._logInfoInitial(details));
   }
 
   /**
@@ -153,7 +153,7 @@ export default class ApiLog extends CommonBase {
       details.error  = response.originalError;
     }
 
-    this._log.event.apiReturned(this._redactFullDetails(details, target));
+    this._log.event.apiReturned(this._logInfoFull(details, target));
 
     // For ease of downstream handling (especially graphing), log a metric of
     // just the method name, success flag, and elapsed time.
@@ -161,26 +161,14 @@ export default class ApiLog extends CommonBase {
   }
 
   /**
-   * Gets the current time, in the usual Unix Epoch msec form.
-   *
-   * **Note:** This method exists so as to make this class a little easier to
-   * test.
-   *
-   * @returns {Int} The current time in msec since the Unix Epoch.
-   */
-  _now() {
-    return Date.now();
-  }
-
-  /**
-   * Helper for the two main details processing methods, which gets a clone of
-   * the given call details object and does the common processing on it for both
-   * cases.
+   * Helper for the two main logging-oriented details processing methods, which
+   * gets a clone of the given call details object and does the common
+   * processing on it for both cases.
    *
    * @param {object} details Ad-hoc object with call details.
    * @returns {object} Cloned and processed version of `details`.
    */
-  _redactCommon(details) {
+  _logInfoCommon(details) {
     details = Object.assign({}, details);
 
     const target = details.target;
@@ -206,10 +194,10 @@ export default class ApiLog extends CommonBase {
    * @returns {object} Possibly value-redacted form of `details`, or `details`
    *   itself if this instance is not performing redaction.
    */
-  _redactFullDetails(details) {
+  _logInfoFull(details) {
     const { msg, result, target: target_unused } = details;
 
-    details = this._redactCommon(details);
+    details = this._logInfoCommon(details);
 
     if (this._shouldRedact) {
       // **TODO:** Use `target` to drive selective redaction of the message
@@ -239,10 +227,10 @@ export default class ApiLog extends CommonBase {
    *   state of affairs _before_ a call has been made.
    * @returns {object} Logging-appropriate form of `detail`.
    */
-  _redactInitialDetails(details) {
+  _logInfoInitial(details) {
     const { msg, target: target_unused } = details;
 
-    details = this._redactCommon(details);
+    details = this._logInfoCommon(details);
 
     if ((msg !== null) && this._shouldRedact) {
       // When redacting the incoming details, we are not selective (that is, we
@@ -255,5 +243,17 @@ export default class ApiLog extends CommonBase {
     }
 
     return details;
+  }
+
+  /**
+   * Gets the current time, in the usual Unix Epoch msec form.
+   *
+   * **Note:** This method exists so as to make this class a little easier to
+   * test.
+   *
+   * @returns {Int} The current time in msec since the Unix Epoch.
+   */
+  _now() {
+    return Date.now();
   }
 }
