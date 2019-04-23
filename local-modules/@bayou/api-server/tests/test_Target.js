@@ -72,6 +72,19 @@ describe('@bayou/api-server/Target', () => {
     });
   });
 
+  describe('.className', () => {
+    it('is the name of the class (constructor function) of `directObject`, if it has a class', () => {
+      class Florp {}
+      const t = new Target('x', new Florp());
+      assert.strictEqual(t.className, 'Florp');
+    });
+
+    it('is `<unknown>` if `directObject` is a plain object', () => {
+      const t = new Target('x', { x: 10 });
+      assert.strictEqual(t.className, '<unknown>');
+    });
+  });
+
   describe('.directObject', () => {
     it('is the same as the `directObject` passed to the constructor', () => {
       for (const obj of VALID_DIRECTS) {

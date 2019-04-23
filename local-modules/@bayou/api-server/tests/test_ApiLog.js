@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken, Message } from '@bayou/api-common';
+import { Target } from '@bayou/api-server';
 import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 
@@ -22,7 +23,7 @@ describe('@bayou/api-server/ApiLog', () => {
         const token  = new BearerToken('foo', 'foo-bar');
         const msg    = new Message(123, token, new Functor('x', 'y'));
 
-        apiLog.incomingMessage(msg);
+        apiLog.incomingMessage(msg, new Target('x', {}));
 
         const record = logger.record;
 

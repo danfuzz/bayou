@@ -3,10 +3,14 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken, TargetId } from '@bayou/api-common';
-import { TObject } from '@bayou/typecheck';
+import { RedactUtil } from '@bayou/see-all';
+import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import Schema from './Schema';
+
+/** {Int} Maximum depth to produce when redacting values. */
+const MAX_REDACTION_DEPTH = 4;
 
 /**
  * Wrapper for an object which is callable through the API. A target can be
@@ -15,6 +19,58 @@ import Schema from './Schema';
  * generally available without additional authorization checks).
  */
 export default class Target extends CommonBase {
+  /**
+   * Like {@link #logInfoFromPayload}, except only to be used when processing
+   * `null` as a target (e.g. when a target ID was not valid). Since there is
+   * no metadata available in this case, when redaction is on, this method
+   * performs full value redaction.
+   *
+   * @param {Functor} payload The call payload.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  static logInfoFromPayloadForNullTarget(payload, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return payload;
+    }
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+  }
+
+  /**
+   * Like {@link #logInfoFromResult}, except only to be used when processing
+   * `null` as a target (e.g. when a target ID was not valid). Since there is
+   * no metadata available in this case, when redaction is on, this method
+   * performs full value redaction.
+   *
+   * @param {*} result The result of the call in question.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  static logInfoFromResultForNullTarget(result, shouldRedact) {
+    if ((result === undefined) || (result === null)) {
+      return result;
+    }
+
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return result;
+    }
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+  }
+
   /**
    * Constructs an instance which wraps the given object.
    *
@@ -50,10 +106,27 @@ export default class Target extends CommonBase {
   }
 
   /**
-  * {object} The object which this instance represents, wraps, and generally
-  * provides access to. Accessing this property indicates that this instance is
-  * _not_ currently idle.
-  */
+   * {string} The name of the class which {@link #directObject} is an instance
+   * of.
+   */
+  get className() {
+    const clazz = this._directObject.constructor;
+
+    if ((clazz !== Object) && TFunction.isClass(clazz)) {
+      const name = clazz.name;
+      if (typeof name === 'string') {
+        return name;
+      }
+    }
+
+    return '<unknown>';
+  }
+
+  /**
+   * {object} The object which this instance represents, wraps, and generally
+   * provides access to. Accessing this property indicates that this instance is
+   * _not_ currently idle.
+   */
   get directObject() {
     return this._directObject;
   }
@@ -102,5 +175,62 @@ export default class Target extends CommonBase {
     const impl = obj[name];
 
     return impl.apply(obj, payload.args);
+  }
+
+  /**
+   * Converts the given payload (as presumably passed to an earlier call to
+   * {@link #call}, or about to be used as such), so as to be suitable for
+   * logging, including performing any necessary redaction.
+   *
+   * @param {Functor} payload The call payload.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  logInfoFromPayload(payload, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return payload;
+    }
+
+    // **TODO:** Redaction should be driven by target-specific metadata, based
+    // on `payload.name` (the method name) as well.
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+  }
+
+  /**
+   * Converts the given call result (as presumably returned from an earlier call
+   * to {@link #call}), so as to be suitable for logging, including performing
+   * any necessary redaction.
+   *
+   * @param {*} result The result of the call in question.
+   * @param {Functor} payload_unused The call payload which produced `result`.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  logInfoFromResult(result, payload_unused, shouldRedact) {
+    if ((result === undefined) || (result === null)) {
+      return result;
+    }
+
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return result;
+    }
+
+    // **TODO:** Redaction should be driven by target-specific metadata, based
+    // on `payload.name` (the method name) as well.
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
   }
 }

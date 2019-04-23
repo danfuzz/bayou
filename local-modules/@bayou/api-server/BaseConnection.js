@@ -138,16 +138,24 @@ export default class BaseConnection extends CommonBase {
     let error  = null;
 
     if (msg instanceof Message) {
-      this._apiLog.incomingMessage(msg);
       try {
         target = await this._getTarget(msg);
-        result = await this._actOnMessage(msg, target);
       } catch (e) {
         error = e;
       }
+
+      this._apiLog.incomingMessage(msg, target);
+
+      if (error === null) {
+        try {
+          result = await this._actOnMessage(msg, target);
+        } catch (e) {
+          error = e;
+        }
+      }
     } else if (msg instanceof Error) {
       error = msg;
-      msg = null; // Salient for logging.
+      msg   = null; // Salient for logging.
     } else {
       // Shouldn't happen because `_decodeMessage()` should only return one of
       // the above two types.

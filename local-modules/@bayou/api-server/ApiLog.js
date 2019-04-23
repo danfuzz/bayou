@@ -3,14 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Message, Response } from '@bayou/api-common';
-import { BaseLogger, RedactUtil } from '@bayou/see-all';
+import { BaseLogger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import Target from './Target';
-
-/** {Int} Maximum depth to produce when redacting values. */
-const MAX_REDACTION_DEPTH = 4;
 
 /**
  * Handler of the logging of API calls.
@@ -67,7 +64,7 @@ export default class ApiLog extends CommonBase {
       // This is indicative of a bug in this module. The user of `ApiLog` should
       // have called `incomingMessage(msg)` but apparently didn't.
       details = this._initialDetails(msg);
-      this._log.event.orphanMessage(this._redactInitialDetails(details));
+      this._log.event.orphanMessage(this._logInfoInitial(details));
     }
 
     if (response.error) {
@@ -77,21 +74,28 @@ export default class ApiLog extends CommonBase {
       this._log.error('Error from API call:', response.originalError);
     }
 
-    this._finishDetails(details, response);
-    this._logCompletedCall(details, target);
+    this._logCompletedCall(details, response, target);
   }
 
   /**
    * Logs an incoming message. This should be called just after the message was
-   * decoded off of an incoming connection.
+   * decoded off of an incoming connection and its target object is known (or is
+   * known to be invalid).
    *
    * @param {Message} msg Incoming message.
+   * @param {Target|null} target The target that is handling the message, if
+   *   any.
    */
-  incomingMessage(msg) {
-    const details = this._initialDetails(msg);
+  incomingMessage(msg, target) {
+    Message.check(msg);
+    if (target !== null) {
+      Target.check(target);
+    }
+
+    const details = this._initialDetails(msg, target);
 
     this._pending.set(msg, details);
-    this._log.event.apiReceived(this._redactInitialDetails(details));
+    this._log.event.apiReceived(this._logInfoInitial(details));
   }
 
   /**
@@ -102,59 +106,130 @@ export default class ApiLog extends CommonBase {
   nonMessageResponse(response) {
     const details = this._initialDetails(null);
 
-    this._finishDetails(details, response);
-    this._logCompletedCall(details, null);
-  }
-
-  /**
-   * Modifies the given details object to represent a completed call.
-   *
-   * @param {object} details Ad-hoc details object to modify.
-   * @param {Response} response Response which is being sent to the caller.
-   */
-  _finishDetails(details, response) {
-    details.endTime      = this._now();
-    details.durationMsec = details.endTime - details.startTime;
-
-    if (response.error) {
-      details.ok     = false;
-      details.error  = response.originalError;
-    } else {
-      details.ok     = true;
-      details.result = response.result;
-    }
+    this._logCompletedCall(details, response, null);
   }
 
   /**
    * Makes the initial details object to represent an incoming call.
    *
    * @param {Message|null} msg The incoming message, if any.
+   * @param {Target|null} target The target that is handling the message, if
+   *   any.
    * @returns {object} Ad-hoc details object.
    */
-  _initialDetails(msg) {
-    const now = this._now();
+  _initialDetails(msg, target) {
+    const startTime = this._now();
 
-    return {
-      msg:       msg ? msg.logInfo : null,
-      startTime: now
-    };
+    msg = msg ? msg.logInfo : null;
+
+    return { msg, startTime, target };
   }
 
   /**
    * Performs end-of-call logging.
    *
-   * @param {object} details Ad-hoc object with call details.
+   * @param {object} details Ad-hoc object with call details. This object is
+   *   modified by this method.
+   * @param {Response} response Response which is being sent to the caller.
    * @param {Target|null} target The target that handled the message, if any.
    */
-  _logCompletedCall(details, target) {
-    const { durationMsec, msg, ok } = details;
-    const method = msg ? msg.payload.name : '<unknown>';
+  _logCompletedCall(details, response, target) {
+    const msg          = details.msg;
+    const method       = msg ? msg.payload.name : '<unknown>';
+    const ok           = response.error ? false : true;
+    const endTime      = this._now();
+    const durationMsec = endTime - details.startTime;
 
-    this._log.event.apiReturned(this._redactFullDetails(details, target));
+    details.ok           = ok;
+    details.endTime      = endTime;
+    details.durationMsec = durationMsec;
+
+    if (ok) {
+      details.result = response.result;
+    } else {
+      details.error  = response.originalError;
+    }
+
+    this._log.event.apiReturned(this._logInfoFull(details, target));
 
     // For ease of downstream handling (especially graphing), log a metric of
     // just the method name, success flag, and elapsed time.
     this._log.metric.apiCall({ ok, durationMsec, method });
+  }
+
+  /**
+   * Helper for the two main logging-oriented details processing methods, which
+   * gets a clone of the given call details object and does the common
+   * processing on it for both cases.
+   *
+   * @param {object} details Ad-hoc object with call details.
+   * @returns {object} Cloned and processed version of `details`.
+   */
+  _logInfoCommon(details) {
+    details = Object.assign({}, details);
+
+    const { msg, target } = details;
+
+    if (target !== null) {
+      // Replace a non-null target with its class name.
+      details.target = `class ${target.className}`;
+    }
+
+    if (msg !== null) {
+      const payload    = msg.payload;
+      const newPayload = (target === null)
+        ? Target.logInfoFromPayloadForNullTarget(payload, this._shouldRedact)
+        : target.logInfoFromPayload(payload, this._shouldRedact);
+
+      if (payload !== newPayload) {
+        details.msg = Object.assign({}, msg, { payload: newPayload });
+      }
+    }
+
+    return details;
+  }
+
+  /**
+   * Returns a logging-appropriate form of the given ad-hoc call details object,
+   * which is expected to be the complete post-call form. This always does some
+   * processing on the details, and this is specifically where redaction is
+   * performed when required by the configuration of this instance.
+   *
+   * @param {object} details Ad-hoc object with call details.
+   * @returns {object} Possibly value-redacted form of `details`, or `details`
+   *   itself if this instance is not performing redaction.
+   */
+  _logInfoFull(details) {
+    const { msg, result, target } = details;
+
+    details = this._logInfoCommon(details);
+
+    if (result !== undefined) {
+      const payload = (msg !== null) ? msg.payload : null;
+
+      details.result = (target === null)
+        ? Target.logInfoFromResultForNullTarget(result, this._shouldRedact)
+        : target.logInfoFromResult(result, payload, this._shouldRedact);
+    }
+
+    return details;
+  }
+
+  /**
+   * Returns a logging-appropriate form of the given ad-hoc call details object
+   * as produced by {@link #_initialDetails}. This always does some processing
+   * on the details, and this is specifically where redaction is performed when
+   * required by the configuration of this instance.
+   *
+   * @param {object} details Ad-hoc object will call details, representing the
+   *   state of affairs _before_ a call has been made.
+   * @returns {object} Logging-appropriate form of `detail`.
+   */
+  _logInfoInitial(details) {
+    // Just pass through to the common handler method. (In the past, this method
+    // did more stuff, and it might do so again in the future. In the meantime,
+    // it serves as a clear indicator of caller intent.)
+    return this._logInfoCommon(details);
   }
 
   /**
@@ -167,76 +242,5 @@ export default class ApiLog extends CommonBase {
    */
   _now() {
     return Date.now();
-  }
-
-  /**
-   * Gets the value-redacted form of the given ad-hoc call details object, which
-   * should be the _complete_ post-call form, if redaction is required by the
-   * configuration of this instance. If not, this returns the `details` as-is.
-   *
-   * **Note:** This only possibly affects the `msg` binding of the details;
-   * everything else will always get passed through as-is.
-   *
-   * @param {object} details Ad-hoc object will call details.
-   * @param {Target|null} target_unused The target that handled the message, if
-   *   any.
-   * @returns {object} Possibly value-redacted form of `details`, or `details`
-   *   itself if this instance is not performing redaction.
-   */
-  _redactFullDetails(details, target_unused) {
-    if (!this._shouldRedact) {
-      return details;
-    }
-
-    // **TODO:** Use `target` to drive selective redaction of the message
-    // payload.
-
-    const { msg: origMsg, result: origResult } = details;
-    const replacements = {};
-
-    if (origResult) {
-      replacements.result =
-        RedactUtil.wrapRedacted(RedactUtil.redactValues(origResult, MAX_REDACTION_DEPTH));
-    }
-
-    if (origMsg) {
-      const payload =
-        RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
-      replacements.msg = Object.assign({}, origMsg, { payload });
-    }
-
-    return Object.assign({}, details, replacements);
-  }
-
-  /**
-   * Gets the value-redacted form of the given ad-hoc call details object as
-   * produced by {@link #_initialDetails}, if redaction is required by the
-   * configuration of this instance. If not, this returns the `details` as-is.
-   *
-   * **Note:** This only possibly affects the `msg` binding of the details;
-   * everything else will always get passed through as-is.
-   *
-   * @param {object} details Ad-hoc object will call details.
-   * @returns {object} Possibly value-redacted form of `details`, or `details`
-   *   itself if this instance is not performing redaction.
-   */
-  _redactInitialDetails(details) {
-    const origMsg = details.msg;
-
-    if ((origMsg === null) || !this._shouldRedact) {
-      return details;
-    }
-
-    // When redacting the incoming details, we are not selective (that is, we
-    // don't use metadata to drive redaction) because at this point in the API
-    // handling process we don't have enough information to do so. That is, this
-    // call is made before the target of the message is known as an actual
-    // object, and it is only after the target is so known that we can use it to
-    // do selective redaction.
-
-    const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
-    const msg     = Object.assign({}, origMsg, { payload });
-
-    return Object.assign({}, details, { msg });
   }
 }
