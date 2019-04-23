@@ -245,7 +245,7 @@ export default class BaseConnection extends CommonBase {
       throw ConnectionError.connectionClosing(this._connectionId);
     }
 
-    const target = await this._getTarget(msg.targetId);
+    const target = await this._getTarget(msg);
     const result = await target.call(msg.payload);
 
     if (result === undefined) {
@@ -343,16 +343,19 @@ export default class BaseConnection extends CommonBase {
    * having to do a heavyweight operation (e.g. a network round-trip) to
    * determine the authority of a token.
    *
-   * @param {string} idOrToken A target ID or bearer token in string form.
+   * @param {Message} msg The message whose target is to be determined.
    * @returns {Target} The target object that is associated with `idOrToken`.
    */
-  async _getTarget(idOrToken) {
-    const context = this._context;
+  async _getTarget(msg) {
+    Message.check(msg);
+
+    const targetId = msg.targetId;
+    const context  = this._context;
 
     if (context === null) {
       throw ConnectionError.connectionClosed(this._connectionId, 'Connection closed.');
     }
 
-    return context.getAuthorizedTarget(idOrToken);
+    return context.getAuthorizedTarget(targetId);
   }
 }
