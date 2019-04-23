@@ -62,6 +62,8 @@ export default class ApiLog extends CommonBase {
     if (details) {
       this._pending.delete(msg);
     } else {
+      // This is indicative of a bug in this module. The user of `ApiLog` should
+      // have called `incomingMessage(msg)` but apparently didn't.
       details = this._initialDetails(msg);
       this._log.event.orphanMessage(this._redactInitialDetails(details));
     }
