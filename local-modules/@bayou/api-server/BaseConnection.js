@@ -133,13 +133,15 @@ export default class BaseConnection extends CommonBase {
   async handleJsonMessage(msg) {
     msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
+    let target = null;
     let result = null;
-    let error = null;
+    let error  = null;
 
     if (msg instanceof Message) {
       this._apiLog.incomingMessage(msg);
       try {
-        result = await this._actOnMessage(msg);
+        target = await this._getTarget(msg);
+        result = await this._actOnMessage(msg, target);
       } catch (e) {
         error = e;
       }
@@ -235,17 +237,18 @@ export default class BaseConnection extends CommonBase {
    * boundary.
    *
    * @param {Message} msg Parsed message.
+   * @param {Target} target Target of the message, as previously returned from
+   *   {@link #_getTarget}.
    * @returns {*} Whatever the called method returns, except `null` replacing
    *   `undefined`.
    */
-  async _actOnMessage(msg) {
+  async _actOnMessage(msg, target) {
     if (this._closing) {
       // The connection is in the process of getting closed. Just reject the
       // message outright.
       throw ConnectionError.connectionClosing(this._connectionId);
     }
 
-    const target = await this._getTarget(msg);
     const result = await target.call(msg.payload);
 
     if (result === undefined) {
