@@ -197,7 +197,8 @@ export default class Target extends CommonBase {
       return payload;
     }
 
-    // **TODO:** Redaction should be driven by target-specific metadata.
+    // **TODO:** Redaction should be driven by target-specific metadata, based
+    // on `payload.name` (the method name) as well.
 
     return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
   }
@@ -216,6 +217,10 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   logInfoFromResult(result, payload_unused, shouldRedact) {
+    if ((result === undefined) || (result === null)) {
+      return result;
+    }
+
     if (!shouldRedact) {
       // **TODO:** This should ultimately do some processing, including
       // truncating long arrays / objects / strings, redacting strings that look
@@ -223,7 +228,9 @@ export default class Target extends CommonBase {
       return result;
     }
 
-    // **TODO:** Fill me in.
-    return result;
+    // **TODO:** Redaction should be driven by target-specific metadata, based
+    // on `payload.name` (the method name) as well.
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
   }
 }
