@@ -50,12 +50,14 @@ export default class ApiLog extends CommonBase {
    *
    * @param {Message} msg Incoming message.
    * @param {Response} response Response to the message.
-   * @param {Target} target The target that produced the response.
+   * @param {Target|null} target The target that produced the response, if any.
    */
   fullCall(msg, response, target) {
     Message.check(msg);
     Response.check(response);
-    Target.check(target);
+    if (target !== null) {
+      Target.check(target);
+    }
 
     let details = this._pending.get(msg);
 
