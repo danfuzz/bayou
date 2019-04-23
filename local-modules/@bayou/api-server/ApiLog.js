@@ -82,12 +82,20 @@ export default class ApiLog extends CommonBase {
 
   /**
    * Logs an incoming message. This should be called just after the message was
-   * decoded off of an incoming connection.
+   * decoded off of an incoming connection and its target object is known (or is
+   * known to be invalid).
    *
    * @param {Message} msg Incoming message.
+   * @param {Target|null} target The target that is handling the message, if
+   *   any.
    */
-  incomingMessage(msg) {
-    const details = this._initialDetails(msg);
+  incomingMessage(msg, target) {
+    Message.check(msg);
+    if (target !== null) {
+      Target.check(target);
+    }
+
+    const details = this._initialDetails(msg, target);
 
     this._pending.set(msg, details);
     this._log.event.apiReceived(this._redactInitialDetails(details));
@@ -108,15 +116,16 @@ export default class ApiLog extends CommonBase {
    * Makes the initial details object to represent an incoming call.
    *
    * @param {Message|null} msg The incoming message, if any.
+   * @param {Target|null} target The target that is handling the message, if
+   *   any.
    * @returns {object} Ad-hoc details object.
    */
-  _initialDetails(msg) {
-    const now = this._now();
+  _initialDetails(msg, target) {
+    const startTime = this._now();
 
-    return {
-      msg:       msg ? msg.logInfo : null,
-      startTime: now
-    };
+    msg = msg ? msg.logInfo : null;
+
+    return { msg, startTime, target };
   }
 
   /**
@@ -164,73 +173,87 @@ export default class ApiLog extends CommonBase {
   }
 
   /**
-   * Gets the value-redacted form of the given ad-hoc call details object, which
-   * should be the _complete_ post-call form, if redaction is required by the
-   * configuration of this instance. If not, this returns the `details` as-is.
+   * Helper for the two main details processing methods, which gets a clone of
+   * the given call details object and does the common processing on it for both
+   * cases.
    *
-   * **Note:** This only possibly affects the `msg` binding of the details;
-   * everything else will always get passed through as-is.
-   *
-   * @param {object} details Ad-hoc object will call details.
-   * @param {Target|null} target_unused The target that handled the message, if
-   *   any.
-   * @returns {object} Possibly value-redacted form of `details`, or `details`
-   *   itself if this instance is not performing redaction.
+   * @param {object} details Ad-hoc object with call details.
+   * @returns {object} Cloned and processed version of `details`.
    */
-  _redactFullDetails(details, target_unused) {
-    if (!this._shouldRedact) {
-      return details;
+  _redactCommon(details) {
+    details = Object.assign({}, details);
+
+    const target = details.target;
+
+    if (target !== null) {
+      // Replace a non-null target with its class name.
+      details.target = `class ${target.className}`;
     }
 
-    // **TODO:** Use `target` to drive selective redaction of the message
-    // payload.
+    // `msg` typically gets updated, so clone it proactively.
+    details.msg = Object.assign({}, details.msg);
 
-    const { msg: origMsg, result: origResult } = details;
-    const replacements = {};
-
-    if (origResult) {
-      replacements.result =
-        RedactUtil.wrapRedacted(RedactUtil.redactValues(origResult, MAX_REDACTION_DEPTH));
-    }
-
-    if (origMsg) {
-      const payload =
-        RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
-      replacements.msg = Object.assign({}, origMsg, { payload });
-    }
-
-    return Object.assign({}, details, replacements);
+    return details;
   }
 
   /**
-   * Gets the value-redacted form of the given ad-hoc call details object as
-   * produced by {@link #_initialDetails}, if redaction is required by the
-   * configuration of this instance. If not, this returns the `details` as-is.
+   * Returns a logging-appropriate form of the given ad-hoc call details object,
+   * which is expected to be the complete post-call form. This always does some
+   * processing on the details, and this is specifically where redaction is
+   * performed when required by the configuration of this instance.
    *
-   * **Note:** This only possibly affects the `msg` binding of the details;
-   * everything else will always get passed through as-is.
-   *
-   * @param {object} details Ad-hoc object will call details.
+   * @param {object} details Ad-hoc object with call details.
    * @returns {object} Possibly value-redacted form of `details`, or `details`
    *   itself if this instance is not performing redaction.
    */
-  _redactInitialDetails(details) {
-    const origMsg = details.msg;
+  _redactFullDetails(details) {
+    const { msg, result, target: target_unused } = details;
 
-    if ((origMsg === null) || !this._shouldRedact) {
-      return details;
+    details = this._redactCommon(details);
+
+    if (this._shouldRedact) {
+      // **TODO:** Use `target` to drive selective redaction of the message
+      // payload.
+
+      if (result) {
+        details.result =
+          RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+      }
+
+      if (msg !== null) {
+        details.msg.payload =
+          RedactUtil.wrapRedacted(RedactUtil.redactValues(msg.payload, MAX_REDACTION_DEPTH));
+      }
     }
 
-    // When redacting the incoming details, we are not selective (that is, we
-    // don't use metadata to drive redaction) because at this point in the API
-    // handling process we don't have enough information to do so. That is, this
-    // call is made before the target of the message is known as an actual
-    // object, and it is only after the target is so known that we can use it to
-    // do selective redaction.
+    return details;
+  }
 
-    const payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(origMsg.payload, MAX_REDACTION_DEPTH));
-    const msg     = Object.assign({}, origMsg, { payload });
+  /**
+   * Returns a logging-appropriate form of the given ad-hoc call details object
+   * as produced by {@link #_initialDetails}. This always does some processing
+   * on the details, and this is specifically where redaction is performed when
+   * required by the configuration of this instance.
+   *
+   * @param {object} details Ad-hoc object will call details, representing the
+   *   state of affairs _before_ a call has been made.
+   * @returns {object} Logging-appropriate form of `detail`.
+   */
+  _redactInitialDetails(details) {
+    const { msg, target: target_unused } = details;
 
-    return Object.assign({}, details, { msg });
+    details = this._redactCommon(details);
+
+    if ((msg !== null) && this._shouldRedact) {
+      // When redacting the incoming details, we are not selective (that is, we
+      // don't use metadata to drive redaction) because at this point in the API
+      // handling process we don't have enough information to do so. That is,
+      // this call is made before the target of the message is known as an
+      // actual object, and it is only after the target is so known that we can
+      // use it to do selective redaction. **TODO:** Not actually true anymore!
+      details.msg.payload = RedactUtil.wrapRedacted(RedactUtil.redactValues(msg.payload, MAX_REDACTION_DEPTH));
+    }
+
+    return details;
   }
 }

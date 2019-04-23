@@ -144,7 +144,7 @@ export default class BaseConnection extends CommonBase {
         error = e;
       }
 
-      this._apiLog.incomingMessage(msg);
+      this._apiLog.incomingMessage(msg, target);
 
       if (error === null) {
         try {
