@@ -77,8 +77,7 @@ export default class ApiLog extends CommonBase {
       this._log.error('Error from API call:', response.originalError);
     }
 
-    this._finishDetails(details, response);
-    this._logCompletedCall(details, target);
+    this._logCompletedCall(details, response, target);
   }
 
   /**
@@ -102,27 +101,7 @@ export default class ApiLog extends CommonBase {
   nonMessageResponse(response) {
     const details = this._initialDetails(null);
 
-    this._finishDetails(details, response);
-    this._logCompletedCall(details, null);
-  }
-
-  /**
-   * Modifies the given details object to represent a completed call.
-   *
-   * @param {object} details Ad-hoc details object to modify.
-   * @param {Response} response Response which is being sent to the caller.
-   */
-  _finishDetails(details, response) {
-    details.endTime      = this._now();
-    details.durationMsec = details.endTime - details.startTime;
-
-    if (response.error) {
-      details.ok     = false;
-      details.error  = response.originalError;
-    } else {
-      details.ok     = true;
-      details.result = response.result;
-    }
+    this._logCompletedCall(details, response, null);
   }
 
   /**
@@ -143,12 +122,27 @@ export default class ApiLog extends CommonBase {
   /**
    * Performs end-of-call logging.
    *
-   * @param {object} details Ad-hoc object with call details.
+   * @param {object} details Ad-hoc object with call details. This object is
+   *   modified by this method.
+   * @param {Response} response Response which is being sent to the caller.
    * @param {Target|null} target The target that handled the message, if any.
    */
-  _logCompletedCall(details, target) {
-    const { durationMsec, msg, ok } = details;
-    const method = msg ? msg.payload.name : '<unknown>';
+  _logCompletedCall(details, response, target) {
+    const msg          = details.msg;
+    const method       = msg ? msg.payload.name : '<unknown>';
+    const ok           = response.error ? true : false;
+    const endTime      = this._now();
+    const durationMsec = endTime - details.startTime;
+
+    details.ok           = ok;
+    details.endTime      = endTime;
+    details.durationMsec = durationMsec;
+
+    if (ok) {
+      details.result = response.result;
+    } else {
+      details.error  = response.originalError;
+    }
 
     this._log.event.apiReturned(this._redactFullDetails(details, target));
 
