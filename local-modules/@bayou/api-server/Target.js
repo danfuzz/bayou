@@ -103,4 +103,53 @@ export default class Target extends CommonBase {
 
     return impl.apply(obj, payload.args);
   }
+
+  /**
+   * Converts the given payload (as presumably passed to an earlier call to
+   * {@link #call}, or about to be used as such), so as to be suitable for
+   * logging, including performing any necessary redaction.
+   *
+   * @param {Functor} payload The call payload.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  logInfoFromPayload(payload, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return payload;
+    }
+
+    // **TODO:** Fill me in.
+    return payload;
+  }
+
+  /**
+   * Converts the given call result (as presumably returned from an earlier call
+   * to {@link #call}), so as to be suitable for logging, including performing
+   * any necessary redaction.
+   *
+   * @param {*} result The result of the call in question.
+   * @param {Functor} payload_unused The call payload which produced `result`.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  logInfoFromResult(result, payload_unused, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return result;
+    }
+
+    // **TODO:** Fill me in.
+    return result;
+  }
 }
