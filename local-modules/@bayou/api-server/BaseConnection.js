@@ -222,8 +222,8 @@ export default class BaseConnection extends CommonBase {
   }
 
   /**
-   * Helper for `handleJsonMessage()` which actually performs the method call
-   * requested by the given message.
+   * Helper for {@link @handleJsonMessage} which actually performs the method
+   * call requested by the given message.
    *
    * Because `undefined` is not used across the API boundary, a top-level
    * `undefined` result (which, notably, is what is returned from a method that
