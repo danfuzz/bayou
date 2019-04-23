@@ -171,15 +171,17 @@ export default class ApiLog extends CommonBase {
   _logInfoCommon(details) {
     details = Object.assign({}, details);
 
-    const target = details.target;
+    const { msg, target } = details;
 
     if (target !== null) {
       // Replace a non-null target with its class name.
       details.target = `class ${target.className}`;
     }
 
-    // `msg` typically gets updated, so clone it proactively.
-    details.msg = Object.assign({}, details.msg);
+    if (msg !== null) {
+      // A non-`null` `msg` typically gets updated, so clone it proactively.
+      details.msg = Object.assign({}, details.msg);
+    }
 
     return details;
   }
