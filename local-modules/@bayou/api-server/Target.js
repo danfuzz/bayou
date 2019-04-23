@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken, TargetId } from '@bayou/api-common';
-import { TObject } from '@bayou/typecheck';
+import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import Schema from './Schema';
@@ -50,10 +50,27 @@ export default class Target extends CommonBase {
   }
 
   /**
-  * {object} The object which this instance represents, wraps, and generally
-  * provides access to. Accessing this property indicates that this instance is
-  * _not_ currently idle.
-  */
+   * {string} The name of the class which {@link #directObject} is an instance
+   * of.
+   */
+  get className() {
+    const clazz = this._directObject.constructor;
+
+    if ((clazz !== Object) && TFunction.isClass(clazz)) {
+      const name = clazz.name;
+      if (typeof name === 'string') {
+        return name;
+      }
+    }
+
+    return '<unknown>';
+  }
+
+  /**
+   * {object} The object which this instance represents, wraps, and generally
+   * provides access to. Accessing this property indicates that this instance is
+   * _not_ currently idle.
+   */
   get directObject() {
     return this._directObject;
   }
