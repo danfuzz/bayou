@@ -182,7 +182,7 @@ export default class ApiLog extends CommonBase {
         : target.logInfoFromPayload(payload, this._shouldRedact);
 
       if (payload !== newPayload) {
-        details.msg = Object.assign({}, details.msg, { payload });
+        details.msg = Object.assign({}, msg, { payload: newPayload });
       }
     }
 
