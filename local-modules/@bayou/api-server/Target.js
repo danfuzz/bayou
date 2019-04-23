@@ -21,7 +21,9 @@ const MAX_REDACTION_DEPTH = 4;
 export default class Target extends CommonBase {
   /**
    * Like {@link #logInfoFromPayload}, except only to be used when processing
-   * `null` as a target (e.g. when a target ID was not valid).
+   * `null` as a target (e.g. when a target ID was not valid). Since there is
+   * no metadata available in this case, when redaction is on, this method
+   * performs full value redaction.
    *
    * @param {Functor} payload The call payload.
    * @param {boolean} shouldRedact Whether redaction should be performed in
@@ -43,17 +45,22 @@ export default class Target extends CommonBase {
 
   /**
    * Like {@link #logInfoFromResult}, except only to be used when processing
-   * `null` as a target (e.g. when a target ID was not valid).
+   * `null` as a target (e.g. when a target ID was not valid). Since there is
+   * no metadata available in this case, when redaction is on, this method
+   * performs full value redaction.
    *
    * @param {*} result The result of the call in question.
-   * @param {Functor} payload_unused The call payload which produced `result`.
    * @param {boolean} shouldRedact Whether redaction should be performed in
    *   general. Even when `false`, some redaction may be performed out of an
    *   abundance of caution.
    * @returns {Functor} The processed replacement for `payload`, or the original
    *   `payload` if no modifications needed to be made.
    */
-  static logInfoFromResultForNullTarget(result, payload_unused, shouldRedact) {
+  static logInfoFromResultForNullTarget(result, shouldRedact) {
+    if ((result === undefined) || (result === null)) {
+      return result;
+    }
+
     if (!shouldRedact) {
       // **TODO:** This should ultimately do some processing, including
       // truncating long arrays / objects / strings, redacting strings that look
@@ -61,8 +68,7 @@ export default class Target extends CommonBase {
       return result;
     }
 
-    // **TODO:** Fill me in.
-    return result;
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
   }
 
   /**
