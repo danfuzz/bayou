@@ -136,7 +136,7 @@ export default class ApiLog extends CommonBase {
   _logCompletedCall(details, response, target) {
     const msg          = details.msg;
     const method       = msg ? msg.payload.name : '<unknown>';
-    const ok           = response.error ? true : false;
+    const ok           = response.error ? false : true;
     const endTime      = this._now();
     const durationMsec = endTime - details.startTime;
 
