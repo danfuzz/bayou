@@ -133,13 +133,15 @@ export default class BaseConnection extends CommonBase {
   async handleJsonMessage(msg) {
     msg = this._decodeMessage(msg); // Not supposed to ever throw.
 
+    let target = null;
     let result = null;
-    let error = null;
+    let error  = null;
 
     if (msg instanceof Message) {
       this._apiLog.incomingMessage(msg);
       try {
-        result = await this._actOnMessage(msg);
+        target = await this._getTarget(msg);
+        result = await this._actOnMessage(msg, target);
       } catch (e) {
         error = e;
       }
@@ -162,7 +164,7 @@ export default class BaseConnection extends CommonBase {
     if (msg === null) {
       this._apiLog.nonMessageResponse(response);
     } else {
-      this._apiLog.fullCall(msg, response);
+      this._apiLog.fullCall(msg, response, target);
     }
 
     return encodedResponse;
@@ -222,8 +224,8 @@ export default class BaseConnection extends CommonBase {
   }
 
   /**
-   * Helper for `handleJsonMessage()` which actually performs the method call
-   * requested by the given message.
+   * Helper for {@link #handleJsonMessage} which actually performs the method
+   * call requested by the given message.
    *
    * Because `undefined` is not used across the API boundary, a top-level
    * `undefined` result (which, notably, is what is returned from a method that
@@ -235,17 +237,18 @@ export default class BaseConnection extends CommonBase {
    * boundary.
    *
    * @param {Message} msg Parsed message.
+   * @param {Target} target Target of the message, as previously returned from
+   *   {@link #_getTarget}.
    * @returns {*} Whatever the called method returns, except `null` replacing
    *   `undefined`.
    */
-  async _actOnMessage(msg) {
+  async _actOnMessage(msg, target) {
     if (this._closing) {
       // The connection is in the process of getting closed. Just reject the
       // message outright.
       throw ConnectionError.connectionClosing(this._connectionId);
     }
 
-    const target = await this._getTarget(msg.targetId);
     const result = await target.call(msg.payload);
 
     if (result === undefined) {
@@ -343,16 +346,21 @@ export default class BaseConnection extends CommonBase {
    * having to do a heavyweight operation (e.g. a network round-trip) to
    * determine the authority of a token.
    *
-   * @param {string} idOrToken A target ID or bearer token in string form.
-   * @returns {Target} The target object that is associated with `idOrToken`.
+   * @param {Message} msg The message whose target is to be determined.
+   * @returns {Target} The target object that is associated with `msg`.
    */
-  async _getTarget(idOrToken) {
-    const context = this._context;
+  async _getTarget(msg) {
+    Message.check(msg);
+
+    const targetId = msg.targetId;
+    const context  = this._context;
 
     if (context === null) {
       throw ConnectionError.connectionClosed(this._connectionId, 'Connection closed.');
     }
 
-    return context.getAuthorizedTarget(idOrToken);
+    const result = await context.getAuthorizedTarget(targetId);
+
+    return Target.check(result);
   }
 }

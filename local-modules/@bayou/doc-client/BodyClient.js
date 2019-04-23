@@ -871,7 +871,7 @@ export default class BodyClient extends StateMachine {
     // then there will soon be a `gotQuillEvent` event to be handled by this
     // instance, and after that gets done, it will once again be okay to
     // integrate changes from the server.
-    if ((this._snapshot.revNum === baseRevNum) || !this._isQuillChangePending()) {
+    if ((this._snapshot.revNum === baseRevNum) && !this._isQuillChangePending()) {
       this._updateWithChange(result);
     }
 

@@ -2,9 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Message, Response } from '@bayou/api-common';
 import { BaseLogger, RedactUtil } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
+
+import Target from './Target';
 
 /** {Int} Maximum depth to produce when redacting values. */
 const MAX_REDACTION_DEPTH = 4;
@@ -47,13 +50,22 @@ export default class ApiLog extends CommonBase {
    *
    * @param {Message} msg Incoming message.
    * @param {Response} response Response to the message.
+   * @param {Target|null} target The target that produced the response, if any.
    */
-  fullCall(msg, response) {
+  fullCall(msg, response, target) {
+    Message.check(msg);
+    Response.check(response);
+    if (target !== null) {
+      Target.check(target);
+    }
+
     let details = this._pending.get(msg);
 
     if (details) {
       this._pending.delete(msg);
     } else {
+      // This is indicative of a bug in this module. The user of `ApiLog` should
+      // have called `incomingMessage(msg)` but apparently didn't.
       details = this._initialDetails(msg);
       this._log.event.orphanMessage(this._redactInitialDetails(details));
     }
@@ -66,7 +78,7 @@ export default class ApiLog extends CommonBase {
     }
 
     this._finishDetails(details, response);
-    this._logCompletedCall(details);
+    this._logCompletedCall(details, target);
   }
 
   /**
@@ -91,7 +103,7 @@ export default class ApiLog extends CommonBase {
     const details = this._initialDetails(null);
 
     this._finishDetails(details, response);
-    this._logCompletedCall(details);
+    this._logCompletedCall(details, null);
   }
 
   /**
@@ -132,12 +144,13 @@ export default class ApiLog extends CommonBase {
    * Performs end-of-call logging.
    *
    * @param {object} details Ad-hoc object with call details.
+   * @param {Target|null} target The target that handled the message, if any.
    */
-  _logCompletedCall(details) {
+  _logCompletedCall(details, target) {
     const { durationMsec, msg, ok } = details;
     const method = msg ? msg.payload.name : '<unknown>';
 
-    this._log.event.apiReturned(this._redactFullDetails(details));
+    this._log.event.apiReturned(this._redactFullDetails(details, target));
 
     // For ease of downstream handling (especially graphing), log a metric of
     // just the method name, success flag, and elapsed time.
@@ -165,15 +178,17 @@ export default class ApiLog extends CommonBase {
    * everything else will always get passed through as-is.
    *
    * @param {object} details Ad-hoc object will call details.
+   * @param {Target|null} target_unused The target that handled the message, if
+   *   any.
    * @returns {object} Possibly value-redacted form of `details`, or `details`
    *   itself if this instance is not performing redaction.
    */
-  _redactFullDetails(details) {
+  _redactFullDetails(details, target_unused) {
     if (!this._shouldRedact) {
       return details;
     }
 
-    // **TODO:** Use metadata to drive selective redaction of the message
+    // **TODO:** Use `target` to drive selective redaction of the message
     // payload.
 
     const { msg: origMsg, result: origResult } = details;
