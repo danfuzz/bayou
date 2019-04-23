@@ -3,10 +3,14 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken, TargetId } from '@bayou/api-common';
+import { RedactUtil } from '@bayou/see-all';
 import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 import Schema from './Schema';
+
+/** {Int} Maximum depth to produce when redacting values. */
+const MAX_REDACTION_DEPTH = 4;
 
 /**
  * Wrapper for an object which is callable through the API. A target can be
@@ -15,6 +19,52 @@ import Schema from './Schema';
  * generally available without additional authorization checks).
  */
 export default class Target extends CommonBase {
+  /**
+   * Like {@link #logInfoFromPayload}, except only to be used when processing
+   * `null` as a target (e.g. when a target ID was not valid).
+   *
+   * @param {Functor} payload The call payload.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  static logInfoFromPayloadForNullTarget(payload, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return payload;
+    }
+
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+  }
+
+  /**
+   * Like {@link #logInfoFromResult}, except only to be used when processing
+   * `null` as a target (e.g. when a target ID was not valid).
+   *
+   * @param {*} result The result of the call in question.
+   * @param {Functor} payload_unused The call payload which produced `result`.
+   * @param {boolean} shouldRedact Whether redaction should be performed in
+   *   general. Even when `false`, some redaction may be performed out of an
+   *   abundance of caution.
+   * @returns {Functor} The processed replacement for `payload`, or the original
+   *   `payload` if no modifications needed to be made.
+   */
+  static logInfoFromResultForNullTarget(result, payload_unused, shouldRedact) {
+    if (!shouldRedact) {
+      // **TODO:** This should ultimately do some processing, including
+      // truncating long arrays / objects / strings, redacting strings that look
+      // like tokens, and so on.
+      return result;
+    }
+
+    // **TODO:** Fill me in.
+    return result;
+  }
+
   /**
    * Constructs an instance which wraps the given object.
    *
