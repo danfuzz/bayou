@@ -76,7 +76,7 @@ export default class ApiLog extends CommonBase {
     }
 
     this._finishDetails(details, response);
-    this._logCompletedCall(details);
+    this._logCompletedCall(details, target);
   }
 
   /**
@@ -101,7 +101,7 @@ export default class ApiLog extends CommonBase {
     const details = this._initialDetails(null);
 
     this._finishDetails(details, response);
-    this._logCompletedCall(details);
+    this._logCompletedCall(details, null);
   }
 
   /**
@@ -142,12 +142,13 @@ export default class ApiLog extends CommonBase {
    * Performs end-of-call logging.
    *
    * @param {object} details Ad-hoc object with call details.
+   * @param {Target|null} target The target that handled the message, if any.
    */
-  _logCompletedCall(details) {
+  _logCompletedCall(details, target) {
     const { durationMsec, msg, ok } = details;
     const method = msg ? msg.payload.name : '<unknown>';
 
-    this._log.event.apiReturned(this._redactFullDetails(details));
+    this._log.event.apiReturned(this._redactFullDetails(details, target));
 
     // For ease of downstream handling (especially graphing), log a metric of
     // just the method name, success flag, and elapsed time.
@@ -175,15 +176,17 @@ export default class ApiLog extends CommonBase {
    * everything else will always get passed through as-is.
    *
    * @param {object} details Ad-hoc object will call details.
+   * @param {Target|null} target_unused The target that handled the message, if
+   *   any.
    * @returns {object} Possibly value-redacted form of `details`, or `details`
    *   itself if this instance is not performing redaction.
    */
-  _redactFullDetails(details) {
+  _redactFullDetails(details, target_unused) {
     if (!this._shouldRedact) {
       return details;
     }
 
-    // **TODO:** Use metadata to drive selective redaction of the message
+    // **TODO:** Use `target` to drive selective redaction of the message
     // payload.
 
     const { msg: origMsg, result: origResult } = details;
