@@ -58,6 +58,12 @@ export default class EditSession extends ViewSession {
 
     return bodyChangeResult;
   }
+  static get _loggingFor_body_update() {
+    return {
+      args: [true, false],
+      result: false
+    };
+  }
 
   /**
    * Applies an update to the properties (document metadata), assigning
@@ -85,6 +91,12 @@ export default class EditSession extends ViewSession {
     const change = new PropertyChange(baseRevNum + 1, delta, Timestamp.now(), this._authorId);
 
     return this._propertyControl.update(change);
+  }
+  static get _loggingFor_property_update() {
+    return {
+      args: [true, false],
+      result: false
+    };
   }
 
   /**

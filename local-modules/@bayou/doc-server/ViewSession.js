@@ -42,6 +42,12 @@ export default class ViewSession extends BaseSession {
   async body_getChange(revNum) {
     return this._bodyControl.getChange(revNum);
   }
+  static get _loggingFor_body_getChange() {
+    return {
+      args: [true],
+      result: false
+    };
+  }
 
   /**
    * Gets a change of the document body from the indicated base revision. See
@@ -57,6 +63,12 @@ export default class ViewSession extends BaseSession {
   async body_getChangeAfter(baseRevNum, timeoutMsec = null) {
     return this._bodyControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
+  static get _loggingFor_body_getChangeAfter() {
+    return {
+      args: [true, true],
+      result: false
+    };
+  }
 
   /**
    * Returns a snapshot of the full document body contents. See
@@ -68,6 +80,12 @@ export default class ViewSession extends BaseSession {
    */
   async body_getSnapshot(revNum = null) {
     return this._bodyControl.getSnapshot(revNum);
+  }
+  static get _loggingFor_body_getSnapshot() {
+    return {
+      args: [true],
+      result: false
+    };
   }
 
   /**
@@ -99,6 +117,12 @@ export default class ViewSession extends BaseSession {
   async caret_getChangeAfter(baseRevNum, timeoutMsec = null) {
     return this._caretControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
+  static get _loggingFor_caret_getChangeAfter() {
+    return {
+      args: [true, true],
+      result: true
+    };
+  }
 
   /**
    * Gets a snapshot of all active caret information. This will throw an error
@@ -114,6 +138,12 @@ export default class ViewSession extends BaseSession {
    */
   async caret_getSnapshot(revNum = null) {
     return this._caretControl.getSnapshot(revNum);
+  }
+  static get _loggingFor_caret_getSnapshot() {
+    return {
+      args: [true],
+      result: true
+    };
   }
 
   /**
@@ -161,6 +191,12 @@ export default class ViewSession extends BaseSession {
       await this._caretControl.changeForUpdate(this._caretId, docRevNum, index, length);
     return this._caretControl.update(change);
   }
+  static get _loggingFor_caret_update() {
+    return {
+      args: [true, true, true],
+      result: true
+    };
+  }
 
   /**
    * Returns a particular change to the properties (document metadata). See
@@ -171,6 +207,12 @@ export default class ViewSession extends BaseSession {
    */
   async property_getChange(revNum) {
     return this._propertyControl.getChange(revNum);
+  }
+  static get _loggingFor_property_getChange() {
+    return {
+      args: [true],
+      result: false
+    };
   }
 
   /**
@@ -187,6 +229,12 @@ export default class ViewSession extends BaseSession {
   async property_getChangeAfter(baseRevNum, timeoutMsec = null) {
     return this._propertyControl.getChangeAfter(baseRevNum, timeoutMsec);
   }
+  static get _loggingFor_property_getChangeAfter() {
+    return {
+      args: [true, true],
+      result: false
+    };
+  }
 
   /**
    * Returns a snapshot of the properties (document metadata). See
@@ -198,6 +246,12 @@ export default class ViewSession extends BaseSession {
    */
   async property_getSnapshot(revNum = null) {
     return this._propertyControl.getSnapshot(revNum);
+  }
+  static get _loggingFor_property_getSnapshot() {
+    return {
+      args: [true],
+      result: false
+    };
   }
 
   /**
