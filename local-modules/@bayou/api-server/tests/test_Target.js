@@ -73,7 +73,7 @@ describe('@bayou/api-server/Target', () => {
   });
 
   describe('.className', () => {
-    it('is the name of the class (constructor function) of `directObject`, if it has a class', () => {
+    it('is the name of the class (constructor function) of `directObject`, if it has a class and is not a plain object', () => {
       class Florp {}
       const t = new Target('x', new Florp());
       assert.strictEqual(t.className, 'Florp');
@@ -82,6 +82,19 @@ describe('@bayou/api-server/Target', () => {
     it('is `<unknown>` if `directObject` is a plain object', () => {
       const t = new Target('x', { x: 10 });
       assert.strictEqual(t.className, '<unknown>');
+    });
+  });
+
+  describe('.directClass', () => {
+    it('is the class (constructor function) of `directObject`, if it has a class and is not a plain object', () => {
+      class Florp {}
+      const t = new Target('x', new Florp());
+      assert.strictEqual(t.directClass, Florp);
+    });
+
+    it('is `null` if `directObject` is a plain object', () => {
+      const t = new Target('x', { x: 10 });
+      assert.isNull(t.directClass);
     });
   });
 

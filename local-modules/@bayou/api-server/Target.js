@@ -102,9 +102,9 @@ export default class Target extends CommonBase {
    * of.
    */
   get className() {
-    const clazz = this._directObject.constructor;
+    const clazz = this.directClass;
 
-    if ((clazz !== Object) && TFunction.isClass(clazz)) {
+    if (clazz !== null) {
       const name = clazz.name;
       if (typeof name === 'string') {
         return name;
@@ -115,9 +115,20 @@ export default class Target extends CommonBase {
   }
 
   /**
+   * {class|null} The class of {@link #directObject} if it has one and isn't
+   * just (plain) `Object`.
+   */
+  get directClass() {
+    const clazz = this._directObject.constructor;
+
+    return ((clazz !== Object) && TFunction.isClass(clazz))
+      ? clazz
+      : null;
+  }
+
+  /**
    * {object} The object which this instance represents, wraps, and generally
-   * provides access to. Accessing this property indicates that this instance is
-   * _not_ currently idle.
+   * provides access to.
    */
   get directObject() {
     return this._directObject;
