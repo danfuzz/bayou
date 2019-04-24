@@ -28,7 +28,7 @@ export default class ApiLog extends CommonBase {
     this._log = BaseLogger.check(log);
 
     /** {boolean} Whether the logs should be redacted, generally speaking. */
-    this._shouldRedact = TBoolean.check(shouldRedact);
+    this._shouldRedact = TBoolean.check(shouldRedact) || true;
 
     /**
      * {Map<Message,object>} Map from messages that haven't yet been completely
