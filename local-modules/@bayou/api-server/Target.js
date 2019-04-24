@@ -205,7 +205,7 @@ export default class Target extends CommonBase {
     const newArgs = [];
     for (let i = 0; i < argsLen; i++) {
       const a = args[i];
-      args.push(logging[i] ? a : Target._logInfoRedacted(a, true));
+      newArgs.push(logging[i] ? a : Target._logInfoRedacted(a, true));
     }
 
     return new Functor(name, ...newArgs);
