@@ -36,7 +36,7 @@ export default class Target extends CommonBase {
     if (!shouldRedact) {
       return Target._logInfoUnredacted(payload);
     } else {
-      return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+      return Target._logInfoRedacted(payload);
     }
   }
 
@@ -59,7 +59,7 @@ export default class Target extends CommonBase {
     } else if (!shouldRedact) {
       return Target._logInfoUnredacted(result);
     } else {
-      return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+      return Target._logInfoRedacted(result);
     }
   }
 
@@ -200,7 +200,7 @@ export default class Target extends CommonBase {
     // **TODO:** Redaction should be driven by target-specific metadata, based
     // on `payload.name` (the method name) as well.
 
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+    return Target._logInfoRedacted(payload);
   }
 
   /**
@@ -226,7 +226,23 @@ export default class Target extends CommonBase {
     // **TODO:** Redaction should be driven by target-specific metadata, based
     // on `payload.name` (the method name) as well.
 
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+    return Target._logInfoRedacted(result);
+  }
+
+  /**
+   * Helper for the various `logInfo*()` methods, which does processing of
+   * payloads and results when most redaction is on (that is when
+   * `shouldRedact` is passed as `true`) and there is no more-specific redaction
+   * method available.
+   *
+   * @param {*} value Original value.
+   * @returns {*} Appropriately-processed form.
+   */
+  static _logInfoRedacted(value) {
+    // **TODO:** This should ultimately do some processing, including
+    // truncating long arrays / objects / strings, redacting strings that look
+    // like tokens, and so on.
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(value, MAX_REDACTION_DEPTH));
   }
 
   /**
