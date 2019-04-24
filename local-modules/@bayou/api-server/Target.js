@@ -33,7 +33,7 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   static logInfoFromPayloadForNullTarget(payload, shouldRedact) {
-    if (!shouldRedact) {
+    if ((payload.args.length === 0) || !shouldRedact) {
       return Target._logInfoUnredacted(payload);
     } else {
       return Target._logInfoRedacted(payload);
@@ -193,7 +193,7 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   logInfoFromPayload(payload, shouldRedact) {
-    if (!shouldRedact) {
+    if ((payload.args.length === 0) || !shouldRedact) {
       return Target._logInfoUnredacted(payload);
     }
 
@@ -236,13 +236,19 @@ export default class Target extends CommonBase {
    * method available.
    *
    * @param {*} value Original value.
+   * @param {boolean} [isArgument = false] Whether to treat this as a call
+   *   payload argument. This is used to adjust the depth, so that an argument
+   *   redacted individually doesn't convert more depth than if the payload were
+   *   redacted as a unit.
    * @returns {*} Appropriately-processed form.
    */
-  static _logInfoRedacted(value) {
+  static _logInfoRedacted(value, isArgument = false) {
+    const depth = MAX_REDACTION_DEPTH - (isArgument ? 1 : 0);
+
     // **TODO:** This should ultimately do some processing, including
     // truncating long arrays / objects / strings, redacting strings that look
     // like tokens, and so on.
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(value, MAX_REDACTION_DEPTH));
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(value, depth));
   }
 
   /**
@@ -254,9 +260,13 @@ export default class Target extends CommonBase {
    * things out of an abundance of caution.
    *
    * @param {*} value Original value.
+   * @param {boolean} [isArgument_unused = false] Whether to treat this as a
+   *   call payload argument. This is used to adjust the depth, so that an
+   *   argument redacted individually doesn't convert more depth than if the
+   *   payload were redacted as a unit.
    * @returns {*} Appropriately-processed form.
    */
-  static _logInfoUnredacted(value) {
+  static _logInfoUnredacted(value, isArgument_unused = false) {
     // **TODO:** This should ultimately do some processing, including
     // truncating long arrays / objects / strings, redacting strings that look
     // like tokens, and so on.
