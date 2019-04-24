@@ -34,13 +34,10 @@ export default class Target extends CommonBase {
    */
   static logInfoFromPayloadForNullTarget(payload, shouldRedact) {
     if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return payload;
+      return Target._logInfoUnredacted(payload);
+    } else {
+      return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
     }
-
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
   }
 
   /**
@@ -59,16 +56,11 @@ export default class Target extends CommonBase {
   static logInfoFromResultForNullTarget(result, shouldRedact) {
     if ((result === undefined) || (result === null)) {
       return result;
+    } else if (!shouldRedact) {
+      return Target._logInfoUnredacted(result);
+    } else {
+      return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
     }
-
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return result;
-    }
-
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
   }
 
   /**
@@ -191,10 +183,7 @@ export default class Target extends CommonBase {
    */
   logInfoFromPayload(payload, shouldRedact) {
     if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return payload;
+      return Target._logInfoUnredacted(payload);
     }
 
     // **TODO:** Redaction should be driven by target-specific metadata, based
@@ -219,18 +208,31 @@ export default class Target extends CommonBase {
   logInfoFromResult(result, payload_unused, shouldRedact) {
     if ((result === undefined) || (result === null)) {
       return result;
-    }
-
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return result;
+    } else if (!shouldRedact) {
+      return Target._logInfoUnredacted(result);
     }
 
     // **TODO:** Redaction should be driven by target-specific metadata, based
     // on `payload.name` (the method name) as well.
 
     return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+  }
+
+  /**
+   * Helper for the various `logInfo*()` methods, which does processing of
+   * payloads and results when most redaction is off (that is when
+   * `shouldRedact` is passed as `false`).
+   *
+   * **Note:** Name notwithstanding, this method ultimately might redact some
+   * things out of an abundance of caution.
+   *
+   * @param {*} value Original value.
+   * @returns {*} Appropriately-processed form.
+   */
+  static _logInfoUnredacted(value) {
+    // **TODO:** This should ultimately do some processing, including
+    // truncating long arrays / objects / strings, redacting strings that look
+    // like tokens, and so on.
+    return value;
   }
 }
