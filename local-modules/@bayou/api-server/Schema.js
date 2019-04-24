@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TObject, TString } from '@bayou/typecheck';
-import { CommonBase, PropertyIterable } from '@bayou/util-common';
+import { TArray, TBoolean, TObject, TString } from '@bayou/typecheck';
+import { CommonBase, ObjectUtil, PropertyIterable } from '@bayou/util-common';
 
 /**
  * {RegExp} Expression that matches method names that are _not_ to be offered
@@ -24,6 +24,15 @@ const VERBOTEN_NAMES = /^(then|catch)$/;
  * * Constructor methods are excluded.
  * * Methods inherited from the base `Object` prototype are excluded.
  * * All other public methods are included.
+ *
+ * Instances of this class also provide information about how to log calls to
+ * methods, specifically with regards to redaction. This is driven by getters
+ * defined on the _class_ of the target, with names of the form
+ * `_loggingFor_<name>`, where `<name>` is the method name. These getters should
+ * each return a plain object that binds `args` (to an array of booleans) and/or
+ * `result` (to a boolean). See {@link #loggingForArgs},
+ * {@link #loggingForResult}, and {@link Target} for details about how these are
+ * used.
  */
 export default class Schema extends CommonBase {
   /**
@@ -39,11 +48,25 @@ export default class Schema extends CommonBase {
 
     super();
 
+    const clazz = target.constructor;
+
+    /**
+     * {class|null} Class of the target, if it has a class (other than
+     * `Object`).
+     */
+    this._clazz = (clazz && (clazz !== Object)) ? clazz : null;
+
     /**
      * {Map<string, string>} Map from each name to a property descriptor
      * string.
      */
     this._properties = Schema._makeSchemaFor(target);
+
+    /**
+     * {Map<string, object>} Map from each name to its logging metadata.
+     * Populated on-demand as a cache.
+     */
+    this._logging = new Map();
 
     Object.freeze(this);
   }
@@ -80,6 +103,78 @@ export default class Schema extends CommonBase {
     const result = this._properties.get(name);
 
     return result || null;
+  }
+
+  /**
+   * Indicates which arguments of a call to the named method should be logged,
+   * when performing redaction in general.
+   *
+   * **TODO:** Right now this is an array of all-or-nothing booleans, but in the
+   * future we might want to have a more structured redaction spec (e.g., if an
+   * argument is a plain object, which properties of that object to redact).
+   *
+   * @param {string} name Method name.
+   * @returns {array<boolean>} Array which indicates, for each (positional)
+   *   argument, whether (`true`) or not (`false`) to log the argument. If there
+   *   are more actual arguments than elements of the result of this call,
+   *   "extra" arguments should _not_ be logged so as to fail safe.
+   */
+  loggingForArgs(name) {
+    return this._getLogging(name).args;
+  }
+
+  /**
+   * Indicates whether the result of calling the named method should be
+   * logged, when performing redaction in general.
+   *
+   * **TODO:** Right now this is an all-or-nothing boolean, but in the future we
+   * might want to have a more structured redaction spec (e.g., if the return
+   * value is a plain object, which properties to redact).
+   *
+   * @param {string} name Method name.
+   * @returns {boolean} Whether (`true`) or not (`false`) to log the result
+   *   of calling the so-named method.
+   */
+  loggingForResult(name) {
+    return this._getLogging(name).result;
+  }
+
+  /**
+   * Gets the logging metadata for the given property. This provides sensible
+   * fail-safe default results when the metadata was not proactively defined.
+   *
+   * @param {string} name Property (method) name.
+   * @returns {object} Logging metadata.
+   */
+  _getLogging(name) {
+    const descriptor = this.getDescriptor(name);
+    const already    = this._logging.get(name);
+
+    if (already !== undefined) {
+      return already;
+    }
+
+    // Start with fail-safe defaults.
+    const result = { args: [], result: false };
+
+    if ((descriptor !== null) && (this._clazz !== null)) {
+      const logging = this._clazz[`_loggingFor_${name}`];
+      if (ObjectUtil.isPlain(logging)) {
+        if (typeof logging.result === 'boolean') {
+          result.result = logging.result;
+        }
+
+        if (Array.isArray(logging.args)) {
+          TArray.check(logging.args, x => TBoolean.check(x));
+          result.args = Object.freeze(logging.args.slice());
+        }
+      }
+    }
+
+    Object.freeze(result);
+
+    this._logging.set(name, result);
+    return result;
   }
 
   /**

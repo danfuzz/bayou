@@ -35,6 +35,9 @@ export default class MetaHandler extends CommonBase {
   connectionId() {
     return this._connection.connectionId;
   }
+  static get _loggingFor_connectionId() {
+    return { result: true };
+  }
 
   /**
    * API meta-method `ping`: No-op method that merely verifies (implicitly) that
@@ -44,6 +47,9 @@ export default class MetaHandler extends CommonBase {
    */
   ping() {
     return true;
+  }
+  static get _loggingFor_ping() {
+    return { result: true };
   }
 
   /**
@@ -55,5 +61,8 @@ export default class MetaHandler extends CommonBase {
    */
   serverInfo() {
     return Deployment.serverInfo();
+  }
+  static get _loggingFor_serverInfo() {
+    return { result: true };
   }
 }

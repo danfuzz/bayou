@@ -105,6 +105,12 @@ export default class RootAccess extends CommonBase {
     // exception.)
     return result;
   }
+  static get _loggingFor_makeSessionInfo() {
+    return {
+      args:   [true],
+      result: false
+    };
+  }
 
   /**
    * Registers a token to use for the given author ID. When done, the registered
@@ -118,6 +124,9 @@ export default class RootAccess extends CommonBase {
     TString.check(authorToken);
 
     this._tokenMap.set(authorId, Auth.tokenFromString(authorToken));
+  }
+  static get _loggingFor_useToken() {
+    return { args: [true, false] };
   }
 
   /**

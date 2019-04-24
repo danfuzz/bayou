@@ -197,11 +197,13 @@ taking into account recent additions to the language.
       * synthetic fields
       * methods
 
-  As an exception, methods that only serve as helpers for one other method will
-  sometimes get located immediately below the method being helped.
-
   Roughly speaking, you can think of this as an "instance sandwich on static
   bread."
+
+  As an exception, methods that only serve as helpers for one other method, or
+  are otherwise intimately associated with that method, will sometimes get
+  located immediately below the method being helped. Notable examples of this
+  are the logging metadata getter methods (see `MetaHandler` for an example).
 
 #### Enumerated constants
 

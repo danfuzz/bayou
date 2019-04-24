@@ -33,14 +33,11 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   static logInfoFromPayloadForNullTarget(payload, shouldRedact) {
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return payload;
+    if ((payload.args.length === 0) || !shouldRedact) {
+      return Target._logInfoUnredacted(payload);
+    } else {
+      return Target._logInfoRedacted(payload);
     }
-
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
   }
 
   /**
@@ -59,16 +56,11 @@ export default class Target extends CommonBase {
   static logInfoFromResultForNullTarget(result, shouldRedact) {
     if ((result === undefined) || (result === null)) {
       return result;
+    } else if (!shouldRedact) {
+      return Target._logInfoUnredacted(result);
+    } else {
+      return Target._logInfoRedacted(result);
     }
-
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return result;
-    }
-
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
   }
 
   /**
@@ -110,9 +102,9 @@ export default class Target extends CommonBase {
    * of.
    */
   get className() {
-    const clazz = this._directObject.constructor;
+    const clazz = this.directClass;
 
-    if ((clazz !== Object) && TFunction.isClass(clazz)) {
+    if (clazz !== null) {
       const name = clazz.name;
       if (typeof name === 'string') {
         return name;
@@ -123,9 +115,20 @@ export default class Target extends CommonBase {
   }
 
   /**
+   * {class|null} The class of {@link #directObject} if it has one and isn't
+   * just (plain) `Object`.
+   */
+  get directClass() {
+    const clazz = this._directObject.constructor;
+
+    return ((clazz !== Object) && TFunction.isClass(clazz))
+      ? clazz
+      : null;
+  }
+
+  /**
    * {object} The object which this instance represents, wraps, and generally
-   * provides access to. Accessing this property indicates that this instance is
-   * _not_ currently idle.
+   * provides access to.
    */
   get directObject() {
     return this._directObject;
@@ -190,17 +193,22 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   logInfoFromPayload(payload, shouldRedact) {
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return payload;
+    const { name, args } = payload;
+    const argsLen        = args.length;
+
+    if ((argsLen === 0) || !shouldRedact) {
+      return Target._logInfoUnredacted(payload);
     }
 
-    // **TODO:** Redaction should be driven by target-specific metadata, based
-    // on `payload.name` (the method name) as well.
+    const logging = this._schema.loggingForArgs(name);
 
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(payload, MAX_REDACTION_DEPTH));
+    const newArgs = [];
+    for (let i = 0; i < argsLen; i++) {
+      const a = args[i];
+      newArgs.push(logging[i] ? a : Target._logInfoRedacted(a, true));
+    }
+
+    return new Functor(name, ...newArgs);
   }
 
   /**
@@ -209,28 +217,66 @@ export default class Target extends CommonBase {
    * any necessary redaction.
    *
    * @param {*} result The result of the call in question.
-   * @param {Functor} payload_unused The call payload which produced `result`.
+   * @param {Functor} payload The call payload which produced `result`.
    * @param {boolean} shouldRedact Whether redaction should be performed in
    *   general. Even when `false`, some redaction may be performed out of an
    *   abundance of caution.
    * @returns {Functor} The processed replacement for `payload`, or the original
    *   `payload` if no modifications needed to be made.
    */
-  logInfoFromResult(result, payload_unused, shouldRedact) {
+  logInfoFromResult(result, payload, shouldRedact) {
     if ((result === undefined) || (result === null)) {
       return result;
+    } else if (!shouldRedact) {
+      return Target._logInfoUnredacted(result);
     }
 
-    if (!shouldRedact) {
-      // **TODO:** This should ultimately do some processing, including
-      // truncating long arrays / objects / strings, redacting strings that look
-      // like tokens, and so on.
-      return result;
-    }
+    return this._schema.loggingForResult(payload.name)
+      ? result
+      : Target._logInfoRedacted(result);
+  }
 
-    // **TODO:** Redaction should be driven by target-specific metadata, based
-    // on `payload.name` (the method name) as well.
+  /**
+   * Helper for the various `logInfo*()` methods, which does processing of
+   * payloads and results when most redaction is on (that is when
+   * `shouldRedact` is passed as `true`) and there is no more-specific redaction
+   * method available.
+   *
+   * @param {*} value Original value.
+   * @param {boolean} [isArgument = false] Whether to treat this as a call
+   *   payload argument. This is used to adjust the depth, so that an argument
+   *   redacted individually doesn't convert more depth than if the payload were
+   *   redacted as a unit.
+   * @returns {*} Appropriately-processed form.
+   */
+  static _logInfoRedacted(value, isArgument = false) {
+    const depth = MAX_REDACTION_DEPTH - (isArgument ? 1 : 0);
 
-    return RedactUtil.wrapRedacted(RedactUtil.redactValues(result, MAX_REDACTION_DEPTH));
+    // **TODO:** This should ultimately do some processing, including
+    // truncating long arrays / objects / strings, redacting strings that look
+    // like tokens, and so on.
+    return RedactUtil.wrapRedacted(RedactUtil.redactValues(value, depth));
+  }
+
+  /**
+   * Helper for the various `logInfo*()` methods, which does processing of
+   * payloads and results when most redaction is off (that is when
+   * `shouldRedact` is passed as `false`).
+   *
+   * **Note:** Name notwithstanding, this method ultimately might redact some
+   * things out of an abundance of caution.
+   *
+   * @param {*} value Original value.
+   * @param {boolean} [isArgument_unused = false] Whether to treat this as a
+   *   call payload argument. This is used to adjust the depth, so that an
+   *   argument redacted individually doesn't convert more depth than if the
+   *   payload were redacted as a unit.
+   * @returns {*} Appropriately-processed form.
+   */
+  static _logInfoUnredacted(value, isArgument_unused = false) {
+    // **TODO:** This should ultimately do some processing, including
+    // truncating long arrays / objects / strings, redacting strings that look
+    // like tokens, and so on.
+    return value;
   }
 }
