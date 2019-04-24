@@ -193,14 +193,22 @@ export default class Target extends CommonBase {
    *   `payload` if no modifications needed to be made.
    */
   logInfoFromPayload(payload, shouldRedact) {
-    if ((payload.args.length === 0) || !shouldRedact) {
+    const { name, args } = payload;
+    const argsLen        = args.length;
+
+    if ((argsLen === 0) || !shouldRedact) {
       return Target._logInfoUnredacted(payload);
     }
 
-    // **TODO:** Redaction should be driven by target-specific metadata, based
-    // on `payload.name` (the method name) as well.
+    const logging = this._schema.loggingForArgs(name);
 
-    return Target._logInfoRedacted(payload);
+    const newArgs = [];
+    for (let i = 0; i < argsLen; i++) {
+      const a = args[i];
+      args.push(logging[i] ? a : Target._logInfoRedacted(a, true));
+    }
+
+    return new Functor(name, ...newArgs);
   }
 
   /**
@@ -209,24 +217,23 @@ export default class Target extends CommonBase {
    * any necessary redaction.
    *
    * @param {*} result The result of the call in question.
-   * @param {Functor} payload_unused The call payload which produced `result`.
+   * @param {Functor} payload The call payload which produced `result`.
    * @param {boolean} shouldRedact Whether redaction should be performed in
    *   general. Even when `false`, some redaction may be performed out of an
    *   abundance of caution.
    * @returns {Functor} The processed replacement for `payload`, or the original
    *   `payload` if no modifications needed to be made.
    */
-  logInfoFromResult(result, payload_unused, shouldRedact) {
+  logInfoFromResult(result, payload, shouldRedact) {
     if ((result === undefined) || (result === null)) {
       return result;
     } else if (!shouldRedact) {
       return Target._logInfoUnredacted(result);
     }
 
-    // **TODO:** Redaction should be driven by target-specific metadata, based
-    // on `payload.name` (the method name) as well.
-
-    return Target._logInfoRedacted(result);
+    return this._schema.loggingForResult(payload.name)
+      ? result
+      : Target._logInfoRedacted(result);
   }
 
   /**
