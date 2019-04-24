@@ -11,7 +11,6 @@ import BaseConnection from './BaseConnection';
  * Class to handle meta-requests.
  */
 export default class MetaHandler extends CommonBase {
-
   /**
    * Constructs an instance.
    *
