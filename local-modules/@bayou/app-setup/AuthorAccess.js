@@ -85,6 +85,12 @@ export default class AuthorAccess extends CommonBase {
     // of the connection as a reference, instead of by encoding its contents.
     return new ProxiedObject(session);
   }
+  static get _loggingFor_findExistingSession() {
+    return {
+      args:   [true, true],
+      result: true
+    };
+  }
 
   /**
    * Adds a binding to this instance's associated context for a new editing
@@ -111,6 +117,12 @@ export default class AuthorAccess extends CommonBase {
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
     return new ProxiedObject(session);
+  }
+  static get _loggingFor_makeNewSession() {
+    return {
+      args:   [true],
+      result: true
+    };
   }
 
   /**
