@@ -24,6 +24,15 @@ const VERBOTEN_NAMES = /^(then|catch)$/;
  * * Constructor methods are excluded.
  * * Methods inherited from the base `Object` prototype are excluded.
  * * All other public methods are included.
+ *
+ * Instances of this class also provide information about how to log calls to
+ * methods, specifically with regards to redaction. This is driven by getters
+ * defined on the _class_ of the target, with names of the form
+ * `_loggingFor_<name>`, where `<name>` is the method name. These getters should
+ * each return a plain object that binds `args` (to an array of booleans) and/or
+ * `result` (to a boolean). See {@link #loggingForArgs},
+ * {@link #loggingForResult}, and {@link Target} for details about how these are
+ * used.
  */
 export default class Schema extends CommonBase {
   /**
