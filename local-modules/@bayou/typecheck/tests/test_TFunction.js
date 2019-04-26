@@ -77,7 +77,7 @@ const NON_FUNCTIONS = [
 
 describe('@bayou/typecheck/TFunction', () => {
   describe('check()', () => {
-    it('should succeed when passed a function', () => {
+    it('succeeds when passed a function', () => {
       function test(value) {
         assert.strictEqual(TFunction.check(value), value);
       }
@@ -99,7 +99,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('checkCallable()', () => {
-    it('should succeed when passed a callable function', () => {
+    it('succeeds when passed a callable function', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkCallable(value), value);
       }
@@ -131,7 +131,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('checkCallableOrNull()', () => {
-    it('should succeed when passed a callable function', () => {
+    it('succeeds when passed a callable function', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkCallableOrNull(value), value);
       }
@@ -141,7 +141,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should succeed when passed `null`', () => {
+    it('succeeds when passed `null`', () => {
       assert.isNull(TFunction.checkCallableOrNull(null));
     });
 
@@ -171,7 +171,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('checkClass(value)', () => {
-    it('should succeed when passed a class', () => {
+    it('succeeds when passed a class', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkClass(value), value);
       }

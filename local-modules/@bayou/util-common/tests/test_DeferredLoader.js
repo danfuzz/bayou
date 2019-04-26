@@ -26,7 +26,7 @@ describe('@bayou/util-common/DeferredLoader', () => {
   });
 
   describe('makeProxy() result access', () => {
-    it('should succeed in getting properties from the loaded value', () => {
+    it('succeeds in getting properties from the loaded value', () => {
       const loaded = { a: ['blort'], b: ['florp'] };
       function loader() { return loaded; }
 
