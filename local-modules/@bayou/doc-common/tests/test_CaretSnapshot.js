@@ -46,7 +46,7 @@ const op3 = CaretOp.op_add(caret3);
 
 describe('@bayou/doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
-    it('should be an empty instance', () => {
+    it('is an empty instance', () => {
       const EMPTY = CaretSnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);

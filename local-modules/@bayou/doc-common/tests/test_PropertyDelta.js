@@ -14,11 +14,11 @@ describe('@bayou/doc-common/PropertyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = PropertyDelta.EMPTY;
 
-    it('should be an instance of `PropertyDelta`', () => {
+    it('is an instance of `PropertyDelta`', () => {
       assert.instanceOf(EMPTY, PropertyDelta);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(EMPTY);
     });
 
@@ -30,7 +30,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `.isEmpty()`', () => {
+    it('is `.isEmpty()`', () => {
       assert.isTrue(EMPTY.isEmpty());
     });
   });

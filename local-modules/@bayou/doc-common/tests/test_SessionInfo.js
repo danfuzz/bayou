@@ -62,13 +62,13 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.authorToken', () => {
-    it('should be the constructed value if constructed from a string', () => {
+    it('is the constructed value if constructed from a string', () => {
       const token  = 'florp';
       const result = new SessionInfo(SERVER_URL, token, 'x');
       assert.strictEqual(result.authorToken, token);
     });
 
-    it('should be the constructed value if constructed from a `BearerToken`', () => {
+    it('is the constructed value if constructed from a `BearerToken`', () => {
       const token  = new BearerToken('the-id', 'the-secret');
       const result = new SessionInfo(SERVER_URL, token, 'boop');
       assert.strictEqual(result.authorToken, token);
@@ -76,7 +76,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.documentId', () => {
-    it('should be the constructed value', () => {
+    it('is the constructed value', () => {
       const id     = 'blort';
       const result = new SessionInfo(SERVER_URL, 'token', id);
       assert.strictEqual(result.documentId, id);
@@ -84,7 +84,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.serverUrl', () => {
-    it('should be the constructed value', () => {
+    it('is the constructed value', () => {
       const url    = 'https://milk.com:1234/florp';
       const result = new SessionInfo(url, 'token', 'x');
       assert.strictEqual(result.serverUrl, url);
@@ -92,13 +92,13 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.caretId', () => {
-    it('should be the constructed value', () => {
+    it('is the constructed value', () => {
       const id     = 'zorch';
       const result = new SessionInfo(SERVER_URL, 'token', 'doc', id);
       assert.strictEqual(result.caretId, id);
     });
 
-    it('should be `null` if not passed in the constructor', () => {
+    it('is `null` if not passed in the constructor', () => {
       const result = new SessionInfo(SERVER_URL, 'token', 'doc');
       assert.isNull(result.caretId);
     });
@@ -157,7 +157,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       assert.deepEqual(si.logTags, [did, cid]);
     });
 
-    it('should be just the `documentId` if `caretId === null`', () => {
+    it('is just the `documentId` if `caretId === null`', () => {
       const id = 'docness';
       const si = new SessionInfo(SERVER_URL, 'token', id);
       assert.deepEqual(si.logTags, [id]);

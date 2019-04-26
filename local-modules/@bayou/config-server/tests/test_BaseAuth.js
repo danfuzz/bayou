@@ -14,7 +14,7 @@ describe('@bayou/config-server/BaseAuth', () => {
     for (const item of items) {
       const name = `TYPE_${item}`;
       describe(`.${name}`, () => {
-        it('should be a string', () => {
+        it('is a string', () => {
           assert.isString(BaseAuth[name]);
         });
       });

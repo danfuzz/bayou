@@ -70,7 +70,7 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('.args', () => {
-    it('should be a frozen array', () => {
+    it('is a frozen array', () => {
       const ftor = new Functor('blort', 'a', ['b'], { c: 30 });
       assert.isArray(ftor.args);
       assert.isFrozen(ftor.args);

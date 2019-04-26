@@ -11,7 +11,7 @@ import { DataUtil, Functor } from '@bayou/util-common';
 
 describe('@bayou/doc-common/PropertySnapshot', () => {
   describe('.EMPTY', () => {
-    it('should be an empty instance', () => {
+    it('is an empty instance', () => {
       const EMPTY = PropertySnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
