@@ -17,7 +17,7 @@ describe('@bayou/util-common/Singleton', () => {
       assert.strictEqual(test1, test2);
     });
 
-    it('should allow manual construction if it has not ever been constructed', () => {
+    it('allows manual construction if it has not ever been constructed', () => {
       class TestClass extends Singleton { /*empty*/ }
 
       const test1 = new TestClass();

@@ -61,7 +61,7 @@ describe('@bayou/typecheck/TInt', () => {
   });
 
   describe('maxInc()', () => {
-    it('should allow value <= maxInc', () => {
+    it('allows value <= maxInc', () => {
       assert.doesNotThrow(() => TInt.maxInc(4, 4));
       assert.doesNotThrow(() => TInt.maxInc(4, 5));
     });
@@ -132,7 +132,7 @@ describe('@bayou/typecheck/TInt', () => {
   });
 
   describe('rangeInc()', () => {
-    it('should allow `minInc <= value <= maxInc`', () => {
+    it('allows `minInc <= value <= maxInc`', () => {
       assert.doesNotThrow(() => TInt.rangeInc(11, 3, 27));
     });
 
@@ -150,7 +150,7 @@ describe('@bayou/typecheck/TInt', () => {
   });
 
   describe('unsignedByte()', () => {
-    it('should allow integer values in range `[0..255]`', () => {
+    it('allows integer values in range `[0..255]`', () => {
       assert.strictEqual(TInt.unsignedByte(0),   0);
       assert.strictEqual(TInt.unsignedByte(1),   1);
       assert.strictEqual(TInt.unsignedByte(128), 128);

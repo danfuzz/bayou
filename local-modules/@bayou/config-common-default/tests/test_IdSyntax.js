@@ -33,7 +33,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isTrue(IdSyntax.isAuthorId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(IdSyntax.isAuthorId('123456789_123456789-12'));
     });
 
@@ -57,7 +57,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isTrue(IdSyntax.isDocumentId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(IdSyntax.isDocumentId('123456789_123456789-12'));
     });
 

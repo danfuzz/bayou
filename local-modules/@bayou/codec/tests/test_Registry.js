@@ -28,7 +28,7 @@ describe('@bayou/codec/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(RegistryTestClass));
     });
 
-    it('should allow classes without `CODEC_TAG`', () => {
+    it('allows classes without `CODEC_TAG`', () => {
       class NoCodecTag {
         deconstruct() {
           return 'NoCodecTag!';

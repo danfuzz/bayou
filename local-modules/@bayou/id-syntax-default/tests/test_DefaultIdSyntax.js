@@ -28,7 +28,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isTrue(DefaultIdSyntax.isAuthorId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(DefaultIdSyntax.isAuthorId('123456789_123456789-12'));
     });
 
@@ -52,7 +52,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isTrue(DefaultIdSyntax.isDocumentId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(DefaultIdSyntax.isDocumentId('123456789_123456789-12'));
     });
 
@@ -76,7 +76,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isTrue(DefaultIdSyntax.isFileId('123abc7890ABC456789012'));
     });
 
-    it('should allow underscores and hyphens', () => {
+    it('allows underscores and hyphens', () => {
       assert.isTrue(DefaultIdSyntax.isFileId('123456789_123456789-12'));
     });
 
