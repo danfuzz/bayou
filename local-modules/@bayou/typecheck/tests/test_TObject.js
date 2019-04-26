@@ -120,7 +120,7 @@ describe('@bayou/typecheck/TObject', () => {
       test({ a: 10, b: 20 });
     });
 
-    it('should reject non-plain objects', () => {
+    it('rejects non-plain objects', () => {
       function test(value) {
         assert.throws(() => { TObject.plain(value); });
       }
@@ -134,7 +134,7 @@ describe('@bayou/typecheck/TObject', () => {
       test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('should reject non-objects', () => {
+    it('rejects non-objects', () => {
       function test(value) {
         assert.throws(() => { TObject.plain(value); });
       }
@@ -161,25 +161,25 @@ describe('@bayou/typecheck/TObject', () => {
       assert.strictEqual(TObject.withExactKeys(value, ['a', 'b', 'c']), value);
     });
 
-    it('should reject an object value which is missing a key', () => {
+    it('rejects an object value which is missing a key', () => {
       const value = { 'a': 1, 'b': 2 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should reject an object with a superset of keys', () => {
+    it('rejects an object with a superset of keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3, 'd': 4 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should reject non-plain objects', () => {
+    it('rejects non-plain objects', () => {
       assert.throws(() => TObject.withExactKeys(new Map(),  []));
       assert.throws(() => TObject.withExactKeys(['z'],      []));
       assert.throws(() => TObject.withExactKeys(() => true, []));
     });
 
-    it('should reject non-objects', () => {
+    it('rejects non-objects', () => {
       assert.throws(() => TObject.withExactKeys('x',  []));
       assert.throws(() => TObject.withExactKeys(914,  []));
       assert.throws(() => TObject.withExactKeys(null, []));

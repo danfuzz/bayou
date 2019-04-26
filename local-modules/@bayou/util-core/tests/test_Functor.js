@@ -56,7 +56,7 @@ describe('@bayou/util-core/Functor', () => {
       test(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
     });
 
-    it('should reject invalid names', () => {
+    it('rejects invalid names', () => {
       function test(name) {
         assert.throws(() => { new Functor(name); });
       }
@@ -285,7 +285,7 @@ describe('@bayou/util-core/Functor', () => {
       test(Object.freeze({ a: [1, 2, 3], b: [2, 3, 4] }));
     });
 
-    it('should reject non-frozen non-data arguments', () => {
+    it('rejects non-frozen non-data arguments', () => {
       function test(...args) {
         const func = new Functor('florp', ...args);
         assert.throws(() => func.withFrozenArgs());

@@ -13,12 +13,12 @@ describe('@bayou/util-common/DeferredLoader', () => {
       assert.doesNotThrow(() => { DeferredLoader.makeProxy('hello', () => true); });
     });
 
-    it('should reject invalid label arguments', () => {
+    it('rejects invalid label arguments', () => {
       assert.throws(() => { DeferredLoader.makeProxy('', () => true); });
       assert.throws(() => { DeferredLoader.makeProxy(37, () => true); });
     });
 
-    it('should reject invalid loader arguments', () => {
+    it('rejects invalid loader arguments', () => {
       assert.throws(() => { DeferredLoader.makeProxy('hello', null); });
       assert.throws(() => { DeferredLoader.makeProxy('hello', 'blort'); });
       assert.throws(() => { DeferredLoader.makeProxy('hello', new Map()); });

@@ -39,7 +39,7 @@ describe('@bayou/codec/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
     });
 
-    it('should reject a class without `deconstruct()`', () => {
+    it('rejects a class without `deconstruct()`', () => {
       class NoDeconstruct {
         get CODEC_TAG() {
           return 'NoDeconstruct';
@@ -50,7 +50,7 @@ describe('@bayou/codec/Registry', () => {
       assert.throws(() => reg.registerClass(NoDeconstruct));
     });
 
-    it('should reject non-classes', () => {
+    it('rejects non-classes', () => {
       const reg = new Registry();
       assert.throws(() => reg.registerClass(true));
       assert.throws(() => reg.registerClass(37));

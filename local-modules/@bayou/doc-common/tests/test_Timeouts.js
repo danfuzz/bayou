@@ -61,13 +61,13 @@ describe('@bayou/doc-common/Timeouts', () => {
       }
     });
 
-    it('should reject negative numbers', () => {
+    it('rejects negative numbers', () => {
       assert.throws(() => Timeouts.clamp(-1));
       assert.throws(() => Timeouts.clamp(-0.01));
       assert.throws(() => Timeouts.clamp(-123));
     });
 
-    it('should reject non-numbers that are not `null`', () => {
+    it('rejects non-numbers that are not `null`', () => {
       assert.throws(() => Timeouts.clamp(undefined));
       assert.throws(() => Timeouts.clamp(false));
       assert.throws(() => Timeouts.clamp('123'));

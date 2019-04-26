@@ -79,13 +79,13 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should reject invalid hash strings', () => {
+    it('rejects invalid hash strings', () => {
       for (const value of INVALID_HASHES) {
         assert.throws(() => { FrozenBuffer.checkHash(value); });
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const value of NON_STRINGS) {
         assert.throws(() => { FrozenBuffer.checkHash(value); });
       }
@@ -99,13 +99,13 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should reject invalid hash strings', () => {
+    it('rejects invalid hash strings', () => {
       for (const value of INVALID_HASHES) {
         assert.isFalse(FrozenBuffer.isHash(value), value);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const value of NON_STRINGS) {
         assert.isFalse(FrozenBuffer.isHash(value), value);
       }

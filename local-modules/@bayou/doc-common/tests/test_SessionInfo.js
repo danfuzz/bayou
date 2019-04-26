@@ -36,7 +36,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       assert.isFrozen(result);
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new SessionInfo(...args));
       }
@@ -217,7 +217,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       test(new BearerToken('blort', 'florp'));
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       const si = new SessionInfo(SERVER_URL, 'token', 'doc');
 
       function test(value) {
@@ -250,7 +250,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       test('boop');
     });
 
-    it('should reject invalid IDs', () => {
+    it('rejects invalid IDs', () => {
       const si = new SessionInfo(SERVER_URL, 'token', 'doc');
 
       function test(value) {

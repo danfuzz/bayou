@@ -36,23 +36,23 @@ describe('@bayou/util-common/Random', () => {
   });
 
   describe('idString()', () => {
-    it('should reject a non-string prefix', () => {
+    it('rejects a non-string prefix', () => {
       assert.throws(() => Random.idString(true, 10));
     });
 
-    it('should reject an empty prefix', () => {
+    it('rejects an empty prefix', () => {
       assert.throws(() => Random.idString('', 10));
     });
 
-    it('should reject a non-number length', () => {
+    it('rejects a non-number length', () => {
       assert.throws(() => Random.idString('x', 'foo'));
     });
 
-    it('should reject a non-integer length', () => {
+    it('rejects a non-integer length', () => {
       assert.throws(() => Random.idString('x', 12.34));
     });
 
-    it('should reject a non-positive length', () => {
+    it('rejects a non-positive length', () => {
       assert.throws(() => Random.idString('x', 0));
       assert.throws(() => Random.idString('x', -1));
     });

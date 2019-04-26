@@ -231,7 +231,7 @@ describe('@bayou/typecheck/TFunction', () => {
       assert.strictEqual(TFunction.checkClass(UltraBlort, Blort), UltraBlort);
     });
 
-    it('should reject a class that is not the same as or a subclass of the given `ancestor`', () => {
+    it('rejects a class that is not the same as or a subclass of the given `ancestor`', () => {
       function test(value, ancestor) {
         assert.throws(() => { TFunction.checkClass(value, ancestor); });
       }

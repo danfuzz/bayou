@@ -94,7 +94,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isFrozen(snap);
     });
 
-    it('should reject an array that is not all valid ops', () => {
+    it('rejects an array that is not all valid ops', () => {
       function test(value) {
         assert.throws(() => { new CaretSnapshot(0, value); });
       }
@@ -107,7 +107,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([op1, op1]); // Duplicates aren't allowed.
     });
 
-    it('should reject a delta with disallowed ops', () => {
+    it('rejects a delta with disallowed ops', () => {
       function test(ops) {
         const delta = new CaretDelta(ops);
         assert.throws(() => { new CaretSnapshot(0, delta); });
@@ -127,7 +127,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([op1, op1]);
     });
 
-    it('should reject invalid revision numbers', () => {
+    it('rejects invalid revision numbers', () => {
       function test(value) {
         assert.throws(() => { new CaretSnapshot(value, CaretDelta.EMPTY); });
       }
@@ -573,7 +573,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(result.contents, delta);
     });
 
-    it('should reject an invalid `contents`', () => {
+    it('rejects an invalid `contents`', () => {
       const snap = new CaretSnapshot(123, []);
 
       assert.throws(() => snap.withContents('blortch'));
@@ -596,7 +596,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(result.contents, delta);
     });
 
-    it('should reject an invalid `revNum`', () => {
+    it('rejects an invalid `revNum`', () => {
       const snap = new CaretSnapshot(1, [op1, op2]);
 
       assert.throws(() => snap.withRevNum('blortch'));
@@ -644,13 +644,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     });
 
     describe('invalid argument', () => {
-      it('should reject invalid ID strings', () => {
+      it('rejects invalid ID strings', () => {
         const snap = new CaretSnapshot(1, [op1]);
         assert.throws(() => snap.withoutCaret(''));
         assert.throws(() => snap.withoutCaret('ZORCH_SPLAT'));
       });
 
-      it('should reject arguments that are neither strings nor `Caret`s', () => {
+      it('rejects arguments that are neither strings nor `Caret`s', () => {
         const snap = new CaretSnapshot(1, [op1]);
         assert.throws(() => snap.withoutCaret(undefined));
         assert.throws(() => snap.withoutCaret(null));

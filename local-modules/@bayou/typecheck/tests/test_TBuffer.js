@@ -14,7 +14,7 @@ describe('@bayou/typecheck/TBuffer', () => {
       assert.strictEqual(TBuffer.check(buf), buf);
     });
 
-    it('should reject non-Buffers', () => {
+    it('rejects non-Buffers', () => {
       function test(value) {
         assert.throws(() => TBuffer.check(value), /badValue/);
       }
@@ -38,7 +38,7 @@ describe('@bayou/typecheck/TBuffer', () => {
       assert.isNull(TBuffer.orNull(null));
     });
 
-    it('should reject non-`null` non-Buffers', () => {
+    it('rejects non-`null` non-Buffers', () => {
       function test(value) {
         assert.throws(() => TBuffer.check(value), /badValue/);
       }

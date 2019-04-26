@@ -41,7 +41,7 @@ describe('@bayou/api-common/Remote', () => {
       }
     });
 
-    it('should reject invalid values for `targetId`', () => {
+    it('rejects invalid values for `targetId`', () => {
       for (const id of INVALID_IDS) {
         assert.throws(() => new Remote(id), /badValue/, inspect(id));
       }

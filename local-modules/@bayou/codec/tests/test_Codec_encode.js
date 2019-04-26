@@ -19,15 +19,15 @@ describe('@bayou/codec/Codec.encode*()', () => {
   codec.registry.registerClass(MockCodable);
 
   describe('encodeData()', () => {
-    it('should reject function values', () => {
+    it('rejects function values', () => {
       assert.throws(() => encodeData(() => 1));
     });
 
-    it('should reject Symbols', () => {
+    it('rejects Symbols', () => {
       assert.throws(() => encodeData(Symbol('this better not work!')));
     });
 
-    it('should reject undefined', () => {
+    it('rejects undefined', () => {
       assert.throws(() => encodeData(undefined));
     });
 
@@ -54,7 +54,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       test([[[null]]]);
     });
 
-    it('should reject arrays with index holes', () => {
+    it('rejects arrays with index holes', () => {
       const value = [];
 
       value[1] = true;
@@ -63,7 +63,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should reject arrays with non-numeric properties', () => {
+    it('rejects arrays with non-numeric properties', () => {
       const value = [];
 
       value['foo'] = 'bar';
@@ -101,7 +101,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.deepEqual(encodeData(orig), expect);
     });
 
-    it('should reject objects with no `deconstruct()` method', () => {
+    it('rejects objects with no `deconstruct()` method', () => {
       class NoDeconstruct {
         get CODEC_TAG() {
           return 'NoDeconstruct';

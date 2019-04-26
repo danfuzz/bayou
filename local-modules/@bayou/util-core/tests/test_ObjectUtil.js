@@ -53,7 +53,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test({ a: 'aaa', b: 'bbb', 1: '111', 2: '222' });
     });
 
-    it('should reject inputs with keys not representable in plain objects with full fidelity', () => {
+    it('rejects inputs with keys not representable in plain objects with full fidelity', () => {
       function test(value) {
         const map = new Map([[value, 'whatever']]);
         assert.throws(() => ObjectUtil.fromMap(map), /badValue/);
@@ -75,7 +75,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test(['x']);
     });
 
-    it('should reject non-map inputs', () => {
+    it('rejects non-map inputs', () => {
       function test(value) {
         assert.throws(() => ObjectUtil.fromMap(value), /badValue/);
       }

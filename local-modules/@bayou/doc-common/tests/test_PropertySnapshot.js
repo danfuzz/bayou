@@ -60,7 +60,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isFrozen(snap);
     });
 
-    it('should reject an array that is not all valid ops', () => {
+    it('rejects an array that is not all valid ops', () => {
       function test(value) {
         assert.throws(() => { new PropertySnapshot(0, value); });
       }
@@ -81,7 +81,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should reject a delta with disallowed ops', () => {
+    it('rejects a delta with disallowed ops', () => {
       function test(ops) {
         const delta = new PropertyDelta(ops);
         assert.throws(() => { new PropertySnapshot(0, delta); });
@@ -100,7 +100,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should reject invalid revision numbers', () => {
+    it('rejects invalid revision numbers', () => {
       function test(value) {
         assert.throws(() => { new PropertySnapshot(value, PropertyDelta.EMPTY); });
       }
@@ -546,7 +546,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.strictEqual(result.contents, delta);
     });
 
-    it('should reject an invalid `contents`', () => {
+    it('rejects an invalid `contents`', () => {
       const snap = new PropertySnapshot(123, []);
 
       assert.throws(() => snap.withContents('blortch'));
@@ -594,7 +594,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.strictEqual(result.contents, delta);
     });
 
-    it('should reject an invalid `revNum`', () => {
+    it('rejects an invalid `revNum`', () => {
       const snap = new PropertySnapshot(123, []);
 
       assert.throws(() => snap.withRevNum('blortch'));

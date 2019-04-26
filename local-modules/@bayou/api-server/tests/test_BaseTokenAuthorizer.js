@@ -106,7 +106,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       assert.deepEqual(result, { got: new BearerToken('yes', 'yes') });
     });
 
-    it('should reject a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
+    it('rejects a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_targetFromToken(value_unused) {
           throw new Error('Should not have been called.');
@@ -135,7 +135,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       assert.isNull(result);
     });
 
-    it('should reject a bad subclass implementation', () => {
+    it('rejects a bad subclass implementation', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_targetFromToken(value_unused) {
           // Supposed to be an object or `null`.
@@ -168,7 +168,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       assert.throws(() => au.tokenFromString('nope'), /badValue/);
     });
 
-    it('should reject a non-string without calling through to any `_impl`', () => {
+    it('rejects a non-string without calling through to any `_impl`', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           throw new Error('Should not have been called.');
@@ -186,7 +186,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       assert.throws(() => au.tokenFromString(['x']), /badValue/);
     });
 
-    it('should reject a bad subclass implementation', () => {
+    it('rejects a bad subclass implementation', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value_unused) {
           return true;

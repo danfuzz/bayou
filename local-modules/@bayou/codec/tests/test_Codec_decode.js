@@ -44,13 +44,13 @@ describe('@bayou/codec/Codec.decode*()', () => {
       test([[[null]]]);
     });
 
-    it('should reject plain objects not in "encoded instance" form', () => {
+    it('rejects plain objects not in "encoded instance" form', () => {
       assert.throws(() => decodeData({}));
       assert.throws(() => decodeData({ a: 123 }));
       assert.throws(() => decodeData({ foo: [], x: [] }));
     });
 
-    it('should reject functions', () => {
+    it('rejects functions', () => {
       assert.throws(() => decodeData(function () { return true; }));
       assert.throws(() => decodeData(() => 123));
     });

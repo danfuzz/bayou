@@ -20,13 +20,13 @@ describe('@bayou/typecheck/TInt', () => {
       test(10000000);
     });
 
-    it('should reject numbers which are not safe integers', () => {
+    it('rejects numbers which are not safe integers', () => {
       assert.throws(() => TInt.check(3.1));
       assert.throws(() => TInt.check(NaN));
       assert.throws(() => TInt.check(1e100));
     });
 
-    it('should reject a non-number value', () => {
+    it('rejects a non-number value', () => {
       assert.throws(() => TInt.check('this better not work'));
     });
   });

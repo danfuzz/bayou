@@ -63,13 +63,13 @@ describe('@bayou/doc-common/CaretId', () => {
       }
     });
 
-    it('should reject invalid ID strings', () => {
+    it('rejects invalid ID strings', () => {
       for (const s of INVALID_STRINGS) {
         assert.throws(() => CaretId.check(s), /badValue/, s);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const v of NON_STRINGS) {
         assert.throws(() => CaretId.check(v), /badValue/, v);
       }
@@ -102,13 +102,13 @@ describe('@bayou/doc-common/CaretId', () => {
       assert.strictEqual('0zor0', CaretId.payloadFromId('cr-0zor0'));
     });
 
-    it('should reject invalid ID strings', () => {
+    it('rejects invalid ID strings', () => {
       for (const s of INVALID_STRINGS) {
         assert.throws(() => CaretId.payloadFromId(s), /badValue/, s);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const v of NON_STRINGS) {
         assert.throws(() => CaretId.payloadFromId(v), /badValue/, v);
       }

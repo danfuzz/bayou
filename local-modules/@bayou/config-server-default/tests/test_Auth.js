@@ -100,7 +100,7 @@ describe('@bayou/config-server-default/Auth', () => {
       }
     });
 
-    it('should reject non-token syntax', () => {
+    it('rejects non-token syntax', () => {
       assert.isFalse(Auth.isToken('00000000-11234def0'));
       assert.isFalse(Auth.isToken('-0000000-11234def'));
       assert.isFalse(Auth.isToken('z-0000000-1123cdef'));
@@ -117,7 +117,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('tokenAuthority()', () => {
-    it('should reject non-token values', async () => {
+    it('rejects non-token values', async () => {
       async function test(x) {
         await assert.isRejected(Auth.tokenAuthority(x), /badValue/);
       }

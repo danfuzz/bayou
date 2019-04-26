@@ -89,7 +89,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.deepEqual(result2.ops, []);
     });
 
-    it('should reject calls when `other` is not an instance of the class', () => {
+    it('rejects calls when `other` is not an instance of the class', () => {
       const delta = PropertyDelta.EMPTY;
 
       assert.throws(() => delta.compose('blort', false));
