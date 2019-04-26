@@ -13,7 +13,7 @@ describe('@bayou/util-core/DataUtil', () => {
     // Tests that should work the same for both `null` and non-`null` values for
     // `nonDataConverter`.
     function commonTests(nonDataConverter) {
-      it('should return the given value if it is a primitive', () => {
+      it('returns the given value if it is a primitive', () => {
         function test(value) {
           const popsicle = DataUtil.deepFreeze(value, nonDataConverter);
           assert.strictEqual(popsicle, value);
@@ -28,7 +28,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test(Symbol('foo'));
       });
 
-      it('should return the provided value if it is already deep-frozen', () => {
+      it('returns the provided value if it is already deep-frozen', () => {
         function test(value) {
           const popsicle     = DataUtil.deepFreeze(value, nonDataConverter);
           const deepPopsicle = DataUtil.deepFreeze(popsicle, nonDataConverter);
@@ -45,7 +45,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test([[1, 2], [3, 4]]);
       });
 
-      it('should return a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
+      it('returns a deep-frozen object if passed one that isn\'t already deep-frozen', () => {
         function test(value) {
           const popsicle = DataUtil.deepFreeze(value, nonDataConverter);
           assert.isTrue(DataUtil.isDeepFrozen(popsicle, nonDataConverter));
@@ -110,7 +110,7 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.deepEqual(popsicle, orig);
       });
 
-      it('should return a given `FrozenBuffer`', () => {
+      it('returns a given `FrozenBuffer`', () => {
         function test(value) {
           assert.strictEqual(DataUtil.deepFreeze(value, nonDataConverter), value);
         }
@@ -264,7 +264,7 @@ describe('@bayou/util-core/DataUtil', () => {
   });
 
   describe('equalData()', () => {
-    it('should return `true` for equal primitive values', () => {
+    it('returns `true` for equal primitive values', () => {
       function test(value) {
         assert.isTrue(DataUtil.equalData(value, value));
       }
@@ -280,7 +280,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(Symbol('foo'));
     });
 
-    it('should return `true` for equal-content arrays', () => {
+    it('returns `true` for equal-content arrays', () => {
       function test(v1, v2) {
         assert.isTrue(DataUtil.equalData(v1, v2), inspect(v1));
       }
@@ -297,7 +297,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(v1, v2);
     });
 
-    it('should return `true` for equal-content objects', () => {
+    it('returns `true` for equal-content objects', () => {
       function test(v1, v2) {
         assert.isTrue(DataUtil.equalData(v1, v2), v1);
       }
@@ -307,7 +307,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test({ a: 1, b: { b: 2 } }, { a: 1, b: { b: 2 } });
     });
 
-    it('should return `true` for equal-content `FrozenBuffer`s', () => {
+    it('returns `true` for equal-content `FrozenBuffer`s', () => {
       function test(content) {
         const buf1 = FrozenBuffer.coerce(content);
         const buf2 = FrozenBuffer.coerce(content);
@@ -318,7 +318,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test('Florps are now likes again.');
     });
 
-    it('should return `true` for equal-content functors', () => {
+    it('returns `true` for equal-content functors', () => {
       function test(v1, v2) {
         assert.isTrue(DataUtil.equalData(v1, v2), v1);
       }
@@ -328,7 +328,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('z', [1, [2]]), new Functor('z', [1, [2]]));
     });
 
-    it('should return `false` for non-data objects even if equal', () => {
+    it('returns `false` for non-data objects even if equal', () => {
       function test(value) {
         assert.isFalse(DataUtil.equalData(value, value), value);
       }
@@ -338,7 +338,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(/blort/);
     });
 
-    it('should return `false` for non-equal values', () => {
+    it('returns `false` for non-equal values', () => {
       function test(v1, v2) {
         assert.isFalse(DataUtil.equalData(v1, v2), inspect(v1));
       }
@@ -386,7 +386,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('x', 1, 2, 3), [1, 2, 3]);
     });
 
-    it('should return `false` given an object/array with non-data bindings', () => {
+    it('returns `false` given an object/array with non-data bindings', () => {
       function test(v) {
         const obj = { a: 10, b: v, c: 20 };
         assert.isFalse(DataUtil.equalData(obj, obj), inspect(v));
@@ -409,7 +409,7 @@ describe('@bayou/util-core/DataUtil', () => {
   });
 
   describe('isData()', () => {
-    it('should return `true` for primitive values', () => {
+    it('returns `true` for primitive values', () => {
       function test(value) {
         assert.isTrue(DataUtil.isData(value));
       }
@@ -423,7 +423,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(Symbol('foo'));
     });
 
-    it('should return `true` for appropriate composites', () => {
+    it('returns `true` for appropriate composites', () => {
       function test(value) {
         assert.isTrue(DataUtil.isData(value));
       }
@@ -445,7 +445,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(FrozenBuffer.coerce('florp'));
     });
 
-    it('should return `false` for non-plain objects or composites with same', () => {
+    it('returns `false` for non-plain objects or composites with same', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }
@@ -468,7 +468,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('x', [synthetic]));
     });
 
-    it('should return `false` for functions, generators and composites containing same', () => {
+    it('returns `false` for functions, generators and composites containing same', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }
@@ -486,7 +486,7 @@ describe('@bayou/util-core/DataUtil', () => {
   });
 
   describe('isDeepFrozen()', () => {
-    it('should return `true` for primitive values', () => {
+    it('returns `true` for primitive values', () => {
       function test(value) {
         assert.isTrue(DataUtil.isDeepFrozen(value));
       }
@@ -500,7 +500,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(Symbol('foo'));
     });
 
-    it('should return `true` for appropriate frozen composites', () => {
+    it('returns `true` for appropriate frozen composites', () => {
       function test(value) {
         assert.isTrue(DataUtil.isDeepFrozen(value));
       }
@@ -519,7 +519,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('x', new Functor('y', 914, 37)));
     });
 
-    it('should return `true` for `FrozenBuffer`s', () => {
+    it('returns `true` for `FrozenBuffer`s', () => {
       function test(value) {
         assert.isTrue(DataUtil.isDeepFrozen(value));
       }
@@ -528,7 +528,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(FrozenBuffer.coerce('blort'));
     });
 
-    it('should return `false` for composites that are not frozen even if all elements are', () => {
+    it('returns `false` for composites that are not frozen even if all elements are', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }
@@ -542,7 +542,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test({ a: 10, b: Object.freeze({ c: 30 }) });
     });
 
-    it('should return `false` for frozen composites with non-frozen elements', () => {
+    it('returns `false` for frozen composites with non-frozen elements', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }
@@ -558,7 +558,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('x', new Functor('y', [])));
     });
 
-    it('should return `false` for non-plain objects or composites with same', () => {
+    it('returns `false` for non-plain objects or composites with same', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }
@@ -581,7 +581,7 @@ describe('@bayou/util-core/DataUtil', () => {
       test(new Functor('x', Object.freeze([synthetic])));
     });
 
-    it('should return `false` for functions, generators and composites containing same', () => {
+    it('returns `false` for functions, generators and composites containing same', () => {
       function test(value) {
         assert.isFalse(DataUtil.isDeepFrozen(value));
       }

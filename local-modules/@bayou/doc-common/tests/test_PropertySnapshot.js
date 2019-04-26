@@ -237,7 +237,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('entries()', () => {
-    it('should return an iterator', () => {
+    it('returns an iterator', () => {
       const snap   = new PropertySnapshot(0, []);
       const result = snap.entries();
 
@@ -289,7 +289,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       function test(...args) {
         const snap = new PropertySnapshot(...args);
         assert.isTrue(snap.equals(snap), inspect(snap));
@@ -306,7 +306,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(...args) {
         const snap1 = new PropertySnapshot(...args);
         const snap2 = new PropertySnapshot(...args);
@@ -326,7 +326,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should return `true` when identical construction ops are passed in different orders', () => {
+    it('returns `true` when identical construction ops are passed in different orders', () => {
       const snap1 = new PropertySnapshot(321, [
         PropertyOp.op_set('a', 10),
         PropertyOp.op_set('b', 20),
@@ -341,7 +341,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(snap1.equals(snap2));
     });
 
-    it('should return `true` when equal property values are not also `===`', () => {
+    it('returns `true` when equal property values are not also `===`', () => {
       const snap1 = new PropertySnapshot(37, [
         PropertyOp.op_set('a', [1, 2]),
         PropertyOp.op_set('b', { b: 20 }),
@@ -357,7 +357,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(snap2.equals(snap1));
     });
 
-    it('should return `false` when `revNum`s differ', () => {
+    it('returns `false` when `revNum`s differ', () => {
       const snap1 = new PropertySnapshot(123, [PropertyOp.op_set('a', 10)]);
       const snap2 = new PropertySnapshot(456, [PropertyOp.op_set('a', 10)]);
 
@@ -365,7 +365,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
 
-    it('should return `false` when a property value differs', () => {
+    it('returns `false` when a property value differs', () => {
       const snap1 = new PropertySnapshot(9, [
         PropertyOp.op_set('a', 10),
         PropertyOp.op_set('b', 20),
@@ -381,7 +381,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
 
-    it('should return `false` when passed a non-snapshot', () => {
+    it('returns `false` when passed a non-snapshot', () => {
       const snap = PropertySnapshot.EMPTY;
 
       assert.isFalse(snap.equals(undefined));
@@ -395,7 +395,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('get()', () => {
-    it('should return the value associated with an existing property', () => {
+    it('returns the value associated with an existing property', () => {
       function test(name, value) {
         const op = PropertyOp.op_set(name, value);
         const snap = new PropertySnapshot(1, [
@@ -439,7 +439,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('getOrNull()', () => {
-    it('should return the value associated with an existing property', () => {
+    it('returns the value associated with an existing property', () => {
       function test(name, value) {
         const op = PropertyOp.op_set(name, value);
         const snap = new PropertySnapshot(1, [
@@ -475,7 +475,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.deepEqual(result.value, value);
     });
 
-    it('should return `null` when given a name that is not bound as a property', () => {
+    it('returns `null` when given a name that is not bound as a property', () => {
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', 'zorch')]);
 
       assert.isNull(snap.getOrNull('x'));
@@ -483,7 +483,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('has()', () => {
-    it('should return `true` for an existing property', () => {
+    it('returns `true` for an existing property', () => {
       const snap = new PropertySnapshot(1, [
         PropertyOp.op_set('blort',  'zorch'),
         PropertyOp.op_set('florp',  'like'),
@@ -499,7 +499,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(snap.has('zither'));
     });
 
-    it('should return `false` for a non-existent property', () => {
+    it('returns `false` for a non-existent property', () => {
       const snap = new PropertySnapshot(1, [
         PropertyOp.op_set('blort', 'zorch'),
         PropertyOp.op_set('florp', 'like')
@@ -531,13 +531,13 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('withContents()', () => {
-    it('should return `this` if the given `contents` is `===` to the snapshot\'s', () => {
+    it('returns `this` if the given `contents` is `===` to the snapshot\'s', () => {
       const snap = new PropertySnapshot(123, PropertyDelta.EMPTY);
 
       assert.strictEqual(snap.withContents(PropertyDelta.EMPTY), snap);
     });
 
-    it('should return an appropriately-constructed instance given a different `contents`', () => {
+    it('returns an appropriately-constructed instance given a different `contents`', () => {
       const delta  = new PropertyDelta([PropertyOp.op_set('blort', 'zorch')]);
       const snap   = new PropertySnapshot(123, []);
       const result = snap.withContents(delta);
@@ -554,13 +554,13 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('withProperty()', () => {
-    it('should return `this` if the exact property is already in the snapshot', () => {
+    it('returns `this` if the exact property is already in the snapshot', () => {
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', 'zorch')]);
 
       assert.strictEqual(snap.withProperty('blort', 'zorch'), snap);
     });
 
-    it('should return an appropriately-constructed instance given a new property', () => {
+    it('returns an appropriately-constructed instance given a new property', () => {
       const snap     = new PropertySnapshot(1, [PropertyOp.op_set('blort', 'zorch')]);
       const expected = new PropertySnapshot(1, [
         PropertyOp.op_set('blort', 'zorch'),
@@ -570,7 +570,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(snap.withProperty('florp', 'like').equals(expected));
     });
 
-    it('should return an appropriately-constructed instance given an updated property', () => {
+    it('returns an appropriately-constructed instance given an updated property', () => {
       const snap     = new PropertySnapshot(2, [PropertyOp.op_set('blort', 'zorch')]);
       const expected = new PropertySnapshot(2, [PropertyOp.op_set('blort', 'like')]);
 
@@ -579,13 +579,13 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('withRevNum()', () => {
-    it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
+    it('returns `this` if the given `revNum` is the same as in the snapshot', () => {
       const snap = new PropertySnapshot(123, PropertyDelta.EMPTY);
 
       assert.strictEqual(snap.withRevNum(123), snap);
     });
 
-    it('should return an appropriately-constructed instance given a different `revNum`', () => {
+    it('returns an appropriately-constructed instance given a different `revNum`', () => {
       const delta  = new PropertyDelta([PropertyOp.op_set('blort', 'zorch')]);
       const snap   = new PropertySnapshot(123, delta);
       const result = snap.withRevNum(456);
@@ -602,14 +602,14 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('withoutProperty()', () => {
-    it('should return `this` if there is no matching property', () => {
+    it('returns `this` if there is no matching property', () => {
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', 'zorch')]);
 
       assert.strictEqual(snap.withoutProperty('x'), snap);
       assert.strictEqual(snap.withoutProperty('y'), snap);
     });
 
-    it('should return an appropriately-constructed instance if there is a matching property', () => {
+    it('returns an appropriately-constructed instance if there is a matching property', () => {
       const snap = new PropertySnapshot(2, [
         PropertyOp.op_set('blort', 'zorch'),
         PropertyOp.op_set('florp', 'like')

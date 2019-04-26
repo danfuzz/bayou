@@ -9,7 +9,7 @@ import { CommonBase } from '@bayou/util-common';
 
 describe('@bayou/util-core/CommonBase', () => {
   describe('check()', () => {
-    it('should return the supplied value if it is an instance of the class or a subclass', () => {
+    it('returns the supplied value if it is an instance of the class or a subclass', () => {
       class Subclass1 extends CommonBase {
         fiat() { /*empty*/ }
       }

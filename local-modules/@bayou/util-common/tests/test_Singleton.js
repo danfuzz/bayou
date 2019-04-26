@@ -9,7 +9,7 @@ import { Singleton } from '@bayou/util-common';
 
 describe('@bayou/util-common/Singleton', () => {
   describe('.theOne', () => {
-    it('should return the same object every time it is called', () => {
+    it('returns the same object every time it is called', () => {
       class TestClass extends Singleton { /*empty*/ }
       const test1 = TestClass.theOne;
       const test2 = TestClass.theOne;

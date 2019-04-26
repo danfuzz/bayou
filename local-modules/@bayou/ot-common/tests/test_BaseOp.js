@@ -124,12 +124,12 @@ describe('@bayou/ot-common/BaseOp', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       const op = new MockOp('x', 'y', 'z');
       assert.isTrue(op.equals(op));
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(...args) {
         const op1 = new MockOp(...args);
         const op2 = new MockOp(...args);
@@ -142,7 +142,7 @@ describe('@bayou/ot-common/BaseOp', () => {
       test('z', { a: 10, b: 20 });
     });
 
-    it('should return `false` when payloads differ', () => {
+    it('returns `false` when payloads differ', () => {
       function test(p1, p2) {
         const op1 = new MockOp(...p1);
         const op2 = new MockOp(...p2);
@@ -162,7 +162,7 @@ describe('@bayou/ot-common/BaseOp', () => {
       test(['x', { a: 10 }],  ['x', { a: 10, c: 'foo' }]);
     });
 
-    it('should return `false` when passed a non-instance', () => {
+    it('returns `false` when passed a non-instance', () => {
       const op = new MockOp('x');
 
       assert.isFalse(op.equals(undefined));

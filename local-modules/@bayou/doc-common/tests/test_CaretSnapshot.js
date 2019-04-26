@@ -274,7 +274,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('entries()', () => {
-    it('should return an iterator', () => {
+    it('returns an iterator', () => {
       const snap   = new CaretSnapshot(0, []);
       const result = snap.entries();
 
@@ -311,7 +311,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       let snap;
 
       snap = new CaretSnapshot(0, []);
@@ -324,7 +324,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(snap.equals(snap));
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       let snap1, snap2;
 
       snap1 = new CaretSnapshot(0, []);
@@ -340,13 +340,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(snap1.equals(snap2));
     });
 
-    it('should return `true` when identical carets are passed in different orders', () => {
+    it('returns `true` when identical carets are passed in different orders', () => {
       const snap1 = new CaretSnapshot(37, [op1, op2, op3]);
       const snap2 = new CaretSnapshot(37, [op3, op1, op2]);
       assert.isTrue(snap1.equals(snap2));
     });
 
-    it('should return `true` when equal carets are not also `===`', () => {
+    it('returns `true` when equal carets are not also `===`', () => {
       const c1a = newCaretOp('cr-florp', 2, 3, '#444444', 'ab');
       const c1b = newCaretOp('cr-florp', 2, 3, '#444444', 'ab');
       const c2a = newCaretOp('cr-like0',  3, 0, '#dbdbdb', 'cd');
@@ -357,13 +357,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(snap1.equals(snap2));
     });
 
-    it('should return `false` when `revNum`s differ', () => {
+    it('returns `false` when `revNum`s differ', () => {
       const snap1 = new CaretSnapshot(1, [op1, op2, op3]);
       const snap2 = new CaretSnapshot(2, [op1, op2, op3]);
       assert.isFalse(snap1.equals(snap2));
     });
 
-    it('should return `false` when caret contents differ', () => {
+    it('returns `false` when caret contents differ', () => {
       let snap1, snap2;
 
       snap1 = new CaretSnapshot(1, [op1]);
@@ -412,7 +412,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isFalse(snap2.equals(snap1));
     });
 
-    it('should return `false` when passed a non-snapshot', () => {
+    it('returns `false` when passed a non-snapshot', () => {
       const snap = new CaretSnapshot(1, [op1, op2, op3]);
 
       assert.isFalse(snap.equals(undefined));
@@ -426,7 +426,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('get()', () => {
-    it('should return the caret associated with an existing ID', () => {
+    it('returns the caret associated with an existing ID', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
       assert.strictEqual(snap.get(caret1.id), caret1);
@@ -450,7 +450,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('getOrNull()', () => {
-    it('should return the caret associated with an existing ID', () => {
+    it('returns the caret associated with an existing ID', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
       assert.strictEqual(snap.getOrNull(caret1.id), caret1);
@@ -458,7 +458,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(snap.getOrNull(caret3.id), caret3);
     });
 
-    it('should return `null` when given an ID that is not in the snapshot', () => {
+    it('returns `null` when given an ID that is not in the snapshot', () => {
       const snap = new CaretSnapshot(999, [op1, op3]);
 
       assert.isNull(snap.getOrNull(caret2.id));
@@ -474,7 +474,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('has()', () => {
-    it('should return `true` when given an ID for an existing caret', () => {
+    it('returns `true` when given an ID for an existing caret', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
 
       assert.isTrue(snap.has(caret1.id));
@@ -482,7 +482,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(snap.has(caret3.id));
     });
 
-    it('should return `false` when given an ID that is not in the snapshot', () => {
+    it('returns `false` when given an ID that is not in the snapshot', () => {
       const snap = new CaretSnapshot(999, [op1, op3]);
 
       assert.isFalse(snap.has(caret2.id));
@@ -498,14 +498,14 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('randomUnusedId()', () => {
-    it('should return a string for which `CaretId.isInstance()` is `true`', () => {
+    it('returns a string for which `CaretId.isInstance()` is `true`', () => {
       const snap = new CaretSnapshot(999, [op1, op2, op3]);
       const id   = snap.randomUnusedId();
 
       assert.isTrue(CaretId.isInstance(id));
     });
 
-    it('should return an ID that is not used', () => {
+    it('returns an ID that is not used', () => {
       // What we're doing here is mocking out `CaretSnapshot.has()` to lie about
       // the IDs in the instance N times, so that we can infer that the method
       // under test actually retries.
@@ -531,7 +531,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('withCaret()', () => {
-    it('should return `this` if the exact caret is already in the snapshot', () => {
+    it('returns `this` if the exact caret is already in the snapshot', () => {
       const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withCaret(caret1), snap);
@@ -540,14 +540,14 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(snap.withCaret(cloneCaret), snap);
     });
 
-    it('should return an appropriately-constructed instance given a new caret', () => {
+    it('returns an appropriately-constructed instance given a new caret', () => {
       const snap     = new CaretSnapshot(1, [op1]);
       const expected = new CaretSnapshot(1, [op1, op2]);
 
       assert.isTrue(snap.withCaret(caret2).equals(expected));
     });
 
-    it('should return an appropriately-constructed instance given an updated caret', () => {
+    it('returns an appropriately-constructed instance given an updated caret', () => {
       const modCaret = new Caret(caret1, { index: 321 });
       const modOp    = CaretOp.op_add(modCaret);
       const snap     = new CaretSnapshot(1, [op1,   op2]);
@@ -558,13 +558,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('withContents()', () => {
-    it('should return `this` if the given `contents` is `===` to the snapshot\'s', () => {
+    it('returns `this` if the given `contents` is `===` to the snapshot\'s', () => {
       const snap = new CaretSnapshot(123, CaretDelta.EMPTY);
 
       assert.strictEqual(snap.withContents(CaretDelta.EMPTY), snap);
     });
 
-    it('should return an appropriately-constructed instance given a different `contents`', () => {
+    it('returns an appropriately-constructed instance given a different `contents`', () => {
       const delta  = new CaretDelta([op1, op2, op3]);
       const snap   = new CaretSnapshot(111, [op1]);
       const result = snap.withContents(delta);
@@ -581,13 +581,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('withRevNum()', () => {
-    it('should return `this` if the given `revNum` is the same as in the snapshot', () => {
+    it('returns `this` if the given `revNum` is the same as in the snapshot', () => {
       const snap = new CaretSnapshot(1, [op1]);
 
       assert.strictEqual(snap.withRevNum(1), snap);
     });
 
-    it('should return an appropriately-constructed instance given a different `revNum`', () => {
+    it('returns an appropriately-constructed instance given a different `revNum`', () => {
       const delta  = new CaretDelta([op1, op2]);
       const snap   = new CaretSnapshot(1, delta);
       const result = snap.withRevNum(2);
@@ -605,14 +605,14 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
 
   describe('withoutCaret()', () => {
     describe('valid `Caret` argument', () => {
-      it('should return `this` if there is no matching caret', () => {
+      it('returns `this` if there is no matching caret', () => {
         const snap = new CaretSnapshot(1, [op1]);
 
         assert.strictEqual(snap.withoutCaret(caret2), snap);
         assert.strictEqual(snap.withoutCaret(caret3), snap);
       });
 
-      it('should return an appropriately-constructed instance if there is a matching caret', () => {
+      it('returns an appropriately-constructed instance if there is a matching caret', () => {
         const snap     = new CaretSnapshot(1, [op1, op2]);
         const expected = new CaretSnapshot(1, [op2]);
 
@@ -629,13 +629,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
     });
 
     describe('valid ID argument', () => {
-      it('should return `this` if there is no matching caret', () => {
+      it('returns `this` if there is no matching caret', () => {
         const snap = new CaretSnapshot(1, [op1]);
 
         assert.strictEqual(snap.withoutCaret('cr-not00'), snap);
       });
 
-      it('should return an appropriately-constructed instance if there is a matching caret', () => {
+      it('returns an appropriately-constructed instance if there is a matching caret', () => {
         const snap     = new CaretSnapshot(1, [op1, op2]);
         const expected = new CaretSnapshot(1, [op2]);
 

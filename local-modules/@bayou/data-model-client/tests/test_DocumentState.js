@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { DocumentState } from '@bayou/data-model-client';
 
 describe('@bayou/data-model-client/DocumentState', () => {
-  it('should return default values when passed an undefined initial', () => {
+  it('returns default values when passed an undefined initial', () => {
     const reducer = DocumentState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
 

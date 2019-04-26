@@ -107,12 +107,12 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when compared to itself', () => {
+    it('returns `true` when compared to itself', () => {
       const ftor = new Functor('blort', 10);
       assert.isTrue(ftor.equals(ftor));
     });
 
-    it('should return `true` when the name and all arguments are `===`', () => {
+    it('returns `true` when the name and all arguments are `===`', () => {
       function test(...args) {
         const ftor1 = new Functor('blort', ...args);
         const ftor2 = new Functor('blort', ...args);
@@ -130,14 +130,14 @@ describe('@bayou/util-core/Functor', () => {
       test(new Set(['x', 'y']));
     });
 
-    it('should return `true` when the name is `===` and all arguments are `equalData()`', () => {
+    it('returns `true` when the name is `===` and all arguments are `equalData()`', () => {
       const ftor1 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
       const ftor2 = new Functor('blort', 10, ['x', ['y']], { a: 123 }, new Functor('z'));
       assert.isTrue(ftor1.equals(ftor2));
       assert.isTrue(ftor2.equals(ftor1));
     });
 
-    it('should return `true` when the name is `===` and all arguments are `.equals()`', () => {
+    it('returns `true` when the name is `===` and all arguments are `.equals()`', () => {
       function test(...args) {
         const args1 = args.map(x => new HasEquals(x));
         const args2 = args.map(x => new HasEquals(x));
@@ -151,21 +151,21 @@ describe('@bayou/util-core/Functor', () => {
       test('x', 'y', [123]);
     });
 
-    it('should return `false` when the names do not match', () => {
+    it('returns `false` when the names do not match', () => {
       const ftor1 = new Functor('blort', 10);
       const ftor2 = new Functor('florp', 10);
       assert.isFalse(ftor1.equals(ftor2));
       assert.isFalse(ftor2.equals(ftor1));
     });
 
-    it('should return `false` when argument counts do not match', () => {
+    it('returns `false` when argument counts do not match', () => {
       const ftor1 = new Functor('blort', 10);
       const ftor2 = new Functor('blort', 10, 20);
       assert.isFalse(ftor1.equals(ftor2));
       assert.isFalse(ftor2.equals(ftor1));
     });
 
-    it('should return `false` when an argument is not `===` or `equalData()` or `.equals()`', () => {
+    it('returns `false` when an argument is not `===` or `equalData()` or `.equals()`', () => {
       function test(args1, args2) {
         const ftor1 = new Functor('blort', ...args1);
         const ftor2 = new Functor('blort', ...args2);
@@ -191,7 +191,7 @@ describe('@bayou/util-core/Functor', () => {
       test([1, haseq, 1], [1, null, 1]);
     });
 
-    it('should return `false` when compared to a non-functor', () => {
+    it('returns `false` when compared to a non-functor', () => {
       const ftor = new Functor('blort', 10);
 
       function test(value) {
@@ -221,7 +221,7 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('withFrozenArgs()', () => {
-    it('should return `this` if the arguments are all already frozen / deep-frozen', () => {
+    it('returns `this` if the arguments are all already frozen / deep-frozen', () => {
       function test(...args) {
         const func   = new Functor('florp', ...args);
         const result = func.withFrozenArgs();

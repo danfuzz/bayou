@@ -21,7 +21,7 @@ describe('@bayou/util-common/JsonUtil', () => {
       assert.throws(() => JsonUtil.parseFrozen(badString));
     });
 
-    it('should return a frozen object when passed a valid json string', () => {
+    it('returns a frozen object when passed a valid json string', () => {
       const jsonString = '{ "a": 1, "b": 2, "c": 3 }';
       const object = JsonUtil.parseFrozen(jsonString);
 

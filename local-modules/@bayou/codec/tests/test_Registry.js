@@ -76,7 +76,7 @@ describe('@bayou/codec/Registry', () => {
       assert.throws(() => reg.codecForPayload(Symbol('foo')));
     });
 
-    it('should return the named codec if it is registered', () => {
+    it('returns the named codec if it is registered', () => {
       const reg       = new Registry();
       const itemCodec = new ItemCodec('Boop', Boolean, null, () => 0, () => 0);
 
@@ -86,7 +86,7 @@ describe('@bayou/codec/Registry', () => {
       assert.strictEqual(testCodec, itemCodec);
     });
 
-    it('should return the codec for a special type if it is registered', () => {
+    it('returns the codec for a special type if it is registered', () => {
       const reg       = new Registry();
       const type      = 'symbol';
       const itemCodec = new ItemCodec(ItemCodec.tagFromType(type), type, null, () => 0, () => 0);

@@ -283,7 +283,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('isCallable()', () => {
-    it('should return `true` when passed a callable function', () => {
+    it('returns `true` when passed a callable function', () => {
       function test(value) {
         assert.isTrue(TFunction.isCallable(value), value);
       }
@@ -293,7 +293,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should return `false` when passed a non-callable function', () => {
+    it('returns `false` when passed a non-callable function', () => {
       function test(value) {
         assert.isFalse(TFunction.isCallable(value), value);
       }
@@ -303,7 +303,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should return `false` when passed a non-function', () => {
+    it('returns `false` when passed a non-function', () => {
       function test(value) {
         assert.isFalse(TFunction.isCallable(value), value);
       }
@@ -315,7 +315,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('isClass(value)', () => {
-    it('should return `true` when passed a class', () => {
+    it('returns `true` when passed a class', () => {
       function test(value) {
         assert.isTrue(TFunction.isClass(value), value);
       }
@@ -325,7 +325,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should return `false` when passed a non-class function', () => {
+    it('returns `false` when passed a non-class function', () => {
       function test(value) {
         assert.isFalse(TFunction.isClass(value), value);
       }
@@ -335,7 +335,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should return `false` when passed a non-function', () => {
+    it('returns `false` when passed a non-function', () => {
       function test(value) {
         assert.isFalse(TFunction.isClass(value), value);
       }
@@ -352,14 +352,14 @@ describe('@bayou/typecheck/TFunction', () => {
       assert.isFalse(TFunction.isClass(123, null));
     });
 
-    it('should return `true` for a value that is the same as the given `ancestor`', () => {
+    it('returns `true` for a value that is the same as the given `ancestor`', () => {
       class Blort { }
 
       assert.isTrue(TFunction.isClass(Map, Map));
       assert.isTrue(TFunction.isClass(Blort, Blort));
     });
 
-    it('should return `true` for a value that is a subclass of the given `ancestor`', () => {
+    it('returns `true` for a value that is a subclass of the given `ancestor`', () => {
       class Blort { }
       class SubBlort extends Blort { }
       class UltraBlort extends SubBlort { }
@@ -370,7 +370,7 @@ describe('@bayou/typecheck/TFunction', () => {
       assert.isTrue(TFunction.isClass(UltraBlort, Blort));
     });
 
-    it('should return `false` when passed a class that is not the same as `ancestor` nor is a subclass of it', () => {
+    it('returns `false` when passed a class that is not the same as `ancestor` nor is a subclass of it', () => {
       function test(value, ancestor) {
         assert.isFalse(TFunction.isClass(value, ancestor));
       }
@@ -385,7 +385,7 @@ describe('@bayou/typecheck/TFunction', () => {
       test(Blort, SubBlort);
     });
 
-    it('should return `false` when passed a non-class function', () => {
+    it('returns `false` when passed a non-class function', () => {
       function test(value) {
         assert.isFalse(TFunction.isClass(value, Object), value);
       }
@@ -395,7 +395,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should return `false` when passed a non-function', () => {
+    it('returns `false` when passed a non-function', () => {
       function test(value) {
         assert.isFalse(TFunction.isClass(value, Object), value);
       }

@@ -11,7 +11,7 @@ import { TString } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TArray', () => {
   describe('check(value)', () => {
-    it('should return the provided value when passed an array', () => {
+    it('returns the provided value when passed an array', () => {
       const value = [1, 2, 3];
 
       assert.doesNotThrow(() => TArray.check(value));

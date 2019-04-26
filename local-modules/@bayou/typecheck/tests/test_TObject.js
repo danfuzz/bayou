@@ -9,7 +9,7 @@ import { TObject } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TObject', () => {
   describe('check(value)', () => {
-    it('should return the provided value when passed an object', () => {
+    it('returns the provided value when passed an object', () => {
       function test(value) {
         assert.strictEqual(TObject.check(value), value);
       }
@@ -55,7 +55,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('orNull(value)', () => {
-    it('should return the provided value when passed an object', () => {
+    it('returns the provided value when passed an object', () => {
       function test(value) {
         assert.strictEqual(TObject.orNull(value), value);
       }
@@ -66,7 +66,7 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map());
     });
 
-    it('should return `null` when passed `null`', () => {
+    it('returns `null` when passed `null`', () => {
       assert.isNull(TObject.orNull(null));
     });
 
@@ -79,7 +79,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('orNull(value, clazz)', () => {
-    it('should return the provided value when passed an object of a matching class', () => {
+    it('returns the provided value when passed an object of a matching class', () => {
       function test(value, clazz) {
         assert.strictEqual(TObject.orNull(value, clazz), value);
       }
@@ -92,7 +92,7 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map(),      Object);
     });
 
-    it('should return `null` when passed a `null` value, no matter what class is passed', () => {
+    it('returns `null` when passed a `null` value, no matter what class is passed', () => {
       assert.isNull(TObject.orNull(null, Object));
       assert.isNull(TObject.orNull(null, Set));
     });

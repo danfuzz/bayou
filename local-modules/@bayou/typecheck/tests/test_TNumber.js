@@ -9,7 +9,7 @@ import { TNumber } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TNumber', () => {
   describe('check()', () => {
-    it('should return the provided value when passed a number', () => {
+    it('returns the provided value when passed a number', () => {
       function test(v) {
         assert.strictEqual(TNumber.check(v), v);
       }

@@ -93,7 +93,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('isHash()', () => {
-    it('should return `true` for valid hash strings', () => {
+    it('returns `true` for valid hash strings', () => {
       for (const value of VALID_HASHES) {
         assert.isTrue(FrozenBuffer.isHash(value), value);
       }

@@ -39,7 +39,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
       }
     }
 
-    it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
+    it('returns an empty result from `EMPTY.compose(EMPTY)`', () => {
       const result1 = CaretDelta.EMPTY.compose(CaretDelta.EMPTY, false);
       assert.instanceOf(result1, CaretDelta);
       assert.deepEqual(result1.ops, []);

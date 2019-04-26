@@ -9,7 +9,7 @@ import { TBoolean } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TBoolean', () => {
   describe('check()', () => {
-    it('should return the provided value when passed a boolean', () => {
+    it('returns the provided value when passed a boolean', () => {
       assert.strictEqual(TBoolean.check(true), true);
       assert.strictEqual(TBoolean.check(false), false);
     });
