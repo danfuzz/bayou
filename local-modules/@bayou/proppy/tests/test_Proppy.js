@@ -90,7 +90,7 @@ describe('@bayou/proppy/Proppy', () => {
       _testStringParsing(input, { key: 'value\nthis is a multiline value' });
     });
 
-    it('should parse accepted escape sequences', () => {
+    it('parses accepted escape sequences', () => {
       let input = null;
 
       input = '"key\\\\" = "value"';
