@@ -114,7 +114,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
 
   describe('constructor()', () => {
     describe('invalid arguments', () => {
-      it('should throw an error if the first argument is anything other than a string or `Buffer`', () => {
+      it('throws an error if the first argument is anything other than a string or `Buffer`', () => {
         assert.throws(() => new FrozenBuffer(1));
         assert.throws(() => new FrozenBuffer(true));
         assert.throws(() => new FrozenBuffer(null));

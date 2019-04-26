@@ -20,7 +20,7 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map());
     });
 
-    it('should throw an Error when passed anything other than an object', () => {
+    it('throws an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null));
       assert.throws(() => TObject.check(undefined));
       assert.throws(() => TObject.check(54));
@@ -44,11 +44,11 @@ describe('@bayou/typecheck/TObject', () => {
       test(() => 123, Object);
     });
 
-    it('should throw an Error when passed a value not of the given class', () => {
+    it('throws an Error when passed a value not of the given class', () => {
       assert.throws(() => TObject.check(new Boolean(true), String));
     });
 
-    it('should throw an Error when passed anything other than an object', () => {
+    it('throws an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null, Object));
       assert.throws(() => TObject.check(54,   Object));
     });
@@ -70,7 +70,7 @@ describe('@bayou/typecheck/TObject', () => {
       assert.isNull(TObject.orNull(null));
     });
 
-    it('should throw an Error when passed anything other than an object or `null`', () => {
+    it('throws an Error when passed anything other than an object or `null`', () => {
       assert.throws(() => TObject.orNull(undefined));
       assert.throws(() => TObject.orNull(false));
       assert.throws(() => TObject.orNull(54));
@@ -97,12 +97,12 @@ describe('@bayou/typecheck/TObject', () => {
       assert.isNull(TObject.orNull(null, Set));
     });
 
-    it('should throw an Error when passed an object of a non-matching class', () => {
+    it('throws an Error when passed an object of a non-matching class', () => {
       assert.throws(() => TObject.orNull(new Map(), Set));
       assert.throws(() => TObject.orNull(new Set(), Map));
     });
 
-    it('should throw an Error when passed anything other than an object or `null`', () => {
+    it('throws an Error when passed anything other than an object or `null`', () => {
       assert.throws(() => TObject.orNull(false,   Boolean));
       assert.throws(() => TObject.orNull(914,     Number));
       assert.throws(() => TObject.orNull('florp', String));

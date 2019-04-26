@@ -63,7 +63,7 @@ describe('@bayou/codec/Registry', () => {
   });
 
   describe('codecForPayload()', () => {
-    it('should throw an error if an unregistered tag is requested', () => {
+    it('throws an error if an unregistered tag is requested', () => {
       const reg = new Registry();
 
       // Throws because `Boop` isn't a registered class.

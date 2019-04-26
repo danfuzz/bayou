@@ -66,7 +66,7 @@ describe('@bayou/typecheck/TInt', () => {
       assert.doesNotThrow(() => TInt.maxInc(4, 5));
     });
 
-    it('should throw an error when `value > maxInc`', () => {
+    it('throws an error when `value > maxInc`', () => {
       assert.throws(() => TInt.maxInc(4, 3));
     });
   });
@@ -136,7 +136,7 @@ describe('@bayou/typecheck/TInt', () => {
       assert.doesNotThrow(() => TInt.rangeInc(11, 3, 27));
     });
 
-    it('should throw an error when `value < minInc`', () => {
+    it('throws an error when `value < minInc`', () => {
       assert.throws(() => TInt.rangeInc(2, 3, 27));
     });
 
@@ -144,7 +144,7 @@ describe('@bayou/typecheck/TInt', () => {
       assert.doesNotThrow(() => TInt.rangeInc(27, 3, 27));
     });
 
-    it('should throw an error when `value > maxInc`', () => {
+    it('throws an error when `value > maxInc`', () => {
       assert.throws(() => TInt.rangeInc(37, 3, 27));
     });
   });
@@ -157,7 +157,7 @@ describe('@bayou/typecheck/TInt', () => {
       assert.strictEqual(TInt.unsignedByte(255), 255);
     });
 
-    it('should throw an error when value is outsid of range `[0..255]`', () => {
+    it('throws an error when value is outsid of range `[0..255]`', () => {
       assert.throws(() => TInt.unsgignedByte(-1));
       assert.throws(() => TInt.unsgignedByte(256));
     });

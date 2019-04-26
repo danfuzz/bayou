@@ -431,7 +431,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.deepEqual(result.value, value);
     });
 
-    it('should throw an error when given a name that is not bound as a property', () => {
+    it('throws an error when given a name that is not bound as a property', () => {
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', 'zorch')]);
 
       assert.throws(() => { snap.get('x'); });
@@ -510,7 +510,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isFalse(snap.has('x'));
     });
 
-    it('should throw an error when passed an argument that is not a valid name', () => {
+    it('throws an error when passed an argument that is not a valid name', () => {
       const snap = PropertySnapshot.EMPTY;
       function test(value) {
         assert.throws(() => { snap.has(value); });

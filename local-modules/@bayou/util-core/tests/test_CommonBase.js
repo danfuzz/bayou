@@ -29,7 +29,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.strictEqual(Subclass1.check(subclass2), subclass2);
     });
 
-    it('should throw an Error if the supplied value is not an instance of the class or a subclass', () => {
+    it('throws an Error if the supplied value is not an instance of the class or a subclass', () => {
       class Subclass extends CommonBase {
         fiat() { /*empty*/ }
       }

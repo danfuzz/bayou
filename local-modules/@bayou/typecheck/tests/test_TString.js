@@ -353,7 +353,7 @@ describe('@bayou/typecheck/TString', () => {
       test('This better work!');
     });
 
-    it('should throw if value is a string of length 0', () => {
+    it('throws if value is a string of length 0', () => {
       assert.throws(() => TString.nonEmpty(''));
     });
   });

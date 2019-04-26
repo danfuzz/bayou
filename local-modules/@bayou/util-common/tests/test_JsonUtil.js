@@ -9,13 +9,13 @@ import { JsonUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/JsonUtil', () => {
   describe('parseFrozen(jsonString)', () => {
-    it('should throw an error if handed anything other than a string', () => {
+    it('throws an error if handed anything other than a string', () => {
       assert.throws(() => JsonUtil.parseFrozen([]));
       assert.throws(() => JsonUtil.parseFrozen({}));
       assert.throws(() => JsonUtil.parseFrozen(Symbol('in a row?')));
     });
 
-    it('should throw an Error when pass a string that isn\'t valid JSON', () => {
+    it('throws an Error when pass a string that isn\'t valid JSON', () => {
       const badString = '{ "a": 1, "b": 2, "c": 3 alksdj falsdj falsd jfalskd jfal;sdkjfaks}';
 
       assert.throws(() => JsonUtil.parseFrozen(badString));

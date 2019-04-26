@@ -18,7 +18,7 @@ describe('@bayou/typecheck/TArray', () => {
       assert.strictEqual(TArray.check(value), value);
     });
 
-    it('should throw an Error when passed anything other than an array', () => {
+    it('throws an Error when passed anything other than an array', () => {
       assert.throws(() => TArray.check(3.1));
       assert.throws(() => TArray.check({ }));
       assert.throws(() => TArray.check('this better not work'));
@@ -32,7 +32,7 @@ describe('@bayou/typecheck/TArray', () => {
       assert.doesNotThrow(() => TArray.check(value, x => TInt.check(x)));
     });
 
-    it('should throw an error if an element checker fails', () => {
+    it('throws an error if an element checker fails', () => {
       const value = [1, 2, 3];
 
       assert.throws(() => TArray.check(value, x => TString.check(x)));

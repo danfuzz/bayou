@@ -14,11 +14,11 @@ describe('@bayou/typecheck/TBoolean', () => {
       assert.strictEqual(TBoolean.check(false), false);
     });
 
-    it('should throw an Error when passed undefined', () => {
+    it('throws an Error when passed undefined', () => {
       assert.throws(() => TBoolean.check(undefined));
     });
 
-    it('should throw an Error when passed anything other than a boolean', () => {
+    it('throws an Error when passed anything other than a boolean', () => {
       assert.throws(() => TBoolean.check('this better not work'));
       assert.throws(() => TBoolean.check([]));
       assert.throws(() => TBoolean.check({ }));

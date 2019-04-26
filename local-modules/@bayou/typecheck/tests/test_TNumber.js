@@ -28,7 +28,7 @@ describe('@bayou/typecheck/TNumber', () => {
       assert.isNaN(TNumber.check(NaN));
     });
 
-    it('should throw an error when passed a non-number value', () => {
+    it('throws an error when passed a non-number value', () => {
       function test(v) {
         assert.throws(() => TNumber.check(v));
       }

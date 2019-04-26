@@ -434,13 +434,13 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(snap.get(caret3.id), caret3);
     });
 
-    it('should throw an error when given an ID that is not in the snapshot', () => {
+    it('throws an error when given an ID that is not in the snapshot', () => {
       const snap = new CaretSnapshot(999, [op1, op3]);
 
       assert.throws(() => { snap.get(caret2.id); });
     });
 
-    it('should throw an error if given an invalid ID', () => {
+    it('throws an error if given an invalid ID', () => {
       const snap = new CaretSnapshot(999, []);
 
       assert.throws(() => { snap.get(123); });
@@ -464,7 +464,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isNull(snap.getOrNull(caret2.id));
     });
 
-    it('should throw an error if given an invalid ID', () => {
+    it('throws an error if given an invalid ID', () => {
       const snap = new CaretSnapshot(999, []);
 
       assert.throws(() => { snap.getOrNull(123); });
@@ -488,7 +488,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isFalse(snap.has(caret2.id));
     });
 
-    it('should throw an error if given an invalid ID', () => {
+    it('throws an error if given an invalid ID', () => {
       const snap = new CaretSnapshot(999, []);
 
       assert.throws(() => { snap.has(123); });

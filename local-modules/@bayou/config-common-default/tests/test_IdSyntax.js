@@ -45,7 +45,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isFalse(IdSyntax.isAuthorId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => IdSyntax.isAuthorId(id), /badValue/, id);
       }
@@ -69,7 +69,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isFalse(IdSyntax.isDocumentId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => IdSyntax.isDocumentId(id), /badValue/, id);
       }

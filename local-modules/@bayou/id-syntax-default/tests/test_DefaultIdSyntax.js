@@ -40,7 +40,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isAuthorId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isAuthorId(id), /badValue/, id);
       }
@@ -64,7 +64,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isDocumentId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isDocumentId(id), /badValue/, id);
       }
@@ -88,7 +88,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isFileId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isFileId(id), /badValue/, id);
       }

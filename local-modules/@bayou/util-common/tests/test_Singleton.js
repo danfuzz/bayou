@@ -26,7 +26,7 @@ describe('@bayou/util-common/Singleton', () => {
       assert.strictEqual(test1, test2);
     });
 
-    it('should throw an error if the constructor is called after the singleton is created', () => {
+    it('throws an error if the constructor is called after the singleton is created', () => {
       class TestClass extends Singleton { /*empty*/ }
 
       assert.isNotNull(TestClass.theOne);
