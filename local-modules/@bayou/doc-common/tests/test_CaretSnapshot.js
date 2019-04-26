@@ -226,7 +226,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.deepEqual(result.delta, CaretDelta.EMPTY);
     });
 
-    it('should result in a `revNum` diff if that in fact changes', () => {
+    it('results in a `revNum` diff if that in fact changes', () => {
       const snap1  = new CaretSnapshot(1, [op1, op2]);
       const snap2  = new CaretSnapshot(9, [op1, op2]);
       const result = snap1.diff(snap2);
@@ -239,7 +239,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret removal if that in fact happens', () => {
+    it('results in a caret removal if that in fact happens', () => {
       const snap1  = new CaretSnapshot(4, [op1, op2]);
       const snap2  = new CaretSnapshot(4, [op1]);
       const result = snap1.diff(snap2);
@@ -249,7 +249,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret addition if that in fact happens', () => {
+    it('results in a caret addition if that in fact happens', () => {
       const snap1  = new CaretSnapshot(1, [op1]);
       const snap2  = new CaretSnapshot(1, [op1, op2]);
       const result = snap1.diff(snap2);
@@ -259,7 +259,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret update if that in fact happens', () => {
+    it('results in a caret update if that in fact happens', () => {
       const c1     = newCaretOp('cr-florp', 1, 3, '#444444', 'ff');
       const c2     = newCaretOp('cr-florp', 2, 4, '#555555', 'gg');
       const c3     = newCaretOp('cr-florp', 3, 5, '#666666', 'hh');

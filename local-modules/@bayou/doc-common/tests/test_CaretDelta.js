@@ -71,7 +71,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     describe('`delete` preceded by anything for that caret', () => {
-      it('should result in just the `delete`', () => {
+      it('results in just the `delete`', () => {
         const endOp = CaretOp.op_delete('cr-sessi');
 
         test(
@@ -107,7 +107,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     describe('`setField` after `delete`', () => {
-      it('should result in just the `delete`', () => {
+      it('results in just the `delete`', () => {
         const endOp = CaretOp.op_delete('cr-sess1');
         const setOp = CaretOp.op_setField('cr-sess1', 'revNum', 123);
 
@@ -138,7 +138,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     describe('`setField` after `add`', () => {
-      it('should result in a modified `add`', () => {
+      it('results in a modified `add`', () => {
         const beginOp  = CaretOp.op_add(new Caret('cr-sess1', { authorId: 'xyz' }));
         const setOp    = CaretOp.op_setField('cr-sess1', 'revNum', 123);
         const resultOp = CaretOp.op_add(new Caret('cr-sess1', { authorId: 'xyz', revNum: 123 }));

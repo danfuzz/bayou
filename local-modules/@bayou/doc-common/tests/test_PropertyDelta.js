@@ -97,7 +97,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.throws(() => delta.compose(new MockDelta([]), false));
     });
 
-    it('should result in no more than one op per named property, with `other` taking precedence', () => {
+    it('results in no more than one op per named property, with `other` taking precedence', () => {
       function test(ops1, ops2, expectOps) {
         const d1     = new PropertyDelta(ops1);
         const d2     = new PropertyDelta(ops2);

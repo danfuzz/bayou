@@ -208,7 +208,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.deepEqual(result.delta, PropertyDelta.EMPTY);
     });
 
-    it('should result in a `revNum` diff if that in fact changes', () => {
+    it('results in a `revNum` diff if that in fact changes', () => {
       const snap1 = new PropertySnapshot(123, [PropertyOp.op_set('a', 10)]);
       const snap2 = new PropertySnapshot(456, [PropertyOp.op_set('a', 10)]);
       const result = snap1.diff(snap2);
@@ -219,7 +219,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a property removal if that in fact happens', () => {
+    it('results in a property removal if that in fact happens', () => {
       const snap1 = new PropertySnapshot(0, [
         PropertyOp.op_set('a', 10),
         PropertyOp.op_set('b', 20),

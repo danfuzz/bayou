@@ -94,7 +94,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.throws(() => { caret1.diff(caret2); });
     });
 
-    it('should result in an `index` diff if that in fact changes', () => {
+    it('results in an `index` diff if that in fact changes', () => {
       const older   = caret1;
       const op      = CaretOp.op_setField(older.id, 'index', 99999);
       const newer   = older.compose(new CaretDelta([op]));
@@ -117,7 +117,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.doesNotThrow(() => { caret1.diffFields(caret2, 'cr-florp'); });
     });
 
-    it('should result in an `index` diff if that in fact changes', () => {
+    it('results in an `index` diff if that in fact changes', () => {
       const older   = caret1;
       const op      = CaretOp.op_setField(older.id, 'index', 99999);
       const newer   = older.compose(new CaretDelta([op]));
@@ -127,7 +127,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(diffOps[0], op);
     });
 
-    it('should result in a `length` diff if that in fact changes', () => {
+    it('results in a `length` diff if that in fact changes', () => {
       const older   = caret1;
       const op      = CaretOp.op_setField(older.id, 'length', 99999);
       const newer   = older.compose(new CaretDelta([op]));
@@ -137,7 +137,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(diffOps[0], op);
     });
 
-    it('should result in a `color` diff if that in fact changes', () => {
+    it('results in a `color` diff if that in fact changes', () => {
       const older   = caret1;
       const op      = CaretOp.op_setField(older.id, 'color', '#abcdef');
       const newer   = older.compose(new CaretDelta([op]));
