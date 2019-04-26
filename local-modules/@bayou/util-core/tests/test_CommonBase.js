@@ -40,7 +40,7 @@ describe('@bayou/util-core/CommonBase', () => {
   });
 
   describe('coerce()', () => {
-    it('should call through to `_impl_coerce()`', () => {
+    it('calls through to `_impl_coerce()`', () => {
       let gotValue = null;
       class HasCoerce extends CommonBase {
         static _impl_coerce(value) {
@@ -66,7 +66,7 @@ describe('@bayou/util-core/CommonBase', () => {
   });
 
   describe('coerceOrNull()', () => {
-    it('should call through to `_impl_coerce()` if there is no `_impl_coerceOrNull()`', () => {
+    it('calls through to `_impl_coerce()` if there is no `_impl_coerceOrNull()`', () => {
       let gotValue = null;
       class HasCoerce extends CommonBase {
         static _impl_coerce(value) {
@@ -80,7 +80,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.strictEqual(gotValue, 123);
     });
 
-    it('should call through to `_impl_coerce()` if there is no `_impl_coerceOrNull()` and convert a throw into a `null`', () => {
+    it('calls through to `_impl_coerce()` if there is no `_impl_coerceOrNull()` and convert a throw into a `null`', () => {
       class HasCoerce extends CommonBase {
         static _impl_coerce(value_unused) {
           throw new Error('oy');
@@ -91,7 +91,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.isNull(value);
     });
 
-    it('should call through to `_impl_coerceOrNull()`', () => {
+    it('calls through to `_impl_coerceOrNull()`', () => {
       let gotValue = null;
       class HasCoerce extends CommonBase {
         static _impl_coerceOrNull(value) {
@@ -105,7 +105,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.strictEqual(gotValue, 123);
     });
 
-    it('should call through to `_impl_coerceOrNull()` and accept a `null` return value', () => {
+    it('calls through to `_impl_coerceOrNull()` and accept a `null` return value', () => {
       class HasCoerce extends CommonBase {
         static _impl_coerceOrNull(value_unused) {
           return null;
