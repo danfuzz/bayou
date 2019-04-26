@@ -26,7 +26,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test(value, ['blort'], { blort: 'blort' });
     });
 
-    it('should fail if a property is missing', () => {
+    it('fails if a property is missing', () => {
       function test(value, keys) {
         assert.throws(() => ObjectUtil.extract(value, keys));
       }

@@ -63,7 +63,7 @@ describe('@bayou/proppy/Proppy', () => {
       _testStringParsing(input, { '_.-/-._': 'mound' });
     });
 
-    it('should not accept unquoted keys or values that have unblessed characters', () => {
+    it('does not accept unquoted keys or values that have unblessed characters', () => {
       let input = null;
 
       // Non-7-bit character
@@ -90,7 +90,7 @@ describe('@bayou/proppy/Proppy', () => {
       _testStringParsing(input, { key: 'value\nthis is a multiline value' });
     });
 
-    it('should parse accepted escape sequences', () => {
+    it('parses accepted escape sequences', () => {
       let input = null;
 
       input = '"key\\\\" = "value"';
@@ -109,7 +109,7 @@ describe('@bayou/proppy/Proppy', () => {
       _testStringParsing(input, { 'key\t': 'value' });
     });
 
-    it('should not accept unapproved escape sequences', () => {
+    it('does not accept unapproved escape sequences', () => {
       let input = null;
 
       input = '"key\\r" = value';
@@ -119,7 +119,7 @@ describe('@bayou/proppy/Proppy', () => {
       assert.throws(() => _testStringParsing(input, { 'key\b': 'value' }));
     });
 
-    it('should not accept approved escape sequences in unquoted keys or values', () => {
+    it('does not accept approved escape sequences in unquoted keys or values', () => {
       let input = null;
 
       input = 'key\\\\ = value';

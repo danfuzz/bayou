@@ -33,7 +33,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('.nonTokenPrefix', () => {
-    it('should be a short but nonempty lowercase alpha string, ending with a dash', () => {
+    it('is a short but nonempty lowercase alpha string, ending with a dash', () => {
       const prefix = Auth.nonTokenPrefix;
 
       assert.isString(prefix, prefix);
@@ -42,7 +42,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('.rootTokens', () => {
-    it('should be an array of `BearerToken` instances', () => {
+    it('is an array of `BearerToken` instances', () => {
       const tokens = Auth.rootTokens;
 
       assert.isArray(tokens);

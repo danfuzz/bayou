@@ -43,7 +43,7 @@ describe('@bayou/typecheck/TNumber', () => {
   });
 
   describe('range()', () => {
-    it('should allow values in the specified range', () => {
+    it('allows values in the specified range', () => {
       function test(v, minInc, maxExc) {
         assert.strictEqual(TNumber.range(v, minInc, maxExc), v);
       }
@@ -70,7 +70,7 @@ describe('@bayou/typecheck/TNumber', () => {
   });
 
   describe('rangeInc()', () => {
-    it('should allow values in the specified range', () => {
+    it('allows values in the specified range', () => {
       function test(v, minInc, maxInc) {
         assert.strictEqual(TNumber.rangeInc(v, minInc, maxInc), v);
       }

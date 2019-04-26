@@ -71,7 +71,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
   });
 
   describe('targetFromToken()', () => {
-    it('should call through to the `_impl` given a `BearerToken`', async () => {
+    it('calls through to the `_impl` given a `BearerToken`', async () => {
       class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value) {
           return { got: value };

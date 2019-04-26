@@ -15,7 +15,7 @@ describe('@bayou/data-model-client/OwnerState', () => {
     assert.isNotNull(state);
   });
 
-  it('should not change the state if passed an unknown action', () => {
+  it('does not change the state if passed an unknown action', () => {
     const reducer = OwnerState.reducer;
     const initialState = Object.freeze({ a:1, b:2, c:3 });
     const newState = reducer(initialState, { type: 'unknown_action' });
@@ -23,7 +23,7 @@ describe('@bayou/data-model-client/OwnerState', () => {
     assert.deepEqual(newState, initialState);
   });
 
-  it('should not modify prior state object when applying a known action', () => {
+  it('does not modify prior state object when applying a known action', () => {
     const reducer = OwnerState.reducer;
 
     // Pass in undefined initial state to get back the default values
@@ -36,7 +36,7 @@ describe('@bayou/data-model-client/OwnerState', () => {
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should update the owner name state when passed the "set owner name" action', () => {
+  it('updates the owner name state when passed the "set owner name" action', () => {
     const reducer = OwnerState.reducer;
 
     // Pass in undefined initial state to get back the default values

@@ -11,7 +11,7 @@ import { DataUtil, Functor } from '@bayou/util-common';
 
 describe('@bayou/doc-common/PropertySnapshot', () => {
   describe('.EMPTY', () => {
-    it('should be an empty instance', () => {
+    it('is an empty instance', () => {
       const EMPTY = PropertySnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
@@ -55,7 +55,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       test([PropertyOp.op_set('x', 'y'), PropertyOp.op_set('z', 'pdq')]);
     });
 
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const snap = new PropertySnapshot(0, [PropertyOp.op_set('x', 'y')]);
       assert.isFrozen(snap);
     });
@@ -138,7 +138,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
+    it('produces an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
       function test(snap) {
         which++;
@@ -156,7 +156,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
         [PropertyOp.op_set('foo', 'bar'), PropertyOp.op_set('baz', 914)]));
     });
 
-    it('should update `revNum` given a change with a different `revNum`', () => {
+    it('updates `revNum` given a change with a different `revNum`', () => {
       const snap     = new PropertySnapshot(123, PropertyDelta.EMPTY);
       const expected = new PropertySnapshot(456, PropertyDelta.EMPTY);
       const result   = snap.compose(new PropertyChange(456, PropertyDelta.EMPTY));
@@ -176,7 +176,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should update a pre-existing property given an appropriate op', () => {
+    it('updates a pre-existing property given an appropriate op', () => {
       const op       = PropertyOp.op_set('florp', 'like');
       const snap     = new PropertySnapshot(0, [PropertyOp.op_set('florp', 'unlike')]);
       const expected = new PropertySnapshot(0, [op]);
@@ -198,7 +198,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const snap = new PropertySnapshot(914,
         [PropertyOp.op_set('a', 10), PropertyOp.op_set('b', 20)]);
       const result = snap.diff(snap);
@@ -208,7 +208,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.deepEqual(result.delta, PropertyDelta.EMPTY);
     });
 
-    it('should result in a `revNum` diff if that in fact changes', () => {
+    it('results in a `revNum` diff if that in fact changes', () => {
       const snap1 = new PropertySnapshot(123, [PropertyOp.op_set('a', 10)]);
       const snap2 = new PropertySnapshot(456, [PropertyOp.op_set('a', 10)]);
       const result = snap1.diff(snap2);
@@ -219,7 +219,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a property removal if that in fact happens', () => {
+    it('results in a property removal if that in fact happens', () => {
       const snap1 = new PropertySnapshot(0, [
         PropertyOp.op_set('a', 10),
         PropertyOp.op_set('b', 20),

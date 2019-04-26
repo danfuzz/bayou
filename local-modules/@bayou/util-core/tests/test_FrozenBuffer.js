@@ -164,7 +164,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer('RkxPUlAK', 'base64'));
       });
 
-      it('should produce bytes identical to the expected base-64 decoding', () => {
+      it('produces bytes identical to the expected base-64 decoding', () => {
         function test(string) {
           const nodeBuf = Buffer.from(string, 'utf8');
           const base64  = nodeBuf.toString('base64');
@@ -196,7 +196,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         }
       });
 
-      it('should not share the original buffer data; should be a copy', () => {
+      it('does not share the original buffer data; should be a copy', () => {
         const nodeBuf1 = Buffer.from('blortch', 'utf8');
         const nodeBuf2 = Buffer.from(nodeBuf1);
         const buf      = new FrozenBuffer(nodeBuf1);
@@ -212,17 +212,17 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('.base64', () => {
-    it('should be as expected when originally constructed from a `Buffer`', () => {
+    it('is as expected when originally constructed from a `Buffer`', () => {
       const buf = new FrozenBuffer(Buffer.from('florp splat', 'utf8'));
       assert.strictEqual(buf.base64, 'ZmxvcnAgc3BsYXQ=');
     });
 
-    it('should be as expected when originally constructed from a UTF-8 string', () => {
+    it('is as expected when originally constructed from a UTF-8 string', () => {
       const buf = new FrozenBuffer('blort splat florp');
       assert.strictEqual(buf.base64, 'YmxvcnQgc3BsYXQgZmxvcnA=');
     });
 
-    it('should be as expected when originally constructed from a base-64 string', () => {
+    it('is as expected when originally constructed from a base-64 string', () => {
       const base64 = 'ZmxvcnAgc3BsYXQ=';
       const buf = new FrozenBuffer(base64, 'base64');
       assert.strictEqual(buf.base64, base64);
@@ -230,19 +230,19 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('.hashLength', () => {
-    it('should be `256`', () => {
+    it('is `256`', () => {
       assert.strictEqual(new FrozenBuffer('x').hashLength, 256);
     });
   });
 
   describe('.hashName', () => {
-    it('should be `sha3`', () => {
+    it('is `sha3`', () => {
       assert.strictEqual(new FrozenBuffer('x').hashName, 'sha3');
     });
   });
 
   describe('.hash', () => {
-    it('should be a 256 SHA-3 with length, in the prescribed format', () => {
+    it('is a 256 SHA-3 with length, in the prescribed format', () => {
       // **Note:** You can validate this result via the command-line `openssl`
       // tool: `printf '<data>' | openssl dgst -sha256`
       const data = 'This is the most important data you have ever observed.';
@@ -254,12 +254,12 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('.length', () => {
-    it('should be the expected length from a Buffer', () => {
+    it('is the expected length from a Buffer', () => {
       const buf = new FrozenBuffer(Buffer.alloc(9000));
       assert.strictEqual(buf.length, 9000);
     });
 
-    it('should be the expected length from a UTF-8 string', () => {
+    it('is the expected length from a UTF-8 string', () => {
       assert.strictEqual(new FrozenBuffer('12345').length, 5);
 
       // Because of UTF-8 encoding.
@@ -270,7 +270,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('.string', () => {
-    it('should be the same string given in the UTF-8 string constructor', () => {
+    it('is the same string given in the UTF-8 string constructor', () => {
       function test(string) {
         const buf = new FrozenBuffer(string);
         assert.strictEqual(buf.string, string);
@@ -281,7 +281,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should be the UTF-8 decoding of the Buffer given in the constructor', () => {
+    it('is the UTF-8 decoding of the Buffer given in the constructor', () => {
       function test(string) {
         const nodeBuf = Buffer.from(string, 'utf8');
         const buf = new FrozenBuffer(nodeBuf);
@@ -361,7 +361,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('toBuffer()', () => {
-    it('should be a buffer with the same contents as given in the constructor', () => {
+    it('is a buffer with the same contents as given in the constructor', () => {
       const nodeBuf = Buffer.alloc(9000);
 
       for (let i = 0; i < nodeBuf.length; i++) {
@@ -375,7 +375,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.deepEqual(result, nodeBuf);
     });
 
-    it('should be the UTF-8 encoding of the string given in the UTF-8 string constructor', () => {
+    it('is the UTF-8 encoding of the string given in the UTF-8 string constructor', () => {
       function test(string) {
         const buf = new FrozenBuffer(string);
         const nodeBuf = Buffer.from(string, 'utf8');
@@ -387,7 +387,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should be independent of the internally-stored buffer and to other results from this method', () => {
+    it('is independent of the internally-stored buffer and to other results from this method', () => {
       const nodeBuf = Buffer.from('abc', 'utf8');
       const origBuf = new FrozenBuffer(nodeBuf);
       const toBuf1  = origBuf.toBuffer();

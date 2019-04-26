@@ -14,11 +14,11 @@ describe('@bayou/doc-common/PropertyDelta', () => {
   describe('.EMPTY', () => {
     const EMPTY = PropertyDelta.EMPTY;
 
-    it('should be an instance of `PropertyDelta`', () => {
+    it('is an instance of `PropertyDelta`', () => {
       assert.instanceOf(EMPTY, PropertyDelta);
     });
 
-    it('should be a frozen object', () => {
+    it('is a frozen object', () => {
       assert.isFrozen(EMPTY);
     });
 
@@ -30,7 +30,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.isFrozen(EMPTY.ops);
     });
 
-    it('should be `.isEmpty()`', () => {
+    it('is `.isEmpty()`', () => {
       assert.isTrue(EMPTY.isEmpty());
     });
   });
@@ -97,7 +97,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.throws(() => delta.compose(new MockDelta([]), false));
     });
 
-    it('should result in no more than one op per named property, with `other` taking precedence', () => {
+    it('results in no more than one op per named property, with `other` taking precedence', () => {
       function test(ops1, ops2, expectOps) {
         const d1     = new PropertyDelta(ops1);
         const d2     = new PropertyDelta(ops2);
@@ -141,7 +141,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       test([op1, op5], [op7],      [op5, op7]);
     });
 
-    it('should not include deletions when `wantDocument` is `true`', () => {
+    it('does not include deletions when `wantDocument` is `true`', () => {
       const op1    = PropertyOp.op_set('aaa', '111');
       const op2    = PropertyOp.op_set('bbb', '222');
       const op3    = PropertyOp.op_set('ccc', '333');

@@ -49,7 +49,7 @@ describe('@bayou/api-common/Remote', () => {
   });
 
   describe('.targetId', () => {
-    it('should be the same as the `targetID` passed to the constructor', () => {
+    it('is the same as the `targetID` passed to the constructor', () => {
       for (const id of VALID_IDS) {
         const r = new Remote(id);
         assert.strictEqual(r.targetId, id);
@@ -58,7 +58,7 @@ describe('@bayou/api-common/Remote', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should be a single-element array with the same contents as the `targetId` passed to the constructor', () => {
+    it('is a single-element array with the same contents as the `targetId` passed to the constructor', () => {
       for (const id of VALID_IDS) {
         const r   = new Remote(id);
         const dec = r.deconstruct();

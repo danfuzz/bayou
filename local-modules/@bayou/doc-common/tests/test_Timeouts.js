@@ -9,12 +9,12 @@ import { Timeouts } from '@bayou/doc-common';
 
 describe('@bayou/doc-common/Timeouts', () => {
   describe('.MAX_TIMEOUT_MSEC', () => {
-    it('should be an integer', () => {
+    it('is an integer', () => {
       const max = Timeouts.MAX_TIMEOUT_MSEC;
       assert.isTrue(Number.isSafeInteger(max));
     });
 
-    it('should be greater than the minimum', () => {
+    it('is greater than the minimum', () => {
       const max = Timeouts.MAX_TIMEOUT_MSEC;
       const min = Timeouts.MIN_TIMEOUT_MSEC;
       assert.isTrue(max > min);
@@ -22,7 +22,7 @@ describe('@bayou/doc-common/Timeouts', () => {
   });
 
   describe('.MIN_TIMEOUT_MSEC', () => {
-    it('should be a positive integer', () => {
+    it('is a positive integer', () => {
       const min = Timeouts.MIN_TIMEOUT_MSEC;
       assert.isTrue(Number.isSafeInteger(min));
       assert.isAtLeast(min, 0);

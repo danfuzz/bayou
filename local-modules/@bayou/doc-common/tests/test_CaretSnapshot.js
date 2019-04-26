@@ -46,7 +46,7 @@ const op3 = CaretOp.op_add(caret3);
 
 describe('@bayou/doc-common/CaretSnapshot', () => {
   describe('.EMPTY', () => {
-    it('should be an empty instance', () => {
+    it('is an empty instance', () => {
       const EMPTY = CaretSnapshot.EMPTY;
 
       assert.strictEqual(EMPTY.revNum, 0);
@@ -89,7 +89,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([op1, op2, op3]);
     });
 
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const snap = new CaretSnapshot(0, [op1]);
       assert.isFrozen(snap);
     });
@@ -158,7 +158,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
+    it('produces an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
       function test(snap) {
         which++;
@@ -172,7 +172,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test(new CaretSnapshot(999, [op1, op2, op3]));
     });
 
-    it('should update `revNum` given a change with a different `revNum`', () => {
+    it('updates `revNum` given a change with a different `revNum`', () => {
       const snap     = new CaretSnapshot(1,  [op1, op2]);
       const expected = new CaretSnapshot(999,[op1, op2]);
       const result   = snap.compose(new CaretChange(999, []));
@@ -196,7 +196,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.throws(() => { snap.compose(change); });
     });
 
-    it('should update a pre-existing caret given an appropriate op', () => {
+    it('updates a pre-existing caret given an appropriate op', () => {
       const c1       = newCaretOp('cr-foooo', 1, 2, '#333333', 'dd');
       const c2       = newCaretOp('cr-foooo', 3, 2, '#333333', 'dd');
       const snap     = new CaretSnapshot(1, [op1, c1]);
@@ -217,7 +217,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const snap   = new CaretSnapshot(123, [op1, op2]);
       const result = snap.diff(snap);
 
@@ -226,7 +226,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.deepEqual(result.delta, CaretDelta.EMPTY);
     });
 
-    it('should result in a `revNum` diff if that in fact changes', () => {
+    it('results in a `revNum` diff if that in fact changes', () => {
       const snap1  = new CaretSnapshot(1, [op1, op2]);
       const snap2  = new CaretSnapshot(9, [op1, op2]);
       const result = snap1.diff(snap2);
@@ -239,7 +239,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret removal if that in fact happens', () => {
+    it('results in a caret removal if that in fact happens', () => {
       const snap1  = new CaretSnapshot(4, [op1, op2]);
       const snap2  = new CaretSnapshot(4, [op1]);
       const result = snap1.diff(snap2);
@@ -249,7 +249,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret addition if that in fact happens', () => {
+    it('results in a caret addition if that in fact happens', () => {
       const snap1  = new CaretSnapshot(1, [op1]);
       const snap2  = new CaretSnapshot(1, [op1, op2]);
       const result = snap1.diff(snap2);
@@ -259,7 +259,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(composed.equals(expected));
     });
 
-    it('should result in a caret update if that in fact happens', () => {
+    it('results in a caret update if that in fact happens', () => {
       const c1     = newCaretOp('cr-florp', 1, 3, '#444444', 'ff');
       const c2     = newCaretOp('cr-florp', 2, 4, '#555555', 'gg');
       const c3     = newCaretOp('cr-florp', 3, 5, '#666666', 'hh');

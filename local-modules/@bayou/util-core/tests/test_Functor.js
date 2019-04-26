@@ -70,7 +70,7 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('.args', () => {
-    it('should be a frozen array', () => {
+    it('is a frozen array', () => {
       const ftor = new Functor('blort', 'a', ['b'], { c: 30 });
       assert.isArray(ftor.args);
       assert.isFrozen(ftor.args);
@@ -207,7 +207,7 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('toString()', () => {
-    it('should produce expected strings in various cases', () => {
+    it('produces expected strings in various cases', () => {
       function test(expect, name, ...args) {
         const result = new Functor(name, ...args);
         assert.strictEqual(result.toString(), expect);
@@ -247,7 +247,7 @@ describe('@bayou/util-core/Functor', () => {
       test(alreadyFrozenInstance);
     });
 
-    it('should produce an instance with all frozen arguments equal to the original arguments', () => {
+    it('produces an instance with all frozen arguments equal to the original arguments', () => {
       function test(...args) {
         const result = new Functor('florp', ...args).withFrozenArgs();
 

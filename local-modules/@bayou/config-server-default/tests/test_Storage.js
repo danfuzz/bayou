@@ -12,13 +12,13 @@ import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/config-server-default/Storage', () => {
   describe('.DEFAULT_DOCUMENT_BODY', () => {
-    it('should be an instance of `BodyDelta`', () => {
+    it('is an instance of `BodyDelta`', () => {
       assert.instanceOf(Storage.DEFAULT_DOCUMENT_BODY, BodyDelta);
     });
   });
 
   describe('.dataStore', () => {
-    it('should be an instance of `LocalDataStore`', () => {
+    it('is an instance of `LocalDataStore`', () => {
       assert.isObject(Storage.dataStore);
       assert.instanceOf(Storage.dataStore, LocalDataStore);
     });
@@ -33,7 +33,7 @@ describe('@bayou/config-server-default/Storage', () => {
   });
 
   describe('.fileStore', () => {
-    it('should be an instance of `LocalFileStore`', () => {
+    it('is an instance of `LocalFileStore`', () => {
       assert.isObject(Storage.fileStore);
       assert.instanceOf(Storage.fileStore, LocalFileStore);
     });
