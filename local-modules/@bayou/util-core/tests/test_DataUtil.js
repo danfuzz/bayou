@@ -68,7 +68,7 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.isNotFrozen(orig);
       });
 
-      it('should work on arrays with holes', () => {
+      it('works on arrays with holes', () => {
         const orig = [1, 2, 3];
         orig[37]   = ['florp'];
         orig[914]  = [[['like']]];
@@ -79,7 +79,7 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.deepEqual(popsicle, orig);
       });
 
-      it('should work on arrays with additional string-named properties', () => {
+      it('works on arrays with additional string-named properties', () => {
         const orig = [1, 2, 3];
         orig.florp = ['florp'];
         orig.like  = [[['like']]];
@@ -90,7 +90,7 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.deepEqual(popsicle, orig);
       });
 
-      it('should work on arrays with additional symbol-named properties', () => {
+      it('works on arrays with additional symbol-named properties', () => {
         const orig = [1, 2, 3];
         orig[Symbol('florp')] = ['florp'];
         orig[Symbol('like')] = [[['like']]];
@@ -101,7 +101,7 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.deepEqual(popsicle, orig);
       });
 
-      it('should work on objects with symbol-named properties', () => {
+      it('works on objects with symbol-named properties', () => {
         const orig = { a: 10, [Symbol('b')]: 20 };
 
         const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
@@ -119,7 +119,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test(FrozenBuffer.coerce('florp'));
       });
 
-      it('should work on functors with freezable arguments', () => {
+      it('works on functors with freezable arguments', () => {
         function test(...args) {
           const ftor = new Functor(...args);
           const popsicle = DataUtil.deepFreeze(ftor, nonDataConverter);
@@ -135,7 +135,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test('blort', new Functor('x', [1, 2, 3]), [4, 5, 6]);
       });
 
-      it('should work on already-deep-frozen functors', () => {
+      it('works on already-deep-frozen functors', () => {
         function test(...args) {
           const ftor = new Functor(...args);
           const popsicle = DataUtil.deepFreeze(ftor, nonDataConverter);

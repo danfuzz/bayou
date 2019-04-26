@@ -80,7 +80,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       assert.deepEqual(result3, expected);
     });
 
-    it('should work in the face of interleaved iteration', () => {
+    it('works in the face of interleaved iteration', () => {
       const iterator = new Set([1, 2, 3, 'florp', 5, 6.7]).keys();
       const wrapped  = IterableUtil.multiUseSafe(iterator);
       const expected = [1, 2, 3, 'florp', 5, 6.7];
