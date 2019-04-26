@@ -60,7 +60,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test({ x: [[[[[123]]]]], y: [37, [37], [[37]], [[[37]]]], z: [{ x: 10 }] });
       });
 
-      it('should not freeze the originally passed value', () => {
+      it('does not freeze the originally passed value', () => {
         const orig = [1, 2, 3];
         const popsicle = DataUtil.deepFreeze(orig, nonDataConverter);
 

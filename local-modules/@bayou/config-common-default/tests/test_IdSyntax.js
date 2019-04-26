@@ -37,11 +37,11 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isTrue(IdSyntax.isAuthorId('123456789_123456789-12'));
     });
 
-    it('should not allow non-ASCII characters', () => {
+    it('does not allow non-ASCII characters', () => {
       assert.isFalse(IdSyntax.isAuthorId('123456789•123456789•12'));
     });
 
-    it('should not allow non-alphanum characters', () => {
+    it('does not allow non-alphanum characters', () => {
       assert.isFalse(IdSyntax.isAuthorId('123456789\t123456789+12'));
     });
 
@@ -61,11 +61,11 @@ describe('@bayou/config-common-default/IdSyntax', () => {
       assert.isTrue(IdSyntax.isDocumentId('123456789_123456789-12'));
     });
 
-    it('should not allow non-ASCII characters', () => {
+    it('does not allow non-ASCII characters', () => {
       assert.isFalse(IdSyntax.isDocumentId('123456789•123456789•12'));
     });
 
-    it('should not allow non-alphanum characters', () => {
+    it('does not allow non-alphanum characters', () => {
       assert.isFalse(IdSyntax.isDocumentId('123456789\t123456789+12'));
     });
 

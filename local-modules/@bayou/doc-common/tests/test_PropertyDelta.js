@@ -141,7 +141,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       test([op1, op5], [op7],      [op5, op7]);
     });
 
-    it('should not include deletions when `wantDocument` is `true`', () => {
+    it('does not include deletions when `wantDocument` is `true`', () => {
       const op1    = PropertyOp.op_set('aaa', '111');
       const op2    = PropertyOp.op_set('bbb', '222');
       const op3    = PropertyOp.op_set('ccc', '333');

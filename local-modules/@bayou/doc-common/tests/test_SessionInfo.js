@@ -126,7 +126,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       assert.strictEqual(info.caretId, si.caretId);
     });
 
-    it('should not bind `caretId` if the instance has no `caretId`', () => {
+    it('does not bind `caretId` if the instance has no `caretId`', () => {
       const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
       const info = si.logInfo;
 

@@ -15,7 +15,7 @@ describe('@bayou/data-model-client/DocumentState', () => {
     assert.isNotNull(state);
   });
 
-  it('should not change the state if passed an unknown action', () => {
+  it('does not change the state if passed an unknown action', () => {
     const reducer = DocumentState.reducer;
     const initialState = Object.freeze({ a:1, b:2, c:3 });
     const newState = reducer(initialState, { type: 'unknown_action' });
@@ -23,7 +23,7 @@ describe('@bayou/data-model-client/DocumentState', () => {
     assert.deepEqual(newState, initialState);
   });
 
-  it('should not modify prior state object when applying a known action', () => {
+  it('does not modify prior state object when applying a known action', () => {
     const reducer = DocumentState.reducer;
 
     // Pass in undefined initial state to get back the default values

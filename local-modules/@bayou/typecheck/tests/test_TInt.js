@@ -140,7 +140,7 @@ describe('@bayou/typecheck/TInt', () => {
       assert.throws(() => TInt.rangeInc(2, 3, 27));
     });
 
-    it('should not throw an error when `value === maxInc`', () => {
+    it('does not throw an error when `value === maxInc`', () => {
       assert.doesNotThrow(() => TInt.rangeInc(27, 3, 27));
     });
 

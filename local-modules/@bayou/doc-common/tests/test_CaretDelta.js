@@ -57,7 +57,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
       assert.throws(() => delta.compose(new MockDelta([]), true));
     });
 
-    it('should not include `delete` ops when `wantDocument` is `true`', () => {
+    it('does not include `delete` ops when `wantDocument` is `true`', () => {
       const op1    = CaretOp.op_add(new Caret('cr-aaaaa', { authorId: 'xyz' }));
       const op2    = CaretOp.op_add(new Caret('cr-bbbbb', { authorId: 'xyz' }));
       const op3    = CaretOp.op_add(new Caret('cr-ccccc', { authorId: 'xyz' }));
