@@ -87,7 +87,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed anything other than a function', () => {
+    it('fails when passed anything other than a function', () => {
       function test(value) {
         assert.throws(() => { TFunction.check(value); });
       }
@@ -109,7 +109,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-callable function', () => {
+    it('fails when passed a non-callable function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkCallable(value); });
       }
@@ -119,7 +119,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-function', () => {
+    it('fails when passed a non-function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkCallable(value); });
       }
@@ -145,7 +145,7 @@ describe('@bayou/typecheck/TFunction', () => {
       assert.isNull(TFunction.checkCallableOrNull(null));
     });
 
-    it('should fail when passed a non-callable function', () => {
+    it('fails when passed a non-callable function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkCallableOrNull(value); });
       }
@@ -155,7 +155,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-`null` non-function', () => {
+    it('fails when passed a non-`null` non-function', () => {
       function test(value) {
         if (value === null) {
           return;
@@ -181,7 +181,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-class function', () => {
+    it('fails when passed a non-class function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkClass(value); });
       }
@@ -191,7 +191,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-function', () => {
+    it('fails when passed a non-function', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkClass(value); });
       }
@@ -246,7 +246,7 @@ describe('@bayou/typecheck/TFunction', () => {
       test(Blort, SubBlort);
     });
 
-    it('should fail when passed a non-class function for `value`', () => {
+    it('fails when passed a non-class function for `value`', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkClass(value, Object); });
       }
@@ -256,7 +256,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-function for `value`', () => {
+    it('fails when passed a non-function for `value`', () => {
       function test(value) {
         assert.throws(() => { TFunction.checkClass(value, Object); });
       }
@@ -266,7 +266,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-class for `ancestor`', () => {
+    it('fails when passed a non-class for `ancestor`', () => {
       function test(ancestor) {
         assert.throws(() => { TFunction.checkClass(Object, ancestor); },
           /./, /./, inspect(ancestor));
@@ -405,7 +405,7 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should fail when passed a non-class for `ancestor`', () => {
+    it('fails when passed a non-class for `ancestor`', () => {
       function test(ancestor) {
         assert.throws(() => { TFunction.isClass(Object, ancestor); },
           /./, /./, inspect(ancestor));

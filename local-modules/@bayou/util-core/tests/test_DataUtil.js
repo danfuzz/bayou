@@ -152,7 +152,7 @@ describe('@bayou/util-core/DataUtil', () => {
     describe('with `nonDataConverter === null`', () => {
       commonTests(null);
 
-      it('should fail if given a function or a composite that contains same', () => {
+      it('fails if given a function or a composite that contains same', () => {
         function test(value) {
           assert.throws(() => { DataUtil.deepFreeze(value); });
         }
@@ -165,7 +165,7 @@ describe('@bayou/util-core/DataUtil', () => {
         test({ a: 10, b: { c: { d: test } } });
       });
 
-      it('should fail if given a non-plain object or a composite that contains same', () => {
+      it('fails if given a non-plain object or a composite that contains same', () => {
         function test(value) {
           assert.throws(() => { DataUtil.deepFreeze(value); });
         }
