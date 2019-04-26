@@ -31,7 +31,7 @@ describe('@bayou/util-common/StringUtil', () => {
       test(0x86bda720, 'These pretzels are making me thirsty.');
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       function test(v) {
         assert.throws(() => StringUtil.hash32(v));
       }

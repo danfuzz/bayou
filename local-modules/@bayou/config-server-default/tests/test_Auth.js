@@ -59,7 +59,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('getAuthorToken()', () => {
-    it('should return a `BearerToken` when given a valid author ID', async () => {
+    it('returns a `BearerToken` when given a valid author ID', async () => {
       const t = await Auth.getAuthorToken('some-author');
 
       assert.instanceOf(t, BearerToken);
@@ -72,13 +72,13 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.isFalse(t1.sameToken(t2));
     });
 
-    it('should return a token whose full string conforms to `isToken()`', async () => {
+    it('returns a token whose full string conforms to `isToken()`', async () => {
       const t = await Auth.getAuthorToken('some-author');
 
       assert.isTrue(Auth.isToken(t.secretToken));
     });
 
-    it('should return a token which elicits a correct response from `tokenAuthority()`', async () => {
+    it('returns a token which elicits a correct response from `tokenAuthority()`', async () => {
       const AUTHOR_ID = 'that-author';
       const t         = await Auth.getAuthorToken(AUTHOR_ID);
       const authority = await Auth.tokenAuthority(t);
@@ -92,7 +92,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('isToken()', () => {
-    it('should accept token syntax', () => {
+    it('accepts token syntax', () => {
       assert.isTrue(Auth.isToken(ROOT_TOKEN));
 
       for (const t of EXAMPLE_TOKENS) {
@@ -100,7 +100,7 @@ describe('@bayou/config-server-default/Auth', () => {
       }
     });
 
-    it('should reject non-token syntax', () => {
+    it('rejects non-token syntax', () => {
       assert.isFalse(Auth.isToken('00000000-11234def0'));
       assert.isFalse(Auth.isToken('-0000000-11234def'));
       assert.isFalse(Auth.isToken('z-0000000-1123cdef'));
@@ -117,7 +117,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('tokenAuthority()', () => {
-    it('should reject non-token values', async () => {
+    it('rejects non-token values', async () => {
       async function test(x) {
         await assert.isRejected(Auth.tokenAuthority(x), /badValue/);
       }

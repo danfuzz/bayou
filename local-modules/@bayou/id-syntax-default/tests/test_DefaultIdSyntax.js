@@ -24,7 +24,7 @@ const NON_STRINGS = [
 
 describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   describe('isAuthorId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isAuthorId('123abc7890ABC456789012'));
     });
 
@@ -40,7 +40,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isAuthorId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isAuthorId(id), /badValue/, id);
       }
@@ -48,7 +48,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   });
 
   describe('isDocumentId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isDocumentId('123abc7890ABC456789012'));
     });
 
@@ -64,7 +64,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isDocumentId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isDocumentId(id), /badValue/, id);
       }
@@ -72,7 +72,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   });
 
   describe('isFileId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isFileId('123abc7890ABC456789012'));
     });
 
@@ -88,7 +88,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
       assert.isFalse(DefaultIdSyntax.isFileId('123456789\t123456789+12'));
     });
 
-    it('should throw an error given a non-string argument', () => {
+    it('throws an error given a non-string argument', () => {
       for (const id of NON_STRINGS) {
         assert.throws(() => DefaultIdSyntax.isFileId(id), /badValue/, id);
       }

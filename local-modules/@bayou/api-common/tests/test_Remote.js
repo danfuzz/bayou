@@ -35,13 +35,13 @@ const INVALID_IDS = [
 
 describe('@bayou/api-common/Remote', () => {
   describe('constructor()', () => {
-    it('should accept valid IDs', () => {
+    it('accepts valid IDs', () => {
       for (const id of VALID_IDS) {
         assert.doesNotThrow(() => new Remote(id), id);
       }
     });
 
-    it('should reject invalid values for `targetId`', () => {
+    it('rejects invalid values for `targetId`', () => {
       for (const id of INVALID_IDS) {
         assert.throws(() => new Remote(id), /badValue/, inspect(id));
       }

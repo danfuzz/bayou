@@ -23,7 +23,7 @@ class RegistryTestClass {
 
 describe('@bayou/codec/Registry', () => {
   describe('register()', () => {
-    it('should accept a class with all salient properties', () => {
+    it('accepts a class with all salient properties', () => {
       const reg = new Registry();
       assert.doesNotThrow(() => reg.registerClass(RegistryTestClass));
     });
@@ -39,7 +39,7 @@ describe('@bayou/codec/Registry', () => {
       assert.doesNotThrow(() => reg.registerClass(NoCodecTag));
     });
 
-    it('should reject a class without `deconstruct()`', () => {
+    it('rejects a class without `deconstruct()`', () => {
       class NoDeconstruct {
         get CODEC_TAG() {
           return 'NoDeconstruct';
@@ -50,7 +50,7 @@ describe('@bayou/codec/Registry', () => {
       assert.throws(() => reg.registerClass(NoDeconstruct));
     });
 
-    it('should reject non-classes', () => {
+    it('rejects non-classes', () => {
       const reg = new Registry();
       assert.throws(() => reg.registerClass(true));
       assert.throws(() => reg.registerClass(37));
@@ -63,7 +63,7 @@ describe('@bayou/codec/Registry', () => {
   });
 
   describe('codecForPayload()', () => {
-    it('should throw an error if an unregistered tag is requested', () => {
+    it('throws an error if an unregistered tag is requested', () => {
       const reg = new Registry();
 
       // Throws because `Boop` isn't a registered class.
@@ -76,7 +76,7 @@ describe('@bayou/codec/Registry', () => {
       assert.throws(() => reg.codecForPayload(Symbol('foo')));
     });
 
-    it('should return the named codec if it is registered', () => {
+    it('returns the named codec if it is registered', () => {
       const reg       = new Registry();
       const itemCodec = new ItemCodec('Boop', Boolean, null, () => 0, () => 0);
 
@@ -86,7 +86,7 @@ describe('@bayou/codec/Registry', () => {
       assert.strictEqual(testCodec, itemCodec);
     });
 
-    it('should return the codec for a special type if it is registered', () => {
+    it('returns the codec for a special type if it is registered', () => {
       const reg       = new Registry();
       const type      = 'symbol';
       const itemCodec = new ItemCodec(ItemCodec.tagFromType(type), type, null, () => 0, () => 0);

@@ -10,14 +10,14 @@ import { Random } from '@bayou/util-common';
 
 describe('@bayou/util-common/Random', () => {
   describe('byteBuffer()', () => {
-    it('should return a buffer of the requested length', () => {
+    it('returns a buffer of the requested length', () => {
       const length = 17;
       const randomBytes = Random.byteBuffer(length);
 
       assert.strictEqual(length, randomBytes.length);
     });
 
-    it('should return different results every time', () => {
+    it('returns different results every time', () => {
       const length = 23;
       const bytesA = Random.byteBuffer(length);
       const bytesB = Random.byteBuffer(length);
@@ -27,7 +27,7 @@ describe('@bayou/util-common/Random', () => {
   });
 
   describe('hexByteString()', () => {
-    it('should return a string of hex digits of the requested length', () => {
+    it('returns a string of hex digits of the requested length', () => {
       const length = 13;
       const string = Random.hexByteString(length);
 
@@ -36,28 +36,28 @@ describe('@bayou/util-common/Random', () => {
   });
 
   describe('idString()', () => {
-    it('should reject a non-string prefix', () => {
+    it('rejects a non-string prefix', () => {
       assert.throws(() => Random.idString(true, 10));
     });
 
-    it('should reject an empty prefix', () => {
+    it('rejects an empty prefix', () => {
       assert.throws(() => Random.idString('', 10));
     });
 
-    it('should reject a non-number length', () => {
+    it('rejects a non-number length', () => {
       assert.throws(() => Random.idString('x', 'foo'));
     });
 
-    it('should reject a non-integer length', () => {
+    it('rejects a non-integer length', () => {
       assert.throws(() => Random.idString('x', 12.34));
     });
 
-    it('should reject a non-positive length', () => {
+    it('rejects a non-positive length', () => {
       assert.throws(() => Random.idString('x', 0));
       assert.throws(() => Random.idString('x', -1));
     });
 
-    it('should return a string that starts with the indicated prefix', () => {
+    it('returns a string that starts with the indicated prefix', () => {
       function test(p) {
         const result = Random.idString(p, 4);
         assert.isTrue(result.startsWith(`${p}-`));
@@ -68,7 +68,7 @@ describe('@bayou/util-common/Random', () => {
       test('123456');
     });
 
-    it('should return a string with the expected number and kind of characters after the prefix', () => {
+    it('returns a string with the expected number and kind of characters after the prefix', () => {
       function test(l) {
         const result = Random.idString('x', l);
         assert.lengthOf(result, l + 2);
@@ -87,7 +87,7 @@ describe('@bayou/util-common/Random', () => {
   });
 
   describe('shortLabel()', () => {
-    it('should return a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
+    it('returns a probably-random string of the form "[prefix]-[8 * base32ish random character]"', () => {
       const label1A = Random.shortLabel('A');
       const label2A = Random.shortLabel('A');
 

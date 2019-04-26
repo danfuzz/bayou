@@ -9,7 +9,7 @@ import { ColorUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/ColorUtil', () => {
   describe('checkCss()', () => {
-    it('should accept proper strings', () => {
+    it('accepts proper strings', () => {
       function test(v) {
         assert.doesNotThrow(() => ColorUtil.checkCss(v));
       }
@@ -20,7 +20,7 @@ describe('@bayou/util-common/ColorUtil', () => {
       test('#def012');
     });
 
-    it('should reject improper strings', () => {
+    it('rejects improper strings', () => {
       function test(v) {
         assert.throws(() => ColorUtil.checkCss(v));
       }
@@ -37,7 +37,7 @@ describe('@bayou/util-common/ColorUtil', () => {
       test('#?@%^()');  // Oddball characters.
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       function test(v) {
         assert.throws(() => ColorUtil.checkCss(v));
       }
@@ -80,7 +80,7 @@ describe('@bayou/util-common/ColorUtil', () => {
       test(300, 1.0, 0.5, '#ff00ff'); // Pure magenta.
     });
 
-    it('should reject improper arguments', () => {
+    it('rejects improper arguments', () => {
       function test(h, s, l) {
         assert.throws(() => ColorUtil.cssFromHsl(h, s, l));
       }

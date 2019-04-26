@@ -60,7 +60,7 @@ describe('@bayou/env-server/Dirs', () => {
   });
 
   describe('.VAR_DIR', () => {
-    it('should return a known subdirectory off of `BASE_DIR`', () => {
+    it('returns a known subdirectory off of `BASE_DIR`', () => {
       const baseDir = Dirs.theOne.BASE_DIR;
       const varDir = path.join(baseDir, 'var');
 

@@ -23,7 +23,7 @@ describe('@bayou/config-server-default/Storage', () => {
       assert.instanceOf(Storage.dataStore, LocalDataStore);
     });
 
-    it('should return the same actual object on every access', () => {
+    it('returns the same actual object on every access', () => {
       const store = Storage.dataStore;
 
       for (let i = 0; i < 10; i++) {
@@ -38,7 +38,7 @@ describe('@bayou/config-server-default/Storage', () => {
       assert.instanceOf(Storage.fileStore, LocalFileStore);
     });
 
-    it('should return the same actual object on every access', () => {
+    it('returns the same actual object on every access', () => {
       const store = Storage.fileStore;
 
       for (let i = 0; i < 10; i++) {

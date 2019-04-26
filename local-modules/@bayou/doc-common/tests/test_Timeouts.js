@@ -34,7 +34,7 @@ describe('@bayou/doc-common/Timeouts', () => {
       assert.strictEqual(Timeouts.clamp(null), Timeouts.MAX_TIMEOUT_MSEC);
     });
 
-    it('should accept in-range integers as-is', () => {
+    it('accepts in-range integers as-is', () => {
       const min = Timeouts.MIN_TIMEOUT_MSEC;
       const max = Timeouts.MAX_TIMEOUT_MSEC;
 
@@ -61,13 +61,13 @@ describe('@bayou/doc-common/Timeouts', () => {
       }
     });
 
-    it('should reject negative numbers', () => {
+    it('rejects negative numbers', () => {
       assert.throws(() => Timeouts.clamp(-1));
       assert.throws(() => Timeouts.clamp(-0.01));
       assert.throws(() => Timeouts.clamp(-123));
     });
 
-    it('should reject non-numbers that are not `null`', () => {
+    it('rejects non-numbers that are not `null`', () => {
       assert.throws(() => Timeouts.clamp(undefined));
       assert.throws(() => Timeouts.clamp(false));
       assert.throws(() => Timeouts.clamp('123'));

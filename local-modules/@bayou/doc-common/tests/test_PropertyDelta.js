@@ -79,7 +79,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
   });
 
   describe('compose()', () => {
-    it('should return an empty result from `EMPTY.compose(EMPTY)`', () => {
+    it('returns an empty result from `EMPTY.compose(EMPTY)`', () => {
       const result1 = PropertyDelta.EMPTY.compose(PropertyDelta.EMPTY, false);
       assert.instanceOf(result1, PropertyDelta);
       assert.deepEqual(result1.ops, []);
@@ -89,7 +89,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.deepEqual(result2.ops, []);
     });
 
-    it('should reject calls when `other` is not an instance of the class', () => {
+    it('rejects calls when `other` is not an instance of the class', () => {
       const delta = PropertyDelta.EMPTY;
 
       assert.throws(() => delta.compose('blort', false));
@@ -156,7 +156,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       function test(ops) {
         const delta = new PropertyDelta(ops);
         assert.isTrue(delta.equals(delta));
@@ -167,7 +167,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       function test(ops) {
         const d1 = new PropertyDelta(ops);
         const d2 = new PropertyDelta(ops);
@@ -180,7 +180,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       test([PropertyOp.op_set('aaa', 'bbb'), PropertyOp.op_delete('ccc')]);
     });
 
-    it('should return `true` when equal ops are not also `===`', () => {
+    it('returns `true` when equal ops are not also `===`', () => {
       const ops1 = [PropertyOp.op_set('aaa', 'bbb')];
       const ops2 = [PropertyOp.op_set('aaa', 'bbb')];
       const d1 = new PropertyDelta(ops1);
@@ -190,7 +190,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.isTrue(d2.equals(d1));
     });
 
-    it('should return `false` when array lengths differ', () => {
+    it('returns `false` when array lengths differ', () => {
       const op1 = PropertyOp.op_set('aaa', 'bbb');
       const op2 = PropertyOp.op_delete('ccc');
       const d1 = new PropertyDelta([op1]);
@@ -200,7 +200,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.isFalse(d2.equals(d1));
     });
 
-    it('should return `false` when corresponding ops differ', () => {
+    it('returns `false` when corresponding ops differ', () => {
       function test(ops1, ops2) {
         const d1 = new PropertyDelta(ops1);
         const d2 = new PropertyDelta(ops2);
@@ -225,7 +225,7 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       test([op1, op2, op3, op4, op5], [op1, op2, op3, op4, op1]);
     });
 
-    it('should return `false` when passed a non-instance or an instance of a different class', () => {
+    it('returns `false` when passed a non-instance or an instance of a different class', () => {
       const delta = new PropertyDelta([]);
 
       assert.isFalse(delta.equals(undefined));

@@ -162,7 +162,7 @@ describe('@bayou/ot-common/RevisionNumber', () => {
       test(333, 300);
     });
 
-    it('should reject non-negative integers below the specified limit', () => {
+    it('rejects non-negative integers below the specified limit', () => {
       function test(value, limit) {
         assert.throws(() => RevisionNumber.min(value, limit), /^badValue/);
       }

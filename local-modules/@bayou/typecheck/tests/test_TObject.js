@@ -9,7 +9,7 @@ import { TObject } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TObject', () => {
   describe('check(value)', () => {
-    it('should return the provided value when passed an object', () => {
+    it('returns the provided value when passed an object', () => {
       function test(value) {
         assert.strictEqual(TObject.check(value), value);
       }
@@ -20,7 +20,7 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map());
     });
 
-    it('should throw an Error when passed anything other than an object', () => {
+    it('throws an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null));
       assert.throws(() => TObject.check(undefined));
       assert.throws(() => TObject.check(54));
@@ -30,7 +30,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('check(value, clazz)', () => {
-    it('should accept a value of the given class', () => {
+    it('accepts a value of the given class', () => {
       function test(value, clazz) {
         assert.strictEqual(TObject.check(value, clazz), value);
       }
@@ -44,18 +44,18 @@ describe('@bayou/typecheck/TObject', () => {
       test(() => 123, Object);
     });
 
-    it('should throw an Error when passed a value not of the given class', () => {
+    it('throws an Error when passed a value not of the given class', () => {
       assert.throws(() => TObject.check(new Boolean(true), String));
     });
 
-    it('should throw an Error when passed anything other than an object', () => {
+    it('throws an Error when passed anything other than an object', () => {
       assert.throws(() => TObject.check(null, Object));
       assert.throws(() => TObject.check(54,   Object));
     });
   });
 
   describe('orNull(value)', () => {
-    it('should return the provided value when passed an object', () => {
+    it('returns the provided value when passed an object', () => {
       function test(value) {
         assert.strictEqual(TObject.orNull(value), value);
       }
@@ -66,11 +66,11 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map());
     });
 
-    it('should return `null` when passed `null`', () => {
+    it('returns `null` when passed `null`', () => {
       assert.isNull(TObject.orNull(null));
     });
 
-    it('should throw an Error when passed anything other than an object or `null`', () => {
+    it('throws an Error when passed anything other than an object or `null`', () => {
       assert.throws(() => TObject.orNull(undefined));
       assert.throws(() => TObject.orNull(false));
       assert.throws(() => TObject.orNull(54));
@@ -79,7 +79,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('orNull(value, clazz)', () => {
-    it('should return the provided value when passed an object of a matching class', () => {
+    it('returns the provided value when passed an object of a matching class', () => {
       function test(value, clazz) {
         assert.strictEqual(TObject.orNull(value, clazz), value);
       }
@@ -92,17 +92,17 @@ describe('@bayou/typecheck/TObject', () => {
       test(new Map(),      Object);
     });
 
-    it('should return `null` when passed a `null` value, no matter what class is passed', () => {
+    it('returns `null` when passed a `null` value, no matter what class is passed', () => {
       assert.isNull(TObject.orNull(null, Object));
       assert.isNull(TObject.orNull(null, Set));
     });
 
-    it('should throw an Error when passed an object of a non-matching class', () => {
+    it('throws an Error when passed an object of a non-matching class', () => {
       assert.throws(() => TObject.orNull(new Map(), Set));
       assert.throws(() => TObject.orNull(new Set(), Map));
     });
 
-    it('should throw an Error when passed anything other than an object or `null`', () => {
+    it('throws an Error when passed anything other than an object or `null`', () => {
       assert.throws(() => TObject.orNull(false,   Boolean));
       assert.throws(() => TObject.orNull(914,     Number));
       assert.throws(() => TObject.orNull('florp', String));
@@ -110,7 +110,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('plain()', () => {
-    it('should accept plain objects', () => {
+    it('accepts plain objects', () => {
       function test(value) {
         assert.strictEqual(TObject.plain(value), value);
       }
@@ -120,7 +120,7 @@ describe('@bayou/typecheck/TObject', () => {
       test({ a: 10, b: 20 });
     });
 
-    it('should reject non-plain objects', () => {
+    it('rejects non-plain objects', () => {
       function test(value) {
         assert.throws(() => { TObject.plain(value); });
       }
@@ -134,7 +134,7 @@ describe('@bayou/typecheck/TObject', () => {
       test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('should reject non-objects', () => {
+    it('rejects non-objects', () => {
       function test(value) {
         assert.throws(() => { TObject.plain(value); });
       }
@@ -149,37 +149,37 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('withExactKeys()', () => {
-    it('should accept an empty list of keys', () => {
+    it('accepts an empty list of keys', () => {
       const value = {};
 
       assert.strictEqual(TObject.withExactKeys(value, []), value);
     });
 
-    it('should accept an object with exactly the provided keys', () => {
+    it('accepts an object with exactly the provided keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3 };
 
       assert.strictEqual(TObject.withExactKeys(value, ['a', 'b', 'c']), value);
     });
 
-    it('should reject an object value which is missing a key', () => {
+    it('rejects an object value which is missing a key', () => {
       const value = { 'a': 1, 'b': 2 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should reject an object with a superset of keys', () => {
+    it('rejects an object with a superset of keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3, 'd': 4 };
 
       assert.throws(() => TObject.withExactKeys(value, ['a', 'b', 'c']));
     });
 
-    it('should reject non-plain objects', () => {
+    it('rejects non-plain objects', () => {
       assert.throws(() => TObject.withExactKeys(new Map(),  []));
       assert.throws(() => TObject.withExactKeys(['z'],      []));
       assert.throws(() => TObject.withExactKeys(() => true, []));
     });
 
-    it('should reject non-objects', () => {
+    it('rejects non-objects', () => {
       assert.throws(() => TObject.withExactKeys('x',  []));
       assert.throws(() => TObject.withExactKeys(914,  []));
       assert.throws(() => TObject.withExactKeys(null, []));

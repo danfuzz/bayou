@@ -15,13 +15,13 @@ describe('@bayou/config-server-default/Deployment', () => {
   });
 
   describe('isRunningInDevelopment()', () => {
-    it('should return `true`', () => {
+    it('returns `true`', () => {
       assert.isTrue(Deployment.isRunningInDevelopment());
     });
   });
 
   describe('aboutToRun()', () => {
-    it('should return without throwing', () => {
+    it('returns without throwing', () => {
       assert.doesNotThrow(() => Deployment.aboutToRun(['argument is ignored']));
     });
   });

@@ -9,7 +9,7 @@ import { CommonBase } from '@bayou/util-common';
 
 describe('@bayou/util-core/CommonBase', () => {
   describe('check()', () => {
-    it('should return the supplied value if it is an instance of the class or a subclass', () => {
+    it('returns the supplied value if it is an instance of the class or a subclass', () => {
       class Subclass1 extends CommonBase {
         fiat() { /*empty*/ }
       }
@@ -29,7 +29,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.strictEqual(Subclass1.check(subclass2), subclass2);
     });
 
-    it('should throw an Error if the supplied value is not an instance of the class or a subclass', () => {
+    it('throws an Error if the supplied value is not an instance of the class or a subclass', () => {
       class Subclass extends CommonBase {
         fiat() { /*empty*/ }
       }
@@ -54,7 +54,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.strictEqual(gotValue, 123);
     });
 
-    it('should reject a `_impl_coerce()` result that is not an instance of the class', () => {
+    it('rejects a `_impl_coerce()` result that is not an instance of the class', () => {
       class HasCoerce extends CommonBase {
         static _impl_coerce(value) {
           return value;
@@ -116,7 +116,7 @@ describe('@bayou/util-core/CommonBase', () => {
       assert.isNull(value);
     });
 
-    it('should reject a `_impl_coerceOrNull()` result that is neither `null` nor an instance of the class', () => {
+    it('rejects a `_impl_coerceOrNull()` result that is neither `null` nor an instance of the class', () => {
       class HasCoerce extends CommonBase {
         static _impl_coerceOrNull(value) {
           return value;

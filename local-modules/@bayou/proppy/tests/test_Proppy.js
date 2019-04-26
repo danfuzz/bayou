@@ -20,25 +20,25 @@ describe('@bayou/proppy/Proppy', () => {
       _testStringParsing(input, { key: 'value' });
     });
 
-    it('should accept multiple keys and values', () => {
+    it('accepts multiple keys and values', () => {
       const input = 'key = value\nkey2 = value2\nkey3 = value3';
 
       _testStringParsing(input, { key: 'value', key2: 'value2', key3: 'value3' });
     });
 
-    it('should accept single quoted keys and values', () => {
+    it('accepts single quoted keys and values', () => {
       const input = "'key' = 'value'";
 
       _testStringParsing(input, { key: 'value' });
     });
 
-    it('should accept double quoted keys and values', () => {
+    it('accepts double quoted keys and values', () => {
       const input = '"key" = "value"';
 
       _testStringParsing(input, { key: 'value' });
     });
 
-    it('should accept unquoted keys and values if they consist entirely of blessed characters', () => {
+    it('accepts unquoted keys and values if they consist entirely of blessed characters', () => {
       let input = null;
 
       input = 'key = value';
@@ -83,7 +83,7 @@ describe('@bayou/proppy/Proppy', () => {
       assert.throws(() => _testStringParsing(input, { 'key+1': 'value+1' }));
     });
 
-    it('should accept unquoted keys and values if they consist entirely of blessed characters', () => {
+    it('accepts unquoted keys and values if they consist entirely of blessed characters', () => {
       const input = 'key = "value\n' +
                     'this is a multiline value"';
 

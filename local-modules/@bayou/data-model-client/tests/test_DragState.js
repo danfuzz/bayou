@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { DragState } from '@bayou/data-model-client';
 
 describe('@bayou/data-model-client/DragState', () => {
-  it('should return default values when passed a null initial state', () => {
+  it('returns default values when passed a null initial state', () => {
     const reducer = DragState.reducer;
     const state = reducer(undefined, { type: 'unknown_action' });
 

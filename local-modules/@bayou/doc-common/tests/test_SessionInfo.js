@@ -13,30 +13,30 @@ const SERVER_URL = 'https://example.com:1234/the/path';
 
 describe('@bayou/doc-common/SessionInfo', () => {
   describe('constructor()', () => {
-    it('should accept four strings', () => {
+    it('accepts four strings', () => {
       // **TODO:** Will have to be updated when validation is improved. Likewise
       // throughout the file.
       const result = new SessionInfo(SERVER_URL, 'one', 'two', 'three');
       assert.isFrozen(result);
     });
 
-    it('should accept three strings', () => {
+    it('accepts three strings', () => {
       const result = new SessionInfo(SERVER_URL, 'one', 'two');
       assert.isFrozen(result);
     });
 
-    it('should accept three strings and `null`', () => {
+    it('accepts three strings and `null`', () => {
       const result = new SessionInfo(SERVER_URL, 'one', 'two', null);
       assert.isFrozen(result);
     });
 
-    it('should accept a `BearerToken` for the `authorToken` argument', () => {
+    it('accepts a `BearerToken` for the `authorToken` argument', () => {
       const token  = new BearerToken('x', 'y');
       const result = new SessionInfo(SERVER_URL, token, 'boop');
       assert.isFrozen(result);
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       function test(...args) {
         assert.throws(() => new SessionInfo(...args));
       }
@@ -165,14 +165,14 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('deconstruct()', () => {
-    it('should return a three-element array when constructed with three arguments', () => {
+    it('returns a three-element array when constructed with three arguments', () => {
       const si     = new SessionInfo(SERVER_URL, 'token', 'id');
       const result = si.deconstruct();
 
       assert.deepEqual(result, [SERVER_URL, 'token', 'id']);
     });
 
-    it('should return a four-element array when constructed with four non-`null` arguments', () => {
+    it('returns a four-element array when constructed with four non-`null` arguments', () => {
       const si     = new SessionInfo(SERVER_URL, 'token', 'id', 'c');
       const result = si.deconstruct();
 
@@ -181,7 +181,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('withAuthorToken()', () => {
-    it('should return a new instance given a string', () => {
+    it('returns a new instance given a string', () => {
       const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
       const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
 
@@ -199,7 +199,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       test('boop');
     });
 
-    it('should return a new instance given a `BearerToken`', () => {
+    it('returns a new instance given a `BearerToken`', () => {
       const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
       const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
 
@@ -217,7 +217,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       test(new BearerToken('blort', 'florp'));
     });
 
-    it('should reject invalid arguments', () => {
+    it('rejects invalid arguments', () => {
       const si = new SessionInfo(SERVER_URL, 'token', 'doc');
 
       function test(value) {
@@ -232,7 +232,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('withCaretId()', () => {
-    it('should return a new instance given a valid `caretId`', () => {
+    it('returns a new instance given a valid `caretId`', () => {
       const orig1 = new SessionInfo(SERVER_URL, 'token', 'doc', 'caret-1');
       const orig2 = new SessionInfo(`${SERVER_URL}/123`, 'also-token', 'docky');
 
@@ -250,7 +250,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
       test('boop');
     });
 
-    it('should reject invalid IDs', () => {
+    it('rejects invalid IDs', () => {
       const si = new SessionInfo(SERVER_URL, 'token', 'doc');
 
       function test(value) {
@@ -265,7 +265,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('withoutCaretId()', () => {
-    it('should return a new instance with `caretId === null`', () => {
+    it('returns a new instance with `caretId === null`', () => {
       function test(orig) {
         const result = orig.withoutCaretId();
         const expect = new SessionInfo(orig.serverUrl, orig.authorToken, orig.documentId);

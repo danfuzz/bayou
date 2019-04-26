@@ -9,16 +9,16 @@ import { DeferredLoader } from '@bayou/util-common';
 
 describe('@bayou/util-common/DeferredLoader', () => {
   describe('makeProxy()', () => {
-    it('should accept valid arguments', () => {
+    it('accepts valid arguments', () => {
       assert.doesNotThrow(() => { DeferredLoader.makeProxy('hello', () => true); });
     });
 
-    it('should reject invalid label arguments', () => {
+    it('rejects invalid label arguments', () => {
       assert.throws(() => { DeferredLoader.makeProxy('', () => true); });
       assert.throws(() => { DeferredLoader.makeProxy(37, () => true); });
     });
 
-    it('should reject invalid loader arguments', () => {
+    it('rejects invalid loader arguments', () => {
       assert.throws(() => { DeferredLoader.makeProxy('hello', null); });
       assert.throws(() => { DeferredLoader.makeProxy('hello', 'blort'); });
       assert.throws(() => { DeferredLoader.makeProxy('hello', new Map()); });
@@ -50,7 +50,7 @@ describe('@bayou/util-common/DeferredLoader', () => {
       assert.strictEqual(count, 1);
     });
 
-    it('should throw an error when trying to get properties not in the loaded value', () => {
+    it('throws an error when trying to get properties not in the loaded value', () => {
       const loaded = { yep: 'yep' };
       function loader() { return loaded; }
 
@@ -58,14 +58,14 @@ describe('@bayou/util-common/DeferredLoader', () => {
       assert.throws(() => { dl.nopeNotBound; });
     });
 
-    it('should throw an error if the loader throws an error', () => {
+    it('throws an error if the loader throws an error', () => {
       function loader() { throw new Error('oy'); }
 
       const dl = DeferredLoader.makeProxy('x', loader);
       assert.throws(() => { dl.anything; });
     });
 
-    it('should throw an error if the loader does not return an object', () => {
+    it('throws an error if the loader does not return an object', () => {
       function loader() { return 914; }
 
       const dl = DeferredLoader.makeProxy('x', loader);

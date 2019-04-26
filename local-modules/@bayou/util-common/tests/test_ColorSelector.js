@@ -48,7 +48,7 @@ describe('@bayou/util-common/ColorSelector', () => {
   });
 
   describe('nextCssColor()', () => {
-    it('should return a valid hex string representation of the RGB value of a given color', () => {
+    it('returns a valid hex string representation of the RGB value of a given color', () => {
       const selector = new ColorSelector();
       const hex = selector.nextCssColor();
 

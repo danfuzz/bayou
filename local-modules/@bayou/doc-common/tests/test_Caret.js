@@ -149,25 +149,25 @@ describe('@bayou/doc-common/Caret', () => {
   });
 
   describe('equals()', () => {
-    it('should return `true` when passed itself', () => {
+    it('returns `true` when passed itself', () => {
       assert.isTrue(caret1.equals(caret1));
       assert.isTrue(caret2.equals(caret2));
       assert.isTrue(caret3.equals(caret3));
     });
 
-    it('should return `true` when passed an identically-constructed value', () => {
+    it('returns `true` when passed an identically-constructed value', () => {
       const same = caret1.compose(CaretDelta.EMPTY);
       assert.notStrictEqual(caret1, same);
       assert.isTrue(caret1.equals(same));
     });
 
-    it('should return `false` when caret IDs differ', () => {
+    it('returns `false` when caret IDs differ', () => {
       const c1 = newCaret('cr-xxxxx', 1, 2, '#000011', 'some-author');
       const c2 = newCaret('cr-yyyyy', 1, 2, '#000011', 'some-author');
       assert.isFalse(c1.equals(c2));
     });
 
-    it('should return `false` when any field differs', () => {
+    it('returns `false` when any field differs', () => {
       const c1 = caret1;
       let   c2, op;
 
@@ -188,7 +188,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.isFalse(c1.equals(c2));
     });
 
-    it('should return `false` when passed a non-caret', () => {
+    it('returns `false` when passed a non-caret', () => {
       const caret = newCaret('cr-florp', 1, 2, '#000011', 'blorp');
 
       assert.isFalse(caret.equals(undefined));

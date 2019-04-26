@@ -9,7 +9,7 @@ import { ObjectUtil } from '@bayou/util-core';
 
 describe('@bayou/util-core/ObjectUtil', () => {
   describe('extract()', () => {
-    it('should return the extracted properties', () => {
+    it('returns the extracted properties', () => {
       function test(value, keys, expected) {
         const result = ObjectUtil.extract(value, keys);
         assert.isFrozen(result);
@@ -53,7 +53,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test({ a: 'aaa', b: 'bbb', 1: '111', 2: '222' });
     });
 
-    it('should reject inputs with keys not representable in plain objects with full fidelity', () => {
+    it('rejects inputs with keys not representable in plain objects with full fidelity', () => {
       function test(value) {
         const map = new Map([[value, 'whatever']]);
         assert.throws(() => ObjectUtil.fromMap(map), /badValue/);
@@ -75,7 +75,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test(['x']);
     });
 
-    it('should reject non-map inputs', () => {
+    it('rejects non-map inputs', () => {
       function test(value) {
         assert.throws(() => ObjectUtil.fromMap(value), /badValue/);
       }
@@ -90,7 +90,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
   });
 
   describe('hasOwnProperty()', () => {
-    it('should return `true` when asked about an object\'s own propery', () => {
+    it('returns `true` when asked about an object\'s own propery', () => {
       const value = {};
 
       value.uniqueProperty = 'super neat!';
@@ -98,13 +98,13 @@ describe('@bayou/util-core/ObjectUtil', () => {
       assert.isTrue(ObjectUtil.hasOwnProperty(value, 'uniqueProperty'));
     });
 
-    it('should return `false` when asked about a property in a parent', () => {
+    it('returns `false` when asked about a property in a parent', () => {
       const value = {};
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'toString'));
     });
 
-    it('should return `false` when asked about an absent property', () => {
+    it('returns `false` when asked about an absent property', () => {
       const value = { x: 'this is a neat string!' };
 
       assert.isFalse(ObjectUtil.hasOwnProperty(value, 'floopty'));
@@ -112,7 +112,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
   });
 
   describe('isPlain()', () => {
-    it('should return `true` for plain objects', () => {
+    it('returns `true` for plain objects', () => {
       function test(value) {
         assert.isTrue(ObjectUtil.isPlain(value));
       }
@@ -123,7 +123,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test({ a: 10, b: 20, c: [1, 2, 3] });
     });
 
-    it('should return `false` for non-plain objects', () => {
+    it('returns `false` for non-plain objects', () => {
       function test(value) {
         assert.isFalse(ObjectUtil.isPlain(value));
       }
@@ -137,7 +137,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
       test({ [Symbol('foo')]: 'foo' });
     });
 
-    it('should return `false` for non-objects', () => {
+    it('returns `false` for non-objects', () => {
       function test(value) {
         assert.isFalse(ObjectUtil.isPlain(value));
       }

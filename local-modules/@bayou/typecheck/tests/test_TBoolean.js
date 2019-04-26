@@ -9,16 +9,16 @@ import { TBoolean } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TBoolean', () => {
   describe('check()', () => {
-    it('should return the provided value when passed a boolean', () => {
+    it('returns the provided value when passed a boolean', () => {
       assert.strictEqual(TBoolean.check(true), true);
       assert.strictEqual(TBoolean.check(false), false);
     });
 
-    it('should throw an Error when passed undefined', () => {
+    it('throws an Error when passed undefined', () => {
       assert.throws(() => TBoolean.check(undefined));
     });
 
-    it('should throw an Error when passed anything other than a boolean', () => {
+    it('throws an Error when passed anything other than a boolean', () => {
       assert.throws(() => TBoolean.check('this better not work'));
       assert.throws(() => TBoolean.check([]));
       assert.throws(() => TBoolean.check({ }));

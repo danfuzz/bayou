@@ -57,19 +57,19 @@ const NON_STRINGS = [
 
 describe('@bayou/doc-common/CaretId', () => {
   describe('check()', () => {
-    it('should accept valid ID strings', () => {
+    it('accepts valid ID strings', () => {
       for (const s of VALID_IDS) {
         assert.strictEqual(CaretId.check(s), s, s);
       }
     });
 
-    it('should reject invalid ID strings', () => {
+    it('rejects invalid ID strings', () => {
       for (const s of INVALID_STRINGS) {
         assert.throws(() => CaretId.check(s), /badValue/, s);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const v of NON_STRINGS) {
         assert.throws(() => CaretId.check(v), /badValue/, v);
       }
@@ -77,19 +77,19 @@ describe('@bayou/doc-common/CaretId', () => {
   });
 
   describe('isInstance()', () => {
-    it('should return `true` for valid ID strings', () => {
+    it('returns `true` for valid ID strings', () => {
       for (const s of VALID_IDS) {
         assert.isTrue(CaretId.isInstance(s), s);
       }
     });
 
-    it('should return `false` for invalid ID strings', () => {
+    it('returns `false` for invalid ID strings', () => {
       for (const s of INVALID_STRINGS) {
         assert.isFalse(CaretId.isInstance(s), s);
       }
     });
 
-    it('should return `false` for non-strings', () => {
+    it('returns `false` for non-strings', () => {
       for (const v of NON_STRINGS) {
         assert.isFalse(CaretId.isInstance(v), v);
       }
@@ -97,18 +97,18 @@ describe('@bayou/doc-common/CaretId', () => {
   });
 
   describe('payloadFromId()', () => {
-    it('should return the payload from a valid id', () => {
+    it('returns the payload from a valid id', () => {
       assert.strictEqual('fooba', CaretId.payloadFromId('cr-fooba'));
       assert.strictEqual('0zor0', CaretId.payloadFromId('cr-0zor0'));
     });
 
-    it('should reject invalid ID strings', () => {
+    it('rejects invalid ID strings', () => {
       for (const s of INVALID_STRINGS) {
         assert.throws(() => CaretId.payloadFromId(s), /badValue/, s);
       }
     });
 
-    it('should reject non-strings', () => {
+    it('rejects non-strings', () => {
       for (const v of NON_STRINGS) {
         assert.throws(() => CaretId.payloadFromId(v), /badValue/, v);
       }
@@ -116,14 +116,14 @@ describe('@bayou/doc-common/CaretId', () => {
   });
 
   describe('randomInstance()', () => {
-    it('should return values for which `isInstance()` is `true`', () => {
+    it('returns values for which `isInstance()` is `true`', () => {
       for (let i = 0; i < 10; i++) {
         const id = CaretId.randomInstance();
         assert.isTrue(CaretId.isInstance(id), id);
       }
     });
 
-    it('should return a different value every time (practically speaking)', () => {
+    it('returns a different value every time (practically speaking)', () => {
       // This is well under the count at which we can statistically expect a
       // collision to always occur -- at about 6800, the chance of a collision
       // is about 50% -- but collisions might still legitimately crop up in this

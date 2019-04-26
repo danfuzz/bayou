@@ -9,7 +9,7 @@ import { TNumber } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TNumber', () => {
   describe('check()', () => {
-    it('should return the provided value when passed a number', () => {
+    it('returns the provided value when passed a number', () => {
       function test(v) {
         assert.strictEqual(TNumber.check(v), v);
       }
@@ -21,14 +21,14 @@ describe('@bayou/typecheck/TNumber', () => {
       test(-Infinity);
     });
 
-    it('should accept NaN', () => {
+    it('accepts NaN', () => {
       // NaN somewhat ironically is in fact a number in this sense. But also,
       // because of IEEE754 wackiness, `NaN !== NaN`, so the usual strict
       // equality test can't be done.
       assert.isNaN(TNumber.check(NaN));
     });
 
-    it('should throw an error when passed a non-number value', () => {
+    it('throws an error when passed a non-number value', () => {
       function test(v) {
         assert.throws(() => TNumber.check(v));
       }

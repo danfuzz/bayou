@@ -9,7 +9,7 @@ import { IterableUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/IterableUtil', () => {
   describe('multiUseSafe()', () => {
-    it('should throw an error if not passed an `Iterable`', () => {
+    it('throws an error if not passed an `Iterable`', () => {
       assert.throws(() => IterableUtil.multiUseSafe(123));
       assert.throws(() => IterableUtil.multiUseSafe('blort'));
       assert.throws(() => IterableUtil.multiUseSafe({}));
