@@ -36,7 +36,7 @@ describe('@bayou/data-model-client/OwnerState', () => {
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should update the owner name state when passed the "set owner name" action', () => {
+  it('updates the owner name state when passed the "set owner name" action', () => {
     const reducer = OwnerState.reducer;
 
     // Pass in undefined initial state to get back the default values

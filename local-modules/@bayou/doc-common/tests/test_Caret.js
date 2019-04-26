@@ -40,35 +40,35 @@ describe('@bayou/doc-common/Caret', () => {
       test(caret3);
     });
 
-    it('should update `authorId` given the appropriate op', () => {
+    it('updates `authorId` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.id, 'authorId', 'boop');
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.authorId, 'boop');
     });
 
-    it('should update `index` given the appropriate op', () => {
+    it('updates `index` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.id, 'index', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.index, 99999);
     });
 
-    it('should update `length` given the appropriate op', () => {
+    it('updates `length` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.id, 'length', 99999);
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.length, 99999);
     });
 
-    it('should update `color` given the appropriate op', () => {
+    it('updates `color` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.id, 'color', '#aabbcc');
       const result = caret1.compose(new CaretDelta([op]));
 
       assert.strictEqual(result.color, '#aabbcc');
     });
 
-    it('should update `revNum` given the appropriate op', () => {
+    it('updates `revNum` given the appropriate op', () => {
       const op     = CaretOp.op_setField(caret1.id, 'revNum', 12345);
       const result = caret1.compose(new CaretDelta([op]));
 

@@ -36,7 +36,7 @@ describe('@bayou/data-model-client/SharingState', () => {
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should update the sharing state when passed the "set sharing state" action', () => {
+  it('updates the sharing state when passed the "set sharing state" action', () => {
     const reducer = SharingState.reducer;
 
     // Pass in undefined initial state to get back the default values

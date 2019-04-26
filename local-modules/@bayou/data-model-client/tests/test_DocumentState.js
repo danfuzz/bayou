@@ -52,7 +52,7 @@ describe('@bayou/data-model-client/DocumentState', () => {
     assert.equal(newStarState, !initialStarState);
   });
 
-  it('should update the title state when passed the "set title" action', () => {
+  it('updates the title state when passed the "set title" action', () => {
     const reducer = DocumentState.reducer;
 
     // Pass in undefined initial state to get back the default values

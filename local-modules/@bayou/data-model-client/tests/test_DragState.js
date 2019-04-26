@@ -36,7 +36,7 @@ describe('@bayou/data-model-client/DragState', () => {
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should update the drag index state when passed the "set drag index" action', () => {
+  it('updates the drag index state when passed the "set drag index" action', () => {
     const reducer = DragState.reducer;
 
     // Pass in undefined initial state to get back the default values

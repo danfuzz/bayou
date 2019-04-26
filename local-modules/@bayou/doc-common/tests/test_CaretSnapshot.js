@@ -172,7 +172,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test(new CaretSnapshot(999, [op1, op2, op3]));
     });
 
-    it('should update `revNum` given a change with a different `revNum`', () => {
+    it('updates `revNum` given a change with a different `revNum`', () => {
       const snap     = new CaretSnapshot(1,  [op1, op2]);
       const expected = new CaretSnapshot(999,[op1, op2]);
       const result   = snap.compose(new CaretChange(999, []));
@@ -196,7 +196,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.throws(() => { snap.compose(change); });
     });
 
-    it('should update a pre-existing caret given an appropriate op', () => {
+    it('updates a pre-existing caret given an appropriate op', () => {
       const c1       = newCaretOp('cr-foooo', 1, 2, '#333333', 'dd');
       const c2       = newCaretOp('cr-foooo', 3, 2, '#333333', 'dd');
       const snap     = new CaretSnapshot(1, [op1, c1]);
