@@ -89,7 +89,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([op1, op2, op3]);
     });
 
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const snap = new CaretSnapshot(0, [op1]);
       assert.isFrozen(snap);
     });
@@ -158,7 +158,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
+    it('produces an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
       function test(snap) {
         which++;
@@ -217,7 +217,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const snap   = new CaretSnapshot(123, [op1, op2]);
       const result = snap.diff(snap);
 

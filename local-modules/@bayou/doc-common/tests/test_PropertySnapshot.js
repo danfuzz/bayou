@@ -55,7 +55,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       test([PropertyOp.op_set('x', 'y'), PropertyOp.op_set('z', 'pdq')]);
     });
 
-    it('should produce a frozen instance', () => {
+    it('produces a frozen instance', () => {
       const snap = new PropertySnapshot(0, [PropertyOp.op_set('x', 'y')]);
       assert.isFrozen(snap);
     });
@@ -138,7 +138,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty change with the same `revNum`', () => {
+    it('produces an equal instance when passed an empty change with the same `revNum`', () => {
       let which = 0;
       function test(snap) {
         which++;
@@ -198,7 +198,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const snap = new PropertySnapshot(914,
         [PropertyOp.op_set('a', 10), PropertyOp.op_set('b', 20)]);
       const result = snap.diff(snap);

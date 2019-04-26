@@ -121,7 +121,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
   });
 
   describe('encodeJson()', () => {
-    it('should produce a string', () => {
+    it('produces a string', () => {
       assert.isString(encodeJson(null));
       assert.isString(encodeJson(914));
       assert.isString(encodeJson([1, 2, 3]));
@@ -135,7 +135,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
   });
 
   describe('encodeJsonBuffer()', () => {
-    it('should produce a `FrozenBuffer`', () => {
+    it('produces a `FrozenBuffer`', () => {
       assert.instanceOf(encodeJsonBuffer(null), FrozenBuffer);
       assert.instanceOf(encodeJsonBuffer(914), FrozenBuffer);
       assert.instanceOf(encodeJsonBuffer([1, 2, 3]), FrozenBuffer);

@@ -164,7 +164,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer('RkxPUlAK', 'base64'));
       });
 
-      it('should produce bytes identical to the expected base-64 decoding', () => {
+      it('produces bytes identical to the expected base-64 decoding', () => {
         function test(string) {
           const nodeBuf = Buffer.from(string, 'utf8');
           const base64  = nodeBuf.toString('base64');

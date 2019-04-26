@@ -27,7 +27,7 @@ const caret3 = newCaret('cr-33333', 3, 99, '#333333', 'third-author');
 
 describe('@bayou/doc-common/Caret', () => {
   describe('compose()', () => {
-    it('should produce an equal instance when passed an empty delta', () => {
+    it('produces an equal instance when passed an empty delta', () => {
       let which = 0;
       function test(caret) {
         which++;
@@ -83,7 +83,7 @@ describe('@bayou/doc-common/Caret', () => {
   });
 
   describe('diff()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const result = caret1.diff(caret1);
 
       assert.instanceOf(result, CaretDelta);
@@ -106,7 +106,7 @@ describe('@bayou/doc-common/Caret', () => {
   });
 
   describe('diffFields()', () => {
-    it('should produce an empty diff when passed itself', () => {
+    it('produces an empty diff when passed itself', () => {
       const result = caret1.diffFields(caret1, 'cr-florp');
 
       assert.instanceOf(result, CaretDelta);
