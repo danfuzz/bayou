@@ -21,7 +21,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('constructor()', () => {
-    it('should accept an array of valid ops', () => {
+    it('accepts an array of valid ops', () => {
       function test(value) {
         new PropertySnapshot(0, value);
       }
@@ -34,7 +34,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       ]);
     });
 
-    it('should accept valid revision numbers', () => {
+    it('accepts valid revision numbers', () => {
       function test(value) {
         new PropertySnapshot(value, PropertyDelta.EMPTY);
       }
@@ -44,7 +44,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       test(999999);
     });
 
-    it('should accept a valid delta', () => {
+    it('accepts a valid delta', () => {
       function test(ops) {
         const delta = new PropertyDelta(ops);
         new PropertySnapshot(0, delta);

@@ -73,7 +73,7 @@ const NON_STRINGS = [
 
 describe('@bayou/util-core/FrozenBuffer', () => {
   describe('checkHash()', () => {
-    it('should accept valid hash strings', () => {
+    it('accepts valid hash strings', () => {
       for (const value of VALID_HASHES) {
         assert.strictEqual(FrozenBuffer.checkHash(value), value);
       }
@@ -127,7 +127,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
     });
 
     describe('constructor(string, \'utf8\')', () => {
-      it('should accept valid arguments', () => {
+      it('accepts valid arguments', () => {
         assert.doesNotThrow(() => new FrozenBuffer(''));
         assert.doesNotThrow(() => new FrozenBuffer('hello'));
         assert.doesNotThrow(() => new FrozenBuffer('florp', 'utf8'));
@@ -159,7 +159,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
     });
 
     describe('constructor(string, \'base64\')', () => {
-      it('should accept valid arguments', () => {
+      it('accepts valid arguments', () => {
         assert.doesNotThrow(() => new FrozenBuffer('', 'base64'));
         assert.doesNotThrow(() => new FrozenBuffer('RkxPUlAK', 'base64'));
       });
@@ -179,7 +179,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
     });
 
     describe('constructor(Buffer)', () => {
-      it('should accept valid arguments', () => {
+      it('accepts valid arguments', () => {
         assert.doesNotThrow(() => new FrozenBuffer(Buffer.from('')));
         assert.doesNotThrow(() => new FrozenBuffer(Buffer.alloc(100, 123)));
       });

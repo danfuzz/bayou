@@ -24,7 +24,7 @@ const NON_STRINGS = [
 
 describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   describe('isAuthorId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isAuthorId('123abc7890ABC456789012'));
     });
 
@@ -48,7 +48,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   });
 
   describe('isDocumentId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isDocumentId('123abc7890ABC456789012'));
     });
 
@@ -72,7 +72,7 @@ describe('@bayou/id-syntax-default/DefaultIdSyntax', () => {
   });
 
   describe('isFileId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(DefaultIdSyntax.isFileId('123abc7890ABC456789012'));
     });
 

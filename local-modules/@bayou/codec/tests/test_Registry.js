@@ -23,7 +23,7 @@ class RegistryTestClass {
 
 describe('@bayou/codec/Registry', () => {
   describe('register()', () => {
-    it('should accept a class with all salient properties', () => {
+    it('accepts a class with all salient properties', () => {
       const reg = new Registry();
       assert.doesNotThrow(() => reg.registerClass(RegistryTestClass));
     });

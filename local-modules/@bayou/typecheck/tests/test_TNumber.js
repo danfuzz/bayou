@@ -21,7 +21,7 @@ describe('@bayou/typecheck/TNumber', () => {
       test(-Infinity);
     });
 
-    it('should accept NaN', () => {
+    it('accepts NaN', () => {
       // NaN somewhat ironically is in fact a number in this sense. But also,
       // because of IEEE754 wackiness, `NaN !== NaN`, so the usual strict
       // equality test can't be done.

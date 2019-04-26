@@ -13,24 +13,24 @@ const SERVER_URL = 'https://example.com:1234/the/path';
 
 describe('@bayou/doc-common/SessionInfo', () => {
   describe('constructor()', () => {
-    it('should accept four strings', () => {
+    it('accepts four strings', () => {
       // **TODO:** Will have to be updated when validation is improved. Likewise
       // throughout the file.
       const result = new SessionInfo(SERVER_URL, 'one', 'two', 'three');
       assert.isFrozen(result);
     });
 
-    it('should accept three strings', () => {
+    it('accepts three strings', () => {
       const result = new SessionInfo(SERVER_URL, 'one', 'two');
       assert.isFrozen(result);
     });
 
-    it('should accept three strings and `null`', () => {
+    it('accepts three strings and `null`', () => {
       const result = new SessionInfo(SERVER_URL, 'one', 'two', null);
       assert.isFrozen(result);
     });
 
-    it('should accept a `BearerToken` for the `authorToken` argument', () => {
+    it('accepts a `BearerToken` for the `authorToken` argument', () => {
       const token  = new BearerToken('x', 'y');
       const result = new SessionInfo(SERVER_URL, token, 'boop');
       assert.isFrozen(result);

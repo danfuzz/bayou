@@ -92,7 +92,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('isToken()', () => {
-    it('should accept token syntax', () => {
+    it('accepts token syntax', () => {
       assert.isTrue(Auth.isToken(ROOT_TOKEN));
 
       for (const t of EXAMPLE_TOKENS) {

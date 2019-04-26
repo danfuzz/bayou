@@ -23,7 +23,7 @@ class HasEquals {
 
 describe('@bayou/util-core/Functor', () => {
   describe('constructor()', () => {
-    it('should accept valid names', () => {
+    it('accepts valid names', () => {
       function test(name) {
         const result = new Functor(name);
         assert.instanceOf(result, Functor, name);
@@ -40,7 +40,7 @@ describe('@bayou/util-core/Functor', () => {
       test('ABCDE-FGHIJ-KLMNO-PQRST-UVWXY-Z');
     });
 
-    it('should accept various amounts and types of arguments', () => {
+    it('accepts various amounts and types of arguments', () => {
       function test(...args) {
         const result = new Functor('blort', ...args);
         assert.instanceOf(result, Functor, inspect(args));

@@ -57,7 +57,7 @@ const NON_STRINGS = [
 
 describe('@bayou/doc-common/CaretId', () => {
   describe('check()', () => {
-    it('should accept valid ID strings', () => {
+    it('accepts valid ID strings', () => {
       for (const s of VALID_IDS) {
         assert.strictEqual(CaretId.check(s), s, s);
       }

@@ -56,7 +56,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('constructor()', () => {
-    it('should accept an array of valid ops', () => {
+    it('accepts an array of valid ops', () => {
       function test(value) {
         new CaretSnapshot(0, value);
       }
@@ -67,7 +67,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test([op1, op2, op3]);
     });
 
-    it('should accept valid revision numbers', () => {
+    it('accepts valid revision numbers', () => {
       function test(value) {
         new CaretSnapshot(value, CaretDelta.EMPTY);
       }
@@ -77,7 +77,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       test(999999);
     });
 
-    it('should accept a valid delta', () => {
+    it('accepts a valid delta', () => {
       function test(ops) {
         const delta = new CaretDelta(ops);
         new CaretSnapshot(0, delta);

@@ -9,7 +9,7 @@ import { DeferredLoader } from '@bayou/util-common';
 
 describe('@bayou/util-common/DeferredLoader', () => {
   describe('makeProxy()', () => {
-    it('should accept valid arguments', () => {
+    it('accepts valid arguments', () => {
       assert.doesNotThrow(() => { DeferredLoader.makeProxy('hello', () => true); });
     });
 

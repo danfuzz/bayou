@@ -9,7 +9,7 @@ import { ColorUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/ColorUtil', () => {
   describe('checkCss()', () => {
-    it('should accept proper strings', () => {
+    it('accepts proper strings', () => {
       function test(v) {
         assert.doesNotThrow(() => ColorUtil.checkCss(v));
       }

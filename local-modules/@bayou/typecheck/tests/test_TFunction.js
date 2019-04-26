@@ -203,7 +203,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('checkClass(value, ancestor)', () => {
-    it('should accept a `null` ancestor', () => {
+    it('accepts a `null` ancestor', () => {
       function test(value) {
         assert.strictEqual(TFunction.checkClass(value, null), value);
       }
@@ -213,14 +213,14 @@ describe('@bayou/typecheck/TFunction', () => {
       }
     });
 
-    it('should accept a value that is the same as the given `ancestor`', () => {
+    it('accepts a value that is the same as the given `ancestor`', () => {
       class Blort { }
 
       assert.strictEqual(TFunction.checkClass(Map, Map), Map);
       assert.strictEqual(TFunction.checkClass(Blort, Blort), Blort);
     });
 
-    it('should accept a value that is a subclass of the given `ancestor`', () => {
+    it('accepts a value that is a subclass of the given `ancestor`', () => {
       class Blort { }
       class SubBlort extends Blort { }
       class UltraBlort extends SubBlort { }
@@ -347,7 +347,7 @@ describe('@bayou/typecheck/TFunction', () => {
   });
 
   describe('isClass(value, ancestor)', () => {
-    it('should accept a `null` ancestor', () => {
+    it('accepts a `null` ancestor', () => {
       assert.isTrue(TFunction.isClass(Map, null));
       assert.isFalse(TFunction.isClass(123, null));
     });

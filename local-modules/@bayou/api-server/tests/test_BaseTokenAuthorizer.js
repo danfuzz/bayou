@@ -122,7 +122,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       await assert.isRejected(au.targetFromToken(['foo']), /badValue/);
     });
 
-    it('should accept `null` from the `_impl`', async () => {
+    it('accepts `null` from the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value_unused) {
           return null;

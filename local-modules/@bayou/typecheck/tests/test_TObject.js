@@ -30,7 +30,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('check(value, clazz)', () => {
-    it('should accept a value of the given class', () => {
+    it('accepts a value of the given class', () => {
       function test(value, clazz) {
         assert.strictEqual(TObject.check(value, clazz), value);
       }
@@ -110,7 +110,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('plain()', () => {
-    it('should accept plain objects', () => {
+    it('accepts plain objects', () => {
       function test(value) {
         assert.strictEqual(TObject.plain(value), value);
       }
@@ -149,13 +149,13 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('withExactKeys()', () => {
-    it('should accept an empty list of keys', () => {
+    it('accepts an empty list of keys', () => {
       const value = {};
 
       assert.strictEqual(TObject.withExactKeys(value, []), value);
     });
 
-    it('should accept an object with exactly the provided keys', () => {
+    it('accepts an object with exactly the provided keys', () => {
       const value = { 'a': 1, 'b': 2, 'c': 3 };
 
       assert.strictEqual(TObject.withExactKeys(value, ['a', 'b', 'c']), value);

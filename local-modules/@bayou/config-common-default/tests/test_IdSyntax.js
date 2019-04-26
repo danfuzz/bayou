@@ -29,7 +29,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
   });
 
   describe('isAuthorId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(IdSyntax.isAuthorId('123abc7890ABC456789012'));
     });
 
@@ -53,7 +53,7 @@ describe('@bayou/config-common-default/IdSyntax', () => {
   });
 
   describe('isDocumentId()', () => {
-    it('should accept 32-character alphanum ASCII strings', () => {
+    it('accepts 32-character alphanum ASCII strings', () => {
       assert.isTrue(IdSyntax.isDocumentId('123abc7890ABC456789012'));
     });
 

@@ -9,7 +9,7 @@ import { TBuffer } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TBuffer', () => {
   describe('check()', () => {
-    it('should accept valid instances', () => {
+    it('accepts valid instances', () => {
       const buf = Buffer.from('123');
       assert.strictEqual(TBuffer.check(buf), buf);
     });
@@ -29,12 +29,12 @@ describe('@bayou/typecheck/TBuffer', () => {
   });
 
   describe('orNull()', () => {
-    it('should accept valid instances', () => {
+    it('accepts valid instances', () => {
       const buf = Buffer.from('123');
       assert.strictEqual(TBuffer.orNull(buf), buf);
     });
 
-    it('should accept `null`', () => {
+    it('accepts `null`', () => {
       assert.isNull(TBuffer.orNull(null));
     });
 

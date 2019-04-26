@@ -9,7 +9,7 @@ import { TInt } from '@bayou/typecheck';
 
 describe('@bayou/typecheck/TInt', () => {
   describe('check()', () => {
-    it('should accept safe integers', () => {
+    it('accepts safe integers', () => {
       function test(value) {
         assert.strictEqual(TInt.check(value), value);
       }

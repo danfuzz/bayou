@@ -72,7 +72,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('should accept plain objects and encode as a tagged entries array', () => {
+    it('accepts plain objects and encode as a tagged entries array', () => {
       function test(value) {
         const expect = ConstructorCall.from('object', ...Object.entries(value));
         assert.deepEqual(encodeData(value), expect);
@@ -94,7 +94,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.deepEqual(encodeData(orig), expect);
     });
 
-    it('should accept `FrozenBuffer`s and encode as a single base-64 string argument', () => {
+    it('accepts `FrozenBuffer`s and encode as a single base-64 string argument', () => {
       const orig   = new FrozenBuffer('florp');
       const expect = ConstructorCall.from('buf', 'ZmxvcnA=');
 
@@ -113,7 +113,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(noDeconstruct));
     });
 
-    it('should accept objects with a `CODEC_TAG` property and `deconstruct()` method', () => {
+    it('accepts objects with a `CODEC_TAG` property and `deconstruct()` method', () => {
       const fakeObject = new MockCodable();
 
       assert.doesNotThrow(() => encodeData(fakeObject));

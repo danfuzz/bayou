@@ -34,7 +34,7 @@ describe('@bayou/doc-common/Timeouts', () => {
       assert.strictEqual(Timeouts.clamp(null), Timeouts.MAX_TIMEOUT_MSEC);
     });
 
-    it('should accept in-range integers as-is', () => {
+    it('accepts in-range integers as-is', () => {
       const min = Timeouts.MIN_TIMEOUT_MSEC;
       const max = Timeouts.MAX_TIMEOUT_MSEC;
 
