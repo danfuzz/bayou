@@ -2,10 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DragState } from '@bayou/data-model-client';
 import { CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
-import { QuillEvents, QuillGeometry, QuillUtil } from '@bayou/quill-util';
+import { QuillEvents, QuillGeometry } from '@bayou/quill-util';
 import { TObject } from '@bayou/typecheck';
 
 /**
@@ -97,18 +96,6 @@ export default class CaretOverlay {
     this._useReferences = new Map();
 
     /**
-     * {Int|null} While a drag action is in progress this property
-     * indicates where in the Quill document the cursor currently is.
-     * This lets the drawing code know where to put the drop coach mark.
-     * When there is no drag action this property is `null`.
-     */
-    this._dragIndex = null;
-
-    // Subscribe to changes in the Redux store. This is how this module is
-    // informed about changes in the drag state.
-    editorComplex.clientStore.subscribe(this._updateDragIndicator.bind(this));
-
-    /**
      * {ClientStore} Data store and its associated mutation state machine
      * used for updating the client data model as changes come from the
      * server.
@@ -173,103 +160,72 @@ export default class CaretOverlay {
 
     const quill = this._editorComplex.bodyQuill;
 
-    if (this._dragIndex !== null) {
-      // We're in the middle of having something dragged over the editor area.
-      // Just draw the coach mark for the drop location and nothing else
-      // until the drag is completed or canceled.
-      const rect = QuillGeometry.boundsForCursorAtOffset(quill, this._dragIndex);
-      const containerBounds = QuillUtil.containerDiv(quill);
-      const editorBounds = QuillUtil.editorDiv(quill);
+    // Draw the remote author cursors and highlights.
 
-      rect.left = (containerBounds.clientWidth - editorBounds.clientWidth) / 2.0;
-      rect.right = rect.left + editorBounds.clientWidth;
-      rect.width = editorBounds.clientWidth;
-      rect.bottom += 2;
-      rect.top = rect.bottom - 4;
-      rect.height = rect.bottom - rect.top;
+    // For each caret...
+    for (const [caretId, caret] of this._lastCaretSnapshot.entries()) {
+      // Is this caret us? If so, don't draw anything. **TODO:** The caret
+      // snapshot ideally wouldn't actually represent the caret controlled by
+      // this editor. The code that pushes the snapshot into the store should
+      // be updated accordingly.
+      if (this._editorComplex.docSession.controlsCaret(caretId)) {
+        continue;
+      }
 
-      const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
-      const path = this._document.createElementNS(SVG_NAMESPACE, 'rect');
+      const avatarReference = this._useReferences.get(caretId);
 
-      path.setAttribute('d', pathCommand);
-      path.setAttribute('fill', '#0576b9');
-      path.setAttribute('fill-opacity', 1.0);
-      path.setAttribute('x', rect.left);
-      path.setAttribute('y', rect.top);
-      path.setAttribute('width', rect.width);
-      path.setAttribute('height', rect.height);
-      path.setAttribute('rx', 2.5);
-      path.setAttribute('ry', 2.5);
+      if (caret.length === 0) {
+        // Length of zero means an insertion point instead of a selection
+        const rect = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
 
-      this._svgOverlay.appendChild(path);
-    } else {
-      // We're not dragging so draw the remote author cursors and highlights.
+        const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
+        const path = this._document.createElementNS(SVG_NAMESPACE, 'path');
 
-      // For each caret...
-      for (const [caretId, caret] of this._lastCaretSnapshot.entries()) {
-        // Is this caret us? If so, don't draw anything. **TODO:** The caret
-        // snapshot ideally wouldn't actually represent the caret controlled by
-        // this editor. The code that pushes the snapshot into the store should
-        // be updated accordingly.
-        if (this._editorComplex.docSession.controlsCaret(caretId)) {
-          continue;
-        }
+        // Even for a zero-width rect we get what we expect when we stroke the
+        // frame.
+        path.setAttribute('d', pathCommand);
+        path.setAttribute('fill', caret.color);
+        path.setAttribute('fill-opacity', '1.0');
+        path.setAttribute('stroke-width', '1.0');
+        path.setAttribute('stroke', caret.color);
+        path.setAttribute('stroke-opacity', '1.0');
 
-        const avatarReference = this._useReferences.get(caretId);
+        this._svgOverlay.appendChild(path);
 
-        if (caret.length === 0) {
-          // Length of zero means an insertion point instead of a selection
-          const rect = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
+        const x = rect.left - (AVATAR_DIMENSION / 2.0);
+        const y = rect.top - AVATAR_DIMENSION;
 
-          const pathCommand = QuillGeometry.svgPathCommandsForRect(rect);
-          const path = this._document.createElementNS(SVG_NAMESPACE, 'path');
+        avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
+        this._svgOverlay.appendChild(avatarReference);
+      } else {
+        // Generate a list of rectangles representing the selection.
+        let rects = QuillGeometry.boundsForLinesInRange(quill, caret.index, caret.length);
 
-          // Even for a zero-width rect we get what we expect when we stroke the
-          // frame.
-          path.setAttribute('d', pathCommand);
-          path.setAttribute('fill', caret.color);
-          path.setAttribute('fill-opacity', '1.0');
-          path.setAttribute('stroke-width', '1.0');
-          path.setAttribute('stroke', caret.color);
-          path.setAttribute('stroke-opacity', '1.0');
+        rects = rects.map(QuillGeometry.snapRectToPixels);
 
-          this._svgOverlay.appendChild(path);
+        for (const rect of rects) {
+          const svgRect = this._document.createElementNS(SVG_NAMESPACE, 'rect');
 
-          const x = rect.left - (AVATAR_DIMENSION / 2.0);
-          const y = rect.top - AVATAR_DIMENSION;
+          svgRect.setAttribute('x', rect.left);
+          svgRect.setAttribute('y', rect.top);
+          svgRect.setAttribute('width', rect.width);
+          svgRect.setAttribute('height', rect.height);
+          svgRect.setAttribute('rx', 3);
+          svgRect.setAttribute('ry', 3);
+          svgRect.setAttribute('fill', caret.color);
+          svgRect.setAttribute('fill-opacity', '0.50');
+          svgRect.setAttribute('stroke-width', '1.0');
+          svgRect.setAttribute('stroke', caret.color);
+          svgRect.setAttribute('stroke-opacity', '1.0');
+
+          this._svgOverlay.appendChild(svgRect);
+
+          const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
+          const x = topLeft.left - (AVATAR_DIMENSION / 2.0);
+          const y = topLeft.top - AVATAR_DIMENSION;
 
           avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
           this._svgOverlay.appendChild(avatarReference);
-        } else {
-          // Generate a list of rectangles representing the selection.
-          let rects = QuillGeometry.boundsForLinesInRange(quill, caret.index, caret.length);
-
-          rects = rects.map(QuillGeometry.snapRectToPixels);
-
-          for (const rect of rects) {
-            const svgRect = this._document.createElementNS(SVG_NAMESPACE, 'rect');
-
-            svgRect.setAttribute('x', rect.left);
-            svgRect.setAttribute('y', rect.top);
-            svgRect.setAttribute('width', rect.width);
-            svgRect.setAttribute('height', rect.height);
-            svgRect.setAttribute('rx', 3);
-            svgRect.setAttribute('ry', 3);
-            svgRect.setAttribute('fill', caret.color);
-            svgRect.setAttribute('fill-opacity', '0.50');
-            svgRect.setAttribute('stroke-width', '1.0');
-            svgRect.setAttribute('stroke', caret.color);
-            svgRect.setAttribute('stroke-opacity', '1.0');
-
-            this._svgOverlay.appendChild(svgRect);
-
-            const topLeft = QuillGeometry.boundsForCursorAtOffset(quill, caret.index);
-            const x = topLeft.left - (AVATAR_DIMENSION / 2.0);
-            const y = topLeft.top - AVATAR_DIMENSION;
-
-            avatarReference.setAttribute('transform', `translate(${x}, ${y})`);
-            this._svgOverlay.appendChild(avatarReference);
-          }
         }
       }
     }
@@ -513,18 +469,6 @@ export default class CaretOverlay {
     if (updateDisplay) {
       this._updateDisplay();
     }
-  }
-
-  _updateDragIndicator() {
-    const state = this._editorComplex.clientStore.getState();
-    const dragIndex = DragState.dragIndex(state);
-
-    if (this._dragIndex === dragIndex) {
-      return;
-    }
-
-    this._dragIndex = dragIndex;
-    this._updateDisplay();
   }
 
   /**
