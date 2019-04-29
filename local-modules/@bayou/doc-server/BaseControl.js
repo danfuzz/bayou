@@ -1004,8 +1004,8 @@ export default class BaseControl extends BaseDataManager {
    *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
    *   defined by {@link #update}.
-   * @param {Int} timeoutMsec Timeout to use for calls that could significantly
-   *   block.
+   * @param {Int|null} timeoutMsec Timeout to use for calls that could
+   *   significantly block.
    * @returns {BaseChange|null} Result for the outer call to {@link #update}, or
    *   `null` if the attempt failed due to losing an append race.
    */
@@ -1112,7 +1112,7 @@ export default class BaseControl extends BaseDataManager {
    *   maximum allowed value.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec) {
+  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec = null) {
     TBoolean.check(allowMissing);
 
     await this._checkRevNumRange(startInclusive, endExclusive, timeoutMsec);
