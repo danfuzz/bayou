@@ -40,16 +40,6 @@ const ERROR_DELAY_MSEC = 5000;
  */
 export default class CaretState {
   /**
-   * Redux selector for the caret snapshot.
-   *
-   * @param {object} state The redux state to query.
-   * @returns {CaretSnapshot} The caret snapshot.
-   */
-  static caretSnapshot(state) {
-    return state.carets;
-  }
-
-  /**
    * Redux root reducer function that transforms our actions into
    * state changes.
    * @see http://redux.js.org/docs/basics/Reducers.html
