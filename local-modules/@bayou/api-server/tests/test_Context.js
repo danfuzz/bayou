@@ -33,7 +33,7 @@ class MockAuth extends BaseTokenAuthorizer {
 
 describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
-    it('accepts valid arguments and produce a frozen instance', () => {
+    it('accepts valid arguments and produces a frozen instance', () => {
       const info   = new ContextInfo(new Codec(), new MockAuth());
       const result = new Context(info, new Logger('some-tag'));
 

@@ -117,7 +117,7 @@ describe('@bayou/ot-common/Timestamp', () => {
   });
 
   describe('constructor()', () => {
-    it('accepts two in-range integers and reflect those values in the corresponding fields', () => {
+    it('accepts two in-range integers and reflects those values in the corresponding fields', () => {
       function test(secs, usecs) {
         const result = new Timestamp(secs, usecs);
         assert.strictEqual(result.secs, secs);

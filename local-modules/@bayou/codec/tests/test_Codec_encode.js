@@ -31,7 +31,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(undefined));
     });
 
-    it('passes through non-object values and null as-is', () => {
+    it('passes through non-object values and `null` as-is', () => {
       function test(value) {
         assert.strictEqual(encodeData(value), value);
       }
@@ -72,7 +72,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('accepts plain objects and encode as a tagged entries array', () => {
+    it('accepts plain objects and encodes them as a tagged entries array', () => {
       function test(value) {
         const expect = ConstructorCall.from('object', ...Object.entries(value));
         assert.deepEqual(encodeData(value), expect);
@@ -94,7 +94,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.deepEqual(encodeData(orig), expect);
     });
 
-    it('accepts `FrozenBuffer`s and encode as a single base-64 string argument', () => {
+    it('accepts `FrozenBuffer`s and encodes them as a single base-64 string argument', () => {
       const orig   = new FrozenBuffer('florp');
       const expect = ConstructorCall.from('buf', 'ZmxvcnA=');
 
