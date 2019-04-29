@@ -55,7 +55,7 @@ describe('@bayou/typecheck/TNumber', () => {
       test(0, -1, 1);
     });
 
-    it('should disallow values out of the specified range', () => {
+    it('disallows values out of the specified range', () => {
       function test(v, minInc, maxExc) {
         assert.throws(() => TNumber.range(v, minInc, maxExc));
       }
@@ -83,7 +83,7 @@ describe('@bayou/typecheck/TNumber', () => {
       test(0, -1, 1);
     });
 
-    it('should disallow values out of the specified range', () => {
+    it('disallows values out of the specified range', () => {
       function test(v, minInc, maxInc) {
         assert.throws(() => TNumber.rangeInc(v, minInc, maxInc));
       }

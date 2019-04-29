@@ -133,7 +133,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer('florp', 'utf8'));
       });
 
-      it('should convert strings to bytes using UTF-8 encoding', () => {
+      it('converts strings to bytes using UTF-8 encoding', () => {
         function test(string) {
           const buf = new FrozenBuffer(string);
           const nodeBuf = Buffer.from(string, 'utf8');
@@ -145,7 +145,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         }
       });
 
-      it('should treat a missing second argument as having passed `utf-8`', () => {
+      it('treats a missing second argument as having passed `utf-8`', () => {
         function test(string) {
           const buf1 = new FrozenBuffer(string);
           const buf2 = new FrozenBuffer(string, 'utf8');
@@ -184,7 +184,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer(Buffer.alloc(100, 123)));
       });
 
-      it('should convert bytes to strings using UTF-8 encoding', () => {
+      it('converts bytes to strings using UTF-8 encoding', () => {
         function test(string) {
           const nodeBuf = Buffer.from(string, 'utf8');
           const buf     = new FrozenBuffer(nodeBuf);
@@ -295,7 +295,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('copy()', () => {
-    it('should default to copying all data', () => {
+    it('defaults to copying all data', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -303,7 +303,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.deepEqual(nodeBuf, buf.toBuffer());
     });
 
-    it('should let the target start index be specified', () => {
+    it('lets the target start index be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -312,7 +312,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.strictEqual(nodeBuf.toString('utf8'), 'x1234');
     });
 
-    it('should let the target and source start indexes be specified', () => {
+    it('lets the target and source start indexes be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -322,7 +322,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.strictEqual(nodeBuf.toString('utf8'), 'x345x');
     });
 
-    it('should let the target, source start, and source end indexes be specified', () => {
+    it('lets the target, source start, and source end indexes be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -335,7 +335,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('equals()', () => {
-    it('should consider identically-constructed instances to be equal', () => {
+    it('considers identically-constructed instances to be equal', () => {
       function test(string) {
         const buf1 = new FrozenBuffer(string);
         const buf2 = new FrozenBuffer(string);
@@ -353,7 +353,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should consider differently-constructed instances to be inequal', () => {
+    it('considers differently-constructed instances to be inequal', () => {
       assert.isFalse(new FrozenBuffer('').equals(new FrozenBuffer('x')));
       assert.isFalse(new FrozenBuffer('a').equals(new FrozenBuffer('b')));
       assert.isFalse(new FrozenBuffer('aa').equals(new FrozenBuffer('ab')));

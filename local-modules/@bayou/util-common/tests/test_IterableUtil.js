@@ -18,7 +18,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       }));
     });
 
-    it('should pass a non-`Iterator` through as-is', () => {
+    it('passes a non-`Iterator` through as-is', () => {
       let which = 0;
       function assertAsIs(iterable) {
         which++;
@@ -31,7 +31,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       assertAsIs(new Set([1, 2, 3]));
     });
 
-    it('should wrap the usual built-in suspeccts', () => {
+    it('wraps the usual built-in suspeccts', () => {
       let which = 0;
       function assertWrapped(iterable, expectedContents) {
         which++;
@@ -67,7 +67,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       assertWrapped(new Set([1, 2, 3]).values(),  [1, 2, 3]);
     });
 
-    it('should only call through to an underlying iterator once', () => {
+    it('only calls through to an underlying iterator once', () => {
       const iterator = new Set([1, 2, 'blort', 4, 5]).keys();
       const wrapped  = IterableUtil.multiUseSafe(iterator);
       const expected = [1, 2, 'blort', 4, 5];
@@ -110,7 +110,7 @@ describe('@bayou/util-common/IterableUtil', () => {
     });
   });
 
-  it('should only call through to the underlying iterator as needed', () => {
+  it('only calls through to the underlying iterator as needed', () => {
     let count = 0;
 
     function* rawIterator() {

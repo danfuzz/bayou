@@ -144,7 +144,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('.size', () => {
-    it('should indicate the count of carets', () => {
+    it('indicates the count of carets', () => {
       function test(ops) {
         const snap = new CaretSnapshot(1, ops);
         assert.strictEqual(snap.size, ops.length);
@@ -180,7 +180,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should add a new caret given the appropriate op', () => {
+    it('adds a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
       const expected = new CaretSnapshot(1, [op1]);
       const change   = new CaretChange(1, [CaretOp.op_add(caret1)]);
@@ -189,7 +189,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should refuse to update a nonexistent caret', () => {
+    it('refuses to update a nonexistent caret', () => {
       const snap   = new CaretSnapshot(1, [op1]);
       const change = new CaretChange(1, [CaretOp.op_setField('cr-florp', 'index', 1)]);
 
@@ -207,7 +207,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should remove a caret given the appropriate op', () => {
+    it('removes a caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, [op1, op2]);
       const expected = new CaretSnapshot(1, [op2]);
       const result   = snap.compose(new CaretChange(1, [CaretOp.op_delete(caret1.id)]));
@@ -285,7 +285,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(result[Symbol.iterator](), result);
     });
 
-    it('should in fact iterate over the properties', () => {
+    it('in fact iterates over the properties', () => {
       function test(ops) {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
@@ -619,7 +619,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         assert.isTrue(snap.withoutCaret(caret1).equals(expected));
       });
 
-      it('should only pay attention to the ID of the given caret', () => {
+      it('only pays attention to the ID of the given caret', () => {
         const snap     = new CaretSnapshot(1, [op1, op2]);
         const expected = new CaretSnapshot(1, [op2]);
         const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });

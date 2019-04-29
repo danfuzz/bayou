@@ -9,14 +9,14 @@ import { ColorSelector } from '@bayou/util-common';
 
 describe('@bayou/util-common/ColorSelector', () => {
   describe('constructor()', () => {
-    it('should default to a hue angle of pure red if given no seed', () => {
+    it('defaults to a hue angle of pure red if given no seed', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
 
       assert.equal(hsl.hue, 0);
     });
 
-    it('should have a default hue angle stride of 53°', () => {
+    it('has a default hue angle stride of 53°', () => {
       const selector = new ColorSelector();
       const colorA = selector.nextColorHSL();
       const colorB = selector.nextColorHSL();
@@ -24,21 +24,21 @@ describe('@bayou/util-common/ColorSelector', () => {
       assert.equal(colorA.hue, colorB.hue - 53);
     });
 
-    it('should have a default HSL lightness of 87.5%', () => {
+    it('has a default HSL lightness of 87.5%', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
 
       assert.equal(hsl.lightness, 0.875);
     });
 
-    it('should set the initial hue angle to the seed value MOD 360', () => {
+    it('sets the initial hue angle to the seed value MOD 360', () => {
       const selector = new ColorSelector(397);
       const hsl = selector.nextColorHSL();
 
       assert.equal(hsl.hue, 37);
     });
 
-    it('should advance the hue color angle by the given stride if provided to the constructor', () => {
+    it('advances the hue color angle by the given stride if provided to the constructor', () => {
       const selector = new ColorSelector(0, 37);
       const colorA = selector.nextColorHSL();
       const colorB = selector.nextColorHSL();

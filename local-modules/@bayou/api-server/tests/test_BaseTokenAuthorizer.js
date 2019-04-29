@@ -85,7 +85,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       assert.deepEqual(result, { got: token });
     });
 
-    it('should convert a string to a `BearerToken` then through to the `_impl`', async () => {
+    it('converts a string to a `BearerToken` then through to the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
         async _impl_targetFromToken(value) {
           return { got: value };
@@ -150,7 +150,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
   });
 
   describe('tokenFromString()', () => {
-    it('should validate via `isToken()` given a string, and call through to the `_impl`', () => {
+    it('validates via `isToken()` given a string, and calls through to the `_impl`', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value) {
           return value.startsWith('token-');

@@ -31,7 +31,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(undefined));
     });
 
-    it('should pass through non-object values and null as-is', () => {
+    it('passes through non-object values and `null` as-is', () => {
       function test(value) {
         assert.strictEqual(encodeData(value), value);
       }
@@ -43,7 +43,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       test(null);
     });
 
-    it('should pass through arrays with just data elements as-is', () => {
+    it('passes through arrays with just data elements as-is', () => {
       function test(value) {
         assert.deepEqual(encodeData(value), value);
       }
@@ -72,7 +72,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(value));
     });
 
-    it('accepts plain objects and encode as a tagged entries array', () => {
+    it('accepts plain objects and encodes them as a tagged entries array', () => {
       function test(value) {
         const expect = ConstructorCall.from('object', ...Object.entries(value));
         assert.deepEqual(encodeData(value), expect);
@@ -84,7 +84,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       test({ c: 'yay', d: [1, 2, 3] });
     });
 
-    it('should sort plain object keys in encoded form', () => {
+    it('sorts plain object keys in encoded form', () => {
       const orig   = { d: [1, 2, 3], a: { c: 'cx', b: 'bx' } };
       const expect = ConstructorCall.from('object',
         ['a', ConstructorCall.from('object', ['b', 'bx'], ['c', 'cx'])],
@@ -94,7 +94,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.deepEqual(encodeData(orig), expect);
     });
 
-    it('accepts `FrozenBuffer`s and encode as a single base-64 string argument', () => {
+    it('accepts `FrozenBuffer`s and encodes them as a single base-64 string argument', () => {
       const orig   = new FrozenBuffer('florp');
       const expect = ConstructorCall.from('buf', 'ZmxvcnA=');
 
@@ -127,7 +127,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.isString(encodeJson([1, 2, 3]));
     });
 
-    it('should encode as expected', () => {
+    it('encodes as expected', () => {
       assert.strictEqual(encodeJson(null), 'null');
       assert.strictEqual(encodeJson(914), '914');
       assert.strictEqual(encodeJson({ a: 10, b: 20 }), '{"object":[["a",10],["b",20]]}');
@@ -141,7 +141,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.instanceOf(encodeJsonBuffer([1, 2, 3]), FrozenBuffer);
     });
 
-    it('should encode as expected', () => {
+    it('encodes as expected', () => {
       assert.strictEqual(encodeJsonBuffer(null).string, 'null');
       assert.strictEqual(encodeJsonBuffer(914).string, '914');
       assert.strictEqual(encodeJsonBuffer({ a: 10, b: 20 }).string, '{"object":[["a",10],["b",20]]}');

@@ -50,7 +50,7 @@ describe('@bayou/util-common/ColorUtil', () => {
   });
 
   describe('cssFromHsl()', () => {
-    it('should provide expected results', () => {
+    it('provides expected results', () => {
       function test(h, s, l, expected) {
         assert.strictEqual(ColorUtil.cssFromHsl(h, s, l), expected);
       }
@@ -123,7 +123,7 @@ describe('@bayou/util-common/ColorUtil', () => {
   });
 
   describe('hueFromCss()', () => {
-    it('should provide expected results', () => {
+    it('provides expected results', () => {
       function test(color, expected) {
         assert.strictEqual(ColorUtil.hueFromCss(color), expected, color);
       }

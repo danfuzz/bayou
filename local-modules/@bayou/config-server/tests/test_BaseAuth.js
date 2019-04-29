@@ -20,7 +20,7 @@ describe('@bayou/config-server/BaseAuth', () => {
       });
     }
 
-    it('should have unique values for all items', () => {
+    it('has unique values for all items', () => {
       const set = new Set();
       for (const item of items) {
         const name = `TYPE_${item}`;

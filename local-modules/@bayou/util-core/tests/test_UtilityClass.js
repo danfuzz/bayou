@@ -9,11 +9,11 @@ import { UtilityClass } from '@bayou/util-core';
 
 describe('@bayou/util-core/UtilityClass', () => {
   describe('constructor()', () => {
-    it('should always throw an error', () => {
+    it('always throws an error', () => {
       assert.throws(() => { new UtilityClass(); });
     });
 
-    it('should always throw an error when called via `super`', () => {
+    it('always throws an error when called via `super`', () => {
       class Subclass extends UtilityClass {
         constructor() {
           super();

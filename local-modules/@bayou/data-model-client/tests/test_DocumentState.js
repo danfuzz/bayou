@@ -36,7 +36,7 @@ describe('@bayou/data-model-client/DocumentState', () => {
     assert.doesNotThrow(() => reducer(initialState, action));
   });
 
-  it('should invert the starred state when passed the "toggle star" action', () => {
+  it('inverts the starred state when passed the "toggle star" action', () => {
     const reducer = DocumentState.reducer;
 
     // Pass in undefined initial state to get back the default values

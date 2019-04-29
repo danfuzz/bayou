@@ -38,7 +38,7 @@ describe('@bayou/util-core/ObjectUtil', () => {
   });
 
   describe('fromMap()', () => {
-    it('should convert valid instances', () => {
+    it('converts valid instances', () => {
       function test(value) {
         const map = new Map(Object.entries(value));
         const result = ObjectUtil.fromMap(map);

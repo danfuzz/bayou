@@ -147,7 +147,7 @@ describe('@bayou/doc-server/BaseControl', () => {
   });
 
   describe('constructor()', () => {
-    it('accepts a `FileAccess` and reflect it in the inherited getters', () => {
+    it('accepts a `FileAccess` and reflects it in the inherited getters', () => {
       const fa     = FILE_ACCESS;
       const result = new MockControl(fa, 'boop');
 

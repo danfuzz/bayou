@@ -21,7 +21,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
   codec.registry.registerClass(MockCodable);
 
   describe('decodeData()', () => {
-    it('should pass non-object values through as-is', () => {
+    it('passes non-object values through as-is', () => {
       function test(value) {
         assert.strictEqual(decodeData(value), value);
       }
@@ -33,7 +33,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
       test(null);
     });
 
-    it('should pass arrays with only data values through as-is', () => {
+    it('passes arrays with only data values through as-is', () => {
       function test(value) {
         assert.deepEqual(decodeData(value), value);
       }
@@ -55,13 +55,13 @@ describe('@bayou/codec/Codec.decode*()', () => {
       assert.throws(() => decodeData(() => 123));
     });
 
-    it('should decode an encoded array back to the original array', () => {
+    it('decodes an encoded array back to the original array', () => {
       const orig    = [1, 2, 'buckle my shoe'];
       const encoded = encodeData(orig);
       assert.deepEqual(decodeData(encoded), orig);
     });
 
-    it('should decode an encoded `FrozenBuffer`s back to an equal instance', () => {
+    it('decodes an encoded `FrozenBuffer`s back to an equal instance', () => {
       const orig    = new FrozenBuffer('florp');
       const encoded = encodeData(orig);
       const decoded = decodeData(encoded);
@@ -70,7 +70,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
       assert.deepEqual(decoded.toBuffer(), orig.toBuffer());
     });
 
-    it('should decode an encoded class instance as expected', () => {
+    it('decodes an encoded class instance as expected', () => {
       const apiObject = new MockCodable();
       const encoding  = encodeData(apiObject);
       const decoded   = decodeData(encoding);
@@ -80,7 +80,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
   });
 
   describe('decodeJson()', () => {
-    it('should decode as expected', () => {
+    it('decodes as expected', () => {
       assert.strictEqual(decodeJson('null'), null);
       assert.strictEqual(decodeJson('914'), 914);
       assert.deepEqual(decodeJson('{ "object": [["a", 10], ["b", 20]] }'), { a: 10, b: 20 });
@@ -88,7 +88,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
   });
 
   describe('decodeJsonBuffer()', () => {
-    it('should decode as expected', () => {
+    it('decodes as expected', () => {
       function bufAndDecode(s) {
         return decodeJsonBuffer(FrozenBuffer.coerce(s));
       }

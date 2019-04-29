@@ -75,7 +75,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.strictEqual(result.revNum, 12345);
     });
 
-    it('should refuse to compose if given a non-matching caret ID', () => {
+    it('refuses to compose if given a non-matching caret ID', () => {
       const op = CaretOp.op_setField(caret2.id, 'index', 55);
 
       assert.throws(() => { caret1.compose(new CaretDelta([op])); });
@@ -90,7 +90,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(result.ops, []);
     });
 
-    it('should refuse to diff if given a non-matching caret ID', () => {
+    it('refuses to diff if given a non-matching caret ID', () => {
       assert.throws(() => { caret1.diff(caret2); });
     });
 
@@ -113,7 +113,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(result.ops, []);
     });
 
-    it('should diff fields even if given a non-matching caret ID', () => {
+    it('diffs fields even if given a non-matching caret ID', () => {
       assert.doesNotThrow(() => { caret1.diffFields(caret2, 'cr-florp'); });
     });
 

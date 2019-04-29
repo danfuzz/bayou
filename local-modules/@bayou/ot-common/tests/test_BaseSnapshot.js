@@ -108,7 +108,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
   });
 
   describe('compose()', () => {
-    it('calls through to the delta and wrap the result in a new instance', () => {
+    it('calls through to the delta and wraps the result in a new instance', () => {
       const snap   = new MockSnapshot(10, [new MockOp('x')]);
       const change = new MockChange(20, [new MockOp('y')]);
       const result = snap.compose(change);
@@ -295,7 +295,7 @@ describe('@bayou/ot-common/BaseSnapshot', () => {
   });
 
   describe('diff()', () => {
-    it('calls through to the impl and wrap the result in a timeless authorless change', () => {
+    it('calls through to the impl and wraps the result in a timeless authorless change', () => {
       const oldSnap = new MockSnapshot(10, []);
       const newSnap = new MockSnapshot(20, [new MockOp('x')]);
       const result  = oldSnap.diff(newSnap);

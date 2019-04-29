@@ -76,7 +76,7 @@ describe('@bayou/util-core/Functor', () => {
       assert.isFrozen(ftor.args);
     });
 
-    it('should report the constructed args', () => {
+    it('reports the constructed args', () => {
       function test(...args) {
         const result = new Functor('blort', ...args);
         const resultArgs = result.args;
@@ -94,7 +94,7 @@ describe('@bayou/util-core/Functor', () => {
   });
 
   describe('.name', () => {
-    it('should report the constructed name', () => {
+    it('reports the constructed name', () => {
       function test(name) {
         const result = new Functor(name);
         assert.strictEqual(result.name, name);

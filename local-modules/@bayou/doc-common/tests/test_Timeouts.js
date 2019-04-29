@@ -30,7 +30,7 @@ describe('@bayou/doc-common/Timeouts', () => {
   });
 
   describe('clamp()', () => {
-    it('should convert `null` to the maximum', () => {
+    it('converts `null` to the maximum', () => {
       assert.strictEqual(Timeouts.clamp(null), Timeouts.MAX_TIMEOUT_MSEC);
     });
 
@@ -45,7 +45,7 @@ describe('@bayou/doc-common/Timeouts', () => {
       assert.strictEqual(Timeouts.clamp(max), max);
     });
 
-    it('should clamp too-low whole numbers to the minimum', () => {
+    it('clamps too-low whole numbers to the minimum', () => {
       const min = Timeouts.MIN_TIMEOUT_MSEC;
 
       for (let i = 0; i < min; i += 37) {
@@ -53,7 +53,7 @@ describe('@bayou/doc-common/Timeouts', () => {
       }
     });
 
-    it('should clamp too-high integers to the maximum', () => {
+    it('clamps too-high integers to the maximum', () => {
       const max = Timeouts.MAX_TIMEOUT_MSEC;
 
       for (let i = max + 1; i < (max * 100); i += 1234567) {
