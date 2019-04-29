@@ -165,7 +165,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should add a new property given the appropriate op', () => {
+    it('adds a new property given the appropriate op', () => {
       const op       = PropertyOp.op_set('florp', 'like');
       const snap     = new PropertySnapshot(0, []);
       const expected = new PropertySnapshot(0, [op]);

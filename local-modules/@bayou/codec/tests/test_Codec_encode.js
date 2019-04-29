@@ -127,7 +127,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.isString(encodeJson([1, 2, 3]));
     });
 
-    it('should encode as expected', () => {
+    it('encodes as expected', () => {
       assert.strictEqual(encodeJson(null), 'null');
       assert.strictEqual(encodeJson(914), '914');
       assert.strictEqual(encodeJson({ a: 10, b: 20 }), '{"object":[["a",10],["b",20]]}');
@@ -141,7 +141,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.instanceOf(encodeJsonBuffer([1, 2, 3]), FrozenBuffer);
     });
 
-    it('should encode as expected', () => {
+    it('encodes as expected', () => {
       assert.strictEqual(encodeJsonBuffer(null).string, 'null');
       assert.strictEqual(encodeJsonBuffer(914).string, '914');
       assert.strictEqual(encodeJsonBuffer({ a: 10, b: 20 }).string, '{"object":[["a",10],["b",20]]}');

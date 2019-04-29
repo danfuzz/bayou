@@ -128,7 +128,7 @@ describe('@bayou/util-core/CommonBase', () => {
   });
 
   describe('mixInto()', () => {
-    it('should add its properties to the supplied class', () => {
+    it('adds its properties to the supplied class', () => {
       class NearlyEmptyClass {
         fiat() { /*empty*/ }
       }

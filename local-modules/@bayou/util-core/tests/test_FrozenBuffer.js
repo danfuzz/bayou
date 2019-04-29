@@ -145,7 +145,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         }
       });
 
-      it('should treat a missing second argument as having passed `utf-8`', () => {
+      it('treats a missing second argument as having passed `utf-8`', () => {
         function test(string) {
           const buf1 = new FrozenBuffer(string);
           const buf2 = new FrozenBuffer(string, 'utf8');
@@ -295,7 +295,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('copy()', () => {
-    it('should default to copying all data', () => {
+    it('defaults to copying all data', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 

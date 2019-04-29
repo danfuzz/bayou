@@ -31,7 +31,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       assertAsIs(new Set([1, 2, 3]));
     });
 
-    it('should wrap the usual built-in suspeccts', () => {
+    it('wraps the usual built-in suspeccts', () => {
       let which = 0;
       function assertWrapped(iterable, expectedContents) {
         which++;

@@ -180,7 +180,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should add a new caret given the appropriate op', () => {
+    it('adds a new caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, []);
       const expected = new CaretSnapshot(1, [op1]);
       const change   = new CaretChange(1, [CaretOp.op_add(caret1)]);
@@ -189,7 +189,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should refuse to update a nonexistent caret', () => {
+    it('refuses to update a nonexistent caret', () => {
       const snap   = new CaretSnapshot(1, [op1]);
       const change = new CaretChange(1, [CaretOp.op_setField('cr-florp', 'index', 1)]);
 

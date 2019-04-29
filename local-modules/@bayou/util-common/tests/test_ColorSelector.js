@@ -9,7 +9,7 @@ import { ColorSelector } from '@bayou/util-common';
 
 describe('@bayou/util-common/ColorSelector', () => {
   describe('constructor()', () => {
-    it('should default to a hue angle of pure red if given no seed', () => {
+    it('defaults to a hue angle of pure red if given no seed', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
 
@@ -31,7 +31,7 @@ describe('@bayou/util-common/ColorSelector', () => {
       assert.equal(hsl.lightness, 0.875);
     });
 
-    it('should set the initial hue angle to the seed value MOD 360', () => {
+    it('sets the initial hue angle to the seed value MOD 360', () => {
       const selector = new ColorSelector(397);
       const hsl = selector.nextColorHSL();
 
