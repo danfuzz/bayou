@@ -21,7 +21,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
   codec.registry.registerClass(MockCodable);
 
   describe('decodeData()', () => {
-    it('should pass non-object values through as-is', () => {
+    it('passes non-object values through as-is', () => {
       function test(value) {
         assert.strictEqual(decodeData(value), value);
       }
@@ -33,7 +33,7 @@ describe('@bayou/codec/Codec.decode*()', () => {
       test(null);
     });
 
-    it('should pass arrays with only data values through as-is', () => {
+    it('passes arrays with only data values through as-is', () => {
       function test(value) {
         assert.deepEqual(decodeData(value), value);
       }

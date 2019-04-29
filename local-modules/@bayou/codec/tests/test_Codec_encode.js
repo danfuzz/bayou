@@ -31,7 +31,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       assert.throws(() => encodeData(undefined));
     });
 
-    it('should pass through non-object values and null as-is', () => {
+    it('passes through non-object values and null as-is', () => {
       function test(value) {
         assert.strictEqual(encodeData(value), value);
       }
@@ -43,7 +43,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       test(null);
     });
 
-    it('should pass through arrays with just data elements as-is', () => {
+    it('passes through arrays with just data elements as-is', () => {
       function test(value) {
         assert.deepEqual(encodeData(value), value);
       }

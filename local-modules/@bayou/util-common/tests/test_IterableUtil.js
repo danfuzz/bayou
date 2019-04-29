@@ -18,7 +18,7 @@ describe('@bayou/util-common/IterableUtil', () => {
       }));
     });
 
-    it('should pass a non-`Iterator` through as-is', () => {
+    it('passes a non-`Iterator` through as-is', () => {
       let which = 0;
       function assertAsIs(iterable) {
         which++;

@@ -9,7 +9,7 @@ import { StringUtil } from '@bayou/util-common';
 
 describe('@bayou/util-common/StringUtil', () => {
   describe('hash32()', () => {
-    it('should hash as expected', () => {
+    it('hashes as expected', () => {
       function test(expected, s) {
         assert.strictEqual(StringUtil.hash32(s), expected);
       }
