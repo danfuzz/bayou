@@ -409,16 +409,38 @@ export default class BaseControl extends BaseDataManager {
         throw Errors.badValue(baseDelta, 'document delta');
       }
 
-      await this._getChangeRange(startInclusive, startInclusive, false, timeoutMsec);
+      try {
+        await this._getChangeRange(startInclusive, startInclusive, false, timeoutMsec);
+      } catch (e) {
+        // This _really_ shouldn't possibly throw. This catch/rethrow is here so
+        // that we can definitively log the call as coming from this site (note
+        // that this won't be necessary once Node has async stacktraces).
+        // **TODO:** Remove this catch/rethrow once the salient bug has been
+        // tracked down and fixed.
+        this.log.error('Error from `_getChangeRange()`', e);
+        throw e;
+      }
       return baseDelta;
     }
 
     let result = baseDelta;
     const MAX = MAX_CHANGE_READS_PER_ITERATION;
     for (let i = startInclusive; i < endExclusive; i += MAX) {
-      const end     = Math.min(i + MAX, endExclusive);
-      const changes = await this._getChangeRange(i, end, false, timeoutMsec);
-      const deltas  = changes.map(c => c.delta);
+      let changes;
+
+      try {
+        const end = Math.min(i + MAX, endExclusive);
+        changes = await this._getChangeRange(i, end, false, timeoutMsec);
+      } catch (e) {
+        // Working theory is that this is the call site of the call to
+        // `_getChangeRange()` for which we currently see occasional crashes.
+        // Log it, to help track down what's going on. **TODO:** Remove this
+        // catch/rethrow once the salient bug has been tracked down and fixed.
+        this.log.error(`Error from \`_getChangeRange()\`; overall range ${startInclusive}..${endExclusive - 1}`, e);
+        throw e;
+      }
+
+      const deltas = changes.map(c => c.delta);
 
       result = result.composeAll(deltas, wantDocument);
     }
@@ -931,6 +953,7 @@ export default class BaseControl extends BaseDataManager {
         // `true` === Allow missing changes.
         await this._getChangeRange(i, lastI + 1, true);
       } catch (e) {
+        this.log.error('Error from `_getChangeRange()`', e);
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_error;
       }
@@ -943,6 +966,7 @@ export default class BaseControl extends BaseDataManager {
         // `false` === Do not allow missing changes.
         await this._getChangeRange(i, lastI + 1, false);
       } catch (e) {
+        this.log.error('Error from `_getChangeRange()`', e);
         this.log.info(`Corrupt document: Bogus change in range #${i}..${lastI}.`);
         return ValidationStatus.STATUS_error;
       }
@@ -980,8 +1004,8 @@ export default class BaseControl extends BaseDataManager {
    *   change is defined. That is, this is the snapshot of `change.revNum - 1`.
    * @param {BaseSnapshot} expectedSnapshot The implied expected result as
    *   defined by {@link #update}.
-   * @param {Int} timeoutMsec Timeout to use for calls that could significantly
-   *   block.
+   * @param {Int|null} timeoutMsec Timeout to use for calls that could
+   *   significantly block.
    * @returns {BaseChange|null} Result for the outer call to {@link #update}, or
    *   `null` if the attempt failed due to losing an append race.
    */
@@ -1088,7 +1112,7 @@ export default class BaseControl extends BaseDataManager {
    *   maximum allowed value.
    * @returns {array<BaseChange>} Array of changes, in order by revision number.
    */
-  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec) {
+  async _getChangeRange(startInclusive, endExclusive, allowMissing, timeoutMsec = null) {
     TBoolean.check(allowMissing);
 
     await this._checkRevNumRange(startInclusive, endExclusive, timeoutMsec);
@@ -1122,7 +1146,8 @@ export default class BaseControl extends BaseDataManager {
         result.push(change);
         allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
-        throw Errors.badUse(`Missing change in requested range: r${i}`);
+        const docId = this.fileAccess.documentId;
+        throw Errors.badUse(`Missing change in requested range: r${i}, for r${startInclusive}..r${endExclusive - 1} in doc ${docId}`);
       }
     }
 
