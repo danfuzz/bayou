@@ -16,7 +16,7 @@ describe('@bayou/util-common/ColorSelector', () => {
       assert.equal(hsl.hue, 0);
     });
 
-    it('should have a default hue angle stride of 53°', () => {
+    it('has a default hue angle stride of 53°', () => {
       const selector = new ColorSelector();
       const colorA = selector.nextColorHSL();
       const colorB = selector.nextColorHSL();
@@ -24,7 +24,7 @@ describe('@bayou/util-common/ColorSelector', () => {
       assert.equal(colorA.hue, colorB.hue - 53);
     });
 
-    it('should have a default HSL lightness of 87.5%', () => {
+    it('has a default HSL lightness of 87.5%', () => {
       const selector = new ColorSelector();
       const hsl = selector.nextColorHSL();
 

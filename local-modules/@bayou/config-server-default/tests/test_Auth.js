@@ -52,7 +52,7 @@ describe('@bayou/config-server-default/Auth', () => {
       }
     });
 
-    it('should have only the one well-known token in it', () => {
+    it('has only the one well-known token in it', () => {
       assert.lengthOf(Auth.rootTokens, 1);
       assert.strictEqual(Auth.rootTokens[0].secretToken, ROOT_TOKEN);
     });
@@ -65,7 +65,7 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.instanceOf(t, BearerToken);
     });
 
-    it('should always return a new token even given the same ID', async () => {
+    it('always returns a new token even given the same ID', async () => {
       const t1 = await Auth.getAuthorToken('florp');
       const t2 = await Auth.getAuthorToken('florp');
 

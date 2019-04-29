@@ -422,7 +422,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       test('florp', ['like']);
     });
 
-    it('should always return a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
+    it('always returns a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
       const value = [[['zorch']], ['splat'], 'foo'];
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', value)]);
 
@@ -466,7 +466,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       test('florp', ['like']);
     });
 
-    it('should always return a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
+    it('always returns a deep-frozen property value even when the constructor was passed an unfrozen value', () => {
       const value = [[['zorch']], ['splat'], 'foo'];
       const snap = new PropertySnapshot(1, [PropertyOp.op_set('blort', value)]);
 

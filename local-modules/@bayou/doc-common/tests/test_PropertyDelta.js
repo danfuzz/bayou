@@ -22,11 +22,11 @@ describe('@bayou/doc-common/PropertyDelta', () => {
       assert.isFrozen(EMPTY);
     });
 
-    it('should have an empty `ops`', () => {
+    it('has an empty `ops`', () => {
       assert.strictEqual(EMPTY.ops.length, 0);
     });
 
-    it('should have a frozen `ops`', () => {
+    it('has a frozen `ops`', () => {
       assert.isFrozen(EMPTY.ops);
     });
 

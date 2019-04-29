@@ -303,7 +303,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.deepEqual(nodeBuf, buf.toBuffer());
     });
 
-    it('should let the target start index be specified', () => {
+    it('lets the target start index be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -312,7 +312,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.strictEqual(nodeBuf.toString('utf8'), 'x1234');
     });
 
-    it('should let the target and source start indexes be specified', () => {
+    it('lets the target and source start indexes be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
@@ -322,7 +322,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       assert.strictEqual(nodeBuf.toString('utf8'), 'x345x');
     });
 
-    it('should let the target, source start, and source end indexes be specified', () => {
+    it('lets the target, source start, and source end indexes be specified', () => {
       const buf = new FrozenBuffer('12345');
       const nodeBuf = Buffer.alloc(5);
 
