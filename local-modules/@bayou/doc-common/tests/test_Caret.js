@@ -113,7 +113,7 @@ describe('@bayou/doc-common/Caret', () => {
       assert.deepEqual(result.ops, []);
     });
 
-    it('should diff fields even if given a non-matching caret ID', () => {
+    it('diffs fields even if given a non-matching caret ID', () => {
       assert.doesNotThrow(() => { caret1.diffFields(caret2, 'cr-florp'); });
     });
 

@@ -10,7 +10,7 @@ import { TObject } from '@bayou/typecheck';
 
 describe('@bayou/proppy/Proppy', () => {
   describe('parseString(value)', () => {
-    it('should ignore comments and blank lines', () => {
+    it('ignores comments and blank lines', () => {
       const input = '# this is comment line one\n' +
                     '# this is comment line two\n' +
                     '\n' +

@@ -335,7 +335,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
   });
 
   describe('equals()', () => {
-    it('should consider identically-constructed instances to be equal', () => {
+    it('considers identically-constructed instances to be equal', () => {
       function test(string) {
         const buf1 = new FrozenBuffer(string);
         const buf2 = new FrozenBuffer(string);
@@ -353,7 +353,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
       }
     });
 
-    it('should consider differently-constructed instances to be inequal', () => {
+    it('considers differently-constructed instances to be inequal', () => {
       assert.isFalse(new FrozenBuffer('').equals(new FrozenBuffer('x')));
       assert.isFalse(new FrozenBuffer('a').equals(new FrozenBuffer('b')));
       assert.isFalse(new FrozenBuffer('aa').equals(new FrozenBuffer('ab')));

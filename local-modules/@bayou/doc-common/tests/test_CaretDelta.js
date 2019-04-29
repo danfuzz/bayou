@@ -170,7 +170,7 @@ describe('@bayou/doc-common/CaretDelta', () => {
     });
 
     describe('`setField` after `setField`', () => {
-      it('should drop earlier sets for the same field', () => {
+      it('drops earlier sets for the same field', () => {
         const setOp1 = CaretOp.op_setField('cr-sess1', 'revNum', 123);
         const setOp2 = CaretOp.op_setField('cr-sess1', 'revNum', 999);
 

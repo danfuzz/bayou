@@ -239,7 +239,7 @@ describe('@bayou/util-core/DataUtil', () => {
       });
     });
 
-    it('should use the converter function recursively', () => {
+    it('uses the converter function recursively', () => {
       const obj = {
         get x() { return null; },
         a: 10,
