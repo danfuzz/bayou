@@ -7,7 +7,6 @@ import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
 import DragState from './DragState';
-import SharingState from './SharingState';
 
 /**
  * Wrapper for a redux store. Its main purpose is to compose the
@@ -22,7 +21,6 @@ export default class ClientStore {
       carets:   CaretState.reducer,
       document: DocumentState.reducer,
       drag:     DragState.reducer,
-      sharing:  SharingState.reducer
     });
 
     this._store = createStore(rootReducer);

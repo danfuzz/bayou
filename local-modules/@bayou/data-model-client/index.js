@@ -5,11 +5,9 @@
 import ClientStore from './ClientStore';
 import DocumentState from './DocumentState';
 import DragState from './DragState';
-import SharingState from './SharingState';
 
 export {
   ClientStore,
   DocumentState,
   DragState,
-  SharingState
 };
