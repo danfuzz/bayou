@@ -84,7 +84,7 @@ describe('@bayou/codec/Codec.encode*()', () => {
       test({ c: 'yay', d: [1, 2, 3] });
     });
 
-    it('should sort plain object keys in encoded form', () => {
+    it('sorts plain object keys in encoded form', () => {
       const orig   = { d: [1, 2, 3], a: { c: 'cx', b: 'bx' } };
       const expect = ConstructorCall.from('object',
         ['a', ConstructorCall.from('object', ['b', 'bx'], ['c', 'cx'])],

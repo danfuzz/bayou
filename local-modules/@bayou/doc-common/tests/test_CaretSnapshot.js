@@ -144,7 +144,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
   });
 
   describe('.size', () => {
-    it('should indicate the count of carets', () => {
+    it('indicates the count of carets', () => {
       function test(ops) {
         const snap = new CaretSnapshot(1, ops);
         assert.strictEqual(snap.size, ops.length);
@@ -207,7 +207,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should remove a caret given the appropriate op', () => {
+    it('removes a caret given the appropriate op', () => {
       const snap     = new CaretSnapshot(1, [op1, op2]);
       const expected = new CaretSnapshot(1, [op2]);
       const result   = snap.compose(new CaretChange(1, [CaretOp.op_delete(caret1.id)]));

@@ -38,7 +38,7 @@ describe('@bayou/util-common/ColorSelector', () => {
       assert.equal(hsl.hue, 37);
     });
 
-    it('should advance the hue color angle by the given stride if provided to the constructor', () => {
+    it('advances the hue color angle by the given stride if provided to the constructor', () => {
       const selector = new ColorSelector(0, 37);
       const colorA = selector.nextColorHSL();
       const colorB = selector.nextColorHSL();

@@ -133,7 +133,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer('florp', 'utf8'));
       });
 
-      it('should convert strings to bytes using UTF-8 encoding', () => {
+      it('converts strings to bytes using UTF-8 encoding', () => {
         function test(string) {
           const buf = new FrozenBuffer(string);
           const nodeBuf = Buffer.from(string, 'utf8');
@@ -184,7 +184,7 @@ describe('@bayou/util-core/FrozenBuffer', () => {
         assert.doesNotThrow(() => new FrozenBuffer(Buffer.alloc(100, 123)));
       });
 
-      it('should convert bytes to strings using UTF-8 encoding', () => {
+      it('converts bytes to strings using UTF-8 encoding', () => {
         function test(string) {
           const nodeBuf = Buffer.from(string, 'utf8');
           const buf     = new FrozenBuffer(nodeBuf);

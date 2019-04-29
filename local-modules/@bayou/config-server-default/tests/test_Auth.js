@@ -130,7 +130,7 @@ describe('@bayou/config-server-default/Auth', () => {
       await test(EXAMPLE_TOKENS[0]); // Requires a token object, not a string.
     });
 
-    it('should indicate "no auth" for an unknown token', async () => {
+    it('indicates "no auth" for an unknown token', async () => {
       async function test(t) {
         const token = Auth.tokenFromString(t);
         const auth  = await Auth.tokenAuthority(token);
@@ -143,7 +143,7 @@ describe('@bayou/config-server-default/Auth', () => {
       }
     });
 
-    it('should indicate "root auth" for the staticly-known root token', async () => {
+    it('indicates "root auth" for the staticly-known root token', async () => {
       const token = Auth.tokenFromString(ROOT_TOKEN);
       const auth  = await Auth.tokenAuthority(token);
 
@@ -152,7 +152,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('tokenFromString()', () => {
-    it('should construct a token with the expected parts, given a valid token', () => {
+    it('constructs a token with the expected parts, given a valid token', () => {
       const id    = 'root-01233210';
       const full  = `${id}-aaaaaaa1`;
       const token = Auth.tokenFromString(full);
@@ -163,7 +163,7 @@ describe('@bayou/config-server-default/Auth', () => {
   });
 
   describe('tokenId()', () => {
-    it('should extract the ID of a valid token', () => {
+    it('extracts the ID of a valid token', () => {
       const id    = 'root-01234210';
       const token = `${id}-bbbbbbbb`;
       assert.strictEqual(Auth.tokenId(token), id);

@@ -117,7 +117,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
   });
 
   describe('.size', () => {
-    it('should indicate the count of bindings', () => {
+    it('indicates the count of bindings', () => {
       function test(ops) {
         const snap = new PropertySnapshot(1, ops);
         assert.strictEqual(snap.size, ops.length);
@@ -187,7 +187,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.isTrue(result.equals(expected));
     });
 
-    it('should remove a property given the appropriate op', () => {
+    it('removes a property given the appropriate op', () => {
       const snap   = new PropertySnapshot(0, [PropertyOp.op_set('florp', 'like')]);
       const change = new PropertyChange(0, [PropertyOp.op_delete('florp')]);
       const result = snap.compose(change);

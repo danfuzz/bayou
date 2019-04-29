@@ -188,7 +188,7 @@ describe('@bayou/util-core/DataUtil', () => {
     describe('with `nonDataConverter !== null`', () => {
       commonTests(inspect);
 
-      it('should convert a non-plain object via the converter function', () => {
+      it('converts a non-plain object via the converter function', () => {
         class Florp {
           inspect() {
             return '{florp}';
@@ -200,14 +200,14 @@ describe('@bayou/util-core/DataUtil', () => {
         assert.strictEqual(result, '{florp}');
       });
 
-      it('should convert a function via the converter function', () => {
+      it('converts a function via the converter function', () => {
         function someFunc() { return 10; }
         const result = DataUtil.deepFreeze(someFunc, inspect);
 
         assert.strictEqual(result, '[Function: someFunc]');
       });
 
-      it('should convert a plain object with synthetic properties via the converter function', () => {
+      it('converts a plain object with synthetic properties via the converter function', () => {
         const obj = {
           a: 10,
           b: 20,

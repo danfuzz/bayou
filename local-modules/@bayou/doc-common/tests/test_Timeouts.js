@@ -30,7 +30,7 @@ describe('@bayou/doc-common/Timeouts', () => {
   });
 
   describe('clamp()', () => {
-    it('should convert `null` to the maximum', () => {
+    it('converts `null` to the maximum', () => {
       assert.strictEqual(Timeouts.clamp(null), Timeouts.MAX_TIMEOUT_MSEC);
     });
 

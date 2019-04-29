@@ -26,7 +26,7 @@ describe('@bayou/typecheck/TArray', () => {
   });
 
   describe('check(value, elementChecker)', () => {
-    it('should validate array elements with an element checker', () => {
+    it('validates array elements with an element checker', () => {
       const value = [1, 2, 3];
 
       assert.doesNotThrow(() => TArray.check(value, x => TInt.check(x)));
