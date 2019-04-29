@@ -285,7 +285,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
       assert.strictEqual(result[Symbol.iterator](), result);
     });
 
-    it('should in fact iterate over the properties', () => {
+    it('in fact iterates over the properties', () => {
       function test(ops) {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
@@ -619,7 +619,7 @@ describe('@bayou/doc-common/CaretSnapshot', () => {
         assert.isTrue(snap.withoutCaret(caret1).equals(expected));
       });
 
-      it('should only pay attention to the ID of the given caret', () => {
+      it('only pays attention to the ID of the given caret', () => {
         const snap     = new CaretSnapshot(1, [op1, op2]);
         const expected = new CaretSnapshot(1, [op2]);
         const modCaret = new Caret(caret1, { revNum: 999999, index: 99 });

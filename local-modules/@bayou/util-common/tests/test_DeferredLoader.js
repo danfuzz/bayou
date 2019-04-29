@@ -35,7 +35,7 @@ describe('@bayou/util-common/DeferredLoader', () => {
       assert.strictEqual(dl.b, loaded.b);
     });
 
-    it('should only ever call the loader once', () => {
+    it('only ever calls the loader once', () => {
       const loaded = { a: 10 };
       let   count  = 0;
       function loader() { count++; return loaded; }
@@ -72,7 +72,7 @@ describe('@bayou/util-common/DeferredLoader', () => {
       assert.throws(() => { dl.anything; });
     });
 
-    it('should only call the loader once even if it throws an error', () => {
+    it('only calls the loader once even if it throws an error', () => {
       let count = 0;
       function loader() { count++; throw new Error('oy'); }
 

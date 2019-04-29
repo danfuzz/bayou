@@ -248,7 +248,7 @@ describe('@bayou/doc-common/PropertySnapshot', () => {
       assert.strictEqual(result[Symbol.iterator](), result);
     });
 
-    it('should in fact iterate over the properties', () => {
+    it('in fact iterates over the properties', () => {
       function test(ops) {
         // Expectations as a map of keys to values.
         const expectMap = new Map();
