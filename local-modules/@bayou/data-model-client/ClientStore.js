@@ -7,7 +7,6 @@ import { combineReducers, createStore } from 'redux';
 
 import DocumentState from './DocumentState';
 import DragState from './DragState';
-import OwnerState from './OwnerState';
 import SharingState from './SharingState';
 
 /**
@@ -23,7 +22,6 @@ export default class ClientStore {
       carets:   CaretState.reducer,
       document: DocumentState.reducer,
       drag:     DragState.reducer,
-      owner:    OwnerState.reducer,
       sharing:  SharingState.reducer
     });
 
