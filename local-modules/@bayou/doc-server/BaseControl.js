@@ -1122,7 +1122,8 @@ export default class BaseControl extends BaseDataManager {
         result.push(change);
         allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
-        throw Errors.badUse(`Missing change in requested range: r${i}`);
+        const docId = this.fileAccess.documentId;
+        throw Errors.badUse(`Missing change in requested range: r${i}, for r${startInclusive}..r${endExclusive - 1} in doc ${docId}`);
       }
     }
 
