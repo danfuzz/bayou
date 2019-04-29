@@ -4,10 +4,8 @@
 
 import ClientStore from './ClientStore';
 import DocumentState from './DocumentState';
-import DragState from './DragState';
 
 export {
   ClientStore,
-  DocumentState,
-  DragState,
+  DocumentState
 };
