@@ -54,8 +54,4 @@ export default class DocumentState {
       }
     };
   }
-
-  static title(state) {
-    return state.document.title;
-  }
 }
