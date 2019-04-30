@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseDataStore } from '@bayou/data-store';
+import { BaseDocStore } from '@bayou/data-store';
 
 /** {array<*>} Array of non-strings. */
 const NON_STRINGS = [
@@ -23,11 +23,11 @@ const NON_STRINGS = [
   new Map()
 ];
 
-describe('@bayou/data-store/BaseDataStore', () => {
+describe('@bayou/data-store/BaseDocStore', () => {
   describe('author ID methods', () => {
     describe('checkAuthorIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           _impl_isAuthorId(id_unused) {
             throw new Error('should-not-be-called');
           }
@@ -41,7 +41,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to `isAuthorId()` and respects a `false` response', () => {
         let gotId = null;
-        class AcceptsNone extends BaseDataStore {
+        class AcceptsNone extends BaseDocStore {
           isAuthorId(id) {
             gotId = id;
             return false;
@@ -55,7 +55,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to `isAuthorId()` and respects a `true` response', () => {
         let gotId = null;
-        class AcceptsAll extends BaseDataStore {
+        class AcceptsAll extends BaseDocStore {
           isAuthorId(id) {
             gotId = id;
             return true;
@@ -71,7 +71,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
     describe('checkExistingAuthorId()', () => {
       it('calls `getAuthorInfo()` and transparently rethrows errors', async () => {
         let gotId = null;
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           async getAuthorInfo(id) {
             gotId = id;
             throw new Error('woop');
@@ -85,7 +85,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getAuthorInfo()` and converts `valid: false` to an error', async () => {
         let gotId = null;
-        class NeverValid extends BaseDataStore {
+        class NeverValid extends BaseDocStore {
           async getAuthorInfo(id) {
             gotId = id;
             return { valid: false, exists: false };
@@ -99,7 +99,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getAuthorInfo()` and converts `exists: false` to an error', async () => {
         let gotId = null;
-        class NeverExists extends BaseDataStore {
+        class NeverExists extends BaseDocStore {
           async getAuthorInfo(id) {
             gotId = id;
             return { valid: true, exists: false };
@@ -113,7 +113,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getAuthorInfo()` and accepts `valid: true, exists: true`', async () => {
         let gotId = null;
-        class AlwaysValid extends BaseDataStore {
+        class AlwaysValid extends BaseDocStore {
           async getAuthorInfo(id) {
             gotId = id;
             return { valid: true, exists: true };
@@ -130,7 +130,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
     describe('getAuthorInfo()', () => {
       it('rejects non-strings without calling through to the impl', async () => {
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           async _impl_getAuthorInfo(id_unused) {
             throw new Error('should-not-be-called');
           }
@@ -144,7 +144,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('rejects syntactically invalid strings without calling through to the impl', async () => {
         let gotId = null;
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           isAuthorId(id) {
             gotId = id;
             return false;
@@ -162,7 +162,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to the impl when given a valid ID', async () => {
         let gotId = null;
-        class AcceptsAll extends BaseDataStore {
+        class AcceptsAll extends BaseDocStore {
           isAuthorId(id) {
             gotId = id;
             return true;
@@ -184,7 +184,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
   describe('document ID methods', () => {
     describe('checkDocumentIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           _impl_isDocumentId(id_unused) {
             throw new Error('should-not-be-called');
           }
@@ -198,7 +198,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to `isDocumentId()` and respects a `false` response', () => {
         let gotId = null;
-        class AcceptsNone extends BaseDataStore {
+        class AcceptsNone extends BaseDocStore {
           isDocumentId(id) {
             gotId = id;
             return false;
@@ -212,7 +212,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to `isDocumentId()` and respects a `true` response', () => {
         let gotId = null;
-        class AcceptsAll extends BaseDataStore {
+        class AcceptsAll extends BaseDocStore {
           isDocumentId(id) {
             gotId = id;
             return true;
@@ -228,7 +228,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
     describe('checkExistingDocumentId()', () => {
       it('calls `getDocumentInfo()` and transparently rethrows errors', async () => {
         let gotId = null;
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           async getDocumentInfo(id) {
             gotId = id;
             throw new Error('woop');
@@ -242,7 +242,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getDocumentInfo()` and converts `valid: false` to an error', async () => {
         let gotId = null;
-        class NeverValid extends BaseDataStore {
+        class NeverValid extends BaseDocStore {
           async getDocumentInfo(id) {
             gotId = id;
             return { valid: false, exists: false, fileId: null };
@@ -256,7 +256,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getDocumentInfo()` and converts `exists: false` to an error', async () => {
         let gotId = null;
-        class NeverExists extends BaseDataStore {
+        class NeverExists extends BaseDocStore {
           async getDocumentInfo(id) {
             gotId = id;
             return { valid: true, exists: false, fileId: null };
@@ -270,7 +270,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls `getDocumentInfo()` and accepts `valid: true, exists: true`', async () => {
         let gotId = null;
-        class AlwaysValid extends BaseDataStore {
+        class AlwaysValid extends BaseDocStore {
           async getDocumentInfo(id) {
             gotId = id;
             return { valid: true, exists: true, fileId: 914 };
@@ -287,7 +287,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
     describe('getDocumentInfo()', () => {
       it('rejects non-strings without calling through to the impl', async () => {
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           async _impl_getDocumentInfo(id_unused) {
             throw new Error('should-not-be-called');
           }
@@ -301,7 +301,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('rejects syntactically invalid strings without calling through to the impl', async () => {
         let gotId = null;
-        class Throws extends BaseDataStore {
+        class Throws extends BaseDocStore {
           isDocumentId(id) {
             gotId = id;
             return false;
@@ -319,7 +319,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
       it('calls through to the impl when given a valid ID', async () => {
         let gotId = null;
-        class AcceptsAll extends BaseDataStore {
+        class AcceptsAll extends BaseDocStore {
           isDocumentId(id) {
             gotId = id;
             return true;
@@ -340,7 +340,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
 
   describe('getPermissions()', () => {
     it('rejects non-strings without calling through to the impl', async () => {
-      class Throws extends BaseDataStore {
+      class Throws extends BaseDocStore {
         _impl_isAuthorId(id_unused) {
           return true;
         }
@@ -366,7 +366,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
       let gotAuthorId   = null;
       let gotDocumentId = null;
 
-      class Throws extends BaseDataStore {
+      class Throws extends BaseDocStore {
         _impl_isAuthorId(id) {
           gotAuthorId = id;
           return id === 'good';
@@ -395,7 +395,7 @@ describe('@bayou/data-store/BaseDataStore', () => {
       let gotAuthorId   = null;
       let gotDocumentId = null;
 
-      class AcceptsAll extends BaseDataStore {
+      class AcceptsAll extends BaseDocStore {
         _impl_isAuthorId(id) {
           gotAuthorId = id;
           return true;
