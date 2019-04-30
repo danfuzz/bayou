@@ -3,7 +3,7 @@
     "quill-delta": "^3.6.2",
 
     "@bayou/config-common": "local",
-    "@bayou/id-syntax-default": "local",
+    "@bayou/doc-id-default": "local",
     "@bayou/injecty": "local",
     "@bayou/util-common": "local"
   }

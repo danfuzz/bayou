@@ -2,10 +2,10 @@
   "dependencies": {
     "@bayou/codec": "local",
     "@bayou/deps-util-server": "local",
+    "@bayou/doc-id-default": "local",
     "@bayou/env-server": "local",
     "@bayou/file-store": "local",
     "@bayou/file-store-ot": "local",
-    "@bayou/id-syntax-default": "local",
     "@bayou/promise-util": "local",
     "@bayou/see-all": "local",
     "@bayou/util-common": "local"

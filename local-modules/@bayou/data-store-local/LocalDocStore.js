@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BaseDocStore } from '@bayou/config-server';
-import { DefaultIdSyntax } from '@bayou/id-syntax-default';
+import { DefaultIdSyntax } from '@bayou/doc-id-default';
 
 /**
  * Data storage implementation that is maximally accepting of IDs (e.g. all
