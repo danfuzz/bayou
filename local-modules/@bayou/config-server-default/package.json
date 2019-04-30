@@ -5,7 +5,7 @@
     "@bayou/config-common-default": "local",
     "@bayou/config-server": "local",
     "@bayou/doc-common": "local",
-    "@bayou/doc-id-default": "local",
+    "@bayou/doc-store-default": "local",
     "@bayou/env-server": "local",
     "@bayou/file-store-local": "local",
     "@bayou/injecty": "local",

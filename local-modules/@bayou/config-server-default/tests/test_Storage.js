@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Storage } from '@bayou/config-server-default';
 import { BodyDelta } from '@bayou/doc-common';
-import { DefaultDocStore } from '@bayou/doc-id-default';
+import { DefaultDocStore } from '@bayou/doc-store-default';
 import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/config-server-default/Storage', () => {
