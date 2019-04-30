@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { BaseDocStore } from '@bayou/data-store';
+import { BaseDocStore } from '@bayou/config-server';
 import { DefaultIdSyntax } from '@bayou/id-syntax-default';
 
 /**

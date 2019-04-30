@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@bayou/injecty": "local",
+    "@bayou/typecheck": "local",
     "@bayou/util-common": "local"
   }
 }

@@ -17,12 +17,12 @@ export default class Storage extends UtilityClass {
   }
 
   /**
-   * {@bayou/data-store/BaseDocStore} Provider of access to the basic "data
-   * store" of the underlying system, for everything other than file storage
-   * (the latter which is handled by {@link #fileStore}). This includes
-   * information such as what users and documents exist, whether IDs (beyond
-   * being syntactically valid) are valid in the context of the rest of the data
-   * stored by the system, and so on.
+   * {@BaseDocStore} Provider of access to the basic "document store" of the
+   * underlying system, for everything other than file storage (the latter which
+   * is handled by {@link #fileStore}). This includes information such as what
+   * users and documents exist, whether IDs (beyond being syntactically valid)
+   * are valid in the context of the rest of the data stored by the system, and
+   * so on.
    */
   static get dataStore() {
     return use.Storage.dataStore;

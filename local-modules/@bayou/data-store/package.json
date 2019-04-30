@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@bayou/typecheck": "local",
-    "@bayou/util-common": "local"
-  }
-}

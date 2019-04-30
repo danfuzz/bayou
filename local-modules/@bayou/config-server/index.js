@@ -4,6 +4,7 @@
 
 import Auth from './Auth';
 import BaseAuth from './BaseAuth';
+import BaseDocStore from './BaseDocStore';
 import HtmlExport from './HtmlExport';
 import Deployment from './Deployment';
 import Logging from './Logging';
@@ -13,6 +14,7 @@ import Storage from './Storage';
 export {
   Auth,
   BaseAuth,
+  BaseDocStore,
   Deployment,
   HtmlExport,
   Logging,

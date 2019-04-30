@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { inspect } from 'util';
 
-import { BaseDocStore } from '@bayou/data-store';
+import { BaseDocStore } from '@bayou/config-server';
 
 /** {array<*>} Array of non-strings. */
 const NON_STRINGS = [
@@ -23,7 +23,7 @@ const NON_STRINGS = [
   new Map()
 ];
 
-describe('@bayou/data-store/BaseDocStore', () => {
+describe('@bayou/config-server/BaseDocStore', () => {
   describe('author ID methods', () => {
     describe('checkAuthorIdSyntax()', () => {
       it('rejects non-strings without calling through to the impl', () => {
