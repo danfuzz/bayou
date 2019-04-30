@@ -30,12 +30,12 @@ export default class Storage extends UtilityClass {
    * version of the class.
    */
   static get dataStore() {
-    if (this._dataStore === undefined) {
+    if (this._docStore === undefined) {
       /** {DefaultDocStore} Unique instance of this class. */
-      this._dataStore = new DefaultDocStore();
+      this._docStore = new DefaultDocStore();
     }
 
-    return this._dataStore;
+    return this._docStore;
   }
 
   /**
