@@ -75,15 +75,10 @@ export default class EditorComplex extends CommonBase {
      */
     this._titleClient = null;
 
-    /**
-     * {ClientStore} Wrapper for the redux data store for this client.
-     */
+    /** {ClientStore} Wrapper for the redux data store for this client. */
     this._clientStore = new ClientStore();
 
-    /**
-     * {CaretState} Machinery that watches for changes to the session state
-     * and updates the client redux store.
-     */
+    /** {CaretState} Watcher of the caret-session state. */
     this._caretState = new CaretState(this);
 
     // The rest of the initialization has to happen asynchronously. In
@@ -130,6 +125,11 @@ export default class EditorComplex extends CommonBase {
   /** {BodyClient} The document body client instance. */
   get bodyClient() {
     return this._bodyClient;
+  }
+
+  /** {CaretState} The caret state instance. */
+  get caretState() {
+    return this._caretState;
   }
 
   /** {ClientStore} Pub/sub interface for client data model changes. */
