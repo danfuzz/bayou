@@ -5,15 +5,9 @@
 import { TString } from '@bayou/typecheck';
 
 const DEFAULT_STATE = {
-  /** {boolean} Whether this document is favorited or not. */
-  starred: false,
-
   /** {string} Document title. */
   title: 'Untitled'
 };
-
-/** {string} Action type to use for toggling the star state. */
-const TOGGLE_STAR_ACTION = 'toggle_star_action';
 
 /** {string} Action type to use for setting the document title. */
 const SET_TITLE_ACTION = 'set_title_action';
@@ -31,11 +25,6 @@ export default class DocumentState {
   static get reducer() {
     return (state = DEFAULT_STATE, action) => {
       switch (action.type) {
-        case TOGGLE_STAR_ACTION: {
-          const newState = Object.assign({}, state, { starred: !state.starred });
-          return newState;
-        }
-
         case SET_TITLE_ACTION: {
           const newState = Object.assign({}, state, { title: action.payload.title });
           return newState;
@@ -45,18 +34,6 @@ export default class DocumentState {
           return state;
         }
       }
-    };
-  }
-
-  /**
-   * Creates a dispatch action object for toggling the state of
-   * the star in the redux store.
-   *
-   * @returns {object} The dispatch action.
-   */
-  static toggleStarAction() {
-    return {
-      type: TOGGLE_STAR_ACTION
     };
   }
 
@@ -76,16 +53,6 @@ export default class DocumentState {
         title
       }
     };
-  }
-
-  /**
-   * Redux selector indicating whether the document is "starred".
-   *
-   * @param {object} state The redux state to query.
-   * @returns {boolean} True if the document is starred, otherwise false.
-   */
-  static isStarred(state) {
-    return state.document.starred;
   }
 
   static title(state) {

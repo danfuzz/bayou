@@ -23,35 +23,6 @@ describe('@bayou/data-model-client/DocumentState', () => {
     assert.deepEqual(newState, initialState);
   });
 
-  it('does not modify prior state object when applying a known action', () => {
-    const reducer = DocumentState.reducer;
-
-    // Pass in undefined initial state to get back the default values
-    const initialState = Object.freeze(reducer(undefined, { type: 'unknown_action' }));
-
-    const action = DocumentState.toggleStarAction();
-
-    // Since the intial state was frozen before being passed in this will
-    // throw an exception if the reducer tries to modify it.
-    assert.doesNotThrow(() => reducer(initialState, action));
-  });
-
-  it('inverts the starred state when passed the "toggle star" action', () => {
-    const reducer = DocumentState.reducer;
-
-    // Pass in undefined initial state to get back the default values
-    const initialState = Object.freeze(reducer(undefined, { type: 'unknown_action' }));
-
-    const initialStarState = initialState.starred;
-    const toggleStarAction = DocumentState.toggleStarAction();
-    const newState = reducer(initialState, toggleStarAction);
-    const newStarState = newState.starred;
-
-    assert.isBoolean(initialStarState);
-    assert.isBoolean(newStarState);
-    assert.equal(newStarState, !initialStarState);
-  });
-
   it('updates the title state when passed the "set title" action', () => {
     const reducer = DocumentState.reducer;
 
