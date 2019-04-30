@@ -128,6 +128,8 @@ export default class CaretState {
       if (snapshot.revNum > revNum) {
         return snapshot;
       }
+
+      await this._updateCondition.whenTrue();
     }
   }
 
