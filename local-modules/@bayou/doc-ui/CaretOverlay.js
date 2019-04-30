@@ -81,12 +81,6 @@ export default class CaretOverlay {
     this._svgDefs = this._addInitialSvgDefs();
 
     /**
-     * {CaretSnapshot} The last caret snapshot we received from `ClientStore`.
-     * We diff the new snapshot against it to find what changed.
-     */
-    this._lastCaretSnapshot = CaretSnapshot.EMPTY;
-
-    /**
      * {Map<string, SVGUseElement>} Map from caret ID to the `<use>` elements
      * for each avatar. By pre-allocating them and storing one for each
      * caret we can avoid the cost of redrawing the user avatar each update
@@ -95,24 +89,26 @@ export default class CaretOverlay {
      */
     this._useReferences = new Map();
 
-    /**
-     * {ClientStore} Data store and its associated mutation state machine
-     * used for updating the client data model as changes come from the
-     * server.
-     */
-    this._clientStore = editorComplex.clientStore;
-
-    /**
-     * {function} Function which acts as our receipt for having subscribed
-     * to changes to the caret store. If called, this function will
-     * unsubscribe this module from further change notifications.
-     */
-    this._caretSubscription = this._clientStore.subscribe(this._onCaretChange.bind(this));
-
-    // Call the change callback once to make sure initial state is set.
-    this._onCaretChange();
-
+    this._watchCarets();
     this._watchLocalEdits();
+  }
+
+  /**
+   * Watches the {@link CaretState} for changes. When noticed, causes the
+   * display to update.
+   */
+  async _watchCarets() {
+    const editorComplex = this._editorComplex;
+    const caretState    = editorComplex.caretState;
+    let   oldSnapshot   = CaretSnapshot.EMPTY;
+    let   newSnapshot   = await caretState.getSnapshot();
+
+    for (;;) {
+      this._onCaretChange(oldSnapshot, newSnapshot);
+
+      oldSnapshot = newSnapshot;
+      newSnapshot = await caretState.getSnapshotAfter(oldSnapshot.revNum);
+    }
   }
 
   /**
@@ -125,8 +121,10 @@ export default class CaretOverlay {
    * the rendered overlay.
    */
   async _watchLocalEdits() {
-    const log = this._editorComplex.log;
-    let currentEvent = this._editorComplex.bodyQuill.currentEvent;
+    const editorComplex = this._editorComplex;
+    const caretState    = editorComplex.caretState;
+    const log           = this._editorComplex.log;
+    let currentEvent    = this._editorComplex.bodyQuill.currentEvent;
 
     for (;;) {
       // Wait for a text change.
@@ -136,8 +134,16 @@ export default class CaretOverlay {
       // we won't just be slowly iterating over all changes.
       currentEvent = currentEvent.latestOfNow(QuillEvents.TYPE_textChange);
 
-      log.detail('Got local edit event.');
-      this._updateDisplay();
+      try {
+        this._updateDisplay(await caretState.getSnapshot());
+      } catch (e) {
+        // Tolerate errors here, because what's likely happened is that this
+        // method beat `_watchCarets()` and there's something missing that
+        // `_onCaretChange()` will soon update. **TODO:** This whole method
+        // should just get combined with `_watchCarets()`, making a single loop
+        // for all updates.
+        log.warn('Trouble with `_updateDisplay()`', e);
+      }
 
       // Wait a moment, before looking for more changes. If there are multiple
       // changes during this time, the `latestOfNow()` call above will elide
@@ -148,8 +154,10 @@ export default class CaretOverlay {
 
   /**
    * Redraws the current state of the remote carets.
+   *
+   * @param {CaretSnapshot} caretSnapshot The caret state to portray.
    */
-  _updateDisplay() {
+  _updateDisplay(caretSnapshot) {
     // Remove extant annotations.
     while (this._svgOverlay.firstChild) {
       this._svgOverlay.removeChild(this._svgOverlay.firstChild);
@@ -163,11 +171,10 @@ export default class CaretOverlay {
     // Draw the remote author cursors and highlights.
 
     // For each caret...
-    for (const [caretId, caret] of this._lastCaretSnapshot.entries()) {
+    for (const [caretId, caret] of caretSnapshot.entries()) {
       // Is this caret us? If so, don't draw anything. **TODO:** The caret
       // snapshot ideally wouldn't actually represent the caret controlled by
-      // this editor. The code that pushes the snapshot into the store should
-      // be updated accordingly.
+      // this editor.
       if (this._editorComplex.docSession.controlsCaret(caretId)) {
         continue;
       }
@@ -421,14 +428,13 @@ export default class CaretOverlay {
    * elements and adds them fresh with each call. With the fine(r)-grained
    * change diffing below, and a cache of the elements, we should be able to
    * merely modify them in place rather than starting from scratch each time.
+   *
+   * @param {CaretSnapshot} oldSnapshot The previous carets.
+   * @param {CaretSnapshot} newSnapshot The latest carets.
    */
-  _onCaretChange() {
-    const oldSnapshot = this._lastCaretSnapshot;
-    const newSnapshot = this._clientStore.getState().carets;
-    const delta = oldSnapshot.diff(newSnapshot).delta;
+  _onCaretChange(oldSnapshot, newSnapshot) {
+    const delta       = oldSnapshot.diff(newSnapshot).delta;
     let updateDisplay = false;
-
-    this._lastCaretSnapshot = newSnapshot;
 
     for (const op of delta.ops) {
       const props = op.props;
@@ -466,7 +472,7 @@ export default class CaretOverlay {
     }
 
     if (updateDisplay) {
-      this._updateDisplay();
+      this._updateDisplay(newSnapshot);
     }
   }
 
