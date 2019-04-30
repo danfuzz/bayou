@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@bayou/data-store": "local",
-    "@bayou/id-syntax-default": "local"
- }
-}

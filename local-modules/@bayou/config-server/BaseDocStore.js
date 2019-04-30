@@ -11,7 +11,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * the underlying system, _except_ for file data (the latter which is managed by
  * the module {@link @bayou/file-store}).
  */
-export default class BaseDataStore extends CommonBase {
+export default class BaseDocStore extends CommonBase {
   /**
    * Checks the syntax of a value alleged to be an author ID. Returns the given
    * value if it's a syntactically correct author ID. Otherwise, throws an

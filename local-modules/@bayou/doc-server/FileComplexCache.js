@@ -46,6 +46,6 @@ export default class FileComplexCache extends BaseCache {
     // back-end call to check the ID here (which would have to be `async`),
     // because that would be a major waste if it turns out we're here in the
     // process of finding an already-cached object.
-    return Storage.dataStore.isDocumentId(id);
+    return Storage.docStore.isDocumentId(id);
   }
 }

@@ -101,7 +101,7 @@ export default class FileComplex extends BaseComplexMember {
     // **Note:** We only need to validate syntax, because if we actually find
     // the session, we can match the author ID and (if it does match) know that
     // the author really exists and is valid.
-    Storage.dataStore.checkAuthorIdSyntax(authorId);
+    Storage.docStore.checkAuthorIdSyntax(authorId);
 
     const already = this._sessions.getOrNull(caretId);
 
@@ -162,7 +162,7 @@ export default class FileComplex extends BaseComplexMember {
     const timeoutTime = Date.now() + MAKE_SESSION_TIMEOUT_MSEC;
 
     // This validates the ID with the back end.
-    await Storage.dataStore.checkExistingAuthorId(authorId);
+    await Storage.docStore.checkExistingAuthorId(authorId);
 
     for (;;) {
       if (Date.now() >= timeoutTime) {

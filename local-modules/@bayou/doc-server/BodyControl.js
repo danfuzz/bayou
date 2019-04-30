@@ -40,7 +40,7 @@ export default class BodyControl extends DurableControl {
    */
   async queueHtmlExport(revNum, documentId) {
     RevisionNumber.check(revNum);
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
+    Storage.docStore.checkDocumentIdSyntax(documentId);
 
     const snapshot = await this._impl_getSnapshot(revNum);
     await HtmlExport.exportHtml(snapshot, documentId);
