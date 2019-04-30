@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyDelta } from '@bayou/doc-common';
-import { LocalDataStore } from '@bayou/data-store-local';
+import { LocalDocStore } from '@bayou/data-store-local';
 import { LocalFileStore } from '@bayou/file-store-local';
 import { UtilityClass } from '@bayou/util-common';
 
@@ -28,12 +28,12 @@ export default class Storage extends UtilityClass {
   }
 
   /**
-   * {LocalDataStore} Implementation of standard configuration point.
+   * {LocalDocStore} Implementation of standard configuration point.
    */
   static get dataStore() {
     if (this._dataStore === undefined) {
-      /** {LocalDataStore} Unique instance of this class. */
-      this._dataStore = new LocalDataStore();
+      /** {LocalDocStore} Unique instance of this class. */
+      this._dataStore = new LocalDocStore();
     }
 
     return this._dataStore;

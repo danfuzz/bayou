@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { Storage } from '@bayou/config-server-default';
 import { BodyDelta } from '@bayou/doc-common';
-import { LocalDataStore } from '@bayou/data-store-local';
+import { LocalDocStore } from '@bayou/data-store-local';
 import { LocalFileStore } from '@bayou/file-store-local';
 
 describe('@bayou/config-server-default/Storage', () => {
@@ -18,9 +18,9 @@ describe('@bayou/config-server-default/Storage', () => {
   });
 
   describe('.dataStore', () => {
-    it('is an instance of `LocalDataStore`', () => {
+    it('is an instance of `LocalDocStore`', () => {
       assert.isObject(Storage.dataStore);
-      assert.instanceOf(Storage.dataStore, LocalDataStore);
+      assert.instanceOf(Storage.dataStore, LocalDocStore);
     });
 
     it('returns the same actual object on every access', () => {
