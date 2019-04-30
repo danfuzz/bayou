@@ -89,8 +89,7 @@ export default class TitleClient extends CommonBase {
   }
 
   /**
-   * Loop which synchronizes the title between Quill, the server, and the Redux
-   * store.
+   * Loop which synchronizes the title between Quill and the server.
    *
    * **TODO:** This very likely wants to use {@link StateMachine}. As it stands,
    * the interactions between the pieces are confusing and surprising, and a
