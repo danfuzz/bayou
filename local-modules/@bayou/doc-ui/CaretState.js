@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { CaretSnapshot } from '@bayou/doc-common';
-import { Delay } from '@bayou/promise-util';
+import { RevisionNumber } from '@bayou/ot-common';
+import { Condition, Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
 /**
@@ -34,9 +35,6 @@ const ERROR_DELAY_MSEC = 5000;
  * Tracker of the state of all carets (active editing sessions) on a given
  * document. It watches for changes observed from the session proxy and
  * dispatches actions to a redux data store to update the client caret model.
- *
- * Other entities interested in caret changes (notably {@link CaretOverlay})
- * should look at the `carets` entry in {@link EditorComplex}'s store.
  */
 export default class CaretState {
   /**
@@ -73,8 +71,64 @@ export default class CaretState {
    *   instance will operate.
    */
   constructor(editorComplex) {
+    /**
+     * {EditorComplex} The editor complex which this instance is associated
+     * with.
+     */
+    this._editorComplex = editorComplex;
+
+    /** {ClientStore} Redux store. */
     this._store = editorComplex.clientStore;
+
+    /**
+     * {CaretSnapshot|null} The latest-known snapshot, or `null` if no snapshot
+     * has yet been retrieved.
+     */
+    this._snapshot = null;
+
+    /**
+     * {Condition} Condition that becomes briefly `true` every time
+     * {@link #_snapshot} is updated.
+     */
+    this._updateCondition = new Condition();
+
+    // Start watching for caret changes.
     this._watchCarets(editorComplex);
+
+    Object.seal(this);
+  }
+
+  /**
+   * Gets the latest-known snapshot of carets.
+   *
+   * @returns {CaretSnapshot} Latest snapshot of caret state.
+   */
+  async getSnapshot() {
+    while (this._snapshot === null) {
+      await this._updateCondition.whenTrue();
+    }
+
+    return this._snapshot;
+  }
+
+  /**
+   * Gets the latest-known snapshot of carets, so long as it is more recent than
+   * the indicated revision. This method will wait until such a revision is
+   * available.
+   *
+   * @param {Int} revNum Revision number after which a snapshot
+   * @returns {CaretSnapshot} Latest snapshot of caret state, guaranteed to have
+   *   `snapshot.revNum > revNum`.
+   */
+  async getSnapshotAfter(revNum) {
+    RevisionNumber.check(revNum);
+
+    for (;;) {
+      const snapshot = await this.getSnapshot();
+      if (snapshot.revNum > revNum) {
+        return snapshot;
+      }
+    }
   }
 
   /**
@@ -86,9 +140,8 @@ export default class CaretState {
   async _watchCarets(editorComplex) {
     await editorComplex.whenReady();
 
-    let docSession = null;
-    let snapshot   = null;
-    let sessionProxy;
+    let docSession   = null;
+    let sessionProxy = null;
 
     for (;;) {
       if (docSession === null) {
@@ -97,6 +150,8 @@ export default class CaretState {
         docSession   = editorComplex.docSession;
         sessionProxy = await docSession.getSessionProxy();
       }
+
+      let snapshot = this._snapshot;
 
       try {
         if (snapshot !== null) {
@@ -142,10 +197,14 @@ export default class CaretState {
         continue;
       }
 
-      this._store.dispatch({
-        type: CARET_SNAPSHOT_UPDATED,
-        snapshot
-      });
+      if (snapshot !== null) {
+        this._snapshot = snapshot;
+        this._updateCondition.onOff();
+        this._store.dispatch({
+          type: CARET_SNAPSHOT_UPDATED,
+          snapshot
+        });
+      }
 
       await Delay.resolve(REQUEST_DELAY_MSEC);
     }
