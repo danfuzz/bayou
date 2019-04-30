@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BodyDelta } from '@bayou/doc-common';
-import { DefaultDocStore } from '@bayou/data-store-local';
+import { DefaultDocStore } from '@bayou/doc-id-default';
 import { LocalFileStore } from '@bayou/file-store-local';
 import { UtilityClass } from '@bayou/util-common';
 

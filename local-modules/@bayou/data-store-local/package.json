@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@bayou/config-server": "local",
-    "@bayou/doc-id-default": "local"
- }
-}
