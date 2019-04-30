@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { DocumentState } from '@bayou/data-model-client';
 import { QuillEvents, QuillUtil } from '@bayou/quill-util';
 import { CommonBase, Errors } from '@bayou/util-common';
 
@@ -90,8 +89,7 @@ export default class TitleClient extends CommonBase {
   }
 
   /**
-   * Loop which synchronizes the title between Quill, the server, and the Redux
-   * store.
+   * Loop which synchronizes the title between Quill and the server.
    *
    * **TODO:** This very likely wants to use {@link StateMachine}. As it stands,
    * the interactions between the pieces are confusing and surprising, and a
@@ -152,17 +150,12 @@ export default class TitleClient extends CommonBase {
   }
 
   /**
-   * Performs a push of the local title state to Redux and to the server.
+   * Performs a push of the local title state to the server.
    */
   async _pushUpdate() {
     const text = this._quillContents;
 
     // **TODO:** Probably want to handle exceptions from this call.
     await this._docSession.propertyClient.set('title', text);
-
-    // Update the Redux store.
-    const store  = this._editorComplex.clientStore;
-    const action = DocumentState.setTitleAction(text);
-    store.dispatch(action);
   }
 }

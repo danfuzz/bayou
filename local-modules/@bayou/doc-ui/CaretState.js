@@ -2,19 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretSnapshot } from '@bayou/doc-common';
-import { Delay } from '@bayou/promise-util';
+import { RevisionNumber } from '@bayou/ot-common';
+import { Condition, Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
-
-/**
- * {CaretSnapshot} Starting state for the caret redux store.
- */
-const INITIAL_STATE = CaretSnapshot.EMPTY;
-
-/**
- * {string} Redux action to dispatch when we receive a new caret snapshot.
- */
-const CARET_SNAPSHOT_UPDATED = 'caret_getSnapshot_updated';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -33,39 +23,9 @@ const ERROR_DELAY_MSEC = 5000;
 /**
  * Tracker of the state of all carets (active editing sessions) on a given
  * document. It watches for changes observed from the session proxy and
- * dispatches actions to a redux data store to update the client caret model.
- *
- * Other entities interested in caret changes (notably {@link CaretOverlay})
- * should look at the `carets` entry in {@link EditorComplex}'s store.
+ * updates itself accordingly.
  */
 export default class CaretState {
-  /**
-   * Redux root reducer function that transforms our actions into
-   * state changes.
-   * @see http://redux.js.org/docs/basics/Reducers.html
-   *
-   * @returns {function} The reducer function.
-   */
-  static get reducer() {
-    return (state = INITIAL_STATE, action) => {
-      let newState;
-
-      switch (action.type) {
-        case CARET_SNAPSHOT_UPDATED:
-          newState = action.snapshot;
-          break;
-
-        default:
-          // If we get an action we don't recognize we shouldn't be mutating
-          // the state so just maintain the current state.
-          newState = state;
-          break;
-      }
-
-      return newState;
-    };
-  }
-
   /**
    * Constructs an instance of this class.
    *
@@ -73,8 +33,63 @@ export default class CaretState {
    *   instance will operate.
    */
   constructor(editorComplex) {
-    this._store = editorComplex.clientStore;
+    /**
+     * {EditorComplex} The editor complex which this instance is associated
+     * with.
+     */
+    this._editorComplex = editorComplex;
+
+    /**
+     * {CaretSnapshot|null} The latest-known snapshot, or `null` if no snapshot
+     * has yet been retrieved.
+     */
+    this._snapshot = null;
+
+    /**
+     * {Condition} Condition that becomes briefly `true` every time
+     * {@link #_snapshot} is updated.
+     */
+    this._updateCondition = new Condition();
+
+    // Start watching for caret changes.
     this._watchCarets(editorComplex);
+
+    Object.seal(this);
+  }
+
+  /**
+   * Gets the latest-known snapshot of carets.
+   *
+   * @returns {CaretSnapshot} Latest snapshot of caret state.
+   */
+  async getSnapshot() {
+    while (this._snapshot === null) {
+      await this._updateCondition.whenTrue();
+    }
+
+    return this._snapshot;
+  }
+
+  /**
+   * Gets the latest-known snapshot of carets, so long as it is more recent than
+   * the indicated revision. This method will wait until such a revision is
+   * available.
+   *
+   * @param {Int} revNum Revision number after which a snapshot
+   * @returns {CaretSnapshot} Latest snapshot of caret state, guaranteed to have
+   *   `snapshot.revNum > revNum`.
+   */
+  async getSnapshotAfter(revNum) {
+    RevisionNumber.check(revNum);
+
+    for (;;) {
+      const snapshot = await this.getSnapshot();
+      if (snapshot.revNum > revNum) {
+        return snapshot;
+      }
+
+      await this._updateCondition.whenTrue();
+    }
   }
 
   /**
@@ -86,9 +101,8 @@ export default class CaretState {
   async _watchCarets(editorComplex) {
     await editorComplex.whenReady();
 
-    let docSession = null;
-    let snapshot   = null;
-    let sessionProxy;
+    let docSession   = null;
+    let sessionProxy = null;
 
     for (;;) {
       if (docSession === null) {
@@ -97,6 +111,8 @@ export default class CaretState {
         docSession   = editorComplex.docSession;
         sessionProxy = await docSession.getSessionProxy();
       }
+
+      let snapshot = this._snapshot;
 
       try {
         if (snapshot !== null) {
@@ -142,10 +158,10 @@ export default class CaretState {
         continue;
       }
 
-      this._store.dispatch({
-        type: CARET_SNAPSHOT_UPDATED,
-        snapshot
-      });
+      if (snapshot !== null) {
+        this._snapshot = snapshot;
+        this._updateCondition.onOff();
+      }
 
       await Delay.resolve(REQUEST_DELAY_MSEC);
     }

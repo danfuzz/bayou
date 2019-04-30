@@ -3,7 +3,6 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Editor } from '@bayou/config-client';
-import { ClientStore } from '@bayou/data-model-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
 import { SessionInfo } from '@bayou/doc-common';
 import { Condition } from '@bayou/promise-util';
@@ -75,15 +74,7 @@ export default class EditorComplex extends CommonBase {
      */
     this._titleClient = null;
 
-    /**
-     * {ClientStore} Wrapper for the redux data store for this client.
-     */
-    this._clientStore = new ClientStore();
-
-    /**
-     * {CaretState} Machinery that watches for changes to the session state
-     * and updates the client redux store.
-     */
+    /** {CaretState} Watcher of the caret-session state. */
     this._caretState = new CaretState(this);
 
     // The rest of the initialization has to happen asynchronously. In
@@ -132,9 +123,9 @@ export default class EditorComplex extends CommonBase {
     return this._bodyClient;
   }
 
-  /** {ClientStore} Pub/sub interface for client data model changes. */
-  get clientStore() {
-    return this._clientStore;
+  /** {CaretState} The caret state instance. */
+  get caretState() {
+    return this._caretState;
   }
 
   /** {DocSession} The session control instance. */
