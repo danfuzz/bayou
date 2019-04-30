@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "@bayou/deps-redux": "local",
-    "@bayou/doc-ui": "local"
+    "@bayou/typechec": "local"
   }
 }

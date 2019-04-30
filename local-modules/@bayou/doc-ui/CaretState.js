@@ -2,20 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { CaretSnapshot } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
-
-/**
- * {CaretSnapshot} Starting state for the caret redux store.
- */
-const INITIAL_STATE = CaretSnapshot.EMPTY;
-
-/**
- * {string} Redux action to dispatch when we receive a new caret snapshot.
- */
-const CARET_SNAPSHOT_UPDATED = 'caret_getSnapshot_updated';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -34,36 +23,9 @@ const ERROR_DELAY_MSEC = 5000;
 /**
  * Tracker of the state of all carets (active editing sessions) on a given
  * document. It watches for changes observed from the session proxy and
- * dispatches actions to a redux data store to update the client caret model.
+ * updates itself accordingly.
  */
 export default class CaretState {
-  /**
-   * Redux root reducer function that transforms our actions into
-   * state changes.
-   * @see http://redux.js.org/docs/basics/Reducers.html
-   *
-   * @returns {function} The reducer function.
-   */
-  static get reducer() {
-    return (state = INITIAL_STATE, action) => {
-      let newState;
-
-      switch (action.type) {
-        case CARET_SNAPSHOT_UPDATED:
-          newState = action.snapshot;
-          break;
-
-        default:
-          // If we get an action we don't recognize we shouldn't be mutating
-          // the state so just maintain the current state.
-          newState = state;
-          break;
-      }
-
-      return newState;
-    };
-  }
-
   /**
    * Constructs an instance of this class.
    *
@@ -76,9 +38,6 @@ export default class CaretState {
      * with.
      */
     this._editorComplex = editorComplex;
-
-    /** {ClientStore} Redux store. */
-    this._store = editorComplex.clientStore;
 
     /**
      * {CaretSnapshot|null} The latest-known snapshot, or `null` if no snapshot
@@ -202,10 +161,6 @@ export default class CaretState {
       if (snapshot !== null) {
         this._snapshot = snapshot;
         this._updateCondition.onOff();
-        this._store.dispatch({
-          type: CARET_SNAPSHOT_UPDATED,
-          snapshot
-        });
       }
 
       await Delay.resolve(REQUEST_DELAY_MSEC);
