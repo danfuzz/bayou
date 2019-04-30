@@ -417,11 +417,10 @@ export default class CaretOverlay {
    * data model store. It keeps a copy of the prior caret snapshot and user
    * that to diff against when new changes come in.
    *
-   * TODO: Currently _updateDisplay() blows away all of the SVG child elements
-   *       and adds them fresh with each call. With the fine(r)-grained change
-   *       diffing below, and a cache of the elements, we should be able to
-   *       merely modify them in place rather than starting from scratch
-   *       each time.
+   * **TODO:** Currently {@link #_updateDisplay} blows away all of the SVG child
+   * elements and adds them fresh with each call. With the fine(r)-grained
+   * change diffing below, and a cache of the elements, we should be able to
+   * merely modify them in place rather than starting from scratch each time.
    */
   _onCaretChange() {
     const oldSnapshot = this._lastCaretSnapshot;
