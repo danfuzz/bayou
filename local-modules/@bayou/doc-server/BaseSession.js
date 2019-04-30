@@ -31,7 +31,7 @@ export default class BaseSession extends CommonBase {
     this._fileComplex = FileComplex.check(fileComplex);
 
     /** {string} Author ID. */
-    this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
+    this._authorId = Storage.docStore.checkAuthorIdSyntax(authorId);
 
     /** {string} Caret ID. */
     this._caretId = CaretId.check(caretId);

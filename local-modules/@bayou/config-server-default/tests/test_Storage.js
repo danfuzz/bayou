@@ -17,17 +17,17 @@ describe('@bayou/config-server-default/Storage', () => {
     });
   });
 
-  describe('.dataStore', () => {
+  describe('.docStore', () => {
     it('is an instance of `DefaultDocStore`', () => {
-      assert.isObject(Storage.dataStore);
-      assert.instanceOf(Storage.dataStore, DefaultDocStore);
+      assert.isObject(Storage.docStore);
+      assert.instanceOf(Storage.docStore, DefaultDocStore);
     });
 
     it('returns the same actual object on every access', () => {
-      const store = Storage.dataStore;
+      const store = Storage.docStore;
 
       for (let i = 0; i < 10; i++) {
-        assert.strictEqual(Storage.dataStore, store, `#${i}`);
+        assert.strictEqual(Storage.docStore, store, `#${i}`);
       }
     });
   });

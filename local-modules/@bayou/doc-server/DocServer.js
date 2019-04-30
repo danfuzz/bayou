@@ -54,7 +54,7 @@ export default class DocServer extends Singleton {
     // out we've already cached a valid result. Once we determine that we need
     // to construct a new complex (below), we'll call through to the back-end to
     // get a file ID, and that call implicitly validates the document ID.
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
+    Storage.docStore.checkDocumentIdSyntax(documentId);
 
     return this._complexes.resolveOrAdd(documentId, async () => {
       try {
@@ -62,7 +62,7 @@ export default class DocServer extends Singleton {
 
         // This validates the document ID and lets us find out the corresponding
         // file ID.
-        const docInfo = await Storage.dataStore.getDocumentInfo(documentId);
+        const docInfo = await Storage.docStore.getDocumentInfo(documentId);
         const fileId  = docInfo.fileId;
 
         const file   = await Storage.fileStore.getFile(fileId);

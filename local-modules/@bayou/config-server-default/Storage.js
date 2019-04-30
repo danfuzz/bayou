@@ -29,7 +29,7 @@ export default class Storage extends UtilityClass {
    * implementation just uses the development-oriented maximally-accepting
    * version of the class.
    */
-  static get dataStore() {
+  static get docStore() {
     if (this._docStore === undefined) {
       /** {DefaultDocStore} Unique instance of this class. */
       this._docStore = new DefaultDocStore();

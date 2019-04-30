@@ -136,7 +136,7 @@ export default class DebugTools extends CommonBase {
    */
   _check_authorId(req_unused, value) {
     try {
-      Storage.dataStore.checkAuthorIdSyntax(value);
+      Storage.docStore.checkAuthorIdSyntax(value);
     } catch (e) {
       // Rethrow with better message.
       const error = new Error();
@@ -153,7 +153,7 @@ export default class DebugTools extends CommonBase {
    */
   _check_documentId(req_unused, value) {
     try {
-      Storage.dataStore.checkDocumentIdSyntax(value);
+      Storage.docStore.checkDocumentIdSyntax(value);
     } catch (e) {
       // Rethrow with better message.
       const error = new Error();
@@ -208,7 +208,7 @@ export default class DebugTools extends CommonBase {
       if (Auth.isToken(value)) {
         return;
       }
-      Storage.dataStore.checkAuthorIdSyntax(value);
+      Storage.docStore.checkAuthorIdSyntax(value);
     } catch (error) {
       // Fall through and throw error.
     }

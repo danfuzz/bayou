@@ -24,8 +24,8 @@ export default class Storage extends UtilityClass {
    * are valid in the context of the rest of the data stored by the system, and
    * so on.
    */
-  static get dataStore() {
-    return use.Storage.dataStore;
+  static get docStore() {
+    return use.Storage.docStore;
   }
 
   /**

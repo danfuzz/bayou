@@ -34,7 +34,7 @@ export default class AuthorAccess extends CommonBase {
      * asynchronous action (e.g., a round trip with the data storage system),
      * and constructors aren't allowed to be `async`.
      */
-    this._authorId = Storage.dataStore.checkAuthorIdSyntax(authorId);
+    this._authorId = Storage.docStore.checkAuthorIdSyntax(authorId);
 
     /** {Logger} Logger for this instance. */
     this._log = log.withAddedContext(authorId);
@@ -61,7 +61,7 @@ export default class AuthorAccess extends CommonBase {
    */
   async findExistingSession(documentId, caretId) {
     // Basic typechecks as a preflight before doing anything more serious.
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
+    Storage.docStore.checkDocumentIdSyntax(documentId);
     CaretId.check(caretId);
 
     const authorId    = this._authorId;
@@ -104,7 +104,7 @@ export default class AuthorAccess extends CommonBase {
    */
   async makeNewSession(documentId) {
     // Basic typecheck as a preflight before doing anything more serious.
-    Storage.dataStore.checkDocumentIdSyntax(documentId);
+    Storage.docStore.checkDocumentIdSyntax(documentId);
 
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
@@ -145,11 +145,11 @@ export default class AuthorAccess extends CommonBase {
     // trying to get a probably-less-obscure error to happen up front in the
     // usual case.)
     await Promise.all([
-      Storage.dataStore.checkExistingAuthorId(authorId),
-      Storage.dataStore.checkExistingDocumentId(documentId)
+      Storage.docStore.checkExistingAuthorId(authorId),
+      Storage.docStore.checkExistingDocumentId(documentId)
     ]);
 
-    const result = await Storage.dataStore.getPermissions(authorId, documentId);
+    const result = await Storage.docStore.getPermissions(authorId, documentId);
 
     if (!(result.canEdit || result.canView)) {
       // Though technically you could say that the file is "found," we report it
