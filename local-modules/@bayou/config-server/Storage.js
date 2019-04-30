@@ -17,7 +17,7 @@ export default class Storage extends UtilityClass {
   }
 
   /**
-   * {@BaseDocStore} Provider of access to the basic "document store" of the
+   * {BaseDocStore} Provider of access to the basic "document store" of the
    * underlying system, for everything other than file storage (the latter which
    * is handled by {@link #fileStore}). This includes information such as what
    * users and documents exist, whether IDs (beyond being syntactically valid)
