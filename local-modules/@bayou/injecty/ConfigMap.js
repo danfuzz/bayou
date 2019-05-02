@@ -8,7 +8,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
 /**
  * Map of names to injected configurations.
  */
-export default class Configuration extends CommonBase {
+export default class ConfigMap extends CommonBase {
   /**
    * Constructs an instance.
    */
