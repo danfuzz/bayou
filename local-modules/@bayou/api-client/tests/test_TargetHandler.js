@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { BearerToken } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
-import TargetHandler from '@bayou/api-client/TargetHandler';
+import { TargetHandler } from '@bayou/api-client/TargetHandler';
 
 describe('@bayou/api-client/TargetHandler', () => {
   describe('makeProxy()', () => {

@@ -8,7 +8,7 @@ import { Logger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, WebsocketCodes } from '@bayou/util-common';
 
-import TargetMap from './TargetMap';
+import { TargetMap } from './TargetMap';
 
 /** Logger. */
 const log = new Logger('api');
@@ -19,7 +19,7 @@ const UNKNOWN_CONNECTION_ID = 'id_unknown';
 /**
  * Connection with the server, via a websocket.
  */
-export default class ApiClient extends CommonBase {
+export class ApiClient extends CommonBase {
   /**
    * Constructs an instance. This instance will connect to a websocket at the
    * same domain at the path `/api`. Once this constructor returns, it is safe
