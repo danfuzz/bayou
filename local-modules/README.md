@@ -40,30 +40,29 @@ can be used in.
 ### Export conventions
 
 Modules defined here all export a set of explicit names and _no_ default. That
-is, even if there is only one export from a module, it is imported as
+is, even if there is only one export from a module, it is imported as:
 
 ```javascript
 import { Name } from 'the-module';
 ```
 
-This makes for consistency in `import` formatting and is also trivial to
-remember.
+This includes module-internal files which define classes:
 
-Internal to a module, the convention is a little more nuanced:
+```javascript
+import { ClassName } from './ClassName';
+```
 
-* Files are allowed to _either_ define a single class or define a collection of
-  data.
-* If a file defines a class, then that class is the single default export of
-  the file, and there are no other exports. In this case, the file's base name
-  and the class name should be the same including capitalization. For example,
-  the class `FooBlort` should reside in a file named `FooBlort.js` (and notably
-  not, `foo-blort.js`).
-* If a file defines a collection of data, then it is exported (as with the main
-  module) as a set of explicit names and _no_ default.
+This makes for consistency in `import` formatting (trivial to remember), is less
+error-prone (can't import a thing with the wrong name, compared to using a
+`default`), and better supports typechecking systems (such as TypeScript).
 
 As a slightly special case, if a module wants to export a set of utility
 functionality, it should do so by defining a utility class named `TheModule`
 per se, and exported as that name.
+
+**Note:** As of this writing, the codebase is in transition from a convention
+where `export default class` was used in module-internal contexts. **TODO:**
+Remove this note when the system is fully converted!
 
 #### Standard `index` form
 
