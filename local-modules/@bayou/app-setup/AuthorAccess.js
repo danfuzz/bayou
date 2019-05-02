@@ -18,7 +18,7 @@ const log = new Logger('author-access');
  * is through instances of this class that users ultimately exercise that
  * authority.
  */
-export default class AuthorAccess extends CommonBase {
+export class AuthorAccess extends CommonBase {
   /**
    * Constructs an instance.
    *

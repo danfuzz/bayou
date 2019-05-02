@@ -16,13 +16,13 @@ import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
-import AppAuthorizer from './AppAuthorizer';
-import DebugTools from './DebugTools';
-import Metrics from './Metrics';
-import RequestLogger from './RequestLogger';
-import RootAccess from './RootAccess';
-import ServerUtil from './ServerUtil';
-import VarInfo from './VarInfo';
+import { AppAuthorizer } from './AppAuthorizer';
+import { DebugTools } from './DebugTools';
+import { Metrics } from './Metrics';
+import { RequestLogger } from './RequestLogger';
+import { RootAccess } from './RootAccess';
+import { ServerUtil } from './ServerUtil';
+import { VarInfo } from './VarInfo';
 
 /**
  * {Int} How long to wait (in msec) between iterations in
@@ -43,7 +43,7 @@ const log = new Logger('app');
  * Web server for the application. This serves all application HTTP(S) requests,
  * including websocket requests.
  */
-export default class Application extends CommonBase {
+export class Application extends CommonBase {
   /**
    * Constructs an instance.
    *

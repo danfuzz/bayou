@@ -5,13 +5,13 @@
 import { BaseTokenAuthorizer } from '@bayou/api-server';
 import { Auth } from '@bayou/config-server';
 
-import Application from './Application';
-import AuthorAccess from './AuthorAccess';
+import { Application } from './Application';
+import { AuthorAccess } from './AuthorAccess';
 
 /**
  * Application-specific implementation of {@link BaseTokenAuthorizer}.
  */
-export default class AppAuthorizer extends BaseTokenAuthorizer {
+export class AppAuthorizer extends BaseTokenAuthorizer {
   /**
    * Constructs an instance.
    *

@@ -25,7 +25,7 @@ const log = new Logger('root-access');
  * token(s) grant access to (along with whatever else is configured by the
  * hook {@link config-server.Deployment#rootAccess}).
  */
-export default class RootAccess extends CommonBase {
+export class RootAccess extends CommonBase {
   /**
    * Constructs an instance.
    */

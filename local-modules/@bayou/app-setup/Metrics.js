@@ -10,7 +10,7 @@ import { CommonBase } from '@bayou/util-common';
 /**
  * Prometheus- / OpenMetrics-based metrics collection and reporting.
  */
-export default class Metrics extends CommonBase {
+export class Metrics extends CommonBase {
   /**
    * Constructs an instance. This also sets up default metrics collection. (As
    * such, the latter bit means that it's probably a bad idea to instantiate
