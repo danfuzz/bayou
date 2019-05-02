@@ -14,7 +14,7 @@ import { MockDelta, MockOp } from '@bayou/ot-common/mocks';
 /**
  * Second mock "delta" class for testing.
  */
-export default class AnotherDelta extends BaseDelta {
+class AnotherDelta extends BaseDelta {
   _impl_isDocument() {
     return true;
   }
