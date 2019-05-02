@@ -13,7 +13,7 @@ import { InfoError } from '@bayou/util-common';
  * **Note:** We intentionally exclude stack trace info from the encoded form,
  * because that can be security-sensitive.
  */
-export default class CodableError extends InfoError {
+export class CodableError extends InfoError {
   /** {string} Name of this class for the sake of API coding. */
   static get CODEC_TAG() {
     return 'Error';

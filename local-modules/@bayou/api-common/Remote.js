@@ -4,14 +4,14 @@
 
 import { CommonBase } from '@bayou/util-common';
 
-import TargetId from './TargetId';
+import { TargetId } from './TargetId';
 
 /**
  * Encodable representation of an object that is proxied over a connection.
  * Instances of this class are what get encoded instead of encoding a
  * {@link ProxiedObject} (or its target).
  */
-export default class Remote extends CommonBase {
+export class Remote extends CommonBase {
   /**
    * Constructs an instance.
    *

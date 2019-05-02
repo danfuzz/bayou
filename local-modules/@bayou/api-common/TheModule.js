@@ -5,15 +5,15 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import CodableError from './CodableError';
-import Message from './Message';
-import Response from './Response';
-import Remote from './Remote';
+import { CodableError } from './CodableError';
+import { Message } from './Message';
+import { Response } from './Response';
+import { Remote } from './Remote';
 
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *
