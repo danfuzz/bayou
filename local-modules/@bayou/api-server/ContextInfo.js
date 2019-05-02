@@ -5,14 +5,14 @@
 import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseTokenAuthorizer from './BaseTokenAuthorizer';
-import Context from './Context';
+import { BaseTokenAuthorizer } from './BaseTokenAuthorizer';
+import { Context } from './Context';
 
 /**
  * All the info needed to construct instances of {@link Context}, except for
  * logging-related stuff (which tends to be different for every instance).
  */
-export default class ContextInfo extends CommonBase {
+export class ContextInfo extends CommonBase {
   /**
    * Constructs an instance.
    *

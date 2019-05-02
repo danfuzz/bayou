@@ -7,12 +7,12 @@ import { BaseLogger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import Target from './Target';
+import { Target } from './Target';
 
 /**
  * Handler of the logging of API calls.
  */
-export default class ApiLog extends CommonBase {
+export class ApiLog extends CommonBase {
   /**
    * Constructs an instance.
    *

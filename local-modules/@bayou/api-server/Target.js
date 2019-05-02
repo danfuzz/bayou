@@ -7,7 +7,7 @@ import { RedactUtil } from '@bayou/see-all';
 import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
-import Schema from './Schema';
+import { Schema } from './Schema';
 
 /** {Int} Maximum depth to produce when redacting values. */
 const MAX_REDACTION_DEPTH = 4;
@@ -18,7 +18,7 @@ const MAX_REDACTION_DEPTH = 4;
  * who prove knowledge of a token's secret) or be "uncontrolled" (that is, be
  * generally available without additional authorization checks).
  */
-export default class Target extends CommonBase {
+export class Target extends CommonBase {
   /**
    * Like {@link #logInfoFromPayload}, except only to be used when processing
    * `null` as a target (e.g. when a target ID was not valid). Since there is

@@ -4,13 +4,13 @@
 
 import contentType from 'content-type';
 
-import BaseConnection from './BaseConnection';
+import { BaseConnection } from './BaseConnection';
 
 /**
  * Direct handler for one-shot API requests that arrive over a standard HTTP
  * POST.
  */
-export default class PostConnection extends BaseConnection {
+export class PostConnection extends BaseConnection {
   /**
    * Constructs an instance. As a side effect, the contructor attaches the
    * constructed instance to the HTTP request, and arranges to respond.

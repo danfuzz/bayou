@@ -7,9 +7,9 @@ import { BaseLogger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
-import ContextInfo from './ContextInfo';
-import ProxiedObject from './ProxiedObject';
-import Target from './Target';
+import { ContextInfo } from './ContextInfo';
+import { ProxiedObject } from './ProxiedObject';
+import { Target } from './Target';
 
 /**
  * Binding context for an API server or session therein. Instances of this class
@@ -18,7 +18,7 @@ import Target from './Target';
  * bearer tokens. In addition, this class is used to hold the knowledge of which
  * {@link Codec} to use for a session.
  */
-export default class Context extends CommonBase {
+export class Context extends CommonBase {
   /**
    * Constructs an instance which is initially empty.
    *

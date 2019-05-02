@@ -34,7 +34,7 @@ const VERBOTEN_NAMES = /^(then|catch)$/;
  * {@link #loggingForResult}, and {@link Target} for details about how these are
  * used.
  */
-export default class Schema extends CommonBase {
+export class Schema extends CommonBase {
   /**
    * Constructs an instance based on the given object.
    *
