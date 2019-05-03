@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `Set`.
  */
-export default class TSet extends UtilityClass {
+export class TSet extends UtilityClass {
   /**
    * Checks a value of type `Set`. Optionally checks the types of values.
    *

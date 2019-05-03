@@ -29,7 +29,7 @@ const SPEED_COLOR = {
  * Collector of test results reported via public methods that closely match
  * the Mocha test-reporting events.
  */
-export default class TestCollector extends CommonBase {
+export class TestCollector extends CommonBase {
   /**
    * Constructs an instance.
    */

@@ -10,7 +10,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * exclusion. This class can be used to serialize running of critical sections
  * of code, among other things.
  */
-export default class Mutex extends CommonBase {
+export class Mutex extends CommonBase {
   /**
    * Constructs an instance.
    */

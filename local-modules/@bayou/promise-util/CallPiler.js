@@ -39,7 +39,7 @@ import { TFunction } from '@bayou/typecheck';
  * Results 2 2
  * ```
  */
-export default class CallPiler {
+export class CallPiler {
   /**
    * Constructs an instance.
    *

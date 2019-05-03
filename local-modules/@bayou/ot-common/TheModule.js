@@ -10,7 +10,7 @@ import Timestamp from './Timestamp';
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *

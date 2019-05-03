@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
  * Utility that constructs of promises which become resolved after a specified
  * delay.
  */
-export default class Delay extends UtilityClass {
+export class Delay extends UtilityClass {
   /**
    * Returns a promise that, after a specified delay, resolves to an indicated
    * value. If that value is _also_ a promise, then the result of this function

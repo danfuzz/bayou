@@ -4,13 +4,13 @@
 
 import { UtilityClass } from '@bayou/util-common';
 
-import TestFiles from './TestFiles';
+import { TestFiles } from './TestFiles';
 
 /**
  * Webpack loader for the client test files. This gets imported by Webpack via
  * the file `loadClientTests.js`.
  */
-export default class ClientTestsLoader extends UtilityClass {
+export class ClientTestsLoader extends UtilityClass {
   /**
    * Load the synthesized client test file.
    *

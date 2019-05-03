@@ -5,15 +5,15 @@
 import { TArray, TFunction } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BaseChange from './BaseChange';
-import RevisionNumber from './RevisionNumber';
+import { BaseChange } from './BaseChange';
+import { RevisionNumber } from './RevisionNumber';
 
 /**
  * Base class for snapshots of (parts of) documents. Every snapshot consists of
  * a revision number and a from-empty delta. Instances of this class are always
  * frozen.
  */
-export default class BaseSnapshot extends CommonBase {
+export class BaseSnapshot extends CommonBase {
   /**
    * {BaseSnapshot} Empty instance of this class. It has an empty delta and
    * revision number `0`.

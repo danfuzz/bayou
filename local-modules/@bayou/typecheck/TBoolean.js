@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `Boolean`.
  */
-export default class TBoolean extends UtilityClass {
+export class TBoolean extends UtilityClass {
   /**
    * Checks a value of type `Boolean`.
    *

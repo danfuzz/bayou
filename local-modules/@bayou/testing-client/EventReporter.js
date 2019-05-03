@@ -10,7 +10,7 @@ import { BaseReporter } from '@bayou/testing-common';
  * server side. See {@link @bayou/testing-server.EventReceiver} for the
  * consuming code.
  */
-export default class EventReporter extends BaseReporter {
+export class EventReporter extends BaseReporter {
   /**
    * Constructs an instance.
    *

@@ -5,15 +5,15 @@
 import { TArray, TFunction, TString } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-common';
 
-import Action from './Action';
-import Options from './Options';
-import TopErrorHandler from './TopErrorHandler';
+import { Action } from './Action';
+import { Options } from './Options';
+import { TopErrorHandler } from './TopErrorHandler';
 
 /**
  * Top-level logic for starting a server or running server actions (such as unit
  * tests).
  */
-export default class Server extends UtilityClass {
+export class Server extends UtilityClass {
   /**
    * Starts the server or runs a server action (such as a unit test), based on
    * the given command-line arguments.

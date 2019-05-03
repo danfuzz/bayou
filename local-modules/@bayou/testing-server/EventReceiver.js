@@ -4,12 +4,12 @@
 
 import { CommonBase } from '@bayou/util-common';
 
-import TestCollector from './TestCollector';
+import { TestCollector } from './TestCollector';
 
 /**
  * Receiver of events sent by {@link @bayou/testing-client.EventReporter}.
  */
-export default class EventReceiver extends CommonBase {
+export class EventReceiver extends CommonBase {
   /**
    * Constructs an instance.
    */

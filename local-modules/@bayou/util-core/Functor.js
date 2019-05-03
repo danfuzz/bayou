@@ -4,11 +4,11 @@
 
 import { inspect } from 'util';
 
-import CoreTypecheck from './CoreTypecheck';
-import DataUtil from './DataUtil';
-import Errors from './Errors';
-import FrozenBuffer from './FrozenBuffer';
-import ObjectUtil from './ObjectUtil';
+import { CoreTypecheck } from './CoreTypecheck';
+import { DataUtil } from './DataUtil';
+import { Errors } from './Errors';
+import { FrozenBuffer } from './FrozenBuffer';
+import { ObjectUtil } from './ObjectUtil';
 
 /**
  * Functor data value. A "functor," generally speaking, is a thing that looks
@@ -26,7 +26,7 @@ import ObjectUtil from './ObjectUtil';
  * **Note for pedants:** This class does _not_ implement a "functor" in the
  * strict mathematical or category-theoretical sense of the word.
  */
-export default class Functor {
+export class Functor {
   /**
    * Constructs an instance.
    *

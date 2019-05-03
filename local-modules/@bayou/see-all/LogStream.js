@@ -4,8 +4,8 @@
 
 import { CommonBase } from '@bayou/util-common';
 
-import BaseLogger from './BaseLogger';
-import LogRecord from './LogRecord';
+import { BaseLogger } from './BaseLogger';
+import { LogRecord } from './LogRecord';
 
 /**
  * Adaptor which provides a writable stream on top of a logger at a particular
@@ -14,7 +14,7 @@ import LogRecord from './LogRecord';
  * **Note:** This implements just the basic functionality, _not_ including any
  * events or flow control.
  */
-export default class LogStream extends CommonBase {
+export class LogStream extends CommonBase {
   /**
    * Constructs an instance.
    *

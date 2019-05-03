@@ -10,7 +10,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
 /**
  * Entry for the weak-cache portion of a {@link BaseCache} instance.
  */
-export default class WeakCacheEntry extends CommonBase {
+export class WeakCacheEntry extends CommonBase {
   /**
    * Constructs an instance.
    *

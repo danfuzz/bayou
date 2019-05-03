@@ -11,8 +11,8 @@ import { promisify } from 'util';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
-import CollectingReporter from './CollectingReporter';
-import TestFiles from './TestFiles';
+import { CollectingReporter } from './CollectingReporter';
+import { TestFiles } from './TestFiles';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('testing');
@@ -23,7 +23,7 @@ chai.use(chaiAsPromised);
 /**
  * Driver for the Mocha framework, for server tests.
  */
-export default class ServerTests extends UtilityClass {
+export class ServerTests extends UtilityClass {
   /**
    * Builds a list of all bayou-local tests, adds them to a test runner,
    * and then executes the tests.

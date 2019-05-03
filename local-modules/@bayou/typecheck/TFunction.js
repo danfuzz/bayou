@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `Function`.
  */
-export default class TFunction extends UtilityClass {
+export class TFunction extends UtilityClass {
   /**
    * Checks a value of type `Function`.
    *

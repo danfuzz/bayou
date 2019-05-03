@@ -8,12 +8,12 @@ import minimist from 'minimist';
 import { TArray, TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import Action from './Action';
+import { Action } from './Action';
 
 /**
  * Command-line option parsing.
  */
-export default class Options extends CommonBase {
+export class Options extends CommonBase {
   /**
    * Constructs an instance, which in the process parses the command-line
    * options.

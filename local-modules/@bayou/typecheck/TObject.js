@@ -7,7 +7,7 @@ import { CoreTypecheck, Errors, ObjectUtil, UtilityClass } from '@bayou/util-cor
 /**
  * Type checker for type `Object`.
  */
-export default class TObject extends UtilityClass {
+export class TObject extends UtilityClass {
   /**
    * Checks that a value is of type `Object`, and is optionally an instance of
    * a particular class. `null` is _not_ considered an object by this check.

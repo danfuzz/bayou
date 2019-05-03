@@ -4,12 +4,12 @@
 
 import { Singleton } from '@bayou/util-common';
 
-import AllSinks from './AllSinks';
+import { AllSinks } from './AllSinks';
 
 /**
  * Registry for loggers.
  */
-export default class SeeAll extends Singleton {
+export class SeeAll extends Singleton {
   /**
    * Adds a logging sink to the system. May be called more than once. Each sink
    * added via this method gets called as `sink.sinkLog(logRecord)`.

@@ -4,14 +4,14 @@
 
 import { CommonBase } from '@bayou/util-common';
 
-import LogRecord from './LogRecord';
+import { LogRecord } from './LogRecord';
 
 /**
  * Base class for logging sinks (that is, a "sink" as a destination for log
  * records). Instances of this class accept {@link LogRecord} instances and
  * durably log them _somewhere_.
  */
-export default class BaseSink extends CommonBase {
+export class BaseSink extends CommonBase {
   /**
    * Accepts a log record, doing whatever is appropriate per the subclass.
    *

@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { TFunction } from '@bayou/typecheck';
 
-import BaseProxyHandler from './BaseProxyHandler';
+import { BaseProxyHandler } from './BaseProxyHandler';
 
 /** {Set<string>} Set of methods which never get proxied. */
 const VERBOTEN_METHODS = new Set([
@@ -44,7 +44,7 @@ const VERBOTEN_METHODS = new Set([
  * a `Proxy` with an instance of it as the handler. The "target" of the proxy is
  * ignored and can just be an empty object.
  */
-export default class MethodCacheProxyHandler extends BaseProxyHandler {
+export class MethodCacheProxyHandler extends BaseProxyHandler {
   /**
    * Constructs an instance.
    */

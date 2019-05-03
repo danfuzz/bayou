@@ -7,7 +7,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * DOM helper utilities.
  */
-export default class DomUtil extends UtilityClass {
+export class DomUtil extends UtilityClass {
   /**
    * Adds a stylesheet to the given document by URL, returning a promise that
    * resolves when it is fully loaded.

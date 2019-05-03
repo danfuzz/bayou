@@ -10,7 +10,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
  * **Note:** Babel's browser polyfill includes a Node-compatible `Buffer`
  * implementation, which is why this class works regardless of environment.
  */
-export default class TBuffer extends UtilityClass {
+export class TBuffer extends UtilityClass {
   /**
    * Checks a value of type `Buffer`.
    *

@@ -68,7 +68,7 @@ import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
  * throws an exception. (2) a default handler for (any, error), which logs the
  * error and aborts the state machine.
  */
-export default class StateMachine {
+export class StateMachine {
   /**
    * Constructs an instance.
    *

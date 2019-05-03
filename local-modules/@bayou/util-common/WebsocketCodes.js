@@ -28,7 +28,7 @@ const CLOSE_CODES = {
 /**
  * Translator of websocket status codes to human-oriented strings.
  */
-export default class WebsocketCodes extends UtilityClass {
+export class WebsocketCodes extends UtilityClass {
   /**
    * Get a friendly string for the given close reason code. This will always
    * include the number and will also include the name if known.

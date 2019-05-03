@@ -21,7 +21,7 @@ const MAX_OBJECT_KEYS = 20;
  * Performer of various kinds of redaction on {@link LogRecord} instances and
  * their constituent parts.
  */
-export default class RedactUtil extends UtilityClass {
+export class RedactUtil extends UtilityClass {
   /**
    * Truncates a string to be no more than the given number of characters,
    * including the truncation-indicating ellipsis, if truncated.

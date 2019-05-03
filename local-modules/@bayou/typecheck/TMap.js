@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `Map`.
  */
-export default class TMap extends UtilityClass {
+export class TMap extends UtilityClass {
   /**
    * Checks a value of type `Map`. Optionally checks the types of keys and
    *  values.

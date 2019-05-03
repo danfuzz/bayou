@@ -2,14 +2,14 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import CoreTypecheck from './CoreTypecheck';
-import Errors from './Errors';
-import UtilityClass from './UtilityClass';
+import { CoreTypecheck } from './CoreTypecheck';
+import { Errors } from './Errors';
+import { UtilityClass } from './UtilityClass';
 
 /**
  * `Object` helper utilities.
  */
-export default class ObjectUtil extends UtilityClass {
+export class ObjectUtil extends UtilityClass {
   /**
    * Extracts the named keys from the given object, returning a new frozen
    * plain object (frozen but not deep-frozen) with those bindings. It is an

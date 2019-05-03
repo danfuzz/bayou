@@ -7,7 +7,7 @@ import { UtilityClass } from '@bayou/util-core';
 /**
  * JSON helper utilities.
  */
-export default class JsonUtil extends UtilityClass {
+export class JsonUtil extends UtilityClass {
   /**
    * Like `JSON.parse()`, except the result is always deep-frozen.
    *

@@ -17,7 +17,7 @@ import { CommonBase, Errors } from '@bayou/util-core';
  * In addition, this class provides a static method {@link #makeProxy} for
  * convenient proxy construction.
  */
-export default class BaseProxyHandler extends CommonBase {
+export class BaseProxyHandler extends CommonBase {
   /**
    * Constructs and returns a proxy which wraps an instance of this class,
    * and with a frozen no-op function as the target. The instance of this class

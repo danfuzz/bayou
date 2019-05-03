@@ -18,7 +18,7 @@ const POSITION_NOT_FOUND = Object.freeze({
  * Miscellaneous helpers for interacting with Quill that didn't fit anywhere
  * else.
  */
-export default class QuillUtil extends UtilityClass {
+export class QuillUtil extends UtilityClass {
   /**
    * Return value for {@link #quillContextForPixelPosition} for cases where the
    * pixel is not in the Quill context. All properties are nulled/zeroed except

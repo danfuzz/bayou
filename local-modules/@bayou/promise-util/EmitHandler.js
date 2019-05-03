@@ -11,7 +11,7 @@ import { Functor, MethodCacheProxyHandler } from '@bayou/util-common';
  * more interestingly &mdash; offers any property as a function which emits an
  * event with that property's name.
  */
-export default class EmitHandler extends MethodCacheProxyHandler {
+export class EmitHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *

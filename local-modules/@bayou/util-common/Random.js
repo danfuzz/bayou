@@ -19,7 +19,7 @@ const ID_CHARS = 'abcdefghjkmnpqrstuwxyz0123456789';
  * Random number utilities. All values are generated using a cryptographically
  * secure random number generator.
  */
-export default class Random extends UtilityClass {
+export class Random extends UtilityClass {
   /**
    * Gets a random byte value (range `0` to `255` inclusive).
    *

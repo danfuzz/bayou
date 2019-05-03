@@ -17,7 +17,7 @@ const log = new Logger('top-error');
  * rejected promises) that percolate to the main event loop without having been
  * handled.
  */
-export default class TopErrorHandler extends UtilityClass {
+export class TopErrorHandler extends UtilityClass {
   /**
    * Sets up error handling.
    */

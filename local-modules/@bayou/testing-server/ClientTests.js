@@ -10,7 +10,7 @@ import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
-import EventReceiver from './EventReceiver';
+import { EventReceiver } from './EventReceiver';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('testing');
@@ -18,7 +18,7 @@ const log = new Logger('testing');
 /**
  * Indirect driver for the Mocha framework, for client tests.
  */
-export default class ClientTests extends UtilityClass {
+export class ClientTests extends UtilityClass {
   /**
    * Sets up and runs client tests, using a captive browser environment.
    *

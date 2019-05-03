@@ -4,9 +4,9 @@
 
 import { TBoolean } from '@bayou/typecheck';
 
-import AllSinks from './AllSinks';
-import BaseLogger from './BaseLogger';
-import LogTag from './LogTag';
+import { AllSinks } from './AllSinks';
+import { BaseLogger } from './BaseLogger';
+import { LogTag } from './LogTag';
 
 /**
  * Logger which associates a tag (typically a subsystem or module name) with all
@@ -17,7 +17,7 @@ import LogTag from './LogTag';
  * default. The rest are not squelchable. See {@link LogRecord} for more
  * details.
  */
-export default class Logger extends BaseLogger {
+export class Logger extends BaseLogger {
   /**
    * Constructs an instance.
    *

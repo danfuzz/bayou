@@ -6,7 +6,7 @@ import { EventSource } from '@bayou/promise-util';
 import { TObject } from '@bayou/typecheck';
 import { CommonBase, Functor, UtilityClass } from '@bayou/util-common';
 
-import QuillEvents from './QuillEvents';
+import { QuillEvents } from './QuillEvents';
 
 /**
  * Creator of subclasses of `Quill` (or `Quill`-like classes), that support the
@@ -16,7 +16,7 @@ import QuillEvents from './QuillEvents';
  * actual `Quill` implementation pluggable, such that one does not even have to
  * have a module named `quill` (per se) defined in the system.
  */
-export default class PromSubclasser extends UtilityClass {
+export class PromSubclasser extends UtilityClass {
   /**
    * Returns a freshly-constructed subclass of the given class. `origClass` is
    * presumed to be `Quill` as defined by the public `quill` module or at least

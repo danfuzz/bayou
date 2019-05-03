@@ -4,7 +4,7 @@
 
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
-import EventSource from './EventSource';
+import { EventSource } from './EventSource';
 
 /**
  * Promise-chained event. Each instance becomes chained to the next event which
@@ -14,7 +14,7 @@ import EventSource from './EventSource';
  * properties and accessors return promises that only become resolved once an
  * appropriate event has been emitted by the source.
  */
-export default class ChainedEvent extends CommonBase {
+export class ChainedEvent extends CommonBase {
   /**
    * Constructs an instance.
    *

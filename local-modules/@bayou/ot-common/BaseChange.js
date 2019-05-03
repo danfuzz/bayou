@@ -6,8 +6,8 @@ import { IdSyntax } from '@bayou/config-common';
 import { TFunction } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseDelta from './BaseDelta';
-import RevisionNumber from './RevisionNumber';
+import { BaseDelta } from './BaseDelta';
+import { RevisionNumber } from './RevisionNumber';
 import Timestamp from './Timestamp';
 
 /**
@@ -40,7 +40,7 @@ import Timestamp from './Timestamp';
  *
  * Instances of this class are immutable.
  */
-export default class BaseChange extends CommonBase {
+export class BaseChange extends CommonBase {
   /**
    * {BaseChange} Representation of the empty (and authorless and timeless)
    * first change to a document.

@@ -10,4 +10,4 @@ import url from 'url';
  */
 const theClass = url.URL || URL;
 
-export default theClass;
+export { theClass as URL };

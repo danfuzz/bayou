@@ -2,15 +2,15 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Errors from './Errors';
-import UtilityClass from './UtilityClass';
+import { Errors } from './Errors';
+import { UtilityClass } from './UtilityClass';
 
 /**
  * Utility to implement the minimal bits of typechecking required by this
  * module. This class exists to avoid a circular dependency between this module
  * and `@bayou/typecheck`.
  */
-export default class CoreTypecheck extends UtilityClass {
+export class CoreTypecheck extends UtilityClass {
   /**
    * Checks that a value is of type `string` and has the usual form of a
    * programming language identifier.

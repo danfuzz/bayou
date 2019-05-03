@@ -9,7 +9,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * Type representation of revision numbers. The values themselves are always
  * just non-negative integers. This is just where the type checker code lives.
  */
-export default class RevisionNumber extends UtilityClass {
+export class RevisionNumber extends UtilityClass {
   /**
    * Checks a value of type `RevisionNumber`.
    *

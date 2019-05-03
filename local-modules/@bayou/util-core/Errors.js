@@ -4,9 +4,9 @@
 
 import { inspect } from 'util';
 
-import CoreTypecheck from './CoreTypecheck';
-import InfoError from './InfoError';
-import UtilityClass from './UtilityClass';
+import { CoreTypecheck } from './CoreTypecheck';
+import { InfoError } from './InfoError';
+import { UtilityClass } from './UtilityClass';
 
 /**
  * Utility class for constructing commonly-used errors, which are applicable to
@@ -17,7 +17,7 @@ import UtilityClass from './UtilityClass';
  * is created with the method `someName()`, then the corresponding predicate
  * will be `is_someName()`.
  */
-export default class Errors extends UtilityClass {
+export class Errors extends UtilityClass {
   /**
    * Constructs an instance which indicates the unrecoverable termination of an
    * ongoing activity (of some sort), in any way other than clean shutdown.

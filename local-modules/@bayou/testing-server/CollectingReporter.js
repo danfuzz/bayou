@@ -4,13 +4,13 @@
 
 import { BaseReporter } from '@bayou/testing-common';
 
-import TestCollector from './TestCollector';
+import { TestCollector } from './TestCollector';
 
 /**
  * Mocha reporter which uses its built-in `spec` reporter to write to the
  * console while also collecting data for eventual writing to a file.
  */
-export default class CollectingReporter extends BaseReporter {
+export class CollectingReporter extends BaseReporter {
   /**
    * Constructs an instance.
    *
