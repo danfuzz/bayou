@@ -4,14 +4,14 @@
 
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import ItemCodec from './ItemCodec';
-import SpecialCodecs from './SpecialCodecs';
+import { ItemCodec } from './ItemCodec';
+import { SpecialCodecs } from './SpecialCodecs';
 
 /**
  * Methods for registering and looking up item codecs by name. The names are
  * how classes/types are identified when encoding and decoding instances.
  */
-export default class Registry extends CommonBase {
+export class Registry extends CommonBase {
   /**
    * Constructs an instance.
    */

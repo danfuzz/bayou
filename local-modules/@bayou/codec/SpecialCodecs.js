@@ -4,13 +4,13 @@
 
 import { FrozenBuffer, Functor, ObjectUtil, UtilityClass } from '@bayou/util-common';
 
-import ItemCodec from './ItemCodec';
+import { ItemCodec } from './ItemCodec';
 
 /**
  * Utility class which holds special `ItemCodec`s (that is, ones that aren't
  * straightforward coders for class instances).
  */
-export default class SpecialCodecs extends UtilityClass {
+export class SpecialCodecs extends UtilityClass {
   /** {ItemCodec} Codec used for coding arrays. */
   static get ARRAY() {
     return new ItemCodec(ItemCodec.tagFromType('array'), 'array', this._arrayPredicate,
