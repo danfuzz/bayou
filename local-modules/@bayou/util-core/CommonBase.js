@@ -4,9 +4,9 @@
 
 import { inspect } from 'util';
 
-import CoreTypecheck from './CoreTypecheck';
-import Errors from './Errors';
-import ObjectUtil from './ObjectUtil';
+import { CoreTypecheck } from './CoreTypecheck';
+import { Errors } from './Errors';
+import { ObjectUtil } from './ObjectUtil';
 
 /**
  * Base class which provides a couple conveniences beyond what baseline
@@ -14,7 +14,7 @@ import ObjectUtil from './ObjectUtil';
  *
  * @abstract
  */
-export default class CommonBase {
+export class CommonBase {
   /**
    * Checks that a value is an instance of this class. Throws an error if not.
    *

@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
-import CoreTypecheck from './CoreTypecheck';
-import Functor from './Functor';
+import { CoreTypecheck } from './CoreTypecheck';
+import { Functor } from './Functor';
 
 /**
  * `Error` subclass that comes with additional structured information.
@@ -23,7 +23,7 @@ import Functor from './Functor';
  * we can't just mix it in here (as this class is the one that gets initialized
  * first). Instead, this happens during module initialization.
  */
-export default class InfoError extends Error {
+export class InfoError extends Error {
   /**
    * Checks if the given value is an instance of this class with the given
    * name. This is a `static` method, so that the check can be made on errors

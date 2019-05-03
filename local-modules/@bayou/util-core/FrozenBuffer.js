@@ -8,8 +8,8 @@ import crypto from 'crypto';
 
 import { inspect } from 'util';
 
-import CoreTypecheck from './CoreTypecheck';
-import Errors from './Errors';
+import { CoreTypecheck } from './CoreTypecheck';
+import { Errors } from './Errors';
 
 /** {string} Node's name for the hashing algorithm to use. */
 const NODE_HASH_NAME = 'sha256';
@@ -29,7 +29,7 @@ const HASH_BIT_LENGTH = 256;
  * first). Instead, this happens during module initialization.
  *
  */
-export default class FrozenBuffer {
+export class FrozenBuffer {
   /**
    * Validates that the given value is a valid hash string, such as might be
    * returned by the instance property `.hash` on this class. Throws an error if

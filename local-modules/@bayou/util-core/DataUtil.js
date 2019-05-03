@@ -2,11 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Errors from './Errors';
-import FrozenBuffer from './FrozenBuffer';
-import Functor from './Functor';
-import ObjectUtil from './ObjectUtil';
-import UtilityClass from './UtilityClass';
+import { Errors } from './Errors';
+import { FrozenBuffer } from './FrozenBuffer';
+import { Functor } from './Functor';
+import { ObjectUtil } from './ObjectUtil';
+import { UtilityClass } from './UtilityClass';
 
 /**
  * "Data value" helper utilities. A "data value" is defined as any JavaScript
@@ -28,7 +28,7 @@ import UtilityClass from './UtilityClass';
  * * Any composite value with an element that is not a data value, per these
  *   rules.
  */
-export default class DataUtil extends UtilityClass {
+export class DataUtil extends UtilityClass {
   /**
    * Makes a deep-frozen clone of the given data value, or return the value
    * itself if it is already deep-frozen. Depending on the second argument,

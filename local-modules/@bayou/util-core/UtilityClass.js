@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import Errors from './Errors';
+import { Errors } from './Errors';
 
 /**
  * Base class for "utility" classes. A utility class is one which is not
@@ -12,7 +12,7 @@ import Errors from './Errors';
  *
  * @abstract
  */
-export default class UtilityClass {
+export class UtilityClass {
   /**
    * Always throws an error. That is, utility classes are not ever supposed to
    * be instantiated.
