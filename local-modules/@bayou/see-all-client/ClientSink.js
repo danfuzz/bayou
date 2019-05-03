@@ -12,7 +12,7 @@ import { Functor } from '@bayou/util-common';
  * Implementation of the `@bayou/see-all` logging sink protocol for use in a web
  * browser context. It logs everything to the browser window console.
  */
-export default class ClientSink extends BaseSink {
+export class ClientSink extends BaseSink {
   /**
    * Registers an instance of this class as a logging sink with the main
    * `@bayou/see-all` module.
