@@ -16,7 +16,7 @@ import { HumanSink, FileSink } from '@bayou/see-all-server';
 import { ClientTests, ServerTests } from '@bayou/testing-server';
 import { CommonBase } from '@bayou/util-common';
 
-import Options from './Options';
+import { Options } from './Options';
 
 /** {Logger} Logger for this file. */
 const log = new Logger('top-action');
@@ -24,7 +24,7 @@ const log = new Logger('top-action');
 /**
  * Top-level server actions. See {@link Options#usage} for semantic details.
  */
-export default class Action extends CommonBase {
+export class Action extends CommonBase {
   /** {array<string>} Array of all allowed actions, in kebab-case form. */
   static get ACTIONS() {
     if (!this._actions) {
