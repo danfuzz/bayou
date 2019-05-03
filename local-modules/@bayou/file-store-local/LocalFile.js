@@ -40,7 +40,7 @@ const MAX_ATOMIC_COMPOSED_CHANGES = 1000;
  * File implementation that stores everything in the locally-accessible
  * filesystem.
  */
-export default class LocalFile extends BaseFile {
+export class LocalFile extends BaseFile {
   /**
    * Constructs an instance.
    *
