@@ -7,7 +7,7 @@ import { Condition, Delay } from '@bayou/promise-util';
 import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import DocSession from './DocSession';
+import { DocSession } from './DocSession';
 
 /**
  * How long to wait (in msec) after sending a caret update before sending the
@@ -24,7 +24,7 @@ const MAX_IDLE_TIME_MSEC = 60 * 1000; // One minute.
 /**
  * Handler for the upload of caret info from a client.
  */
-export default class CaretTracker extends CommonBase {
+export class CaretTracker extends CommonBase {
   /**
    * Constructs an instance.
    *

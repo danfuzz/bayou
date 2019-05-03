@@ -10,7 +10,7 @@ import { TInt, TString } from '@bayou/typecheck';
 import { StateMachine } from '@bayou/state-machine';
 import { Errors, Functor, InfoError } from '@bayou/util-common';
 
-import DocSession from './DocSession';
+import { DocSession } from './DocSession';
 
 /**
  * {Int} Minimum amount of time (in msec) to wait (and continue to retry
@@ -111,7 +111,7 @@ const bindMap = new WeakMap();
  * just wait until it comes back with a result, instead of having to set up a
  * low-duration timeout to repeatedly ask for new changes.
  */
-export default class BodyClient extends StateMachine {
+export class BodyClient extends StateMachine {
   /**
    * Constructs an instance. It is initially in state `detached`. The
    * constructed instance expects to be the primary non-human controller of the
