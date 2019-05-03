@@ -13,7 +13,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * easy to wrangle these uses, including especially for the purposes of testing
  * in isolation.
  */
-export default class ClientEnv extends UtilityClass {
+export class ClientEnv extends UtilityClass {
   /**
    * Initializes this module.
    *
