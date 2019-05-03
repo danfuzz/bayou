@@ -6,7 +6,7 @@
  * A collection of code to help with reconciling Quill contents
  * with on-screen pixel positions.
  */
-export default class QuillGeometry {
+export class QuillGeometry {
   /**
    * Takes a Quill character offset and returns a bounding rectangle for an
    * insertion point cursor at that offset.
