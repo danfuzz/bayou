@@ -7,7 +7,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the network configuration of a server.
  */
-export default class Network extends UtilityClass {
+export class Network extends UtilityClass {
   /**
    * {string} Implementation of standard configuration point.
    *

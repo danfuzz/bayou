@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the file / document storage system.
  */
-export default class Storage extends UtilityClass {
+export class Storage extends UtilityClass {
   /**
    * {@bayou/doc-common/BodyDelta} The body content to use for new documents.
    */

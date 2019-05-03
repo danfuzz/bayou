@@ -10,7 +10,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * Base class for {@link IdSyntax} (in this module) and its configured
  * implementations.
  */
-export default class BaseIdSyntax extends UtilityClass {
+export class BaseIdSyntax extends UtilityClass {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    *

@@ -4,12 +4,12 @@
 
 import { use } from '@bayou/injecty';
 
-import BaseAuth from './BaseAuth';
+import { BaseAuth } from './BaseAuth';
 
 /**
  * Authorization-related functionality.
  */
-export default class Auth extends BaseAuth {
+export class Auth extends BaseAuth {
   /**
    * {string} Prefix which when prepended to an arbitrary ID string is
    * guaranteed to result in string for which {@link #isToken} is `false`.

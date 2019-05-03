@@ -11,7 +11,7 @@ const log = new Logger('html-export');
 /**
  * Utility functionality regarding exporting HTML
  */
-export default class HtmlExport extends UtilityClass {
+export class HtmlExport extends UtilityClass {
 /**
  * Converts the snapshot of given revision number to html.
  *

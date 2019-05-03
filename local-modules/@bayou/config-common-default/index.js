@@ -4,8 +4,8 @@
 
 import { inject } from '@bayou/injecty';
 
-import IdSyntax from './IdSyntax';
-import Text from './Text';
+import { IdSyntax } from './IdSyntax';
+import { Text } from './Text';
 
 /**
  * Injects all of the definitions here into the global configuration.

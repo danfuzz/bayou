@@ -9,7 +9,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding text handling.
  */
-export default class Text extends UtilityClass {
+export class Text extends UtilityClass {
   /**
    * {Delta} Implementation of standard configuration point. See `package.json`
    * in this directory for details of the version we return here.

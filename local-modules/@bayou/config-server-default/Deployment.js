@@ -8,12 +8,12 @@ import { Assets } from '@bayou/assets-client';
 import { ServerEnv } from '@bayou/env-server';
 import { UtilityClass } from '@bayou/util-common';
 
-import Network from './Network';
+import { Network } from './Network';
 
 /**
  * Utility functionality regarding the deployment configuration of a server.
  */
-export default class Deployment extends UtilityClass {
+export class Deployment extends UtilityClass {
   /**
    * {array<string>} Implementation of standard configuration point.
    *

@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the deployment configuration of a server.
  */
-export default class Deployment extends UtilityClass {
+export class Deployment extends UtilityClass {
   /**
    * {array<string>} Array of absolute filesystem paths to the asset directory
    * trees, in priority order (earliest directory "overrides" later ones when

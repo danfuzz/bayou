@@ -10,7 +10,7 @@ import { UtilityClass } from '@bayou/util-common';
  * This (default) implementation treats redaction as a no-op, which is of course
  * inappropriate for a production configuration.
  */
-export default class Logging extends UtilityClass {
+export class Logging extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *

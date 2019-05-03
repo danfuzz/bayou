@@ -10,7 +10,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the file / document storage system.
  */
-export default class Storage extends UtilityClass {
+export class Storage extends UtilityClass {
   /** {BodyDelta} Implementation of standard configuration point. */
   static get DEFAULT_DOCUMENT_BODY() {
     return new BodyDelta([

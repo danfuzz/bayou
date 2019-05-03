@@ -4,12 +4,12 @@
 
 import { use } from '@bayou/injecty';
 
-import BaseIdSyntax from './BaseIdSyntax';
+import { BaseIdSyntax } from './BaseIdSyntax';
 
 /**
  * Utility functionality regarding ID strings.
  */
-export default class IdSyntax extends BaseIdSyntax {
+export class IdSyntax extends BaseIdSyntax {
   /**
    * Checks whether the given value is syntactically valid as an author ID.
    * This method is only ever called with a non-empty string.

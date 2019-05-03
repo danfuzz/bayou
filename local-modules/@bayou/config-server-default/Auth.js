@@ -40,7 +40,7 @@ tokenMint.registerToken(THE_ROOT_TOKEN, Object.freeze({ type: BaseAuth.TYPE_root
 /**
  * Utility functionality regarding the network configuration of a server.
  */
-export default class Auth extends BaseAuth {
+export class Auth extends BaseAuth {
   /**
    * {string} Implementation of standard configuration point.
    */
