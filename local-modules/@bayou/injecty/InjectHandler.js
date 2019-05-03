@@ -4,12 +4,12 @@
 
 import { BaseProxyHandler } from '@bayou/util-common';
 
-import ConfigMap from './ConfigMap';
+import { ConfigMap } from './ConfigMap';
 
 /**
  * Proxy handler which underlies {@link inject}.
  */
-export default class InjectHandler extends BaseProxyHandler {
+export class InjectHandler extends BaseProxyHandler {
   /**
    * Constructs an instance.
    *

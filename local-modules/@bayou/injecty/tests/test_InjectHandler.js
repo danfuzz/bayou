@@ -6,8 +6,8 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 // These classes aren't exported publicly, so they need to be imported by path.
-import ConfigMap from '@bayou/injecty/ConfigMap';
-import InjectHandler from '@bayou/injecty/InjectHandler';
+import { ConfigMap } from '@bayou/injecty/ConfigMap';
+import { InjectHandler } from '@bayou/injecty/InjectHandler';
 
 // **Note:** These tests all use proxy instances in the way expected of clients
 // of this module.

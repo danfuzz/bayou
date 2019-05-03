@@ -4,12 +4,12 @@
 
 import { BaseProxyHandler } from '@bayou/util-common';
 
-import ConfigMap from './ConfigMap';
+import { ConfigMap } from './ConfigMap';
 
 /**
  * Proxy handler which underlies {@link use}.
  */
-export default class UseHandler extends BaseProxyHandler {
+export class UseHandler extends BaseProxyHandler {
   /**
    * Constructs an instance.
    *

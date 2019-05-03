@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 // This class isn't exported publicly, so it needs to be imported by path.
-import ConfigMap from '@bayou/injecty/ConfigMap';
+import { ConfigMap } from '@bayou/injecty/ConfigMap';
 
 describe('@bayou/injecty/ConfigMap', () => {
   describe('constructor', () => {
