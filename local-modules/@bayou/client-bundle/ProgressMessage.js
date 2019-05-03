@@ -5,7 +5,7 @@
 /**
  * Simple plugin to produce progress messages while building Webpack bundles.
  */
-export default class ProgressMessage {
+export class ProgressMessage {
   /**
    * Constructs an instance.
    *
