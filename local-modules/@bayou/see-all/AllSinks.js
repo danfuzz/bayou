@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { Errors, Singleton } from '@bayou/util-common';
 
-import LogRecord from './LogRecord';
+import { LogRecord } from './LogRecord';
 
 /**
  * {Int} Maximum amount of time, in msec, between successive logs that inidicate
@@ -35,7 +35,7 @@ const MAX_LOGS_PER_TIME = 100;
  * module-internal class whose functionality is effectively exposed by the
  * `SeeAll` and `Logger` classes.
  */
-export default class AllSinks extends Singleton {
+export class AllSinks extends Singleton {
   /**
    * Constructs the instance.
    */

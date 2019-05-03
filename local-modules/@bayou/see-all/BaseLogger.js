@@ -6,16 +6,16 @@ import { inspect } from 'util';
 
 import { CommonBase, DataUtil, Errors, Functor } from '@bayou/util-common';
 
-import LogProxyHandler from './LogProxyHandler';
-import LogRecord from './LogRecord';
-import LogStream from './LogStream';
-import LogTag from './LogTag';
+import { LogProxyHandler } from './LogProxyHandler';
+import { LogRecord } from './LogRecord';
+import { LogStream } from './LogStream';
+import { LogTag } from './LogTag';
 
 /**
  * Base class for loggers. Subclasses must implement a handful of `_impl_*`
  * methods.
  */
-export default class BaseLogger extends CommonBase {
+export class BaseLogger extends CommonBase {
   /**
    * Constructs an instance.
    */

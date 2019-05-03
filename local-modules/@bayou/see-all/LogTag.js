@@ -24,7 +24,7 @@ let TIME = null;
  * module. The context strings, if any, are specific to the main tag (defined
  * by the component being so represented).
  */
-export default class LogTag extends CommonBase {
+export class LogTag extends CommonBase {
   /** {LogTag} Instance to use when logging log system metainfo. */
   static get LOG() {
     if (LOG === null) {

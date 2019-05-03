@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase, DataUtil, ErrorUtil, Errors, Functor } from '@bayou/util-common';
 
-import LogTag from './LogTag';
+import { LogTag } from './LogTag';
 
 /** {array<string>} Array of valid severity levels for message instances. */
 const MESSAGE_LEVELS_ARRAY =
@@ -89,7 +89,7 @@ const RESERVED_EVENT_NAMES = new Set([...MESSAGE_LEVELS_ARRAY, TIME_EVENT_NAME])
  *   typically distract from the big picture of the system. They are meant to be
  *   turned on selectively during development and debugging.
  */
-export default class LogRecord extends CommonBase {
+export class LogRecord extends CommonBase {
   /** {array<string>} Array of all valid levels. */
   static get MESSAGE_LEVELS() {
     return MESSAGE_LEVELS_ARRAY;
