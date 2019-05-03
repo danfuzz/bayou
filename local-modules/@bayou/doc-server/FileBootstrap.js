@@ -9,12 +9,12 @@ import { Timestamp } from '@bayou/ot-common';
 import { Mutex } from '@bayou/promise-util';
 import { Errors } from '@bayou/util-common';
 
-import BaseDataManager from './BaseDataManager';
-import BodyControl from './BodyControl';
-import CaretControl from './CaretControl';
-import PropertyControl from './PropertyControl';
-import SchemaHandler from './SchemaHandler';
-import ValidationStatus from './ValidationStatus';
+import { BaseDataManager } from './BaseDataManager';
+import { BodyControl } from './BodyControl';
+import { CaretControl } from './CaretControl';
+import { PropertyControl } from './PropertyControl';
+import { SchemaHandler } from './SchemaHandler';
+import { ValidationStatus } from './ValidationStatus';
 
 /**
  * {BodyDelta} Message used as document to indicate a major validation error.
@@ -43,7 +43,7 @@ const FILE_CREATE_TIMEOUT_MSEC = 10000;
  * Handler for the "bootstrap" setup of a file, including initializing new
  * files, validating existing files, and dealing with validation problems.
  */
-export default class FileBootstrap extends BaseDataManager {
+export class FileBootstrap extends BaseDataManager {
   /**
    * Constructs an instance.
    *

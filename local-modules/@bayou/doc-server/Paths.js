@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
  * Utility class that just provides the common `StoragePath` strings used
  * by the document storage format.
  */
-export default class Paths extends UtilityClass {
+export class Paths extends UtilityClass {
   /**
    * {string} `StoragePath` prefix string for document body (main content)
    * information.

@@ -35,7 +35,7 @@ const TOP_CANDIDATES = 8;
  * top N choices for "most distinctly different color" and pick one of them
  * pseudo-randomly based on the (guaranteed unique) caret ID as the seed.
  */
-export default class CaretColor extends UtilityClass {
+export class CaretColor extends UtilityClass {
   /**
    * Given a caret ID and a set of existing colors, returns the color to use
    * for a new caret with that ID.

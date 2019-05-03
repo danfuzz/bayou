@@ -5,12 +5,12 @@
 import { Storage } from '@bayou/config-server';
 import { BaseCache } from '@bayou/weak-lru-cache';
 
-import FileComplex from './FileComplex';
+import { FileComplex } from './FileComplex';
 
 /**
  * Cache of active instances of {@link FileComplex}.
  */
-export default class FileComplexCache extends BaseCache {
+export class FileComplexCache extends BaseCache {
   /**
    * Constructs an instance.
    *

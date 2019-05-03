@@ -9,7 +9,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility class to convert a BodyDelta to HTML
  */
-export default class BodyDeltaHtml extends UtilityClass {
+export class BodyDeltaHtml extends UtilityClass {
   /**
    * Produces an HTML representation of the contents of this instance.
    *

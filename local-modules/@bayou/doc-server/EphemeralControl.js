@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BaseControl from './BaseControl';
+import { BaseControl } from './BaseControl';
 
 /**
  * Base class for _ephemeral_ document part controllers. Ephemeral parts do not
@@ -15,7 +15,7 @@ import BaseControl from './BaseControl';
  * which merely keys off of the value of the static property {@link #ephemeral}
  * defined here.
  */
-export default class EphemeralControl extends BaseControl {
+export class EphemeralControl extends BaseControl {
   /**
    * {boolean} Whether (`true`) or not (`false`) this instance controls an
    * ephemeral part. Defined as `true` for this class.

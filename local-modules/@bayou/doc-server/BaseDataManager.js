@@ -5,14 +5,14 @@
 import { FileOp } from '@bayou/file-store-ot';
 import { TArray } from '@bayou/typecheck';
 
-import BaseComplexMember from './BaseComplexMember';
-import ValidationStatus from './ValidationStatus';
+import { BaseComplexMember } from './BaseComplexMember';
+import { ValidationStatus } from './ValidationStatus';
 
 /**
  * Subclass of {@link BaseComplexMember} for things that take top-level
  * responsibility for managing data within a file.
  */
-export default class BaseDataManager extends BaseComplexMember {
+export class BaseDataManager extends BaseComplexMember {
   /**
    * {array<FileOp>} Array of {@link FileOp}s which when made into a
    * {@link FileChange} will initialize the portion of the file which this class

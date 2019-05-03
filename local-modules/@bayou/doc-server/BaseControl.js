@@ -9,8 +9,8 @@ import { Delay } from '@bayou/promise-util';
 import { TBoolean, TFunction } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import BaseDataManager from './BaseDataManager';
-import ValidationStatus from './ValidationStatus';
+import { BaseDataManager } from './BaseDataManager';
+import { ValidationStatus } from './ValidationStatus';
 
 /** {Int} Initial amount of time (in msec) between update retries. */
 const INITIAL_UPDATE_RETRY_MSEC = 50;
@@ -52,7 +52,7 @@ const CHANGES_PER_STORED_SNAPSHOT = 1000;
  * in behavior between the subclasses is in whether full change history is
  * stored. See their descriptions for details.
  */
-export default class BaseControl extends BaseDataManager {
+export class BaseControl extends BaseDataManager {
   /**
    * {class} Class (constructor function) of change objects to be used with
    * instances of this class.

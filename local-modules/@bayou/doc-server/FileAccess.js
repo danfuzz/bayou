@@ -18,7 +18,7 @@ const log = new Logger('doc');
  * in isolation, since otherwise they would all have mutual dependencies via
  * {@link FileComplex}.
  */
-export default class FileAccess extends CommonBase {
+export class FileAccess extends CommonBase {
   /**
    * Constructs an instance.
    *
