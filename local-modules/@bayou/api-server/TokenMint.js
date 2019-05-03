@@ -48,7 +48,7 @@ function sequenceGenerator() {
  * across multiple back-end machines, nor one that wishes to have tokens be more
  * durable than OS processes).
  */
-export default class TokenMint extends CommonBase {
+export class TokenMint extends CommonBase {
   /**
    * Constructs an instance.
    *

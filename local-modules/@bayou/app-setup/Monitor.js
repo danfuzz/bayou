@@ -10,9 +10,9 @@ import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import Application from './Application';
-import RequestLogger from './RequestLogger';
-import ServerUtil from './ServerUtil';
+import { Application } from './Application';
+import { RequestLogger } from './RequestLogger';
+import { ServerUtil } from './ServerUtil';
 
 /** {Logger} Logger. */
 const log = new Logger('app-monitor');
@@ -20,7 +20,7 @@ const log = new Logger('app-monitor');
 /**
  * Web server for the monitoring endpoints.
  */
-export default class Monitor extends CommonBase {
+export class Monitor extends CommonBase {
   /**
    * Constructs an instance.
    *

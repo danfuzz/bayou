@@ -98,8 +98,8 @@ taking into account recent additions to the language.
   import { BaseFile } from '@bayou/file-store';
   import { DataUtil, InfoError, Singleton } from '@bayou/util-common';
 
-  import RegularBlort from './RegularBlort';
-  import SpecialBlort from './SpecialBlort';
+  import { RegularBlort } from './RegularBlort';
+  import { SpecialBlort } from './SpecialBlort';
   ```
 
 * `import ... as` &mdash; If you have a name conflict that needs to be resolved,

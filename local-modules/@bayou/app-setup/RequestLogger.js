@@ -15,7 +15,7 @@ import { CommonBase, Random } from '@bayou/util-common';
  * built-in `dev` style, intended to produce concise logs for display on a
  * developer's console.
  */
-export default class RequestLogger extends CommonBase {
+export class RequestLogger extends CommonBase {
   /**
    * Constructs an instance.
    *

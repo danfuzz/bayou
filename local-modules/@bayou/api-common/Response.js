@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { TInt, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, ErrorUtil, Errors, Functor, InfoError } from '@bayou/util-common';
 
-import CodableError from './CodableError';
+import { CodableError } from './CodableError';
 
 /**
  * Payload sent as a response to a method call.
@@ -17,7 +17,7 @@ import CodableError from './CodableError';
  * such that it will be decoded into an `Error` instance of some sort on the
  * far side of the connection.
  */
-export default class Response extends CommonBase {
+export class Response extends CommonBase {
   /**
    * Constructs an instance.
    *

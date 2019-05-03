@@ -9,7 +9,7 @@ import { inspect } from 'util';
 import { BearerToken } from '@bayou/api-common';
 import { Functor } from '@bayou/util-common';
 
-import TargetMap from '@bayou/api-client/TargetMap';
+import { TargetMap } from '@bayou/api-client/TargetMap';
 
 /**
  * Class which has a {@link #sendMessage} that when invoked remembers the

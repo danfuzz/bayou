@@ -5,15 +5,15 @@
 import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Functor } from '@bayou/util-common';
 
-import BearerToken from './BearerToken';
-import TargetId from './TargetId';
+import { BearerToken } from './BearerToken';
+import { TargetId } from './TargetId';
 
 /**
  * Message being sent from client to server to requrest action. This includes
  * a message ID, target address, and a main payload indicating a method name
  * and arguments.
  */
-export default class Message extends CommonBase {
+export class Message extends CommonBase {
   /**
    * Constructs an instance.
    *

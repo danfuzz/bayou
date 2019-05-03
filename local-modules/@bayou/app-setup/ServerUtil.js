@@ -13,7 +13,7 @@ const log = new Logger('app');
  * Utility functions for dealing with `Server`s (e.g., HTTP server objects and
  * the like).
  */
-export default class ServerUtil extends UtilityClass {
+export class ServerUtil extends UtilityClass {
   /**
    * Arranges for the given `Server` to stop listening for connections when
    * the system is trying to shut down.

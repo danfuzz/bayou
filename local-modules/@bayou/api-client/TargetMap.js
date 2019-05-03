@@ -6,7 +6,7 @@ import { TargetId } from '@bayou/api-common';
 import { TFunction, TObject } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import TargetHandler from './TargetHandler';
+import { TargetHandler } from './TargetHandler';
 
 /**
  * Map of the various targets being provided over a connection. Items present in
@@ -17,7 +17,7 @@ import TargetHandler from './TargetHandler';
  * of the fact that the _other_ side of the connection will balk if there turn
  * out to be auth requirements on targets that get referenced.
  */
-export default class TargetMap extends CommonBase {
+export class TargetMap extends CommonBase {
   /**
    * Constructs an instance.
    *

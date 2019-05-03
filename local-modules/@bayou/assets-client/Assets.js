@@ -12,7 +12,7 @@ const DIR = path.resolve(__dirname, 'files');
 /**
  * Default provider of static assets to serve to clients.
  */
-export default class Assets extends UtilityClass {
+export class Assets extends UtilityClass {
   /**
    * {array<string>} Default implementation of the configuration
    * {@link @bayou/config-server/Deployment#ASSET_DIRS}, which refers _just_ to

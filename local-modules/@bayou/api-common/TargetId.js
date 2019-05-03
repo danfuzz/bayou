@@ -5,7 +5,7 @@
 import { TString } from '@bayou/typecheck';
 import { Errors, UtilityClass } from '@bayou/util-common';
 
-import BearerToken from './BearerToken';
+import { BearerToken } from './BearerToken';
 
 /** {RegExp} Regular expression which matches valid target IDs. */
 const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,256}$/;
@@ -22,7 +22,7 @@ const VALID_TARGET_ID_REGEX = /^[-_.a-zA-Z0-9]{1,256}$/;
  * alphanumerics, underscore (`_`), dash (`-`), or period (`.`), which is at
  * least one and no longer than 256 characters.
  */
-export default class TargetId extends UtilityClass {
+export class TargetId extends UtilityClass {
   /**
    * Checks a value of type `TargetId`.
    *

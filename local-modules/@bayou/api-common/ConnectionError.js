@@ -7,14 +7,14 @@ import { inspect } from 'util';
 import { TString } from '@bayou/typecheck';
 import { InfoError } from '@bayou/util-common';
 
-import TargetId from './TargetId';
+import { TargetId } from './TargetId';
 
 /**
  * Error class for reporting errors coming from `ApiClient` related to the
  * connection or transport (as opposed to, e.g., being errors being relayed from
  * the far side of an API connection).
  */
-export default class ConnectionError extends InfoError {
+export class ConnectionError extends InfoError {
   /**
    * Constructs an error indicating that the API connection has been closed.
    * This error is reported in response to any API call made when the connection

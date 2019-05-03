@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import TargetId from './TargetId';
+import { TargetId } from './TargetId';
 
 /**
  * Bearer token, which is a kind of authentication / authorization key wherein
@@ -21,7 +21,7 @@ import TargetId from './TargetId';
  * token (which should have within it, somehow, both an ID portion and a secret
  * portion).
  */
-export default class BearerToken extends CommonBase {
+export class BearerToken extends CommonBase {
   /**
    * Redacts a string for use in error messages and logging. This is generally
    * done in logging and error-handling code which expects that its string

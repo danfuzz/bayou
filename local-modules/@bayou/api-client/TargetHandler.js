@@ -13,7 +13,7 @@ import { Functor, MethodCacheProxyHandler } from '@bayou/util-common';
  * the properties it returns are always functions which perform calls to
  * `ApiClient._send()`.
  */
-export default class TargetHandler extends MethodCacheProxyHandler {
+export class TargetHandler extends MethodCacheProxyHandler {
   /**
    * Constructs an instance.
    *

@@ -11,7 +11,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * {Codec} Standard {@link Codec} instance, constructed by
    * {@link #makeFullCodec}.

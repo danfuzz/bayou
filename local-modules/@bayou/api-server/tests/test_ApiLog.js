@@ -11,7 +11,7 @@ import { MockLogger } from '@bayou/see-all/mocks';
 import { Functor } from '@bayou/util-common';
 
 // Not an exported class, so we have to import it as a file.
-import ApiLog from '../ApiLog';
+import { ApiLog } from '../ApiLog';
 
 describe('@bayou/api-server/ApiLog', () => {
   describe('incomingMessage()', () => {

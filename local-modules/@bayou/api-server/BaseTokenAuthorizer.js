@@ -10,7 +10,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * Abstract class for mapping tokens to objects which embody the powers
  * authorized by those tokens.
  */
-export default class BaseTokenAuthorizer extends CommonBase {
+export class BaseTokenAuthorizer extends CommonBase {
   /**
    * {string} Prefix which when prepended to an arbitrary ID string is
    * guaranteed to result in string for which {@link #isToken} is `false`. This

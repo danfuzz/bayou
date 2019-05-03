@@ -13,7 +13,7 @@ import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
 import { CommonBase } from '@bayou/util-common';
 
-import ServerUtil from './ServerUtil';
+import { ServerUtil } from './ServerUtil';
 
 /** Logger for this module. */
 const log = new Logger('app-debug');
@@ -25,7 +25,7 @@ const LOG_LENGTH_MSEC = 1000 * 60 * 60; // One hour.
  * Introspection to help with debugging. Includes a request handler for hookup
  * to Express.
  */
-export default class DebugTools extends CommonBase {
+export class DebugTools extends CommonBase {
   /**
    * Constructs an instance.
    *

@@ -5,12 +5,12 @@
 import { Deployment } from '@bayou/config-server';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseConnection from './BaseConnection';
+import { BaseConnection } from './BaseConnection';
 
 /**
  * Class to handle meta-requests.
  */
-export default class MetaHandler extends CommonBase {
+export class MetaHandler extends CommonBase {
   /**
    * Constructs an instance.
    *

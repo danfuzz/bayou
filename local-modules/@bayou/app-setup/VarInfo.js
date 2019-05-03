@@ -6,7 +6,7 @@ import { Auth } from '@bayou/config-server';
 import { ServerEnv } from '@bayou/env-server';
 import { CommonBase } from '@bayou/util-common';
 
-import Application from './Application';
+import { Application } from './Application';
 
 /**
  * "Variable" info (like, it varies and isn't just static to the system), which
@@ -16,7 +16,7 @@ import Application from './Application';
  * with what is (or ought to be) reported via `/metrics`. Look into combining
  * these or at least moving as much as is sensible to {@link Metrics}.
  */
-export default class VarInfo extends CommonBase {
+export class VarInfo extends CommonBase {
   /**
    * Constructs an instance.
    *

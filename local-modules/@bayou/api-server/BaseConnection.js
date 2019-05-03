@@ -9,11 +9,11 @@ import { Logger } from '@bayou/see-all';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
-import ApiLog from './ApiLog';
-import ContextInfo from './ContextInfo';
-import MetaHandler from './MetaHandler';
-import ProxiedObject from './ProxiedObject';
-import Target from './Target';
+import { ApiLog } from './ApiLog';
+import { ContextInfo } from './ContextInfo';
+import { MetaHandler } from './MetaHandler';
+import { ProxiedObject } from './ProxiedObject';
+import { Target } from './Target';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('api');
@@ -28,7 +28,7 @@ const log = new Logger('api');
  * lower-level connection (or the like). This class in turn mostly bottoms out
  * by calling on target objects, which perform the actual application services.
  */
-export default class BaseConnection extends CommonBase {
+export class BaseConnection extends CommonBase {
   /**
    * Constructs an instance.
    *

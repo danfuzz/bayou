@@ -16,7 +16,7 @@ import { CommonBase } from '@bayou/util-common';
  * the response message sent to the client indicates that the result is a
  * proxied object and not a regular encoded value.
  */
-export default class ProxiedObject extends CommonBase {
+export class ProxiedObject extends CommonBase {
   /**
    * Constructs an instance which wraps the given object.
    *
