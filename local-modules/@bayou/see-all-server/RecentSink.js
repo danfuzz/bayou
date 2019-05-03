@@ -9,13 +9,13 @@ import { inspect } from 'util';
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 
-import Redactor from './Redactor';
+import { Redactor } from './Redactor';
 
 /**
  * Implementation of the `@bayou/see-all` logging sink protocol which collects a
  * rolling compendium of recently logged items.
  */
-export default class RecentSink extends BaseSink {
+export class RecentSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `@bayou/see-all` module.

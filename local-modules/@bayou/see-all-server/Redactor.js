@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility class for log redaction.
  */
-export default class Redactor extends UtilityClass {
+export class Redactor extends UtilityClass {
   /**
    * Redacts the given record.
    *

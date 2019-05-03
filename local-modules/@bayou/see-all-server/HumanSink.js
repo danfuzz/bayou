@@ -12,7 +12,7 @@ import wrapAnsi from 'wrap-ansi';
 import { BaseSink, Logger, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
-import Redactor from './Redactor';
+import { Redactor } from './Redactor';
 
 /**
  * {Int} Default width of output, in columns. This is used when _not_ outputting
@@ -43,7 +43,7 @@ const MAX_EVENT_STRING_LENGTH = 500;
  * logs in a human-friendly text form to one or both of (a) a file and (b) the
  * console.
  */
-export default class HumanSink extends BaseSink {
+export class HumanSink extends BaseSink {
   /**
    * Patches `console.log()` and friends to call through to `@bayou/see-all`,
    * such that they end up emitting log records and thus ultimately cause

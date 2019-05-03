@@ -7,13 +7,13 @@ import fs from 'fs';
 import { BaseSink, SeeAll } from '@bayou/see-all';
 import { TBoolean, TString } from '@bayou/typecheck';
 
-import Redactor from './Redactor';
+import { Redactor } from './Redactor';
 
 /**
  * Implementation of the `@bayou/see-all` logging sink protocol which stores
  * logged items to a file.
  */
-export default class FileSink extends BaseSink {
+export class FileSink extends BaseSink {
   /**
    * Constructs an instance. This will cause the instance to be registered with
    * the main `@bayou/see-all` module.
