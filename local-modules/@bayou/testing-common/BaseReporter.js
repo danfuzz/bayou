@@ -13,7 +13,7 @@ import { CommonBase, DataUtil, ErrorUtil } from '@bayou/util-common';
  * ultimately landing in an instance of
  * {@link @bayou/testing-server.TestCollector}.
  */
-export default class BaseReporter extends CommonBase {
+export class BaseReporter extends CommonBase {
   /**
    * Constructs an instance.
    *

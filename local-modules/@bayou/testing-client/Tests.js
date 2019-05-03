@@ -15,7 +15,7 @@ import { Mocha } from 'mocha';
 // more info.
 import { registerTests } from './client-tests';
 
-import EventReporter from './EventReporter';
+import { EventReporter } from './EventReporter';
 
 // One-time setup to hook `chai-as-promised` into the main `chai` module.
 chai.use(chaiAsPromised);
@@ -25,7 +25,7 @@ chai.use(chaiAsPromised);
  * client-side `boot-for-test` script, which is operated at "arm's length" by
  * {@link @bayou/testing-server.ClientTests}.
  */
-export default class Tests extends UtilityClass {
+export class Tests extends UtilityClass {
   /**
    * Runs all of the tests, or all of the ones that pass the indicated filter.
    *
