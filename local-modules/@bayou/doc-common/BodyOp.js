@@ -21,7 +21,7 @@ const splitter = new GraphemeSplitter();
  * `fromQuillForm()` and an instance method `toQuillForm()` to convert back and
  * forth as needed.
  */
-export default class BodyOp extends BaseOp {
+export class BodyOp extends BaseOp {
   /** {string} Opcode constant for "delete" operations. */
   static get CODE_delete() {
     return 'delete';

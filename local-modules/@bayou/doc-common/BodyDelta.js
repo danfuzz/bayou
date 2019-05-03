@@ -8,7 +8,7 @@ import { Logger } from '@bayou/see-all';
 import { TBoolean, TObject } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import BodyOp from './BodyOp';
+import { BodyOp } from './BodyOp';
 
 /**
  * {Logger} Logger for this module. **Note:** Just used for some temporary
@@ -36,7 +36,7 @@ const log = new Logger('body-delta');
  * instance, and this `EMPTY` instance is in turn used to make the contents for
  * a no-ops snapshot.
  */
-export default class BodyDelta extends BaseDelta {
+export class BodyDelta extends BaseDelta {
   /**
    * Given a Quill `Delta` instance, returns an instance of this class with the
    * same operations.

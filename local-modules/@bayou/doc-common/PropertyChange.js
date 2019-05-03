@@ -4,14 +4,14 @@
 
 import { BaseChange } from '@bayou/ot-common';
 
-import PropertyDelta from './PropertyDelta';
+import { PropertyDelta } from './PropertyDelta';
 
 /**
  * Change class for representing changes to one or more document properties
  * (that is, the structured document metadata). The `delta`s passed to the
  * constructor must be instances of {@link PropertyDelta}.
  */
-export default class PropertyChange extends BaseChange {
+export class PropertyChange extends BaseChange {
   /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class.

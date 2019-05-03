@@ -5,26 +5,26 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import BodyChange from './BodyChange';
-import BodyDelta from './BodyDelta';
-import BodyOp from './BodyOp';
-import BodySnapshot from './BodySnapshot';
-import Caret from './Caret';
-import CaretChange from './CaretChange';
-import CaretDelta from './CaretDelta';
-import CaretOp from './CaretOp';
-import CaretSnapshot from './CaretSnapshot';
-import Property from './Property';
-import PropertyChange from './PropertyChange';
-import PropertyDelta from './PropertyDelta';
-import PropertyOp from './PropertyOp';
-import PropertySnapshot from './PropertySnapshot';
-import SessionInfo from './SessionInfo';
+import { BodyChange } from './BodyChange';
+import { BodyDelta } from './BodyDelta';
+import { BodyOp } from './BodyOp';
+import { BodySnapshot } from './BodySnapshot';
+import { Caret } from './Caret';
+import { CaretChange } from './CaretChange';
+import { CaretDelta } from './CaretDelta';
+import { CaretOp } from './CaretOp';
+import { CaretSnapshot } from './CaretSnapshot';
+import { Property } from './Property';
+import { PropertyChange } from './PropertyChange';
+import { PropertyDelta } from './PropertyDelta';
+import { PropertyOp } from './PropertyOp';
+import { PropertySnapshot } from './PropertySnapshot';
+import { SessionInfo } from './SessionInfo';
 
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * {string} Schema version string which uniquely identifies the structure of
    * documents and their constituent parts. Any time the formats change in an

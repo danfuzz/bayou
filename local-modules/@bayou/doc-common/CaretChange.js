@@ -4,13 +4,13 @@
 
 import { BaseChange } from '@bayou/ot-common';
 
-import CaretDelta from './CaretDelta';
+import { CaretDelta } from './CaretDelta';
 
 /**
  * Change class for representing changes to caret snapshots. The `delta`s passed
  * to the constructor must be instances of {@link CaretDelta}.
  */
-export default class CaretChange extends BaseChange {
+export class CaretChange extends BaseChange {
   /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class.

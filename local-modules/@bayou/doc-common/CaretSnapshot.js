@@ -5,11 +5,11 @@
 import { BaseSnapshot } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import Caret from './Caret';
-import CaretChange from './CaretChange';
-import CaretDelta from './CaretDelta';
-import CaretId from './CaretId';
-import CaretOp from './CaretOp';
+import { Caret } from './Caret';
+import { CaretChange } from './CaretChange';
+import { CaretDelta } from './CaretDelta';
+import { CaretId } from './CaretId';
+import { CaretOp } from './CaretOp';
 
 
 /**
@@ -19,7 +19,7 @@ import CaretOp from './CaretOp';
  * When thought of in terms of a map, instances of this class can be taken to
  * be maps from caret ID strings to `Caret` values.
  */
-export default class CaretSnapshot extends BaseSnapshot {
+export class CaretSnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *

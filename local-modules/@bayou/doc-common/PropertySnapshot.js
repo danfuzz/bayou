@@ -6,9 +6,9 @@ import { BaseSnapshot } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import PropertyChange from './PropertyChange';
-import PropertyDelta from './PropertyDelta';
-import PropertyOp from './PropertyOp';
+import { PropertyChange } from './PropertyChange';
+import { PropertyDelta } from './PropertyDelta';
+import { PropertyOp } from './PropertyOp';
 
 /**
  * Snapshot of information about all the properties of a particular document.
@@ -17,7 +17,7 @@ import PropertyOp from './PropertyOp';
  * When thought of in terms of a map, instances of this class can be taken to
  * be maps from string keys to arbitrary data values.
  */
-export default class PropertySnapshot extends BaseSnapshot {
+export class PropertySnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *
