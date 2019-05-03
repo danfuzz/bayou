@@ -5,7 +5,7 @@
 import { TFunction, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import BaseProxyHandler from './BaseProxyHandler';
+import { BaseProxyHandler } from './BaseProxyHandler';
 
 /**
  * Creator of "deferred loaders," in the form of a proxy handler class. A
@@ -23,7 +23,7 @@ import BaseProxyHandler from './BaseProxyHandler';
  * imported module can actually depend on the module doing the loading (as long
  * as it doesn't _immediately_ use circularly-depended functionality).
  */
-export default class DeferredLoader extends BaseProxyHandler {
+export class DeferredLoader extends BaseProxyHandler {
   /**
    * Constructs an instance.
    *

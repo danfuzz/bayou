@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-core';
 /**
  * Utility methods for dealing with iterables.
  */
-export default class IterableUtil extends UtilityClass {
+export class IterableUtil extends UtilityClass {
   /**
    * Coerces an iterable-which-might-be-an-iterator into an iterable that is
    * presumed safe to use more than once. Specifically:

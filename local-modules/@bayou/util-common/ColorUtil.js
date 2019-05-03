@@ -15,7 +15,7 @@ const CSS_COLOR_REGEXP = /^#[a-f0-9]{6}$/;
 /**
  * Color manipulation utilities.
  */
-export default class ColorUtil extends UtilityClass {
+export class ColorUtil extends UtilityClass {
   /**
    * Checks whether a given string matches this module's requirements for a
    * CSS-style color hex string, with all lowercase letters and no alpha

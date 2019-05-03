@@ -13,7 +13,7 @@ import { CommonBase } from '@bayou/util-core';
  * either a string or a symbol) and `target` to the target object (either the
  * top-level object or an element in its prototype chain).
  */
-export default class PropertyIterable extends CommonBase {
+export class PropertyIterable extends CommonBase {
   /**
    * Constructs an instance.
    *

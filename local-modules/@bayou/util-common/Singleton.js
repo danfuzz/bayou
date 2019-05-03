@@ -21,7 +21,7 @@ import { CommonBase, Errors, ObjectUtil } from '@bayou/util-core';
  *
  * @abstract
  */
-export default class Singleton extends CommonBase {
+export class Singleton extends CommonBase {
   /**
    * {Singleton} The unique instance of this (derived) class. If the instance
    * has not yet been constructed, accessing this property causes construction

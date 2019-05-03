@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import ColorUtil from './ColorUtil';
+import { ColorUtil } from './ColorUtil';
 
 import { CommonBase } from '@bayou/util-core';
 
@@ -20,7 +20,7 @@ import { CommonBase } from '@bayou/util-core';
  * The V component of each color is 87.5% which puts all of the colors in the
  * pastel range.
  */
-export default class ColorSelector extends CommonBase {
+export class ColorSelector extends CommonBase {
   /**
    * Constructs a new ColorSelector object.
    *

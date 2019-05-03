@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { TObject } from '@bayou/typecheck';
 import { UtilityClass } from '@bayou/util-core';
 
-import PropertyIterable from './PropertyIterable';
+import { PropertyIterable } from './PropertyIterable';
 
 /** {string} How anonymous functions are represented in V8. */
 const V8_ANONYMOUS = '<anonymous>';
@@ -18,7 +18,7 @@ const ANONYMOUS_FUNCTION = V8_ANONYMOUS;
 /**
  * Error helper utilities.
  */
-export default class ErrorUtil extends UtilityClass {
+export class ErrorUtil extends UtilityClass {
   /**
    * Gets a full trace "dump" of an error, in a consistent format meant to be
    * reasonable for logging. This includes the error name and message, a clean

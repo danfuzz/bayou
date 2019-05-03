@@ -13,7 +13,7 @@ import { UtilityClass } from '@bayou/util-core';
  * Several (hopefully) useful routines to make dealing with strings a little
  * nicer.
  */
-export default class StringUtil extends UtilityClass {
+export class StringUtil extends UtilityClass {
   /**
    * Produces a 32-bit integer hashcode for the given string. This uses a
    * cryptographic hash to provide good value distribution.
