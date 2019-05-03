@@ -8,7 +8,7 @@ import { BaseLogger } from '@bayou/see-all';
 import { TBoolean, TFunction, TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import WeakCacheEntry from './WeakCacheEntry';
+import { WeakCacheEntry } from './WeakCacheEntry';
 
 /**
  * Weak-reference based cache, with LRU-based additional cache retention. This
@@ -23,7 +23,7 @@ import WeakCacheEntry from './WeakCacheEntry';
  * This is an abstract base class. Subclasses must fill in a handful of methods
  * and synthetic properties to get a well-behaved instance.
  */
-export default class BaseCache extends CommonBase {
+export class BaseCache extends CommonBase {
   /**
    * Constructs an instance.
    *
