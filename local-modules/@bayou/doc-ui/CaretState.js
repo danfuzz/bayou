@@ -25,7 +25,7 @@ const ERROR_DELAY_MSEC = 5000;
  * document. It watches for changes observed from the session proxy and
  * updates itself accordingly.
  */
-export default class CaretState {
+export class CaretState {
   /**
    * Constructs an instance of this class.
    *

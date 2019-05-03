@@ -11,10 +11,10 @@ import { TObject } from '@bayou/typecheck';
 import { DomUtil } from '@bayou/util-client';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BayouKeyHandlers from './BayouKeyHandlers';
-import CaretOverlay from './CaretOverlay';
-import CaretState from './CaretState';
-import TitleClient from './TitleClient';
+import { BayouKeyHandlers } from './BayouKeyHandlers';
+import { CaretOverlay } from './CaretOverlay';
+import { CaretState } from './CaretState';
+import { TitleClient } from './TitleClient';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('editor-complex');
@@ -23,7 +23,7 @@ const log = new Logger('editor-complex');
  * Manager for the "complex" of objects and DOM nodes which in aggregate form
  * the client-side editor.
  */
-export default class EditorComplex extends CommonBase {
+export class EditorComplex extends CommonBase {
   /**
    * Constructs an instance.
    *

@@ -33,7 +33,7 @@ const AVATAR_SCALE_FACTOR = AVATAR_DIMENSION / 400.0;
  * users editing the same document as the local user. It renders the selections
  * into an SVG element that overlays the Quill editor.
  */
-export default class CaretOverlay {
+export class CaretOverlay {
   /**
    * Constructs an instance.
    *

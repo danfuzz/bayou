@@ -26,7 +26,7 @@ import { UtilityClass } from '@bayou/util-common';
  * });
  * ```
  */
-export default class BayouKeyHandlers extends UtilityClass {
+export class BayouKeyHandlers extends UtilityClass {
   /**
    * Convenience function that returns the group of key handlers that provide
    * default behavior (i.e., what you'd get from Quill if this class were not

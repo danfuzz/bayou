@@ -9,7 +9,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * Plumbing between the title field (managed by Quill) on the client and the
  * document model (specifically a `title` property) on the server.
  */
-export default class TitleClient extends CommonBase {
+export class TitleClient extends CommonBase {
   /**
    * Constructs an instance. The constructed instance expects to be the primary
    * non-human controller of the Quill instance it manages.

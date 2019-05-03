@@ -95,7 +95,7 @@ const MAC_SPECIFIC_BINDINGS = Object.freeze({
  * that overrides `onEnter(metaKeys)` so that it ignored the return/enter key.
  * This greatly simplifies the process of modifying keyboard behavior.
  */
-export default class BayouKeyboard extends Keyboard {
+export class BayouKeyboard extends Keyboard {
   /**
    * {object} Map from key names to integer keycodes. This is a frozen
    * (immutable) value.
