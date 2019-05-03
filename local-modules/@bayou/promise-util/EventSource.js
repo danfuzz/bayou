@@ -6,8 +6,8 @@ import { EventEmitter } from 'events';
 
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
-import ChainedEvent from './ChainedEvent';
-import EmitHandler from './EmitHandler';
+import { ChainedEvent } from './ChainedEvent';
+import { EmitHandler } from './EmitHandler';
 
 /**
  * Subclass of `EventEmitter` used by {@link EventSource}. This is set up to
@@ -82,7 +82,7 @@ class AssociatedEventEmitter extends EventEmitter {
  * accumulation issue. (Imagine a single instance of this class being actively
  * used during a session which lasts for, say, a month.)
  */
-export default class EventSource extends CommonBase {
+export class EventSource extends CommonBase {
   /**
    * Constructs an instance.
    */

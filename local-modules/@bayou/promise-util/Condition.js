@@ -7,7 +7,7 @@ import { TBoolean } from '@bayou/typecheck';
 /**
  * Boolean condition with promise-attached level triggers.
  */
-export default class Condition {
+export class Condition {
   /**
    * Constructs an instance.
    *
