@@ -9,7 +9,7 @@ import { BaseIdSyntax } from '@bayou/config-common';
  * Utility functionality regarding ID strings. This implementation uses the
  * default definitions provided by {@link @bayou/doc-id-default}.
  */
-export default class IdSyntax extends BaseIdSyntax {
+export class IdSyntax extends BaseIdSyntax {
   /**
    * Implementation of standard configuration point.
    *

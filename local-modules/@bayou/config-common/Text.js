@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding text handling.
  */
-export default class Text extends UtilityClass {
+export class Text extends UtilityClass {
   /**
    * {Delta} The class to use for text "delta" (document and change
    * representation) functionality. The interface of this class is expected to

@@ -8,13 +8,13 @@ import webpack from 'webpack';
 import { Delay } from '@bayou/promise-util';
 import { Singleton } from '@bayou/util-common';
 
-import WebpackConfig from './WebpackConfig';
+import { WebpackConfig } from './WebpackConfig';
 
 /**
  * Wrapper around Webpack which can do both one-off builds as well as run
  * Webpack's "dev mode." Includes a request handler for hookup to Express.
  */
-export default class ClientBundle extends Singleton {
+export class ClientBundle extends Singleton {
   /**
    * Constructs the instance.
    */

@@ -10,7 +10,7 @@ import { CommonBase, Errors, Functor, ObjectUtil } from '@bayou/util-common';
  * values produced by {@link Codec#encode} and accepted by {@link Codec#decode}.
  * Instances of this class are always frozen (immutable).
  */
-export default class ConstructorCall extends CommonBase {
+export class ConstructorCall extends CommonBase {
   /**
    * Reviver function suitable for use with `JSON.parse()`, which handles
    * conversion of the JSON encoding form as defined by this module into

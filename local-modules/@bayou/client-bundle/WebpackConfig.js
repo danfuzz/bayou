@@ -10,13 +10,13 @@ import { Dirs } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { JsonUtil, Singleton } from '@bayou/util-common';
 
-import ProgressMessage from './ProgressMessage';
+import { ProgressMessage } from './ProgressMessage';
 
 /**
  * Utility class which provides the Webpack configuration needed for client
  * builds.
  */
-export default class WebpackConfig extends Singleton {
+export class WebpackConfig extends Singleton {
   /**
    * Constructs an instance.
    */

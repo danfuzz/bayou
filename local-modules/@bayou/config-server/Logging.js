@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding log handling.
  */
-export default class Logging extends UtilityClass {
+export class Logging extends UtilityClass {
   /**
    * Performs redaction on an event log payload.
    *

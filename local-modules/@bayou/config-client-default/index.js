@@ -4,7 +4,7 @@
 
 import { inject } from '@bayou/injecty';
 
-import Editor from './Editor';
+import { Editor } from './Editor';
 
 /**
  * Injects all of the definitions here into the global configuration.

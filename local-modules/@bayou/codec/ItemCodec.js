@@ -6,7 +6,7 @@ import { Logger } from '@bayou/see-all';
 import { TArray, TFunction, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
-import ConstructorCall from './ConstructorCall';
+import { ConstructorCall } from './ConstructorCall';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('codec');
@@ -53,7 +53,7 @@ const log = new Logger('codec');
  * **Note:** For the purposes of this class, `null`, arrays, plain objects, and
  * class instances are all considered values with distinct types.
  */
-export default class ItemCodec extends CommonBase {
+export class ItemCodec extends CommonBase {
   /**
    * Gets the tag string (either explicit or implicit) of the given payload.
    * This returns `null` if the payload can't possibly be valid.

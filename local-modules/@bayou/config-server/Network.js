@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the network configuration of a server.
  */
-export default class Network extends UtilityClass {
+export class Network extends UtilityClass {
   /**
    * {string} The base URL to use when constructing URLs to point at the
    * public-facing (set of) machine(s) which front for this server.

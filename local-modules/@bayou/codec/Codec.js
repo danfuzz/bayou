@@ -4,14 +4,14 @@
 
 import { CommonBase, FrozenBuffer } from '@bayou/util-common';
 
-import ConstructorCall from './ConstructorCall';
-import Registry from './Registry';
+import { ConstructorCall } from './ConstructorCall';
+import { Registry } from './Registry';
 
 /**
  * Encoder and decoder of values for transport over an API or for storage on
  * disk or in databases, with binding to a name-to-class registry.
  */
-export default class Codec extends CommonBase {
+export class Codec extends CommonBase {
   /**
    * Constructs an instance.
    *

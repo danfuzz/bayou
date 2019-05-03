@@ -10,7 +10,7 @@ import { UtilityClass } from '@bayou/util-common';
  * reasonable way to define constants needed by the configured implementations
  * and the clients of this configuration.
  */
-export default class BaseAuth extends UtilityClass {
+export class BaseAuth extends UtilityClass {
   /** {string} Constant used by {@link Auth#tokenAuthority} (see which). */
   static get TYPE_author() { return 'author'; }
 

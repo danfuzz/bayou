@@ -37,7 +37,7 @@ const MAP_FILE_NAME = 'source-map.txt';
  * system as of this writing no longer supports overlays, but the actual code to
  * support it here is pretty minimal, so it remains.
  */
-export default class DevMode extends Singleton {
+export class DevMode extends Singleton {
   /**
    * Constructs the instance. Use `start()` to run it.
    */
