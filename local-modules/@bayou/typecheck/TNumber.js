@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `number`.
  */
-export default class TNumber extends UtilityClass {
+export class TNumber extends UtilityClass {
   /**
    * Checks a value of type `number`.
    *

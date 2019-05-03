@@ -7,7 +7,7 @@ import { CoreTypecheck, Errors, URL, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `String`.
  */
-export default class TString extends UtilityClass {
+export class TString extends UtilityClass {
   /**
    * Checks a value of type `String`. Optionally validates contents against
    * a regex.

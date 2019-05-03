@@ -11,7 +11,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
  * se, this class follows the module's convention of using a `T` name prefix, so
  * as to keep things more straightforward.
  */
-export default class TIterable extends UtilityClass {
+export class TIterable extends UtilityClass {
   /**
    * Checks a value of type `Iterable`. Optionally checks the types of entries.
    *

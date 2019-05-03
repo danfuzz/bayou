@@ -7,7 +7,7 @@ import { Errors, UtilityClass } from '@bayou/util-core';
 /**
  * Type checker for type `Array`.
  */
-export default class TArray extends UtilityClass {
+export class TArray extends UtilityClass {
   /**
    * Checks a value of type `Array`. Optionally checks the type of each element.
    *

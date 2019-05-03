@@ -11,7 +11,7 @@ import { CoreTypecheck, Errors, UtilityClass } from '@bayou/util-core';
  * class follows the module's convention of using a `T` name prefix, so as to
  * keep things more straightforward.
  */
-export default class TInt extends UtilityClass {
+export class TInt extends UtilityClass {
   /**
    * Checks a value of type `Int`.
    *
