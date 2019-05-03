@@ -15,7 +15,7 @@ import { Logger } from '@bayou/see-all';
 import { ClientSink } from '@bayou/see-all-client';
 import { UtilityClass } from '@bayou/util-common';
 
-import TopControl from './TopControl';
+import { TopControl } from './TopControl';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('page-init');
@@ -23,7 +23,7 @@ const log = new Logger('page-init');
 /**
  * Top-level logic for starting a client or running client unit tests.
  */
-export default class Client extends UtilityClass {
+export class Client extends UtilityClass {
   /**
    * Starts up a client in the current window.
    *

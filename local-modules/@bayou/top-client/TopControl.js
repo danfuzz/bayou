@@ -16,7 +16,7 @@ const log = new Logger('top');
  * Top-level control for an editor. This is responsible for setting up the
  * browser environment and for keeping things going.
  */
-export default class TopControl {
+export class TopControl {
   /**
    * Constructs an instance.
    *

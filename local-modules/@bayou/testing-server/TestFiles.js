@@ -12,7 +12,7 @@ import { UtilityClass } from '@bayou/util-common';
  * Utility to provide lists of test file names (for unit or integration tests),
  * for both the client and server sides.
  */
-export default class TestFiles extends UtilityClass {
+export class TestFiles extends UtilityClass {
   /**
    * Returns a list of the test files for client modules that are used by the
    * product.
