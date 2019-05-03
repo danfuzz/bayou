@@ -8,6 +8,6 @@ import url from 'url';
  * {class} The `URL` class, which is bound in a different place in the browser
  * and under Node, despite the polyfill (whee).
  */
-const theClass = url.URL || URL;
+const URL = url.URL || URL;
 
-export default theClass;
+export { URL };
