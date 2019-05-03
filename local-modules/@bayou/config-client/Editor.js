@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 /**
  * Utility functionality regarding the setup of interactive editors.
  */
-export default class Editor extends UtilityClass {
+export class Editor extends UtilityClass {
   /**
    * {Quill} The class to use as the Quill editor. The interface of this class
    * is expected to be compatible with the `Quill` class as defined by the Quill

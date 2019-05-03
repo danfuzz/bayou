@@ -17,4 +17,4 @@ import { PromSubclasser } from '@bayou/quill-util';
  */
 const QuillProm = PromSubclasser.makeSubclass(Quill);
 
-export default QuillProm;
+export { QuillProm };
