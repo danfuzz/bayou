@@ -9,7 +9,7 @@ import { Logger, LogRecord } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import Dirs from './Dirs';
+import { Dirs } from './Dirs';
 
 /** {Int} Maximum length of the `errors` string, in characters. */
 const MAX_ERRORS_LENGTH = 5000;
@@ -20,7 +20,7 @@ const log = new Logger('boot-info');
 /**
  * Information about the booting of this server.
  */
-export default class BootInfo extends CommonBase {
+export class BootInfo extends CommonBase {
   /**
    * Constructs an instance.
    *

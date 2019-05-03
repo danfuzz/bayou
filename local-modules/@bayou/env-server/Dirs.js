@@ -12,7 +12,7 @@ import { Errors, Singleton } from '@bayou/util-common';
 /**
  * Various filesystem directories.
  */
-export default class Dirs extends Singleton {
+export class Dirs extends Singleton {
   /**
    * Constructs the instance.
    */

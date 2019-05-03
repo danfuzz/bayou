@@ -10,8 +10,8 @@ import { Logger } from '@bayou/see-all';
 import { TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import BootInfo from './BootInfo';
-import Dirs from './Dirs';
+import { BootInfo } from './BootInfo';
+import { Dirs } from './Dirs';
 
 /**
  * {Int} How long (in msec) to wait between iterations in the shutdown-file
@@ -40,7 +40,7 @@ const log = new Logger('control');
  * parts of the system can use to notice when shutdown is happening and have a
  * chance to exit cleanly.
  */
-export default class ShutdownManager extends CommonBase {
+export class ShutdownManager extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (i.e. reacting to the control files); that stuff
