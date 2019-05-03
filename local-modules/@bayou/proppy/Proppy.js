@@ -36,7 +36,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * The result of parsing a property file is always a frozen object which maps
  * `<key>` to `<value>` for each such pair defined in the file.
  */
-export default class Proppy extends UtilityClass {
+export class Proppy extends UtilityClass {
   /**
    * Reads a property file from the given buffer.
    *
