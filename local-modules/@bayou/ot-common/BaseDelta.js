@@ -5,7 +5,7 @@
 import { TArray, TBoolean, TFunction } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BaseOp from './BaseOp';
+import { BaseOp } from './BaseOp';
 
 /**
  * Base class for document deltas. These are ordered lists of operations which
@@ -18,7 +18,7 @@ import BaseOp from './BaseOp';
  *
  * Instances of this class are immutable.
  */
-export default class BaseDelta extends CommonBase {
+export class BaseDelta extends CommonBase {
   /**
    * {BaseDelta} Empty instance of this class, that is, an instance whose `ops`
    * is an empty array (`[]`). This is a direct instance of whatever class this

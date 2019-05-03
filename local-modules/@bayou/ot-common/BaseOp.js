@@ -17,7 +17,7 @@ import { CommonBase, Errors, Functor } from '@bayou/util-common';
  * string value. These values are collectively taken to be the acceptable opcode
  * names for use with the concrete subclass.
  */
-export default class BaseOp extends CommonBase {
+export class BaseOp extends CommonBase {
   /**
    * Validates a {@link Functor} to be used as the payload for an instance of
    * this class.
