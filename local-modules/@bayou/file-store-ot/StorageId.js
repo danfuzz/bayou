@@ -14,7 +14,7 @@ import { Errors, FrozenBuffer, UtilityClass } from '@bayou/util-common';
  * * content hashes &mdash; Content hashes as defined by
  *   {@link @bayou/util-common.FrozenBuffer}.
  */
-export default class StorageId extends UtilityClass {
+export class StorageId extends UtilityClass {
   /**
    * Validates that the given value is a valid storage ID string. Throws an
    * error if not.

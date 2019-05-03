@@ -13,7 +13,7 @@ import { FrozenBuffer, InfoError, UtilityClass } from '@bayou/util-common';
  * **Note:** The names of the methods match the functor names, and because the
  * convention for those is `lowercase_underscore`, that is what's used.
  */
-export default class Errors extends UtilityClass {
+export class Errors extends UtilityClass {
   /**
    * Constructs an error indicating that a content blob was expected to be
    * absent from the file, but turns out to be present.

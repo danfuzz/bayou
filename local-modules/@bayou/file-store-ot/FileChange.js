@@ -4,14 +4,14 @@
 
 import { BaseChange } from '@bayou/ot-common';
 
-import FileDelta from './FileDelta';
+import { FileDelta } from './FileDelta';
 
 /**
  * Change class for representing changes to a file (writing and/or deleting
  * blobs and/or paths). The `delta`s passed to the constructor must be instances
  * of {@link FileDelta}.
  */
-export default class FileChange extends BaseChange {
+export class FileChange extends BaseChange {
   /** @override */
   static get _impl_deltaClass() {
     return FileDelta;

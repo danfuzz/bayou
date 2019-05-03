@@ -5,8 +5,8 @@
 import { BaseDelta } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import FileOp from './FileOp';
-import StoragePath from './StoragePath';
+import { FileOp } from './FileOp';
+import { StoragePath } from './StoragePath';
 
 /**
  * Delta for file contents, consisting of a simple ordered list of operations.
@@ -19,7 +19,7 @@ import StoragePath from './StoragePath';
  *
  * Instances of this class are immutable.
  */
-export default class FileDelta extends BaseDelta {
+export class FileDelta extends BaseDelta {
   /**
    * Implementation as required by the superclass.
    *

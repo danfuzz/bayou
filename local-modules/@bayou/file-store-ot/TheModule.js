@@ -5,15 +5,15 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import FileChange from './FileChange';
-import FileDelta from './FileDelta';
-import FileOp from './FileOp';
-import FileSnapshot from './FileSnapshot';
+import { FileChange } from './FileChange';
+import { FileDelta } from './FileDelta';
+import { FileOp } from './FileOp';
+import { FileSnapshot } from './FileSnapshot';
 
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *
