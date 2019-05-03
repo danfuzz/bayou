@@ -6,12 +6,12 @@ import { Storage } from '@bayou/config-server';
 import { TBoolean, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import BaseComplexMember from './BaseComplexMember';
-import EditSession from './EditSession';
-import FileAccess from './FileAccess';
-import FileBootstrap from './FileBootstrap';
-import SessionCache from './SessionCache';
-import ViewSession from './ViewSession';
+import { BaseComplexMember } from './BaseComplexMember';
+import { EditSession } from './EditSession';
+import { FileAccess } from './FileAccess';
+import { FileBootstrap } from './FileBootstrap';
+import { SessionCache } from './SessionCache';
+import { ViewSession } from './ViewSession';
 
 /**
  * {Int} Maximum amount of time (in msec) to allow for the creation of new
@@ -28,7 +28,7 @@ const MAKE_SESSION_TIMEOUT_MSEC = 10 * 1000; // Ten seconds.
  * how many active editors there are on that document. (This guarantee is
  * provided by `DocServer`.)
  */
-export default class FileComplex extends BaseComplexMember {
+export class FileComplex extends BaseComplexMember {
   /**
    * Constructs an instance.
    *

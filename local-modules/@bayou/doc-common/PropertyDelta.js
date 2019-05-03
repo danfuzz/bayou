@@ -5,7 +5,7 @@
 import { BaseDelta } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import PropertyOp from './PropertyOp';
+import { PropertyOp } from './PropertyOp';
 
 /**
  * Delta for property (document metadata) information, consisting of a simple
@@ -18,7 +18,7 @@ import PropertyOp from './PropertyOp';
  *
  * Instances of this class are immutable.
  */
-export default class PropertyDelta extends BaseDelta {
+export class PropertyDelta extends BaseDelta {
   /**
    * Main implementation of {@link #compose}.
    *

@@ -6,10 +6,10 @@ import { Caret, CaretChange, CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TString } from '@bayou/typecheck';
 
-import CaretColor from './CaretColor';
-import EphemeralControl from './EphemeralControl';
-import Paths from './Paths';
-import SnapshotManager from './SnapshotManager';
+import { CaretColor } from './CaretColor';
+import { EphemeralControl } from './EphemeralControl';
+import { Paths } from './Paths';
+import { SnapshotManager } from './SnapshotManager';
 
 /**
  * {Int} How long (in msec) that a caret must be inactive before it gets culled
@@ -23,7 +23,7 @@ const MAX_CARET_IDLE_MSEC = 5 * 60 * 1000; // Five minutes.
  * **TODO:** Caret data should be ephemeral. As of this writing, old data will
  * never get purged from the underlying file.
  */
-export default class CaretControl extends EphemeralControl {
+export class CaretControl extends EphemeralControl {
   /**
    * Constructs an instance.
    *

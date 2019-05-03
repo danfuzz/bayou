@@ -12,7 +12,7 @@ import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
 import { DefaultIdSyntax } from '@bayou/doc-id-default';
 import { Logger } from '@bayou/see-all';
 
-import LocalFile from './LocalFile';
+import { LocalFile } from './LocalFile';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('local-file');
@@ -21,7 +21,7 @@ const log = new Logger('local-file');
  * File storage implementation that stores everything in the locally-accessible
  * filesystem.
  */
-export default class LocalFileStore extends BaseFileStore {
+export class LocalFileStore extends BaseFileStore {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */

@@ -7,11 +7,11 @@ import { TInt } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 import fileStoreOt_Errors from './Errors';
-import FileChange from './FileChange';
-import FileDelta from './FileDelta';
-import FileOp from './FileOp';
-import StorageId from './StorageId';
-import StoragePath from './StoragePath';
+import { FileChange } from './FileChange';
+import { FileDelta } from './FileDelta';
+import { FileOp } from './FileOp';
+import { StorageId } from './StorageId';
+import { StoragePath } from './StoragePath';
 
 /**
  * Snapshot of file contents. Instances of this class are always frozen
@@ -20,7 +20,7 @@ import StoragePath from './StoragePath';
  * When thought of in terms of a map, instances of this class can be taken to
  * be maps from string keys to arbitrary data values.
  */
-export default class FileSnapshot extends BaseSnapshot {
+export class FileSnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *

@@ -11,7 +11,7 @@ import { CommonBase } from '@bayou/util-common';
  * class is just a container for the info. See {@link doc-client/DocSession} for
  * usage.
  */
-export default class SessionInfo extends CommonBase {
+export class SessionInfo extends CommonBase {
   /**
    * Constructs an instance.
    *

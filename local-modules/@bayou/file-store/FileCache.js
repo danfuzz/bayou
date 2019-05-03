@@ -4,12 +4,12 @@
 
 import { BaseCache } from '@bayou/weak-lru-cache';
 
-import BaseFile from './BaseFile';
+import { BaseFile } from './BaseFile';
 
 /**
  * Cache of active instances of {@link BaseFile}.
  */
-export default class FileCache extends BaseCache {
+export class FileCache extends BaseCache {
   /**
    * Constructs an instance.
    *

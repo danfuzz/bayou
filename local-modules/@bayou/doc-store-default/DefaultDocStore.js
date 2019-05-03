@@ -9,7 +9,7 @@ import { DefaultIdSyntax } from '@bayou/doc-id-default';
  * Data storage implementation that is maximally accepting of IDs (e.g. all
  * authors exist).
  */
-export default class DefaultDocStore extends BaseDocStore {
+export class DefaultDocStore extends BaseDocStore {
   /**
    * Implementation as required by the superclass.
    *

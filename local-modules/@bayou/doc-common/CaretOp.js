@@ -5,13 +5,13 @@
 import { BaseOp } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import Caret from './Caret';
-import CaretId from './CaretId';
+import { Caret } from './Caret';
+import { CaretId } from './CaretId';
 
 /**
  * Operation which can be applied to a `Caret` or `CaretSnapshot`.
  */
-export default class CaretOp extends BaseOp {
+export class CaretOp extends BaseOp {
   /** {string} Opcode constant for "add" operations (add a new caret). */
   static get CODE_add() {
     return 'add';

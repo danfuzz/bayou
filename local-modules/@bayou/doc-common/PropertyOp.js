@@ -6,12 +6,12 @@ import { BaseOp } from '@bayou/ot-common';
 import { TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import Property from './Property';
+import { Property } from './Property';
 
 /**
  * Operation which can be applied to a `PropertySnapshot`.
  */
-export default class PropertyOp extends BaseOp {
+export class PropertyOp extends BaseOp {
   /** {string} Opcode constant for "delete property" operations. */
   static get CODE_delete() {
     return 'delete';

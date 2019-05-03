@@ -8,7 +8,7 @@ import path from 'path';
 import { Proppy } from '@bayou/proppy';
 import { CommonBase } from '@bayou/util-common';
 
-import Dirs from './Dirs';
+import { Dirs } from './Dirs';
 
 
 /**
@@ -16,7 +16,7 @@ import Dirs from './Dirs';
  * artifact, explicitly stored as a file at the top level of the product
  * artifact directory.
  */
-export default class BuildInfo extends CommonBase {
+export class BuildInfo extends CommonBase {
   /**
    * Constructs the instance.
    */

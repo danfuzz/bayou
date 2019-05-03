@@ -7,7 +7,7 @@ import { CaretId } from '@bayou/doc-common';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import FileComplex from './FileComplex';
+import { FileComplex } from './FileComplex';
 
 /**
  * Base class for the server-side representative of an access session for a
@@ -15,7 +15,7 @@ import FileComplex from './FileComplex';
  * of (concrete subclasses of) this class are exposed across an API boundary,
  * and as such all public methods are available for client use.
  */
-export default class BaseSession extends CommonBase {
+export class BaseSession extends CommonBase {
   /**
    * Constructs an instance.
    *

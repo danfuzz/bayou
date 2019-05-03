@@ -9,8 +9,8 @@ import { EventSource } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { CommonBase } from '@bayou/util-common';
 
-import CaretTracker from './CaretTracker';
-import PropertyClient from './PropertyClient';
+import { CaretTracker } from './CaretTracker';
+import { PropertyClient } from './PropertyClient';
 
 /** Logger. */
 const log = new Logger('doc');
@@ -31,7 +31,7 @@ const log = new Logger('doc');
  *   connection with a server.
  * * `open()` &mdash; The network connection has been established.
  */
-export default class DocSession extends CommonBase {
+export class DocSession extends CommonBase {
   /**
    * Constructs an instance.
    *

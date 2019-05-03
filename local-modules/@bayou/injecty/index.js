@@ -2,9 +2,9 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import AllConfigs from './AllConfigs';
-import InjectHandler from './InjectHandler';
-import UseHandler from './UseHandler';
+import { AllConfigs } from './AllConfigs';
+import { InjectHandler } from './InjectHandler';
+import { UseHandler } from './UseHandler';
 
 /**
  * Provider of injected objects and values, as properties on this instance.

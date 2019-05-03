@@ -5,12 +5,12 @@
 import { BaseSnapshot } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import BodyChange from './BodyChange';
+import { BodyChange } from './BodyChange';
 
 /**
  * Snapshot of main document body contents.
  */
-export default class BodySnapshot extends BaseSnapshot {
+export class BodySnapshot extends BaseSnapshot {
   /**
    * Constructs an instance.
    *

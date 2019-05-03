@@ -5,7 +5,7 @@
 import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
-import BaseFile from './BaseFile';
+import { BaseFile } from './BaseFile';
 
 /**
  * Combination of a `BaseFile` with a `Codec`.
@@ -17,7 +17,7 @@ import BaseFile from './BaseFile';
  * believe that at some point we will once again introduce these sorts of
  * methods.
  */
-export default class FileCodec extends CommonBase {
+export class FileCodec extends CommonBase {
   /**
    * Constructs an instance.
    *

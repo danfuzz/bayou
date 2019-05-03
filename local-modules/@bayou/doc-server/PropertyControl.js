@@ -4,14 +4,14 @@
 
 import { PropertySnapshot } from '@bayou/doc-common';
 
-import DurableControl from './DurableControl';
-import Paths from './Paths';
-import SnapshotManager from './SnapshotManager';
+import { DurableControl } from './DurableControl';
+import { Paths } from './Paths';
+import { SnapshotManager } from './SnapshotManager';
 
 /**
  * Controller for the property metadata of a particular document.
  */
-export default class PropertyControl extends DurableControl {
+export class PropertyControl extends DurableControl {
   /**
    * Constructs an instance.
    *

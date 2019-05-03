@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import BaseSession from './BaseSession';
+import { BaseSession } from './BaseSession';
 
 /**
  * Server side representative of a session which allows viewing. Instantiated
@@ -17,7 +17,7 @@ import BaseSession from './BaseSession';
  * underlying `*Control` instances, while implicitly adding author ID and/or
  * caret ID as appropriate to methods that perform modifications.
  */
-export default class ViewSession extends BaseSession {
+export class ViewSession extends BaseSession {
   /**
    * Constructs an instance.
    *

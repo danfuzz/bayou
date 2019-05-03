@@ -15,7 +15,7 @@ const ID_REGEX = /^[-_a-zA-Z0-9]{1,32}$/;
 /**
  * Default ID syntax definitions. See module `README.md` for more details.
  */
-export default class DefaultIdSyntax {
+export class DefaultIdSyntax {
   /**
    * Default implementation of author ID syntax checking.
    *

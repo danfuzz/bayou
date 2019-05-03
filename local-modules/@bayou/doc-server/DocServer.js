@@ -7,8 +7,8 @@ import { Storage } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';
 
-import FileComplex from './FileComplex';
-import FileComplexCache from './FileComplexCache';
+import { FileComplex } from './FileComplex';
+import { FileComplexCache } from './FileComplexCache';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-server');
@@ -22,7 +22,7 @@ const log = new Logger('doc-server');
  * document-related objects, in particular making sure that such objects have
  * an opportunity to get GC'ed once they're no longer in active use.
  */
-export default class DocServer extends Singleton {
+export class DocServer extends Singleton {
   /**
    * Constructs an instance. This is not meant to be used publicly.
    */

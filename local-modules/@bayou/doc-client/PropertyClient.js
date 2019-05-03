@@ -6,7 +6,7 @@ import { PropertyDelta, PropertyOp, Timeouts } from '@bayou/doc-common';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, DataUtil, Errors } from '@bayou/util-common';
 
-import DocSession from './DocSession';
+import { DocSession } from './DocSession';
 
 /**
  * Accessor for document properties.
@@ -15,7 +15,7 @@ import DocSession from './DocSession';
  * anything locally and it doesn't batch updates to send to the server. This
  * should be fixed!
  */
-export default class PropertyClient extends CommonBase {
+export class PropertyClient extends CommonBase {
   /**
    * Constructs an instance.
    *

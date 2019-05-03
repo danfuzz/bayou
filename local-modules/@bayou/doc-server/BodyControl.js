@@ -6,14 +6,14 @@ import { HtmlExport, Storage } from '@bayou/config-server';
 import { BodyChange, BodyDelta, BodySnapshot } from '@bayou/doc-common';
 import { RevisionNumber } from '@bayou/ot-common';
 
-import DurableControl from './DurableControl';
-import Paths from './Paths';
-import SnapshotManager from './SnapshotManager';
+import { DurableControl } from './DurableControl';
+import { Paths } from './Paths';
+import { SnapshotManager } from './SnapshotManager';
 
 /**
  * Controller for a given document's body content.
  */
-export default class BodyControl extends DurableControl {
+export class BodyControl extends DurableControl {
   /**
    * Constructs an instance.
    *

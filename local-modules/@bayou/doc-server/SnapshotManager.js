@@ -4,13 +4,13 @@
 
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BaseControl from './BaseControl';
+import { BaseControl } from './BaseControl';
 
 /**
  * Holder of cached snapshots for a document portion, along with the ability to
  * generate new snapshots as requested.
  */
-export default class SnapshotManager extends CommonBase {
+export class SnapshotManager extends CommonBase {
   /**
    * Constructs an instance.
    *

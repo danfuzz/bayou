@@ -10,7 +10,7 @@ import { Errors, UtilityClass } from '@bayou/util-common';
  * string constants. This class is merely where the constants and type checker
  * code live.
  */
-export default class ValidationStatus extends UtilityClass {
+export class ValidationStatus extends UtilityClass {
   /**
    * {string} Validation status value, which indicates an unrecoverable error in
    * interpreting the document (or document portion) data.

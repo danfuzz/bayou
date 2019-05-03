@@ -6,9 +6,9 @@ import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 import { TInt, TObject, TString } from '@bayou/typecheck';
 import { ColorUtil, CommonBase, Errors } from '@bayou/util-common';
 
-import CaretDelta from './CaretDelta';
-import CaretId from './CaretId';
-import CaretOp from './CaretOp';
+import { CaretDelta } from './CaretDelta';
+import { CaretId } from './CaretId';
+import { CaretOp } from './CaretOp';
 
 /**
  * {Map<string, function>} Map from each allowed caret field name to a type
@@ -51,7 +51,7 @@ let DEFAULT = null;
  * information about a session from the user's perspective, including the human
  * driving it. The caret per se is merely the most blatant aspect of it.
  */
-export default class Caret extends CommonBase {
+export class Caret extends CommonBase {
   /** {Caret} An instance with all default values. */
   static get DEFAULT() {
     if (DEFAULT === null) {

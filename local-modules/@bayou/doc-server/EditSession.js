@@ -5,7 +5,7 @@
 import { BodyChange, PropertyChange } from '@bayou/doc-common';
 import { RevisionNumber, Timestamp } from '@bayou/ot-common';
 
-import ViewSession from './ViewSession';
+import { ViewSession } from './ViewSession';
 
 /**
  * Server side representative of a session which allows editing.
@@ -13,7 +13,7 @@ import ViewSession from './ViewSession';
  * See header comment on superclass {@link ViewSession} for a salient design
  * note.
  */
-export default class EditSession extends ViewSession {
+export class EditSession extends ViewSession {
   /**
    * Constructs an instance.
    *

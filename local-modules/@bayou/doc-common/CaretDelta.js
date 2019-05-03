@@ -5,7 +5,7 @@
 import { BaseDelta } from '@bayou/ot-common';
 import { Errors } from '@bayou/util-common';
 
-import CaretOp from './CaretOp';
+import { CaretOp } from './CaretOp';
 
 /**
  * Delta for caret information, consisting of a simple ordered list of
@@ -18,7 +18,7 @@ import CaretOp from './CaretOp';
  *
  * Instances of this class are immutable.
  */
-export default class CaretDelta extends BaseDelta {
+export class CaretDelta extends BaseDelta {
   /**
    * Main implementation of {@link #compose}.
    *

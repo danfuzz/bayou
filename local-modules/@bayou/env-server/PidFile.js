@@ -9,7 +9,7 @@ import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import Dirs from './Dirs';
+import { Dirs } from './Dirs';
 
 /** {Logger} Logger. */
 const log = new Logger('pid');
@@ -18,7 +18,7 @@ const log = new Logger('pid');
  * This writes a PID file when {@link #init()} is called, and tries to remove it
  * when the process is shutting down.
  */
-export default class PidFile extends CommonBase {
+export class PidFile extends CommonBase {
   /**
    * Constructs an instance. Logging aside, this doesn't cause any external
    * action to take place (such as writing the PID file); that stuff happens in

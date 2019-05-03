@@ -4,13 +4,13 @@
 
 import { Singleton } from '@bayou/util-common';
 
-import ConfigMap from './ConfigMap';
+import { ConfigMap } from './ConfigMap';
 
 /**
  * Module-internal singleton class which holds the system-wide instance of
  * {@link ConfigMap}.
  */
-export default class AllConfigs extends Singleton {
+export class AllConfigs extends Singleton {
   /**
    * Constructs an instance.
    */

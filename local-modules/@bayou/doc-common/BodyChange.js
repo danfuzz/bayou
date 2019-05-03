@@ -4,13 +4,13 @@
 
 import { BaseChange } from '@bayou/ot-common';
 
-import BodyDelta from './BodyDelta';
+import { BodyDelta } from './BodyDelta';
 
 /**
  * Change class for representing changes to a document body. The `delta`s passed
  * to the constructor must be instances of {@link BodyDelta}.
  */
-export default class BodyChange extends BaseChange {
+export class BodyChange extends BaseChange {
   /**
    * {class} Class (constructor function) of delta objects to be used with
    * instances of this class.

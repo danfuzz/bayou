@@ -10,7 +10,7 @@ import { CommonBase, DataUtil } from '@bayou/util-common';
  * single property within a `PropertySnapshot`. Instances of this class are
  * always frozen (immutable).
  */
-export default class Property extends CommonBase {
+export class Property extends CommonBase {
   /**
    * Constructs an instance.
    *

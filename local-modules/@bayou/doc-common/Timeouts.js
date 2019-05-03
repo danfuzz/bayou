@@ -9,7 +9,7 @@ import { UtilityClass } from '@bayou/util-common';
  * Utility class that just holds common timeout-related constants and utility
  * functions.
  */
-export default class Timeouts extends UtilityClass {
+export class Timeouts extends UtilityClass {
   /**
    * {Int} The maximum valid timeout, in msec. This value is picked so as to
    * avoid "promise pileup" on code which issues requests which end up getting

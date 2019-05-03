@@ -5,13 +5,13 @@
 import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import FileAccess from './FileAccess';
+import { FileAccess } from './FileAccess';
 
 /**
  * Base class for things that hook up to a {@link FileComplex} and for
  * `FileComplex` itself.
  */
-export default class BaseComplexMember extends CommonBase {
+export class BaseComplexMember extends CommonBase {
   /**
    * Constructs an instance.
    *

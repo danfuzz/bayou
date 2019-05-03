@@ -10,11 +10,11 @@ import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
-import BootInfo from './BootInfo';
-import Dirs from './Dirs';
-import PidFile from './PidFile';
-import BuildInfo from './BuildInfo';
-import ShutdownManager from './ShutdownManager';
+import { BootInfo } from './BootInfo';
+import { Dirs } from './Dirs';
+import { PidFile } from './PidFile';
+import { BuildInfo } from './BuildInfo';
+import { ShutdownManager } from './ShutdownManager';
 
 /** {Int} Frequency of uptime metric logs, in msec per log. */
 const UPTIME_LOG_MSEC = 5 * 60 * 1000; // Five minutes.
@@ -25,7 +25,7 @@ const log = new Logger('env-server');
 /**
  * Miscellaneous server-side utilities.
  */
-export default class ServerEnv extends Singleton {
+export class ServerEnv extends Singleton {
   /**
    * Constructs an instance.
    */

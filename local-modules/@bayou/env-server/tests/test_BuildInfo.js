@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import BuildInfo from '@bayou/env-server/BuildInfo';
+import { BuildInfo } from '@bayou/env-server/BuildInfo';
 
 describe('@bayou/env-server/BuildInfo', () => {
   describe('.info', () => {

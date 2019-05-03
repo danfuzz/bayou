@@ -25,7 +25,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
  * (a) maintain parallel structure where feasible, and (b) see if there turns
  * out to be any common functionality that really can be factored out.
  */
-export default class BaseFile extends CommonBase {
+export class BaseFile extends CommonBase {
   /**
    * Constructs an instance.
    *

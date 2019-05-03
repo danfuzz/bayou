@@ -5,9 +5,9 @@
 import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
 import { FileOp } from '@bayou/file-store-ot';
 
-import BaseDataManager from './BaseDataManager';
-import Paths from './Paths';
-import ValidationStatus from './ValidationStatus';
+import { BaseDataManager } from './BaseDataManager';
+import { Paths } from './Paths';
+import { ValidationStatus } from './ValidationStatus';
 
 /**
  * Handler for the schema of a file. As of this writing, this class merely knows
@@ -15,7 +15,7 @@ import ValidationStatus from './ValidationStatus';
  * long term, it will be the locus of responsibility for migration of content
  * from older schemas.
  */
-export default class SchemaHandler extends BaseDataManager {
+export class SchemaHandler extends BaseDataManager {
   /**
    * Constructs an instance.
    *

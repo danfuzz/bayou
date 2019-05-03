@@ -15,7 +15,7 @@ const CARET_ID_REGEX = /^cr-[0-9a-z]{5}$/;
  * characters. (With an expected 5 bits of randomness in each character, that
  * allows for about 33 million simultaneous carets on any given document.)
  */
-export default class CaretId extends UtilityClass {
+export class CaretId extends UtilityClass {
   /**
    * Validates that the given value is a valid caret ID string. Throws an
    * error if not.

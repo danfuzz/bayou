@@ -25,7 +25,7 @@ const PATH_REGEX = /^([/][a-zA-Z0-9_]+)+$/;
  * * Example path: `/foo_1/bar/baz/23`
  * * Example component: `puffin_biscuit_7`
  */
-export default class StoragePath extends UtilityClass {
+export class StoragePath extends UtilityClass {
   /**
    * Gets all the prefixes of the given storage path, where each prefix names
    * a "superdirectory" that the original `path` can be considered to be in.

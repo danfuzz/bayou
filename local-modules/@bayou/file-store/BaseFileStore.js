@@ -5,7 +5,7 @@
 import { TBoolean, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
-import BaseFile from './BaseFile';
+import { BaseFile } from './BaseFile';
 
 /**
  * Base class for file storage access. This is, essentially, the filesystem
@@ -13,7 +13,7 @@ import BaseFile from './BaseFile';
  * must override several methods defined by this class, as indicated in the
  * documentation. Methods to override are all named with the prefix `_impl_`.
  */
-export default class BaseFileStore extends CommonBase {
+export class BaseFileStore extends CommonBase {
   /**
    * Checks a file ID for full validity, beyond simply checking the syntax of
    * the ID. Returns the given ID if all is well, or throws an error if the ID

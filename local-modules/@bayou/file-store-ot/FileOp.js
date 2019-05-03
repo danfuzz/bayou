@@ -6,13 +6,13 @@ import { BaseOp } from '@bayou/ot-common';
 import { TInt } from '@bayou/typecheck';
 import { Errors, FrozenBuffer } from '@bayou/util-common';
 
-import StorageId from './StorageId';
-import StoragePath from './StoragePath';
+import { StorageId } from './StorageId';
+import { StoragePath } from './StoragePath';
 
 /**
  * Operation which can be applied to a {@link FileSnapshot}.
  */
-export default class FileOp extends BaseOp {
+export class FileOp extends BaseOp {
   /** {string} Opcode constant for "delete all" operations. */
   static get CODE_deleteAll() {
     return 'deleteAll';
