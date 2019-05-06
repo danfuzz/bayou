@@ -275,7 +275,7 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
-   * Helper for {@link #handleJsonMessage()} which parses the original incoming
+   * Helper for {@link #handleJsonMessage} which parses the original incoming
    * message.
    *
    * @param {string} msg Incoming message, in JSON-encoded form.
@@ -307,7 +307,7 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
-   * Helper for {@link #handleJsonMessage()} which encodes a response for
+   * Helper for {@link #handleJsonMessage} which encodes a response for
    * sending back to the far side of a connection.
    *
    * @param {Response} response The response in question.

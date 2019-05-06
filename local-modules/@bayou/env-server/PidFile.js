@@ -15,7 +15,7 @@ import { Dirs } from './Dirs';
 const log = new Logger('pid');
 
 /**
- * This writes a PID file when {@link #init()} is called, and tries to remove it
+ * This writes a PID file when {@link #init} is called, and tries to remove it
  * when the process is shutting down.
  */
 export class PidFile extends CommonBase {

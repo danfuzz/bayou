@@ -4,7 +4,7 @@
 
 import { RevisionNumber } from '@bayou/ot-common';
 import { Condition, Delay } from '@bayou/promise-util';
-import { Errors } from '@bayou/util-common';
+import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after receiving a caret update from
@@ -25,7 +25,7 @@ const ERROR_DELAY_MSEC = 5000;
  * document. It watches for changes observed from the session proxy and
  * updates itself accordingly.
  */
-export class CaretState {
+export class CaretState extends CommonBase {
   /**
    * Constructs an instance of this class.
    *
@@ -33,6 +33,8 @@ export class CaretState {
    *   instance will operate.
    */
   constructor(editorComplex) {
+    super();
+
     /**
      * {EditorComplex} The editor complex which this instance is associated
      * with.

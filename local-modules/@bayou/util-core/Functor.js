@@ -21,17 +21,18 @@ import { ObjectUtil } from './ObjectUtil';
  * **Note:** This class mixes in `CommonBase`, so that it gets the static
  * `check()` method and friends. However, because `CommonBase` uses this class,
  * we can't just mix it in here (as this class is the one that gets initialized
- * first). Instead, this happens during module initialization.
+ * first). Instead, this happens during module initialization. (See `index.js`
+ * in this module.)
  *
  * **Note for pedants:** This class does _not_ implement a "functor" in the
  * strict mathematical or category-theoretical sense of the word.
  */
-export class Functor {
+export class Functor /* extends CommonBase */ {
   /**
    * Constructs an instance.
    *
    * @param {string} name Functor name. This must conform to the "label"
-   *   syntax as defined by {@link TString#label()}.
+   *   syntax as defined by {@link TString#label}.
    * @param {...*} args Functor arguments.
    */
   constructor(name, ...args) {

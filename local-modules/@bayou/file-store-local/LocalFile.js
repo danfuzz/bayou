@@ -416,7 +416,7 @@ export class LocalFile extends BaseFile {
   }
 
   /**
-   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * Helper for {@link #_waitThenFlushStorage}, which does all the actual
    * filesystem stuff when the file is supposed to be deleted.
    *
    * @returns {true} `true`, upon successful operation.
@@ -720,7 +720,7 @@ export class LocalFile extends BaseFile {
   }
 
   /**
-   * Helper for {@link #_waitThenFlushStorage()}, which does all the actual
+   * Helper for {@link #_waitThenFlushStorage}, which does all the actual
    * filesystem stuff when there is stuff to write.
    *
    * @returns {true} `true`, upon successful writing.

@@ -66,7 +66,7 @@ export class Codec extends CommonBase {
   }
 
   /**
-   * Converts JSON-encoded text to a usable value. See {@link #decodeData()} for
+   * Converts JSON-encoded text to a usable value. See {@link #decodeData} for
    * details. Beyond what is specified there:
    *
    * * Plain objects which map a single string key to an array are decoded into
@@ -134,7 +134,7 @@ export class Codec extends CommonBase {
   }
 
   /**
-   * Converts an arbitrary value to JSON-encoded text. See {@link #encodeData()}
+   * Converts an arbitrary value to JSON-encoded text. See {@link #encodeData}
    * for details. Beyond what is specified there:
    *
    * * Instances of {@link ConstructorCall} are encoded as a single-binding

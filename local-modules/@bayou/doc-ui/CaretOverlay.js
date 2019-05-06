@@ -6,6 +6,7 @@ import { CaretId, CaretOp, CaretSnapshot } from '@bayou/doc-common';
 import { Delay } from '@bayou/promise-util';
 import { QuillEvents, QuillGeometry } from '@bayou/quill-util';
 import { TObject } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * {Int} Amount of time (in msec) to wait after noticing a local edit before
@@ -33,7 +34,7 @@ const AVATAR_SCALE_FACTOR = AVATAR_DIMENSION / 400.0;
  * users editing the same document as the local user. It renders the selections
  * into an SVG element that overlays the Quill editor.
  */
-export class CaretOverlay {
+export class CaretOverlay extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -42,6 +43,8 @@ export class CaretOverlay {
    * @param {Element} svgElement The `<svg>` element to attach to.
    */
   constructor(editorComplex, svgElement) {
+    super();
+
     /** {EditorComplex} Editor complex that this instance is a part of. */
     this._editorComplex = editorComplex;
 

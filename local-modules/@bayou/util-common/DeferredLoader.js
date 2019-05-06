@@ -14,8 +14,8 @@ import { BaseProxyHandler } from './BaseProxyHandler';
  * first access, it calls on a loader function to load up the "real" target, and
  * then it uses that target for all accesses.
  *
- * The easiest way to use this class is via the {@link
- # BaseProxyHandler#makeProxy()} static method.
+ * The easiest way to use this class is via the static method {@link
+ # BaseProxyHandler#makeProxy}.
  *
  * The point of this class is to help break module dependency cycles. By using
  * this class, it is possible to effectively "import" a module just before it is

@@ -2,16 +2,20 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { CommonBase } from '@bayou/util-common';
+
 /**
  * Simple plugin to produce progress messages while building Webpack bundles.
  */
-export class ProgressMessage {
+export class ProgressMessage extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {Logger} log The logger to use.
    */
   constructor(log) {
+    super();
+
     /** {Logger} Logger. */
     this._log = log;
 
