@@ -7,8 +7,8 @@ import { BaseChange } from './BaseChange';
 import { BaseDelta } from './BaseDelta';
 import { BaseOp } from './BaseOp';
 import { BaseSnapshot } from './BaseSnapshot';
-import Timestamp from './Timestamp';
 import { RevisionNumber } from './RevisionNumber';
+import { Timestamp } from './Timestamp';
 
 export {
   TheModule,
@@ -16,6 +16,6 @@ export {
   BaseDelta,
   BaseOp,
   BaseSnapshot,
-  Timestamp,
-  RevisionNumber
+  RevisionNumber,
+  Timestamp
 };

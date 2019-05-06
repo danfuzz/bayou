@@ -8,7 +8,7 @@ import { CommonBase } from '@bayou/util-common';
 
 import { BaseDelta } from './BaseDelta';
 import { RevisionNumber } from './RevisionNumber';
-import Timestamp from './Timestamp';
+import { Timestamp } from './Timestamp';
 
 /**
  * Base class for representation of a change to document content. A change
