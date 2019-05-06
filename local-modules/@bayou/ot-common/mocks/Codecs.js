@@ -5,15 +5,15 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import { CodableError } from './CodableError';
-import { Message } from './Message';
-import { Response } from './Response';
-import { Remote } from './Remote';
+import { MockChange } from './MockChange';
+import { MockDelta } from './MockDelta';
+import { MockOp } from './MockOp';
+import { MockSnapshot } from './MockSnapshot';
 
 /**
  * Utilities for this module.
  */
-export class TheModule extends UtilityClass {
+export class Codecs extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *
@@ -22,9 +22,9 @@ export class TheModule extends UtilityClass {
   static registerCodecs(registry) {
     Registry.check(registry);
 
-    registry.registerClass(CodableError);
-    registry.registerClass(Message);
-    registry.registerClass(Remote);
-    registry.registerClass(Response);
+    registry.registerClass(MockChange);
+    registry.registerClass(MockDelta);
+    registry.registerClass(MockOp);
+    registry.registerClass(MockSnapshot);
   }
 }

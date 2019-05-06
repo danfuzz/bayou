@@ -31,7 +31,7 @@ export class ApiClient extends CommonBase {
    * @param {Codec} codec Codec instance to use. In order to function properly,
    *   its registry must include all of the encodable classes defined in
    *   `@bayou/api-common` classes. See
-   *   {@link @bayou/api-common.TheModule.registerCodecs}.
+   *   {@link @bayou/api-common.Codecs.registerCodecs}.
    */
   constructor(serverUrl, codec) {
     super();

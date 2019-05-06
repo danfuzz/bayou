@@ -6,7 +6,7 @@ import express from 'express';
 import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { Auth, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
@@ -243,7 +243,7 @@ export class DebugTools extends CommonBase {
     const revNum = req.params.revNum;
     const body = this._getExistingBody(req);
     const change = (await body).getChange(revNum);
-    const result = appCommon_TheModule.modelCodec.encodeJson(await change, true);
+    const result = Codecs.modelCodec.encodeJson(await change, true);
 
     ServerUtil.sendPlainTextResponse(res, result);
   }
@@ -352,7 +352,7 @@ export class DebugTools extends CommonBase {
     const body = this._getExistingBody(req);
     const args = (revNum === undefined) ? [] : [revNum];
     const snapshot = (await body).getSnapshot(...args);
-    const result = appCommon_TheModule.modelCodec.encodeJson(await snapshot, true);
+    const result = Codecs.modelCodec.encodeJson(await snapshot, true);
 
     ServerUtil.sendPlainTextResponse(res, result);
   }
@@ -451,6 +451,6 @@ export class DebugTools extends CommonBase {
    */
   async _makeEncodedInfo(documentId, authorId) {
     const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
-    return appCommon_TheModule.fullCodec.encodeData(info);
+    return Codecs.fullCodec.encodeData(info);
   }
 }

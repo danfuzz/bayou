@@ -2,16 +2,16 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule as apiCommon_TheModule } from '@bayou/api-common';
+import { Codecs as apiCommon_Codecs } from '@bayou/api-common';
 import { Codec, Registry } from '@bayou/codec';
-import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
-import { TheModule as otCommon_TheModule } from '@bayou/ot-common';
+import { Codecs as docCommon_Codecs } from '@bayou/doc-common';
+import { Codecs as otCommon_Codecs } from '@bayou/ot-common';
 import { UtilityClass } from '@bayou/util-common';
 
 /**
  * Utilities for this module.
  */
-export class TheModule extends UtilityClass {
+export class Codecs extends UtilityClass {
   /**
    * {Codec} Standard {@link Codec} instance, constructed by
    * {@link #makeFullCodec}.
@@ -47,9 +47,9 @@ export class TheModule extends UtilityClass {
   static makeFullCodec() {
     const registry = new Registry();
 
-    apiCommon_TheModule.registerCodecs(registry);
-    docCommon_TheModule.registerCodecs(registry);
-    otCommon_TheModule.registerCodecs(registry);
+    apiCommon_Codecs.registerCodecs(registry);
+    docCommon_Codecs.registerCodecs(registry);
+    otCommon_Codecs.registerCodecs(registry);
 
     return new Codec(registry);
   }
@@ -63,8 +63,8 @@ export class TheModule extends UtilityClass {
   static makeModelCodec() {
     const registry = new Registry();
 
-    docCommon_TheModule.registerCodecs(registry);
-    otCommon_TheModule.registerCodecs(registry);
+    docCommon_Codecs.registerCodecs(registry);
+    otCommon_Codecs.registerCodecs(registry);
 
     return new Codec(registry);
   }

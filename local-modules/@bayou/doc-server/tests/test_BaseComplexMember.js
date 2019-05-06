@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { BaseComplexMember } from '@bayou/doc-server';
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { FileAccess } from '@bayou/doc-server';
 import { MockFile } from '@bayou/file-store/mocks';
 import { MockLogger } from '@bayou/see-all/mocks';
@@ -15,7 +15,7 @@ import { MockLogger } from '@bayou/see-all/mocks';
 describe('@bayou/doc-server/BaseComplexMember', () => {
   describe('constructor()', () => {
     it('accepts a `FileAccess` and reflects it in the getters', () => {
-      const codec  = appCommon_TheModule.modelCodec;
+      const codec  = Codecs.modelCodec;
       const file   = new MockFile('blort');
       const fa     = new FileAccess(codec, 'x', file);
       const result = new BaseComplexMember(fa, 'boop');
@@ -35,7 +35,7 @@ describe('@bayou/doc-server/BaseComplexMember', () => {
     });
 
     it('uses the `logLabel` to create an appropriate `log`', () => {
-      const codec  = appCommon_TheModule.modelCodec;
+      const codec  = Codecs.modelCodec;
       const log    = new MockLogger();
       const fa     = new FileAccess(codec, 'x', new MockFile('file-id'), log);
       const result = new BaseComplexMember(fa, 'boop');

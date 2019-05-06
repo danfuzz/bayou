@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
+import { Codecs } from '@bayou/doc-common';
 import { FileOp } from '@bayou/file-store-ot';
 
 import { BaseDataManager } from './BaseDataManager';
@@ -26,7 +26,7 @@ export class SchemaHandler extends BaseDataManager {
     super(fileAccess, 'schema');
 
     /** {string} The document schema version to use and expect. */
-    this._schemaVersion = docCommon_TheModule.SCHEMA_VERSION;
+    this._schemaVersion = Codecs.SCHEMA_VERSION;
 
     Object.freeze(this);
   }

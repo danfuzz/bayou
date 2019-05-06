@@ -2,7 +2,6 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule } from './TheModule';
 import { BodyChange } from './BodyChange';
 import { BodyDelta } from './BodyDelta';
 import { BodyOp } from './BodyOp';
@@ -13,6 +12,7 @@ import { CaretDelta } from './CaretDelta';
 import { CaretId } from './CaretId';
 import { CaretOp } from './CaretOp';
 import { CaretSnapshot } from './CaretSnapshot';
+import { Codecs } from './Codecs';
 import { Property } from './Property';
 import { PropertyChange } from './PropertyChange';
 import { PropertyDelta } from './PropertyDelta';
@@ -22,7 +22,6 @@ import { SessionInfo } from './SessionInfo';
 import { Timeouts } from './Timeouts';
 
 export {
-  TheModule,
   BodyChange,
   BodyDelta,
   BodyOp,
@@ -33,6 +32,7 @@ export {
   CaretId,
   CaretOp,
   CaretSnapshot,
+  Codecs,
   Property,
   PropertyChange,
   PropertyDelta,

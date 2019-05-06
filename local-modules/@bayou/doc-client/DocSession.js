@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from '@bayou/api-client';
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { CaretId, SessionInfo } from '@bayou/doc-common';
 import { EventSource } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
@@ -282,7 +282,7 @@ export class DocSession extends CommonBase {
 
     this._eventSource.emit.opening();
     this._log.event.apiAboutToOpen(url);
-    this._apiClient = new ApiClient(url, appCommon_TheModule.fullCodec);
+    this._apiClient = new ApiClient(url, Codecs.fullCodec);
 
     try {
       this._log.event.apiOpening();

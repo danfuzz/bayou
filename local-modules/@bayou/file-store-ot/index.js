@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Codecs } from './Codecs';
 import { Errors } from './Errors';
 import { FileChange } from './FileChange';
 import { FileDelta } from './FileDelta';
@@ -9,10 +10,9 @@ import { FileOp } from './FileOp';
 import { FileSnapshot } from './FileSnapshot';
 import { StorageId } from './StorageId';
 import { StoragePath } from './StoragePath';
-import { TheModule } from './TheModule';
 
 export {
-  TheModule,
+  Codecs,
   Errors,
   FileChange,
   FileDelta,

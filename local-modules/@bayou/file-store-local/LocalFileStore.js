@@ -8,7 +8,7 @@ import path from 'path';
 import { Codec } from '@bayou/codec';
 import { Dirs } from '@bayou/env-server';
 import { BaseFileStore, FileCache } from '@bayou/file-store';
-import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
+import { Codecs } from '@bayou/file-store-ot';
 import { DefaultIdSyntax } from '@bayou/doc-id-default';
 import { Logger } from '@bayou/see-all';
 
@@ -30,7 +30,7 @@ export class LocalFileStore extends BaseFileStore {
 
     /** {Codec} Codec to use when reading and writing file OT objects. */
     this._codec = new Codec();
-    fileStoreOt_TheModule.registerCodecs(this._codec.registry);
+    Codecs.registerCodecs(this._codec.registry);
 
     /** {FileCache} Cache of {@link LocalFile} instances. */
     this._cache = new FileCache(log);

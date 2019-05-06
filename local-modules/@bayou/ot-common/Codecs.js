@@ -5,15 +5,12 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import { FileChange } from './FileChange';
-import { FileDelta } from './FileDelta';
-import { FileOp } from './FileOp';
-import { FileSnapshot } from './FileSnapshot';
+import { Timestamp } from './Timestamp';
 
 /**
  * Utilities for this module.
  */
-export class TheModule extends UtilityClass {
+export class Codecs extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *
@@ -22,9 +19,6 @@ export class TheModule extends UtilityClass {
   static registerCodecs(registry) {
     Registry.check(registry);
 
-    registry.registerClass(FileChange);
-    registry.registerClass(FileDelta);
-    registry.registerClass(FileOp);
-    registry.registerClass(FileSnapshot);
+    registry.registerClass(Timestamp);
   }
 }
