@@ -61,13 +61,10 @@ export class QuillGeometry extends UtilityClass {
       // Convert character range to screen rectangle.
       const bounds = quill.getBounds(characterOffset, line.length());
 
-      bounds.left = bounds.left;
-      bounds.top = bounds.top;
-      bounds.right = bounds.right;
-      bounds.bottom = bounds.bottom;
+      const { left, top, right, bottom } = bounds;
 
-      bounds.width = bounds.right - bounds.left;
-      bounds.height = bounds.bottom - bounds.top;
+      bounds.width  = right - left;
+      bounds.height = bottom - top;
 
       return bounds;
     });
