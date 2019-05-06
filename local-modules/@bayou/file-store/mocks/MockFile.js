@@ -7,9 +7,7 @@ import { BaseFile } from '@bayou/file-store';
 /**
  * Trivial {@link BaseFile} implementation for use with the tests.
  */
-export default class MockFile extends BaseFile {
-
-  // Augment with other results as necessary for testing
+export class MockFile extends BaseFile {
   appendChange() {
     return true;
   }

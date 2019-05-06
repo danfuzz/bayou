@@ -4,13 +4,13 @@
 
 import { BaseSnapshot } from '@bayou/ot-common';
 
-import MockChange from './MockChange';
-import MockOp from './MockOp';
+import { MockChange } from './MockChange';
+import { MockOp } from './MockOp';
 
 /**
  * Mock subclass of `BaseSnapshot` for testing.
  */
-export default class MockSnapshot extends BaseSnapshot {
+export class MockSnapshot extends BaseSnapshot {
   constructor(revNum, contents) {
     super(revNum, contents);
     Object.freeze(this);

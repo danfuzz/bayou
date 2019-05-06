@@ -2,11 +2,11 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import TheModule from './TheModule';
-import MockChange from './MockChange';
-import MockDelta from './MockDelta';
-import MockOp from './MockOp';
-import MockSnapshot from './MockSnapshot';
+import { TheModule } from './TheModule';
+import { MockChange } from './MockChange';
+import { MockDelta } from './MockDelta';
+import { MockOp } from './MockOp';
+import { MockSnapshot } from './MockSnapshot';
 
 export {
   TheModule,

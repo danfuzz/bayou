@@ -5,7 +5,7 @@
 /**
  * Trivial codec-compatible class for use in tests.
  */
-export default class MockCodable {
+export class MockCodable {
   static get CODEC_TAG() {
     return 'MockCodable';
   }
