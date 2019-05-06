@@ -8,7 +8,7 @@ import path from 'path';
 import ws from 'ws';
 
 import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ServerEnv } from '@bayou/env-server';

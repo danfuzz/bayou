@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule as docCommon_TheModule } from '@bayou/doc-common';
+import { Codecs as docCommon_TheModule } from '@bayou/doc-common';
 import { FileOp } from '@bayou/file-store-ot';
 
 import { BaseDataManager } from './BaseDataManager';

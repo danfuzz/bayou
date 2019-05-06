@@ -7,7 +7,7 @@ import { describe, it } from 'mocha';
 
 import { BaseComplexMember } from '@bayou/doc-server';
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { FileAccess } from '@bayou/doc-server';
 import { MockFile } from '@bayou/file-store/mocks';
 import { MockLogger } from '@bayou/see-all/mocks';

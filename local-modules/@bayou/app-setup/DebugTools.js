@@ -6,7 +6,7 @@ import express from 'express';
 import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { Auth, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { Editor } from '@bayou/config-client';
 import { SessionInfo } from '@bayou/doc-common';
 import { EditorComplex } from '@bayou/doc-ui';

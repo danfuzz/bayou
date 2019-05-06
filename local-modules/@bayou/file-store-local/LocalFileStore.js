@@ -8,7 +8,7 @@ import path from 'path';
 import { Codec } from '@bayou/codec';
 import { Dirs } from '@bayou/env-server';
 import { BaseFileStore, FileCache } from '@bayou/file-store';
-import { TheModule as fileStoreOt_TheModule } from '@bayou/file-store-ot';
+import { Codecs as fileStoreOt_TheModule } from '@bayou/file-store-ot';
 import { DefaultIdSyntax } from '@bayou/doc-id-default';
 import { Logger } from '@bayou/see-all';
 

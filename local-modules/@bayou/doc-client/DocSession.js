@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ApiClient } from '@bayou/api-client';
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { CaretId, SessionInfo } from '@bayou/doc-common';
 import { EventSource } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';

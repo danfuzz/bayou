@@ -24,7 +24,7 @@ import { SessionInfo } from './SessionInfo';
 /**
  * Utilities for this module.
  */
-export class TheModule extends UtilityClass {
+export class Codecs extends UtilityClass {
   /**
    * {string} Schema version string which uniquely identifies the structure of
    * documents and their constituent parts. Any time the formats change in an

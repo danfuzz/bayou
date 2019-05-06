@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { TheModule as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs as appCommon_TheModule } from '@bayou/app-common';
 import { BaseDataManager, FileAccess, ValidationStatus } from '@bayou/doc-server';
 import { MockFile } from '@bayou/file-store/mocks';
 
