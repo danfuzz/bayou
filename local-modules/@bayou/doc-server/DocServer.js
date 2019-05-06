@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codecs as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { Storage } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';
@@ -30,7 +30,7 @@ export class DocServer extends Singleton {
     super();
 
     /** {Codec} Codec instance to use. */
-    this._codec = appCommon_TheModule.fullCodec;
+    this._codec = Codecs.fullCodec;
 
     /**
      * {FileComplexCache} Cache of {@link FileComplex} instances, mapped from

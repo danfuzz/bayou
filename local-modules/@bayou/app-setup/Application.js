@@ -8,7 +8,7 @@ import path from 'path';
 import ws from 'ws';
 
 import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
-import { Codecs as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ServerEnv } from '@bayou/env-server';
@@ -57,7 +57,7 @@ export class Application extends CommonBase {
      * {ContextInfo} The common info used to construct {@link Context}
      * instances.
      */
-    this._contextInfo = new ContextInfo(appCommon_TheModule.fullCodec, new AppAuthorizer(this));
+    this._contextInfo = new ContextInfo(Codecs.fullCodec, new AppAuthorizer(this));
 
     /**
      * {object} The "root access" object. This is the object which tokens

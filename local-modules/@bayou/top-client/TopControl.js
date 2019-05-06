@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Codecs as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { Editor } from '@bayou/config-client';
 import { SessionInfo } from '@bayou/doc-common';
 import { EditorComplex } from '@bayou/doc-ui';
@@ -148,7 +148,7 @@ export class TopControl {
    * @returns {SessionInfo} The parsed info.
    */
   _parseInfo(infoJson) {
-    const info = appCommon_TheModule.fullCodec.decodeJson(infoJson);
+    const info = Codecs.fullCodec.decodeJson(infoJson);
 
     return SessionInfo.check(info);
   }

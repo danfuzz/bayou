@@ -5,12 +5,12 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Codecs as appCommon_TheModule } from '@bayou/app-common';
+import { Codecs } from '@bayou/app-common';
 import { BaseDataManager, FileAccess, ValidationStatus } from '@bayou/doc-server';
 import { MockFile } from '@bayou/file-store/mocks';
 
 /** {FileAccess} Convenient instance of `FileAccess`. */
-const FILE_ACCESS = new FileAccess(appCommon_TheModule.modelCodec, 'doc-123', new MockFile('blort'));
+const FILE_ACCESS = new FileAccess(Codecs.modelCodec, 'doc-123', new MockFile('blort'));
 
 describe('@bayou/doc-server/BaseDataManager', () => {
   describe('afterInit()', () => {
