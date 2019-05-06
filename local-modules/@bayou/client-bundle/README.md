@@ -3,15 +3,14 @@ The Client Environment
 
 ### CSS Modules
 
-The Arugula client code makes use of "CSS modules" so that our CSS
-can be broken up into smaller files. This also gives us the ability
-to easily control what styles are active in the DOM, and when.
+The client code makes use of "CSS modules" so that our CSS can be broken up into
+smaller files. This also gives us the ability to easily control what styles are
+active in the DOM, and when.
 
-When the CSS loaded processes a `.css` file it transforms the class
-names to globally unique values. This is to avoid naming collisions
-with other modules. When you import the CSS module into JavaScript
-you end up with an object that maps the class names that were in the
-CSS file to the unique name.
+When the CSS loaded processes a `.css` file it transforms the class names to
+globally unique values. This is to avoid naming collisions with other modules.
+When you import the CSS module into JavaScript you end up with an object that
+maps the class names that were in the CSS file to the unique name.
 
 #### Basic Usage
 
