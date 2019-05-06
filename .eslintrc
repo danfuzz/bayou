@@ -57,6 +57,7 @@
     "no-new-func": "error",
     "no-new-object": "error",
     "no-regex-spaces": "off",
+    "no-self-assign": ["error", { "props": true }],
     "no-shadow": "error",
     "no-trailing-spaces": "error",
     "no-undef": "error",
