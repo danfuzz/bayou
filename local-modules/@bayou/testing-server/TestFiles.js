@@ -51,8 +51,7 @@ export class TestFiles extends UtilityClass {
    *
    * @param {string} dir Path to the subproduct directory.
    * @param {array<string>} moduleList A list of module names to scan for tests,
-   *   such as might have been returned from a call to
-   *   {@link #_localModulesIn()}.
+   *   such as might have been returned from a call to {@link #_localModulesIn}.
    * @returns {array<string>} List of filesystem paths for test files.
    */
   static _allTestFiles(dir, moduleList) {

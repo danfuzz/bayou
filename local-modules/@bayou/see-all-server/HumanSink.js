@@ -103,21 +103,21 @@ export class HumanSink extends BaseSink {
     /**
      * {Int} Number of columns currently being reserved for log line prefixes.
      * This starts with a reasonable guess (to avoid initial churn) and gets
-     * updated in {@link #_makePrefix()}.
+     * updated in {@link #_makePrefix}.
      */
     this._prefixLength = MIN_PREFIX_LENGTH;
 
     /**
      * {Int} The maximum prefix observed over the previous
      * {@link #_recentLineCount} lines. This gets updated in
-     * {@link #_makePrefix()}.
+     * {@link #_makePrefix}.
      */
     this._recentMaxPrefix = 0;
 
     /**
      * {Int} The number of lines in the reckoning recorded by
      * {@link #_recentMaxPrefix} lines. This gets updated in
-     * {@link #_makePrefix()}.
+     * {@link #_makePrefix}.
      */
     this._recentLineCount = 0;
 

@@ -32,7 +32,7 @@ export class Functor /* extends CommonBase */ {
    * Constructs an instance.
    *
    * @param {string} name Functor name. This must conform to the "label"
-   *   syntax as defined by {@link TString#label()}.
+   *   syntax as defined by {@link TString#label}.
    * @param {...*} args Functor arguments.
    */
   constructor(name, ...args) {

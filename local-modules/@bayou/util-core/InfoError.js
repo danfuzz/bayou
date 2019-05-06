@@ -171,8 +171,8 @@ export class InfoError extends Error /* mixin CommonBase */ {
    * Chrome / Chromium and Safari.
    *
    * **TODO:** This should be removed and call sites fixed to use
-   * {@link UtilError#stackLines()}, except that method would have to be fixed
-   * to be (a) accessible here (wrong module) and (b) become explicitly aware of
+   * {@link UtilError#stackLines}, except that method would have to be fixed to
+   * be (a) accessible here (wrong module) and (b) become explicitly aware of
    * Safari's style.
    *
    * @param {string} orig The original `.stack` string.

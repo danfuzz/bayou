@@ -73,7 +73,7 @@ export class ApiClient extends CommonBase {
      * element is an object that maps `resolve` and `reject` to functions that
      * obey the usual promise contract for functions of those names, and
      * `message` to the originally-sent {@link Message}. Initialized and reset
-     * in {@link #_resetConnection()}.
+     * in {@link #_resetConnection}.
      */
     this._callbacks = null;
 
