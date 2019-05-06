@@ -26,10 +26,10 @@ const HASH_BIT_LENGTH = 256;
  * **Note:** This class mixes in `CommonBase`, so that it gets the static
  * `check()` method and friends. However, because `CommonBase` uses this class,
  * we can't just mix it in here (as this class is the one that gets initialized
- * first). Instead, this happens during module initialization.
- *
+ * first). Instead, this happens during module initialization. (See `index.js`
+ * in this module.)
  */
-export class FrozenBuffer {
+export class FrozenBuffer /* extends CommonBase */ {
   /**
    * Validates that the given value is a valid hash string, such as might be
    * returned by the instance property `.hash` on this class. Throws an error if

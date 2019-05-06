@@ -21,9 +21,10 @@ import { Functor } from './Functor';
  * **Note:** This class mixes in `CommonBase`, so that it gets the static
  * `check()` method and friends. However, because `CommonBase` uses this class,
  * we can't just mix it in here (as this class is the one that gets initialized
- * first). Instead, this happens during module initialization.
+ * first). Instead, this happens during module initialization. (See `index.js`
+ * in this module.)
  */
-export class InfoError extends Error {
+export class InfoError extends Error /* mixin CommonBase */ {
   /**
    * Checks if the given value is an instance of this class with the given
    * name. This is a `static` method, so that the check can be made on errors
