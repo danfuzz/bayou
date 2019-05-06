@@ -63,6 +63,9 @@ while true; do
         --clean)
             outOpts+=("$1")
             ;;
+        --client)
+            buildProjects+=(client)
+            ;;
         --compiler)
             buildProjects+=(compiler)
             ;;
@@ -86,6 +89,9 @@ while true; do
             ;;
         --product-info=?*)
             productInfoPath="${1#*=}"
+            ;;
+        --server)
+            buildProjects+=(server)
             ;;
         --) # End of all options
             shift
@@ -116,6 +122,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '  this performs a full build.'
     echo ''
     echo 'Target options:'
+    echo '  --client'
+    echo '    Build the client (code that runs in a browser).'
     echo '  --compiler'
     echo '    Build the compiler (transpiler).'
     echo '  --copy-sources'
@@ -124,6 +132,8 @@ if (( ${showHelp} || ${argError} )); then
     echo '    this by itself.'
     echo '  --linter'
     echo '    Build the linter.'
+    echo '  --server'
+    echo '    Build the server (main server application).'
     echo ''
     echo 'Other options:'
     echo '  --clean'
