@@ -60,10 +60,6 @@ As a slightly special case, if a module wants to export a set of utility
 functionality which has no reasonable more-specific name, it should do so by
 defining a utility class named `TheModule` per se, and exported as that name.
 
-**Note:** As of this writing, the codebase is in transition from a convention
-where `export default class` was used in module-internal contexts. **TODO:**
-Remove this note when the system is fully converted!
-
 #### Standard `index` form
 
 The standard form of a module's main `index.js` file is to import all the
