@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { CoreTypecheck } from '@bayou/util-core';
 
-import Assert from './Assert';
+import { Assert } from './Assert';
 
 /** {array<string>} Strings to use as test cases. */
 const STRING_CASES = [

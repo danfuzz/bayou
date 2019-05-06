@@ -19,7 +19,7 @@ fileStoreOt_TheModule.registerCodecs(codec.registry);
  * Utility class to dole out unique temporary filesystem paths, so that the
  * various tests don't trample on each other.
  */
-export default class TempFiles extends UtilityClass {
+export class TempFiles extends UtilityClass {
   /**
    * Finishes up a test with the given file. This flushes the file and then
    * removes the directory it uses. The flushing activity notably could write
