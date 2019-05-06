@@ -8,6 +8,7 @@ import { SessionInfo } from '@bayou/doc-common';
 import { EditorComplex } from '@bayou/doc-ui';
 import { Logger } from '@bayou/see-all';
 import { TFunction, TObject } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('top');
@@ -16,13 +17,15 @@ const log = new Logger('top');
  * Top-level control for an editor. This is responsible for setting up the
  * browser environment and for keeping things going.
  */
-export class TopControl {
+export class TopControl extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {Window} window The browser window in which we are operating.
    */
   constructor(window) {
+    super();
+
     /** {Window} The browser window in which we are operating. */
     this._window = window;
 

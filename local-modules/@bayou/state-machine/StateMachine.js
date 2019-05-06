@@ -5,7 +5,7 @@
 import { Condition } from '@bayou/promise-util';
 import { BaseLogger, Logger } from '@bayou/see-all';
 import { TBoolean, TObject, TString } from '@bayou/typecheck';
-import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
+import { CommonBase, Errors, Functor, PropertyIterable } from '@bayou/util-common';
 
 /**
  * Lightweight state machine framework. This allows a subclass to define
@@ -68,7 +68,7 @@ import { Errors, Functor, PropertyIterable } from '@bayou/util-common';
  * throws an exception. (2) a default handler for (any, error), which logs the
  * error and aborts the state machine.
  */
-export class StateMachine {
+export class StateMachine extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -80,6 +80,8 @@ export class StateMachine {
    *   an ongoing basis.
    */
   constructor(initialState, logger = null, verboseLogging = false) {
+    super();
+
     TString.check(initialState);
 
     /** {BaseLogger} Logger to use. */

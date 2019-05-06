@@ -78,7 +78,7 @@ import styles from './some-component.ucss';
 
 // Border classes not active in the DOM yet.
 
-export class SomeComponent {
+export class SomeComponent extends SomeClass {
   ...
 
   lifecycleBegin() {

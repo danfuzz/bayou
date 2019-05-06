@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TFunction } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * Function wrapper that guarantees only one call to the underlying function
@@ -39,7 +40,7 @@ import { TFunction } from '@bayou/typecheck';
  * Results 2 2
  * ```
  */
-export class CallPiler {
+export class CallPiler extends CommonBase {
   /**
    * Constructs an instance.
    *
@@ -47,6 +48,8 @@ export class CallPiler {
    * @param {...*} args Arguments to pass to the function.
    */
   constructor(func, ...args) {
+    super();
+
     /** {function} Function to call. */
     this._func = TFunction.checkCallable(func);
 

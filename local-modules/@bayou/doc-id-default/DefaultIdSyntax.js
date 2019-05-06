@@ -3,6 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TString } from '@bayou/typecheck';
+import { UtilityClass } from '@bayou/util-common';
 
 /**
  * {RexExp} Expression which is used to match all of the ID types.
@@ -15,7 +16,7 @@ const ID_REGEX = /^[-_a-zA-Z0-9]{1,32}$/;
 /**
  * Default ID syntax definitions. See module `README.md` for more details.
  */
-export class DefaultIdSyntax {
+export class DefaultIdSyntax extends UtilityClass {
   /**
    * Default implementation of author ID syntax checking.
    *

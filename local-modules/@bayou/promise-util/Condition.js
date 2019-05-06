@@ -3,17 +3,20 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { TBoolean } from '@bayou/typecheck';
+import { CommonBase } from '@bayou/util-common';
 
 /**
  * Boolean condition with promise-attached level triggers.
  */
-export class Condition {
+export class Condition extends CommonBase {
   /**
    * Constructs an instance.
    *
    * @param {boolean} [initialValue = false] Initial value.
    */
   constructor(initialValue = false) {
+    super();
+
     /** Current value. */
     this._value = TBoolean.check(initialValue);
 

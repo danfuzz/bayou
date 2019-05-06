@@ -2,11 +2,13 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { UtilityClass } from '@bayou/util-common';
+
 /**
  * A collection of code to help with reconciling Quill contents
  * with on-screen pixel positions.
  */
-export class QuillGeometry {
+export class QuillGeometry extends UtilityClass {
   /**
    * Takes a Quill character offset and returns a bounding rectangle for an
    * insertion point cursor at that offset.
