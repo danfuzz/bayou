@@ -4,12 +4,12 @@
 
 import { BaseDelta } from '@bayou/ot-common';
 
-import MockOp from './MockOp';
+import { MockOp } from './MockOp';
 
 /**
  * Mock "delta" class for testing.
  */
-export default class MockDelta extends BaseDelta {
+export class MockDelta extends BaseDelta {
   /** {array<object>} Would-be ops array that contains an invalid element. */
   static get INVALID_OPS() {
     return ['not_an_op'];

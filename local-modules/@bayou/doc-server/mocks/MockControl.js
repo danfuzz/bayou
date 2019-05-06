@@ -8,7 +8,7 @@ import { MockSnapshot } from '@bayou/ot-common/mocks';
 /**
  * Subclass of {@link DurableControl} for use in testing.
  */
-export default class MockControl extends DurableControl {
+export class MockControl extends DurableControl {
   constructor(fileAccess, logLabel) {
     super(fileAccess, logLabel);
 

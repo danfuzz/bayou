@@ -7,7 +7,7 @@ import { BaseLogger } from '@bayou/see-all';
 /**
  * Mock logger, which provides a convenient record of how it was called.
  */
-export default class MockLogger extends BaseLogger {
+export class MockLogger extends BaseLogger {
   /**
    * Constructs an instance.
    */

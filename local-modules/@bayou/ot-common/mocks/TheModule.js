@@ -5,15 +5,15 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import MockChange from './MockChange';
-import MockDelta from './MockDelta';
-import MockOp from './MockOp';
-import MockSnapshot from './MockSnapshot';
+import { MockChange } from './MockChange';
+import { MockDelta } from './MockDelta';
+import { MockOp } from './MockOp';
+import { MockSnapshot } from './MockSnapshot';
 
 /**
  * Utilities for this module.
  */
-export default class TheModule extends UtilityClass {
+export class TheModule extends UtilityClass {
   /**
    * Registers this module's encodable classes with a given codec registry.
    *

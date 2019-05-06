@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { FileChange, FileOp, FileSnapshot } from '@bayou/file-store-ot';
 import { FrozenBuffer } from '@bayou/util-common';
 
-import TempFiles from './TempFiles';
+import { TempFiles } from './TempFiles';
 
 describe('@bayou/file-store-local/LocalFile', () => {
   describe('constructor()', () => {

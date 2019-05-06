@@ -39,7 +39,7 @@ const USECS_PER_SEC = 1000000;
  * restricted to fall within a range of dates with a minimum around the start
  * of the year 2002 and a maximum around the start of the year 2050.
  */
-export default class Timestamp extends CommonBase {
+export class Timestamp extends CommonBase {
   /** {Timestamp} The maximum valid timestamp. */
   static get MAX_VALUE() {
     return new Timestamp(MAX_SECS - 1, USECS_PER_SEC - 1);

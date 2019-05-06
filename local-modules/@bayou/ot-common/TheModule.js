@@ -5,7 +5,7 @@
 import { Registry } from '@bayou/codec';
 import { UtilityClass } from '@bayou/util-common';
 
-import Timestamp from './Timestamp';
+import { Timestamp } from './Timestamp';
 
 /**
  * Utilities for this module.

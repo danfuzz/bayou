@@ -4,12 +4,12 @@
 
 import { BaseChange } from '@bayou/ot-common';
 
-import MockDelta from './MockDelta';
+import { MockDelta } from './MockDelta';
 
 /**
  * Mock subclass of `BaseChange` for testing.
  */
-export default class MockChange extends BaseChange {
+export class MockChange extends BaseChange {
   static get _impl_deltaClass() {
     return MockDelta;
   }

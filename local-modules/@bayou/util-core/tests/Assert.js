@@ -9,7 +9,7 @@ import { InfoError, UtilityClass } from '@bayou/util-core';
 /**
  * Additional assertion functions for use with this project.
  */
-export default class Assert extends UtilityClass {
+export class Assert extends UtilityClass {
   /**
    * Like `assert.throws()`, but specifically to check the details of an
    * expected `InfoError`.

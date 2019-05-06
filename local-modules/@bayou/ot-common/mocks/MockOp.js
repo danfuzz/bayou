@@ -7,7 +7,7 @@ import { BaseOp } from '@bayou/ot-common';
 /**
  * Mock operation class for testing.
  */
-export default class MockOp extends BaseOp {
+export class MockOp extends BaseOp {
   static get CODE_composedDoc()    { return 'composedDoc';    }
   static get CODE_composedNotDoc() { return 'composedNotDoc'; }
   static get CODE_diffDelta()      { return 'diffDelta';      }
