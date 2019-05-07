@@ -123,10 +123,8 @@ export class BodyClient extends StateMachine {
    *   (`true`) or not (`false`) this instance should automatically manage the
    *   "enabled" state of `quill`. If `false`, it is up to clients of this class
    *   to use `quill.enable()` and `quill.disable()`.
-   * @param {Int} [pollingDelayMsec = 0] Delay in msecs to wait before
-   *   transitioning from `wantInputAfterDelay` to `wantInput`.
    */
-  constructor(quill, docSession, manageEnabledState = true, pollingDelayMsec = 0) {
+  constructor(quill, docSession, manageEnabledState = true) {
     super('detached', docSession.log);
 
     /**
@@ -146,9 +144,6 @@ export class BodyClient extends StateMachine {
      * disabled state.
      */
     this._manageEnabledState = manageEnabledState;
-
-    /** {Int} Delay between polling for changes, 0 by default. */
-    this._pollingDelayMsec = pollingDelayMsec;
 
     /**
      * {boolean} Whether the instance is aiming to be fully detached. See
@@ -877,9 +872,8 @@ export class BodyClient extends StateMachine {
 
     // Fire off the next iteration of requesting server changes, after a short
     // delay. The delay is just to keep network traffic at a stately pace
-    // despite any particularly active editing by other clients. Use delay
-    // at least as long as `PULL_DELAY_MSEC`.
-    this.q_wantInputAfterDelay(this._pollingDelayMsec < PULL_DELAY_MSEC ? PULL_DELAY_MSEC : this._pollingDelayMsec);
+    // despite any particularly active editing by other clients.
+    this.q_wantInputAfterDelay(PULL_DELAY_MSEC);
   }
 
   /**
@@ -999,11 +993,10 @@ export class BodyClient extends StateMachine {
         } catch (e) {
           this._pendingChangeAfter = false;
           if (Errors.is_timedOut(e)) {
-            // Emit `wantInputAfterDelay` in response to a timeout. If we're
-            // idling, this will end up retrying the `getChangeAfter()` after
-            // a configured delay. In any other state, it will (correctly)
-            // get ignored.
-            this.q_wantInputAfterDelay(this._pollingDelayMsec);
+            // Emit `wantInput` in response to a timeout. If we're idling, this
+            // will end up retrying the `getChangeAfter()`. In any other state,
+            // it will (correctly) get ignored.
+            this.q_wantInput();
           } else {
             // Any other thrown error is a bona fide problem.
             this.q_apiError('body_getChangeAfter', e);
@@ -1222,7 +1215,7 @@ export class BodyClient extends StateMachine {
   _becomeIdle() {
     if (this._running) {
       this.s_idle();
-      this.q_wantInputAfterDelay(this._pollingDelayMsec);
+      this.q_wantInput();
     } else {
       this.s_detached();
     }
