@@ -6,7 +6,7 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import { format, promisify } from 'util';
 
-import { Delay } from '@bayou/promise-util';
+import { Delay, Mutex } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
 
@@ -33,18 +33,69 @@ export class ClientTests extends UtilityClass {
     // **TODO:** This whole arrangement is a bit hacky and should be improved.
 
     // Set up and start up headless Chrome (via Puppeteer).
-
     const browser   = await puppeteer.launch();
     const page      = await browser.newPage();
     const receiver  = new EventReceiver();
     const collector = receiver.collector;
 
-    page.on('console', (...args) => {
-      // **TODO:** This doesn't quite work, because the first argument can have
-      // Chrome-specific `%` escapes in it, which are similar to but not exactly
-      // what Node's `util.format()` uses.
-      const msg = format(...args);
-      receiver.consoleLine(msg);
+    // We need to do some async stuff in the `console` handler. This mutex
+    // serializes handling so that we deal with each message fully and in-order.
+    // If we saw messages out of order, then (a) it's confusing in general, and
+    // (b) the test output parser would get messed up.
+    const consoleMutex = new Mutex();
+
+    async function handleConsole(consoleMessage) {
+      const args = consoleMessage.args();
+      const type = consoleMessage.type();
+
+      if (args.length === 0) {
+        // Shouldn't happen, but just in case it does, exit early instead of
+        // getting more confused below.
+        return;
+      }
+
+      switch (type) {
+        case 'debug':
+        case 'error':
+        case 'info':
+        case 'log':
+        case 'warning': {
+          // Handle these.
+          break;
+        }
+        default: {
+          // Don't try to handle any other message type.
+          return;
+        }
+      }
+
+      // Convert each of the arguments from a remote handle to a local data
+      // value. These are almost always, but not necessarily, strings.
+      const jsonArgs  = await Promise.all(args.map(a => a.jsonValue()));
+      const arg0      = jsonArgs[0];
+      let   formatted;
+
+      // Dispose the handles, so that the client can GC whatever was generated
+      // from the logging.
+      await Promise.all(args.map(a => a.dispose()));
+
+      if ((typeof arg0 === 'string') && (arg0.indexOf('%') >= 0)) {
+        // The first argument is a presumptive format string. Convert `%c` to
+        // `%s` (because the browser uses the former but Node doesn't understand
+        // it), and then format the result. **Note:** The conversion of `%c`
+        // doesn't actually produce colored output, but that doesn't really
+        // matter in this context.
+        const formatStr = arg0.replace(/%c/g, '%s');
+        formatted = format(formatStr, ...jsonArgs.slice(1));
+      } else {
+        formatted = format('%s', ...jsonArgs);
+      }
+
+      receiver.consoleLine(formatted);
+    }
+
+    page.on('console', (consoleMessage) => {
+      consoleMutex.withLockHeld(() => handleConsole(consoleMessage));
     });
 
     page.on('pageerror', (err) => {
