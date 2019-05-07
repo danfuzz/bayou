@@ -4,6 +4,7 @@
     "@bayou/deps-testing-common": "local",
     "@bayou/deps-testing-server": "local",
     "@bayou/env-server": "local",
+    "@bayou/promise-util": "local",
     "@bayou/testing-common": "local",
     "@bayou/util-common": "local"
   }
