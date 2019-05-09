@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import http from 'http';
 import path from 'path';
@@ -205,7 +206,10 @@ export class Application extends CommonBase {
   _addRoutes() {
     const app = this._app;
 
-    // Logging and metrics
+    // Cookie parsing.
+    app.use(cookieParser());
+
+    // Logging and metrics.
     app.use(this._requestLogger.expressMiddleware);
     app.use(this._metrics.httpRequestMiddleware);
 
