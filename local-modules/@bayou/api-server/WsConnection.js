@@ -8,7 +8,7 @@ import { Message } from '@bayou/api-common';
 import { Condition } from '@bayou/promise-util';
 import { Functor, WebsocketCodes } from '@bayou/util-common';
 
-import { BaseConnection } from './BaseConnection';
+import { HttpConnection } from './HttpConnection';
 
 /**
  * {Int} Number of messages that are proactively rejected while in the process
@@ -20,7 +20,7 @@ const MAX_MESSAGES_WHILE_CLOSING = 100;
 /**
  * Direct handler for API requests over a websocket connection.
  */
-export class WsConnection extends BaseConnection {
+export class WsConnection extends HttpConnection {
   /**
    * Constructs an instance. As a side effect, the contructor attaches the
    * constructed instance to the websocket (as an event listener).
@@ -31,7 +31,7 @@ export class WsConnection extends BaseConnection {
    *   to use.
    */
   constructor(ws, req, contextInfo) {
-    super(contextInfo);
+    super(req, contextInfo);
 
     this._log.event.websocketOrigin(req.headers.origin);
 
