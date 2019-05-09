@@ -148,6 +148,23 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
+   * Gets the value for the indicated HTTP-ish request header. This returns
+   * `null` if there is no such header, including if this kind of connection
+   * doesn't actually have (these sorts of) headers at all.
+   *
+   * @param {string} name Name of the header in question.
+   * @returns {string|null} Header value, or `null` if there is no header with
+   *   the given `name`.
+   */
+  getHeader(name) {
+    TString.nonEmpty(name);
+
+    const result = this._impl_getHeader(name);
+
+    return TString.orNull(result);
+  }
+
+  /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a JSON string response.
    *
@@ -250,6 +267,18 @@ export class BaseConnection extends CommonBase {
    *   the given `name`.
    */
   _impl_getCookie(name) {
+    return this._mustOverride(name);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getHeader}.
+   *
+   * @abstract
+   * @param {string} name Name of the header in question.
+   * @returns {string|null} Header value, or `null` if there is no header with
+   *   the given `name`.
+   */
+  _impl_getHeader(name) {
     return this._mustOverride(name);
   }
 

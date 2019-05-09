@@ -46,4 +46,21 @@ export class HttpConnection extends BaseConnection {
 
     return cookies[name];
   }
+
+  /**
+   * Implementation of method as required by the superclass.
+   *
+   * @param {string} name Name of the header in question.
+   * @returns {string|null} Header value, or `null` if there is no header with
+   *   the given `name`.
+   */
+  _impl_getHeader(name) {
+    const headers = this._req.headers;
+
+    if (!(headers && ObjectUtil.hasOwnProperty(headers, name))) {
+      return null;
+    }
+
+    return headers[name];
+  }
 }
