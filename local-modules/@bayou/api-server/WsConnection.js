@@ -97,6 +97,18 @@ export class WsConnection extends BaseConnection {
   /**
    * Implementation of method as required by the superclass.
    *
+   * @param {string} name Name of the cookie in question.
+   * @returns {string|null} Cookie value, or `null` if there is no cookie with
+   *   the given `name`.
+   */
+  _impl_getCookie(name) {
+    // **TODO:** Fill me in!
+    return null;
+  }
+
+  /**
+   * Implementation of method as required by the superclass.
+   *
    * @returns {boolean} `true` if the connection is open, or `false` if not.
    */
   _impl_isOpen() {

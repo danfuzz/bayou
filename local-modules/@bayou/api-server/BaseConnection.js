@@ -6,7 +6,7 @@ import { ConnectionError, Message, Response } from '@bayou/api-common';
 import { Logging } from '@bayou/config-server';
 import { Condition } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
-import { TBoolean } from '@bayou/typecheck';
+import { TBoolean, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import { ApiLog } from './ApiLog';
@@ -131,6 +131,23 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
+   * Gets the value for the indicated HTTP-ish cookie. This returns `null` if
+   * there is no such cookie, including if this kind of connection doesn't
+   * actually have cookies at all.
+   *
+   * @param {string} name Name of the cookie in question.
+   * @returns {string|null} Cookie value, or `null` if there is no cookie with
+   *   the given `name`.
+   */
+  getCookie(name) {
+    TString.nonEmpty(name);
+
+    const result = this._impl_getCookie(name);
+
+    return TString.orNull(result);
+  }
+
+  /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a JSON string response.
    *
@@ -217,14 +234,29 @@ export class BaseConnection extends CommonBase {
    * `await`ed upon before the base class performs its final cleanup. The
    * intention is that this method _not_ force unsafe closure, but rather that
    * it hasten an orderly shutdown of the connection.
+   *
+   * @abstract
    */
   async _impl_close() {
     this._mustOverride();
   }
 
   /**
+   * Subclass-specific implementation of {@link #getCookie}.
+   *
+   * @abstract
+   * @param {string} name Name of the cookie in question.
+   * @returns {string|null} Cookie value, or `null` if there is no cookie with
+   *   the given `name`.
+   */
+  _impl_getCookie(name) {
+    return this._mustOverride(name);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #isOpen}.
    *
+   * @abstract
    * @returns {boolean} `true` if the connection is open, or `false` if not.
    */
   _impl_isOpen() {
