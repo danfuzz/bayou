@@ -33,13 +33,7 @@ export class HttpConnection extends BaseConnection {
    *   the given `name`.
    */
   _impl_getCookie(name) {
-    const cookies = this._req.cookies;
-
-    if (!(cookies && ObjectUtil.hasOwnProperty(cookies, name))) {
-      return null;
-    }
-
-    return cookies[name];
+    return HttpConnection._getWhatever(this._req.cookies, name);
   }
 
   /**
@@ -50,12 +44,24 @@ export class HttpConnection extends BaseConnection {
    *   the given `name`.
    */
   _impl_getHeader(name) {
-    const headers = this._req.headers;
+    return HttpConnection._getWhatever(this._req.headers, name);
+  }
 
-    if (!(headers && ObjectUtil.hasOwnProperty(headers, name))) {
+  /**
+   * Helper for the two thing-getters, which both bottom out in equivalent
+   * look-ups, just on different properties.
+   *
+   * @param {object|undefined|null} obj Map-like object to look a name up in,
+   *   or `null`(ish) if there's no object in question.
+   * @param {string} name Name to look up.
+   * @returns {string|null} Value found in `obj`, or `null` if either `obj`
+   *   is `null`(ish) or it doesn't contain `name`.
+   */
+  static _getWhatever(obj, name) {
+    if (!(obj && ObjectUtil.hasOwnProperty(obj, name))) {
       return null;
     }
 
-    return headers[name];
+    return obj[name];
   }
 }
