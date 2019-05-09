@@ -109,10 +109,11 @@ describe('@bayou/typecheck/TObject', () => {
     });
   });
 
-  describe('plain()', () => {
+  // Common tests for `plain()` and `plainOrNull()`.
+  function plainishTests(plainish) {
     it('accepts plain objects', () => {
       function test(value) {
-        assert.strictEqual(TObject.plain(value), value);
+        assert.strictEqual(plainish(value), value);
       }
 
       test({});
@@ -122,7 +123,7 @@ describe('@bayou/typecheck/TObject', () => {
 
     it('rejects non-plain objects', () => {
       function test(value) {
-        assert.throws(() => { TObject.plain(value); });
+        assert.throws(() => { plainish(value); });
       }
 
       test([]);
@@ -134,17 +135,32 @@ describe('@bayou/typecheck/TObject', () => {
       test({ [Symbol('blort')]: [1, 2, 3] });
     });
 
-    it('rejects non-objects', () => {
+    it('rejects non-objects (other than `null`)', () => {
       function test(value) {
-        assert.throws(() => { TObject.plain(value); });
+        assert.throws(() => { plainish(value); });
       }
 
-      test(null);
       test(undefined);
       test(false);
       test(true);
       test('x');
       test(37);
+    });
+  }
+
+  describe('plain()', () => {
+    plainishTests(x => TObject.plain(x));
+
+    it('rejects `null`', () => {
+      assert.throws(() => { TObject.plain(null); });
+    });
+  });
+
+  describe('plainOrNull()', () => {
+    plainishTests(x => TObject.plainOrNull(x));
+
+    it('accepts `null`', () => {
+      assert.isNull(TObject.plainOrNull(null));
     });
   });
 
