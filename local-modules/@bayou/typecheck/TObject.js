@@ -65,6 +65,21 @@ export class TObject extends UtilityClass {
   }
 
   /**
+   * Checks that a value is a plain object (in the sense of {@link #plain}) or
+   * is `null`.
+   *
+   * @param {*} value Value to check.
+   * @returns {object} `value`.
+   */
+  static plainOrNull(value) {
+    if ((value === null) || ObjectUtil.isPlain(value)) {
+      return value;
+    }
+
+    throw Errors.badValue(value, 'plain object|null');
+  }
+
+  /**
    * Checks a value of type `Object`, which must be a plain object with exactly
    * the indicated set of keys as "own" properties.
    *

@@ -5,7 +5,7 @@
 import { BearerToken } from '@bayou/api-common';
 import { TokenMint } from '@bayou/api-server';
 import { BaseAuth } from '@bayou/config-server';
-import { TString } from '@bayou/typecheck';
+import { TObject, TString } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
 /**
@@ -62,6 +62,21 @@ export class Auth extends BaseAuth {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation always returns `[]`, that is, it never makes an cookies
+   * required.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} `[]`, always.
+   */
+  static async cookieNamesForToken(token) {
+    BearerToken.check(token);
+
+    return [];
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation succeeds for any valid author ID and always returns a
    * newly-created token. It caches every token token created, such that it can
    * subsequently be found by {@link #tokenAuthority}.
@@ -103,10 +118,13 @@ export class Auth extends BaseAuth {
    * above, for more info.
    *
    * @param {BearerToken} token The token in question.
+   * @param {object|null} cookies The cookies needed in order to authorize
+   *   `token`, or `null` if no cookies are needed. This value should be based
    * @returns {object} Representation of the authority granted by `token`.
    */
-  static async tokenAuthority(token) {
+  static async tokenAuthority(token, cookies) {
     BearerToken.check(token);
+    TObject.plainOrNull(cookies);
 
     const found = tokenMint.getInfoOrNull(token);
 
