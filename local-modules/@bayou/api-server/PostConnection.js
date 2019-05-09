@@ -4,13 +4,13 @@
 
 import contentType from 'content-type';
 
-import { BaseConnection } from './BaseConnection';
+import { HttpConnection } from './HttpConnection';
 
 /**
  * Direct handler for one-shot API requests that arrive over a standard HTTP
  * POST.
  */
-export class PostConnection extends BaseConnection {
+export class PostConnection extends HttpConnection {
   /**
    * Constructs an instance. As a side effect, the contructor attaches the
    * constructed instance to the HTTP request, and arranges to respond.
@@ -21,10 +21,7 @@ export class PostConnection extends BaseConnection {
    *   to use.
    */
   constructor(req, res, contextInfo) {
-    super(contextInfo);
-
-    /** {object} The HTTP request. */
-    this._req = req;
+    super(req, contextInfo);
 
     /** {object} The HTTP response. */
     this._res = res;
@@ -63,18 +60,6 @@ export class PostConnection extends BaseConnection {
 
       await whenFinished;
     }
-  }
-
-  /**
-   * Implementation of method as required by the superclass.
-   *
-   * @param {string} name Name of the cookie in question.
-   * @returns {string|null} Cookie value, or `null` if there is no cookie with
-   *   the given `name`.
-   */
-  _impl_getCookie(name) {
-    // **TODO:** Fill me in!
-    return null;
   }
 
   /**
@@ -157,7 +142,7 @@ export class PostConnection extends BaseConnection {
    * @returns {string|null} The error, if any.
    */
   _validateContentType() {
-    const headerString = this._req.headers['content-type'];
+    const headerString = this.requestHeaders['content-type'];
     if (!headerString) {
       return 'Missing header.';
     }
