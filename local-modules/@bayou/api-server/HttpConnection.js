@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import contentType from 'content-type';
+import { ObjectUtil } from '@bayou/util-common';
 
 import { BaseConnection } from './BaseConnection';
 
@@ -38,7 +38,12 @@ export class HttpConnection extends BaseConnection {
    *   the given `name`.
    */
   _impl_getCookie(name) {
-    // **TODO:** Fill me in!
-    return null;
+    const cookies = this._req.cookies;
+
+    if (!(cookies && ObjectUtil.hasOwnProperty(cookies, name))) {
+      return null;
+    }
+
+    return cookies[name];
   }
 }
