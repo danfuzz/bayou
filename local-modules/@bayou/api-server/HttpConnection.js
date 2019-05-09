@@ -25,11 +25,6 @@ export class HttpConnection extends BaseConnection {
     this._req = req;
   }
 
-  /** {object} The HTTP request headers. */
-  get requestHeaders() {
-    return this._req.headers;
-  }
-
   /**
    * Implementation of method as required by the superclass.
    *

@@ -142,7 +142,7 @@ export class PostConnection extends HttpConnection {
    * @returns {string|null} The error, if any.
    */
   _validateContentType() {
-    const headerString = this.requestHeaders['content-type'];
+    const headerString = this.getHeader('content-type');
     if (!headerString) {
       return 'Missing header.';
     }
