@@ -29,6 +29,25 @@ export class Auth extends BaseAuth {
   }
 
   /**
+   * Gets the names of any (HTTP-ish) request cookies whose contents are
+   * required in order to fully validate / authorize the given token. If the
+   * given token does not require any cookies, then this method returns `[]`
+   * (that is, an empty array).
+   *
+   * **Note:** This is defined to be an `async` method, on the expectation that
+   * in a production configuration, it might require network activity (e.g.
+   * making a request of a different service) to find out what cookie namess are
+   * associated with a given token.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} The names of all the cookies which are needed to
+   *   perform validation / authorization on `token`.
+   */
+  static async cookieNamesForToken(token) {
+    return use.Auth.cookieNamesForToken(token);
+  }
+
+  /**
    * Gets (makes or finds in a cache) an author token, associated with the
    * indicated author ID. This throws an error if it is not possible to make
    * such a token.

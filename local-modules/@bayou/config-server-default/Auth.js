@@ -62,6 +62,21 @@ export class Auth extends BaseAuth {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation always returns `[]`, that is, it never makes an cookies
+   * required.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} `[]`, always.
+   */
+  static async cookieNamesForToken(token) {
+    BearerToken.check(token);
+
+    return [];
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation succeeds for any valid author ID and always returns a
    * newly-created token. It caches every token token created, such that it can
    * subsequently be found by {@link #tokenAuthority}.
