@@ -118,6 +118,19 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
+   * Encodes a message suitable for sending to the other side of this
+   * connection.
+   *
+   * @param {Message} message Message to encode.
+   * @returns {string} Encoded form of `message`.
+   */
+  encodeMessage(message) {
+    Message.check(message);
+
+    return this._codec.encodeJson(message);
+  }
+
+  /**
    * Handles an incoming message, which is expected to be in JSON string form.
    * Returns a JSON string response.
    *
@@ -197,19 +210,6 @@ export class BaseConnection extends CommonBase {
    */
   isOpen() {
     return TBoolean.check(this._impl_isOpen());
-  }
-
-  /**
-   * Encodes a message suitable for sending to the other side of this
-   * connection.
-   *
-   * @param {Message} message Message to encode.
-   * @returns {string} Encoded form of `message`.
-   */
-  encodeMessage(message) {
-    Message.check(message);
-
-    return this._codec.encodeJson(message);
   }
 
   /**
