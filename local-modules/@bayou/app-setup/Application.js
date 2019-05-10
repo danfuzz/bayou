@@ -280,8 +280,8 @@ export class Application extends CommonBase {
 
     wsServer.on('headers', (headers, req) => {
       // The `ws` handler takes control before any of the middleware gets a
-      // chance to run, so we have to "manually" do cookie parsing and logging
-      // here.
+      // chance to run, so we have to "manually" do cookie parsing and request
+      // logging here.
       if (req.headers.cookie) {
         req.cookies = cookie.parse(req.headers.cookie);
       }
