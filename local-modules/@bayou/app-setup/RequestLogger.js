@@ -5,7 +5,7 @@
 import { fromPairs } from 'lodash';
 import { URL } from 'url';
 
-import { Logger } from '@bayou/see-all';
+import { Logger, RedactUtil } from '@bayou/see-all';
 import { CommonBase, Random } from '@bayou/util-common';
 
 /**
@@ -124,5 +124,11 @@ export class RequestLogger extends CommonBase {
 
     this._log.event[baseEvent](id, url.pathname, details);
     this._log.event[`${baseEvent}Headers`](id, req.headers);
+
+    const cookies = req.cookies;
+    if (cookies && (Object.keys(cookies).length !== 0)) {
+      const cookieLog = RedactUtil.redactValues(cookies, 2);
+      this._log.event[`${baseEvent}Cookies`](id, cookieLog);
+    }
   }
 }
