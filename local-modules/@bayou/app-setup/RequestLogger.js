@@ -5,7 +5,7 @@
 import { fromPairs } from 'lodash';
 import { URL } from 'url';
 
-import { Logger } from '@bayou/see-all';
+import { Logger, RedactUtil } from '@bayou/see-all';
 import { CommonBase, Random } from '@bayou/util-common';
 
 /**
@@ -49,17 +49,7 @@ export class RequestLogger extends CommonBase {
   logWebsocketRequest(req, responseHeaderLines) {
     const id = Random.shortLabel('req');
 
-    // Second arg (base URL) is needed because `req.url` doesn't come with a
-    // protocol or host.
-    const url     = new URL(req.url, 'http://x.x');
-
-    const details = {
-      ip:     req.socket.remoteAddress,
-      method: req.method,
-      query:  fromPairs([...url.searchParams])
-    };
-
-    this._log.event.websocketRequest(id, url.pathname, details, req.headers);
+    this._logRequest(id, req, 'websocket');
 
     // Turn the response array into a status code and an object that matches the
     // form of the usual `headers` on an HTTP response object.
@@ -89,16 +79,7 @@ export class RequestLogger extends CommonBase {
   _logExpressRequest(req, res, next) {
     const id = Random.shortLabel('req');
 
-    // **Note:** This doesn't include `url` or `headers`, as those end up in the
-    // top level of the logged event because they are so handy and deserve
-    // prominent placement.
-    const details = {
-      ip:       req.ip,
-      method:   req.method,
-      query:    req.query
-    };
-
-    this._log.event.httpRequest(id, req.originalUrl, details, req.headers);
+    this._logRequest(id, req, 'http');
 
     res.on('finish', () => {
       // Make the headers a plain object, so it gets logged in a clean
@@ -108,5 +89,46 @@ export class RequestLogger extends CommonBase {
     });
 
     next();
+  }
+
+  /**
+   * Helper for both regular and websocket loggers, which does the main request
+   * logging.
+   *
+   * @param {string} id The request ID.
+   * @param {object} req The HTTP request.
+   * @param {string} prefix The prefix for the event names.
+   */
+  _logRequest(id, req, prefix) {
+    const ip     = req.socket.remoteAddress;
+    const method = req.method;
+
+    // If this is a normal HTTP request, we'll have a good value for
+    // `originalUrl` but a possibly-altered `url` (because of routing). And for
+    // a websocket request, we'll end up with `originalUrl === undefined` and an
+    // unmodified `url`. In either case the URL value is missing both protocol
+    // and host. So, we "fluff out" the URL with valid throwaway bits, and just
+    // end up extracting the (non-throwaway) parts we want to log.
+    const url = new URL(req.originalUrl || req.url, 'http://x.x');
+
+    // Similarly, `query` will be set up with a normal HTTP request, but not
+    // for a websocket request, in which case we extract it out of `url`.
+    const query = req.query || fromPairs([...url.searchParams]);
+
+    // **Note:** This doesn't include `url` or `headers`, as those are prominent
+    // enough to deserve special treatment (separate argument and separate
+    // event, respectively).
+    const details = { ip, method, query };
+
+    const baseEvent = `${prefix}Request`;
+
+    this._log.event[baseEvent](id, url.pathname, details);
+    this._log.event[`${baseEvent}Headers`](id, req.headers);
+
+    const cookies = req.cookies;
+    if (cookies && (Object.keys(cookies).length !== 0)) {
+      const cookieLog = RedactUtil.redactValues(cookies, 2);
+      this._log.event[`${baseEvent}Cookies`](id, cookieLog);
+    }
   }
 }
