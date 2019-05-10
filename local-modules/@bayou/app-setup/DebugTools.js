@@ -259,7 +259,7 @@ export class DebugTools extends CommonBase {
   _handle_clientTest(req, res) {
     const testFilter = req.params.testFilter;
 
-    const scriptTag = DebugTools._scriptTagFromPath('/boot-for-test.js');
+    const scriptTag = this._scriptTagFromPath('/boot-for-test.js');
 
     // TODO: Probably want to use a real template.
     const filterSetup = testFilter
@@ -289,7 +289,7 @@ export class DebugTools extends CommonBase {
     const authorId   = this._getAuthorIdParam(req);
     const infoObj    = await this._makeEncodedInfo(documentId, authorId);
     const info       = JSON.stringify(infoObj);
-    const scriptTag  = DebugTools._scriptTagFromPath('/boot-for-debug.js');
+    const scriptTag  = this._scriptTagFromPath('/boot-for-debug.js');
 
     // These are already strings (JSON-encoded even, in the case of `info`),
     // but we still have to JSON-encode _those_ strings, so as to make them
@@ -465,8 +465,8 @@ export class DebugTools extends CommonBase {
    * @param {string} urlPath Path to refer to.
    * @returns {string} Corresponding `<script>` tag.
    */
-  static _scriptTagFromPath(urlPath) {
-    const url = DebugTools._urlFromPath(urlPath);
+  _scriptTagFromPath(urlPath) {
+    const url = this._urlFromPath(urlPath);
 
     return `<script src="${url}"></script>\n`;
   }
@@ -478,7 +478,7 @@ export class DebugTools extends CommonBase {
    * @param {string} urlPath Path to refer to.
    * @returns {string} Absolute URL.
    */
-  static _urlFromPath(urlPath) {
+  _urlFromPath(urlPath) {
     // This trims `/`s from both parts (and then always insert a single slash
     // between them.
 
