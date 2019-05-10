@@ -13,6 +13,7 @@ import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
 import { CommonBase } from '@bayou/util-common';
 
+import { Application } from './Application';
 import { ServerUtil } from './ServerUtil';
 
 /** Logger for this module. */
@@ -29,13 +30,13 @@ export class DebugTools extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {RootAccess} rootAccess The root access manager.
+   * @param {Application} application The main application instance.
    */
-  constructor(rootAccess) {
+  constructor(application) {
     super();
 
-    /** {RootAccess} The root access manager. */
-    this._rootAccess = rootAccess;
+    /** {Application} The main application instance. */
+    this._application = Application.check(application);
 
     /** {RecentSink} A rolling log for the `/log` endpoint. */
     this._sink = new RecentSink(LOG_LENGTH_MSEC);
@@ -371,7 +372,7 @@ export class DebugTools extends CommonBase {
     const authorId = req.params.authorId;
     const token    = req.params.token;
 
-    this._rootAccess.useToken(authorId, token);
+    this._application.rootAccess.useToken(authorId, token);
     ServerUtil.sendPlainTextResponse(res, 'Ok!');
   }
 
@@ -453,7 +454,7 @@ export class DebugTools extends CommonBase {
    *   JSON.
    */
   async _makeEncodedInfo(documentId, authorId) {
-    const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
+    const info = await this._application.rootAccess.makeSessionInfo(authorId, documentId);
     return Codecs.fullCodec.encodeData(info);
   }
 
