@@ -11,7 +11,7 @@ import { Auth, Network, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, URL } from '@bayou/util-common';
 
 import { Application } from './Application';
 import { ServerUtil } from './ServerUtil';
@@ -479,13 +479,17 @@ export class DebugTools extends CommonBase {
    * @returns {string} Absolute URL.
    */
   _urlFromPath(urlPath) {
-    // This trims `/`s from both parts (and then always insert a single slash
-    // between them.
+    // Start with the configured `baseUrl` except with whatever port we happen
+    // to actually be listening on.
+    const url = new URL(Network.baseUrl);
+    url.port = this._application.listenPort;
 
-    const baseUrl = Network.baseUrl.replace(/[/]+$/, '');
-
+    // Combine the base path with the given one, ensuring that there is exactly
+    // one slash between them.
+    const basePath = url.pathname.replace(/[/]+$/, '');
     urlPath = urlPath.replace(/^[/]+/, '');
+    url.pathname = `${basePath}/${urlPath}`;
 
-    return `${baseUrl}/${urlPath}`;
+    return url.href;
   }
 }
