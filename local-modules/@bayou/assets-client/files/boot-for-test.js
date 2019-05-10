@@ -16,8 +16,14 @@
   // the test-running procedure. You can find its main entrypoint in
   // {@link @bayou/main-client} listed as the `testMain` in that module's
   // manifest.
-  var baseUrl = window.location.origin;
+
+  // Get the base URL from the window's URL by dropping `/debug` and everything
+  // after (e.g. `/debug/test`). This is brittle, in that it bakes in a bit of
+  // specific knowledge about the endpoint path.
+  var windowUrl = window.location.href;
+  var baseUrl   = windowUrl.replace(/[/]debug[/].*$/, '');
+
   var elem = document.createElement('script');
-  elem.src = baseUrl + '/static/js/test.bundle.js';
+  elem.src = `${baseUrl}/static/js/test.bundle.js`;
   document.head.appendChild(elem);
 }());

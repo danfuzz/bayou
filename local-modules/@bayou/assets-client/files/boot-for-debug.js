@@ -19,8 +19,11 @@
 function BAYOU_RECOVER(info) {
   var documentId = DEBUG_DOCUMENT_ID;
   var authorId   = DEBUG_AUTHOR_ID;
-  var origin     = new URL(info.serverUrl).origin;
-  var url        = `${origin}/debug/access/${documentId}/${authorId}`;
+
+  // Get the base URL from the server URL by dropping the final `/api`. This is
+  // brittle, in that it bakes in knowledge of the API endpoint.
+  var baseUrl = info.serverUrl.replace(/[/]api$/, '');
+  var url     = `${baseUrl}/debug/access/${documentId}/${authorId}`;
 
   return new Promise((resolve) => {
     var req = new XMLHttpRequest();
