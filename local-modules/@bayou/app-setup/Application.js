@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import cookie from 'cookie';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import http from 'http';
@@ -278,6 +279,13 @@ export class Application extends CommonBase {
     });
 
     wsServer.on('headers', (headers, req) => {
+      // The `ws` handler takes control before any of the middleware gets a
+      // chance to run, so we have to "manually" do cookie parsing and logging
+      // here.
+      if (req.headers.cookie) {
+        req.cookies = cookie.parse(req.headers.cookie);
+      }
+
       this._requestLogger.logWebsocketRequest(req, headers);
     });
   }
