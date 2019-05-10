@@ -59,7 +59,8 @@ export class RequestLogger extends CommonBase {
       query:  fromPairs([...url.searchParams])
     };
 
-    this._log.event.websocketRequest(id, url.pathname, details, req.headers);
+    this._log.event.websocketRequest(id, url.pathname, details);
+    this._log.event.websocketRequestHeaders(id, req.headers);
 
     // Turn the response array into a status code and an object that matches the
     // form of the usual `headers` on an HTTP response object.
@@ -98,7 +99,8 @@ export class RequestLogger extends CommonBase {
       query:    req.query
     };
 
-    this._log.event.httpRequest(id, req.originalUrl, details, req.headers);
+    this._log.event.httpRequest(id, req.originalUrl, details);
+    this._log.event.httpRequestHeaders(id, req.headers);
 
     res.on('finish', () => {
       // Make the headers a plain object, so it gets logged in a clean
