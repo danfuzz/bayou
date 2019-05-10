@@ -191,11 +191,11 @@ export class Application extends CommonBase {
   async start(pickPort = false) {
     const server     = this._server;
     const port       = pickPort ? 0 : Network.listenPort;
-    const resultPort = await ServerUtil.listen(server, port);
 
-    log.event.applicationPort(resultPort);
+    this._listenPort = await ServerUtil.listen(server, port);
+    log.event.applicationPort(this._listenPort);
 
-    if ((port !== 0) && (port !== resultPort)) {
+    if ((port !== 0) && (port !== this._listenPort)) {
       log.warn(`Originally requested port: ${port}`);
     }
 
@@ -205,7 +205,7 @@ export class Application extends CommonBase {
     ServerUtil.handleSystemShutdown(server);
     this._handleSystemShutdown();
 
-    return resultPort;
+    return this._listenPort;
   }
 
   /**
