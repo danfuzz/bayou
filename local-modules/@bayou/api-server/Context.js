@@ -227,7 +227,7 @@ export class Context extends CommonBase {
     const target   = new Target(targetId, obj);
     const remote   = this.addTarget(target);
 
-    this._log.event.newRemote(targetId, obj);
+    this.log.event.newRemote(targetId, obj);
 
     return remote;
   }
