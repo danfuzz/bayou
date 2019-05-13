@@ -31,6 +31,41 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
     });
   });
 
+  describe('cookieNamesForToken()', () => {
+    it('calls through to the `_impl` given a `BearerToken`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_cookieNamesForToken(value) {
+          return [value.secretToken, 'florp'];
+        }
+      }
+
+      const au     = new Authie();
+      const token  = new BearerToken('x', 'xyzpdq');
+      const result = await au.cookieNamesForToken(token);
+
+      assert.deepEqual(result, [token.secretToken, 'florp']);
+    });
+
+    it('rejects a non-`BearerToken` argument', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_cookieNamesForToken(value_unused) {
+          throw new Error('unexpected');
+        }
+      }
+
+      const au = new Authie();
+
+      async function test(v) {
+        await assert.isRejected(au.cookieNamesForToken(v), /badValue/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test('florp');
+      await test([1, 2, 3]);
+    });
+  });
+
   describe('isToken()', () => {
     it('calls through to the `_impl` given a string', () => {
       class Authie extends BaseTokenAuthorizer {

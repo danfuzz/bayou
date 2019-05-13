@@ -9,7 +9,8 @@ import { Application } from './Application';
 import { AuthorAccess } from './AuthorAccess';
 
 /**
- * Application-specific implementation of {@link BaseTokenAuthorizer}.
+ * Application-specific implementation of {@link BaseTokenAuthorizer}. Much of
+ * what this class does is hook up to the configured global {@link Auth}.
  */
 export class AppAuthorizer extends BaseTokenAuthorizer {
   /**
@@ -32,6 +33,16 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
    */
   get _impl_nonTokenPrefix() {
     return Auth.nonTokenPrefix;
+  }
+
+  /**
+   * @override
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} The names of all the cookies which are needed to
+   *   perform validation / authorization on `token`.
+   */
+  async _impl_cookieNamesForToken(token) {
+    return Auth.cookieNamesForToken(token);
   }
 
   /**

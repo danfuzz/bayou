@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-common';
-import { TBoolean, TObject, TString } from '@bayou/typecheck';
+import { TArray, TBoolean, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
@@ -18,6 +18,29 @@ export class BaseTokenAuthorizer extends CommonBase {
    */
   get nonTokenPrefix() {
     return TString.check(this._impl_nonTokenPrefix);
+  }
+
+  /**
+   * Gets the names of any (HTTP-ish) request cookies whose contents are
+   * required in order to fully validate / authorize the given token. If the
+   * given token does not require any cookies, then this method returns `[]`
+   * (that is, an empty array).
+   *
+   * **Note:** This is defined to be an `async` method, on the expectation that
+   * in a production configuration, it might require network activity (e.g.
+   * making a request of a different service) to find out what cookie namess are
+   * associated with a given token.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} The names of all the cookies which are needed to
+   *   perform validation / authorization on `token`.
+   */
+  async cookieNamesForToken(token) {
+    BearerToken.check(token);
+
+    const result = await this._impl_cookieNamesForToken(token);
+
+    return TArray.check(result, x => TString.check(x));
   }
 
   /**
@@ -92,6 +115,20 @@ export class BaseTokenAuthorizer extends CommonBase {
    */
   get _impl_nonTokenPrefix() {
     return this._mustOverride();
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #cookieNamesForToken}.
+   * Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BearerToken} token Token in question. Guaranteed to be a valid
+   *   {@link BearerToken} instance.
+   * @returns {array<string>} Names of all the cookies which `token` requires
+   *   for validation.
+   */
+  async _impl_cookieNamesForToken(token) {
+    return this._mustOverride(token);
   }
 
   /**
