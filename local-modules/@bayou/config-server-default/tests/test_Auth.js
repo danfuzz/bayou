@@ -78,16 +78,76 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.isTrue(Auth.isToken(t.secretToken));
     });
 
-    it('returns a token which elicits a correct response from `tokenAuthority()`', async () => {
+    it('returns a token which elicits a correct response from `getAuthority()`', async () => {
       const AUTHOR_ID = 'that-author';
       const t         = await Auth.getAuthorToken(AUTHOR_ID);
-      const authority = await Auth.tokenAuthority(t, null);
+      const authority = await Auth.getAuthority(t, null);
       const expect    = {
         type:     Auth.TYPE_author,
         authorId: AUTHOR_ID
       };
 
       assert.deepEqual(authority, expect);
+    });
+  });
+
+  describe('getAuthority()', () => {
+    it('rejects non-token values for `token`', async () => {
+      async function test(x) {
+        await assert.isRejected(Auth.getAuthority(x, null), /badValue/);
+      }
+
+      await test(undefined);
+      await test(null);
+      await test('florp');
+      await test([1, 2]);
+      await test(new Map());
+      await test(EXAMPLE_TOKENS[0]); // Requires a token object, not a string.
+    });
+
+    it('accepts `null` for `cookies`', async () => {
+      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
+
+      await assert.isFulfilled(Auth.getAuthority(token, null));
+    });
+
+    it('accepts a plain object for `cookies`', async () => {
+      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
+
+      await assert.isFulfilled(Auth.getAuthority(token, { florp: 'boop' }));
+    });
+
+    it('rejects non-object non-`null` values for `cookies`', async () => {
+      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
+
+      async function test(x) {
+        await assert.isRejected(Auth.getAuthority(token, x), /badValue/);
+      }
+
+      await test(undefined);
+      await test('florp');
+      await test([1, 2]);
+      await test(new Map());
+    });
+
+    it('indicates "no auth" for an unknown token', async () => {
+      async function test(t) {
+        const token = Auth.tokenFromString(t);
+        const auth  = await Auth.getAuthority(token, null);
+
+        assert.deepEqual(auth, { type: Auth.TYPE_none });
+      }
+
+      for (const t of EXAMPLE_TOKENS) {
+        await test(t);
+      }
+    });
+
+    it('indicates "root auth" for the staticly-known root token', async () => {
+      const token = Auth.tokenFromString(ROOT_TOKEN);
+      const auth  = await Auth.getAuthority(token, null);
+
+      assert.deepEqual(auth, { type: Auth.TYPE_root });
     });
   });
 
@@ -113,66 +173,6 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.isFalse(Auth.isToken('root-00000000-11abcdef1'));
       assert.isFalse(Auth.isToken('root-000000001123cdef'));
       assert.isFalse(Auth.isToken('root-1-2'));
-    });
-  });
-
-  describe('tokenAuthority()', () => {
-    it('rejects non-token values for `token`', async () => {
-      async function test(x) {
-        await assert.isRejected(Auth.tokenAuthority(x, null), /badValue/);
-      }
-
-      await test(undefined);
-      await test(null);
-      await test('florp');
-      await test([1, 2]);
-      await test(new Map());
-      await test(EXAMPLE_TOKENS[0]); // Requires a token object, not a string.
-    });
-
-    it('accepts `null` for `cookies`', async () => {
-      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
-
-      await assert.isFulfilled(Auth.tokenAuthority(token, null));
-    });
-
-    it('accepts a plain object for `cookies`', async () => {
-      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
-
-      await assert.isFulfilled(Auth.tokenAuthority(token, { florp: 'boop' }));
-    });
-
-    it('rejects non-object non-`null` values for `cookies`', async () => {
-      const token = Auth.tokenFromString(EXAMPLE_TOKENS[0]);
-
-      async function test(x) {
-        await assert.isRejected(Auth.tokenAuthority(token, x), /badValue/);
-      }
-
-      await test(undefined);
-      await test('florp');
-      await test([1, 2]);
-      await test(new Map());
-    });
-
-    it('indicates "no auth" for an unknown token', async () => {
-      async function test(t) {
-        const token = Auth.tokenFromString(t);
-        const auth  = await Auth.tokenAuthority(token, null);
-
-        assert.deepEqual(auth, { type: Auth.TYPE_none });
-      }
-
-      for (const t of EXAMPLE_TOKENS) {
-        await test(t);
-      }
-    });
-
-    it('indicates "root auth" for the staticly-known root token', async () => {
-      const token = Auth.tokenFromString(ROOT_TOKEN);
-      const auth  = await Auth.tokenAuthority(token, null);
-
-      assert.deepEqual(auth, { type: Auth.TYPE_root });
     });
   });
 

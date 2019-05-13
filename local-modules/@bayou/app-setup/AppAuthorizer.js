@@ -64,7 +64,7 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
   async _impl_targetFromToken(token) {
     // **TODO:** `null` below should actually be an object with all the right
     // cookies, if any.
-    const authority = await Auth.tokenAuthority(token, null);
+    const authority = await Auth.getAuthority(token, null);
 
     switch (authority.type) {
       case Auth.TYPE_root: {
