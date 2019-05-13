@@ -3,7 +3,7 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { BearerToken } from '@bayou/api-common';
-import { TBoolean, TObject, TString } from '@bayou/typecheck';
+import { TArray, TBoolean, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
@@ -21,6 +21,29 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
+   * Gets the names of any (HTTP-ish) request cookies whose contents are
+   * required in order to fully validate / authorize the given token. If the
+   * given token does not require any cookies, then this method returns `[]`
+   * (that is, an empty array).
+   *
+   * **Note:** This is defined to be an `async` method, on the expectation that
+   * in a production configuration, it might require network activity (e.g.
+   * making a request of a different service) to find out what cookie namess are
+   * associated with a given token.
+   *
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} The names of all the cookies which are needed to
+   *   perform validation / authorization on `token`.
+   */
+  async cookieNamesForToken(token) {
+    BearerToken.check(token);
+
+    const result = await this._impl_cookieNamesForToken(token);
+
+    return TArray.check(result, x => TString.check(x));
+  }
+
+  /**
    * Indicates whether the given string is in the valid token syntax as used by
    * this class.
    *
@@ -34,11 +57,12 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
-   * Given a token in either object or string form, gets a corresponding
-   * "target" object which can be used to exercise the authority granted by the
-   * token. This method returns `null` if the token does not grant any
-   * authority. A non-`null` return value can be used as a target object,
-   * suitable for exposing (proxying) on an API connection.
+   * Given a token in either object or string form and (if needed) a set of
+   * cookies, gets a corresponding "target" object which can be used to exercise
+   * the authority granted by the token and cookies. This method returns `null`
+   * if the token does not grant any authority. A non-`null` return value can be
+   * used as a target object, suitable for exposing (proxying) on an API
+   * connection.
    *
    * **Note:** This is defined to be an `async` method, on the expectation that
    * in a production configuration, it might require network activity (e.g.
@@ -47,18 +71,31 @@ export class BaseTokenAuthorizer extends CommonBase {
    * @param {string|BearerToken} token Token to look up. If given a string, this
    *   method automatically converts it to a {@link BearerToken} via a call to
    *   {@link #tokenFromString}.
+   * @param {object|null} cookies The cookies needed in order to authorize
+   *   `token`, or `null` if no cookies are needed. This value should be based
+   *   on the result of an earlier call to {@link #cookieNamesForToken}.
+   *   Specifically, if that method returns something other than `[]`, then this
+   *   value should be a plain object whose keys are the indicated cookie names
+   *   and whose values are the related cookie values from the HTTP-ish request
+   *   in which `token` was presented.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async targetFromToken(token) {
+  async getAuthorizedTarget(token, cookies) {
     if (typeof token === 'string') {
       token = this.tokenFromString(token);
     } else {
       BearerToken.check(token);
     }
 
-    const result = await this._impl_targetFromToken(token);
+    if (cookies === null) {
+      cookies = {};
+    } else {
+      TObject.plain(cookies, x => TString.check(x));
+    }
+
+    const result = await this._impl_getAuthorizedTarget(token, cookies);
 
     return TObject.orNull(result);
   }
@@ -95,6 +132,38 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
+   * Subclass-specific implementation of {@link #cookieNamesForToken}.
+   * Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BearerToken} token Token in question. Guaranteed to be a valid
+   *   {@link BearerToken} instance.
+   * @returns {array<string>} Names of all the cookies which `token` requires
+   *   for validation.
+   */
+  async _impl_cookieNamesForToken(token) {
+    return this._mustOverride(token);
+  }
+
+  /**
+   * Subclass-specific implementation of {@link #getAuthorizedTarget}.
+   * Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BearerToken} token Token to look up. Guaranteed to be a valid
+   *   {@link BearerToken} instance.
+   * @param {object} cookies The cookies needed in order to authorize `token`,
+   *   or `{}` if no cookies are needed. Guaranteed to be a plain object with
+   *   only string values.
+   * @returns {object|null} If `token` grants any authority, an object which
+   *   exposes the so-authorized functionality, or `null` if no authority is
+   *   granted.
+   */
+  async _impl_getAuthorizedTarget(token, cookies) {
+    return this._mustOverride(token, cookies);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #isToken}. Subclasses must
    * override this method.
    *
@@ -104,21 +173,6 @@ export class BaseTokenAuthorizer extends CommonBase {
    */
   _impl_isToken(tokenString) {
     return this._mustOverride(tokenString);
-  }
-
-  /**
-   * Subclass-specific implementation of {@link #targetFromToken}. Subclasses
-   * must override this method.
-   *
-   * @abstract
-   * @param {BearerToken} token Token to look up. Guaranteed to be a valid
-   *   {@link BearerToken} instance.
-   * @returns {object|null} If `token` grants any authority, an object which
-   *   exposes the so-authorized functionality, or `null` if no authority is
-   *   granted.
-   */
-  async _impl_targetFromToken(token) {
-    return this._mustOverride(token);
   }
 
   /**

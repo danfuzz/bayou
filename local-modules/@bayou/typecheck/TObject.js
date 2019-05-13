@@ -51,32 +51,52 @@ export class TObject extends UtilityClass {
   /**
    * Checks that a value is of type `Object` and is furthermore a plain object,
    * which is to say, not any of an array, a function, or an instance of a class
-   * other than `Object` itself.
+   * other than `Object` itself. Optionally, also check the object's values for
+   * conformance to a given checker.
    *
    * @param {*} value Value to check.
+   * @param {function|null} [valueCheck = null] Value type checker. If passed as
+   *   non-`null`, must be a function that behaves like a standard
+   *   `<type>.check()` method.
    * @returns {object} `value`.
    */
-  static plain(value) {
-    if (ObjectUtil.isPlain(value)) {
-      return value;
+  static plain(value, valueCheck = null) {
+    if (!ObjectUtil.isPlain(value)) {
+      throw Errors.badValue(value, 'plain object');
     }
 
-    throw Errors.badValue(value, 'plain object');
+    if (valueCheck !== null) {
+      TObject._checkValues(value, valueCheck);
+    }
+
+    return value;
   }
 
   /**
    * Checks that a value is a plain object (in the sense of {@link #plain}) or
-   * is `null`.
+   * is `null`. Optionally, also check a non-`null` object's values for
+   * conformance to a given checker.
    *
    * @param {*} value Value to check.
+   * @param {function|null} [valueCheck = null] Value type checker. If passed as
+   *   non-`null`, must be a function that behaves like a standard
+   *   `<type>.check()` method.
    * @returns {object} `value`.
    */
-  static plainOrNull(value) {
-    if ((value === null) || ObjectUtil.isPlain(value)) {
+  static plainOrNull(value, valueCheck = null) {
+    if (value === null) {
       return value;
     }
 
-    throw Errors.badValue(value, 'plain object|null');
+    if (!ObjectUtil.isPlain(value)) {
+      throw Errors.badValue(value, 'plain object|null');
+    }
+
+    if (valueCheck !== null) {
+      TObject._checkValues(value, valueCheck);
+    }
+
+    return value;
   }
 
   /**
@@ -111,5 +131,18 @@ export class TObject extends UtilityClass {
     }
 
     return value;
+  }
+
+  /**
+   * Helper for {@link #plain} and {@link #plainOrNull}, which does value
+   * checking.
+   *
+   * @param {*} obj Object to check.
+   * @param {function} valueCheck Value type checker.
+   */
+  static _checkValues(obj, valueCheck) {
+    for (const v of Object.values(obj)) {
+      valueCheck(v);
+    }
   }
 }

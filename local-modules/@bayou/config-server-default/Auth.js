@@ -79,7 +79,7 @@ export class Auth extends BaseAuth {
    *
    * This implementation succeeds for any valid author ID and always returns a
    * newly-created token. It caches every token token created, such that it can
-   * subsequently be found by {@link #tokenAuthority}.
+   * subsequently be found by {@link #getAuthority}.
    *
    * @param {string} authorId ID for the author.
    * @returns {BearerToken} Token which grants author access.
@@ -98,6 +98,27 @@ export class Auth extends BaseAuth {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation &mdash; obviously insecurely &mdash; hard-codes a
+   * particular token to have "root" authority. See {@link #THE_ROOT_TOKEN},
+   * above, for more info.
+   *
+   * @param {BearerToken} token The token in question.
+   * @param {object|null} cookies The cookies needed in order to authorize
+   *   `token`, or `null` if no cookies are needed. This value should be based
+   * @returns {object} Representation of the authority granted by `token`.
+   */
+  static async getAuthority(token, cookies) {
+    BearerToken.check(token);
+    TObject.plainOrNull(cookies);
+
+    const found = tokenMint.getInfoOrNull(token);
+
+    return (found === null) ? { type: Auth.TYPE_none } : found;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * This implementation requires strings that have the general form of
    * `<type>-<id>-<secret>`, where `<type>` is four lowercase characters, and
    * the other two parts are each 16 lowercase hexadecimal digits.
@@ -108,27 +129,6 @@ export class Auth extends BaseAuth {
   static isToken(tokenString) {
     TString.check(tokenString);
     return TOKEN_REGEX.test(tokenString);
-  }
-
-  /**
-   * Implementation of standard configuration point.
-   *
-   * This implementation &mdash; obviously insecurely &mdash; hard-codes a
-   * particular token to have "root" authority. See {@link #THE_ROOT_TOKEN},
-   * above, for more info.
-   *
-   * @param {BearerToken} token The token in question.
-   * @param {object|null} cookies The cookies needed in order to authorize
-   *   `token`, or `null` if no cookies are needed. This value should be based
-   * @returns {object} Representation of the authority granted by `token`.
-   */
-  static async tokenAuthority(token, cookies) {
-    BearerToken.check(token);
-    TObject.plainOrNull(cookies);
-
-    const found = tokenMint.getInfoOrNull(token);
-
-    return (found === null) ? { type: Auth.TYPE_none } : found;
   }
 
   /**

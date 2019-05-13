@@ -66,17 +66,6 @@ export class Auth extends BaseAuth {
   }
 
   /**
-   * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
-   * token (whether or not it actually grants any access).
-   *
-   * @param {string} tokenString The alleged token.
-   * @returns {boolean} `true` iff `tokenString` is syntactically valid.
-   */
-  static isToken(tokenString) {
-    return use.Auth.isToken(tokenString);
-  }
-
-  /**
    * Gets the authority / authorization that is granted by the given
    * {@link BearerToken} and (if necessary) associated cookies. The result is a
    * plain object which binds at least `type` to the type of authority. Per
@@ -109,8 +98,19 @@ export class Auth extends BaseAuth {
    * @returns {object} Plain object with bindings as described above,
    *   representing the authority granted by `token`.
    */
-  static async tokenAuthority(token, cookies) {
-    return use.Auth.tokenAuthority(token, cookies);
+  static async getAuthority(token, cookies) {
+    return use.Auth.getAuthority(token, cookies);
+  }
+
+  /**
+   * Returns `true` iff the `tokenString` is _syntactically_ valid as a bearer
+   * token (whether or not it actually grants any access).
+   *
+   * @param {string} tokenString The alleged token.
+   * @returns {boolean} `true` iff `tokenString` is syntactically valid.
+   */
+  static isToken(tokenString) {
+    return use.Auth.isToken(tokenString);
   }
 
   /**

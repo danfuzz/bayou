@@ -9,7 +9,8 @@ import { Application } from './Application';
 import { AuthorAccess } from './AuthorAccess';
 
 /**
- * Application-specific implementation of {@link BaseTokenAuthorizer}.
+ * Application-specific implementation of {@link BaseTokenAuthorizer}. Much of
+ * what this class does is hook up to the configured global {@link Auth}.
  */
 export class AppAuthorizer extends BaseTokenAuthorizer {
   /**
@@ -36,24 +37,24 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
 
   /**
    * @override
-   * @param {string} tokenString The alleged token string.
-   * @returns {boolean} `true` iff `tokenString` has valid token syntax.
+   * @param {BearerToken} token The token in question.
+   * @returns {array<string>} The names of all the cookies which are needed to
+   *   perform validation / authorization on `token`.
    */
-  _impl_isToken(tokenString) {
-    return Auth.isToken(tokenString);
+  async _impl_cookieNamesForToken(token) {
+    return Auth.cookieNamesForToken(token);
   }
 
   /**
    * @override
    * @param {BearerToken} token Token to look up.
+   * @param {object} cookies The cookies needed in order to authorize `token`.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async _impl_targetFromToken(token) {
-    // **TODO:** `null` below should actually be an object with all the right
-    // cookies, if any.
-    const authority = await Auth.tokenAuthority(token, null);
+  async _impl_getAuthorizedTarget(token, cookies) {
+    const authority = await Auth.getAuthority(token, cookies);
 
     switch (authority.type) {
       case Auth.TYPE_root: {
@@ -70,6 +71,15 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
         return null;
       }
     }
+  }
+
+  /**
+   * @override
+   * @param {string} tokenString The alleged token string.
+   * @returns {boolean} `true` iff `tokenString` has valid token syntax.
+   */
+  _impl_isToken(tokenString) {
+    return Auth.isToken(tokenString);
   }
 
   /**

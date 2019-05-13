@@ -18,12 +18,16 @@ class MockAuth extends BaseTokenAuthorizer {
     return 'nontoken-';
   }
 
-  _impl_isToken(tokenString_unused) {
-    return true;
+  async _impl_cookieNamesForToken(value_unused) {
+    return [];
   }
 
-  async _impl_targetFromToken(token_unused) {
+  async _impl_getAuthorizedTarget(token_unused, cookies_unused) {
     return { some: 'authority' };
+  }
+
+  _impl_isToken(tokenString_unused) {
+    return true;
   }
 
   _impl_tokenFromString(tokenString) {

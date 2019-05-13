@@ -11,12 +11,12 @@ import { UtilityClass } from '@bayou/util-common';
  * and the clients of this configuration.
  */
 export class BaseAuth extends UtilityClass {
-  /** {string} Constant used by {@link Auth#tokenAuthority} (see which). */
+  /** {string} Constant used by {@link Auth#getAuthority} (see which). */
   static get TYPE_author() { return 'author'; }
 
-  /** {string} Constant used by {@link Auth#tokenAuthority} (see which). */
+  /** {string} Constant used by {@link Auth#getAuthority} (see which). */
   static get TYPE_none() { return 'none'; }
 
-  /** {string} Constant used by {@link Auth#tokenAuthority} (see which). */
+  /** {string} Constant used by {@link Auth#getAuthority} (see which). */
   static get TYPE_root() { return 'root'; }
 }
