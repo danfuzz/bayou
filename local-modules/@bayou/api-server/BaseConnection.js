@@ -52,9 +52,6 @@ export class BaseConnection extends CommonBase {
     /** {Context} The binding context to provide access to. */
     this._context = ContextInfo.check(contextInfo).makeContext(this._log);
 
-    /** {Codec} The codec to use. */
-    this._codec = this._context.codec;
-
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, Logging.shouldRedact());
 
@@ -127,7 +124,7 @@ export class BaseConnection extends CommonBase {
   encodeMessage(message) {
     Message.check(message);
 
-    return this._codec.encodeJson(message);
+    return this._context.encodeJson(message);
   }
 
   /**
@@ -345,7 +342,7 @@ export class BaseConnection extends CommonBase {
    */
   _decodeMessage(msg) {
     try {
-      msg = this._codec.decodeJson(msg);
+      msg = this._context.decodeJson(msg);
     } catch (error) {
       return ConnectionError.connectionNonsense(this._connectionId, error.message);
     }
@@ -378,14 +375,14 @@ export class BaseConnection extends CommonBase {
     let problemValue;
 
     try {
-      return this._codec.encodeJson(response);
+      return this._context.encodeJson(response);
     } catch (e) {
       if (response.isError()) {
         // There is probably some bit of structured data in the error which
         // can't get encoded. Stringify it, and try again.
         try {
           response = response.withConservativeError(response);
-          return this._codec.encodeJson(response);
+          return this._context.encodeJson(response);
         } catch (subError) {
           // Ignore this (inner) error, and fall through to report the original
           // problem.
@@ -402,7 +399,7 @@ export class BaseConnection extends CommonBase {
     // Last-ditch attempt to send a breadcrumb back to the caller.
     const newError    = ConnectionError.couldNotEncode(problemValue);
     const newResponse = new Response(response.id, null, newError).withConservativeError();
-    return this._codec.encodeJson(newResponse);
+    return this._context.encodeJson(newResponse);
   }
 
   /**

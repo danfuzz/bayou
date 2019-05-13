@@ -73,7 +73,53 @@ describe('@bayou/api-server/Context', () => {
     });
   });
 
-  describe('getRemoteFor', () => {
+  describe('decodeJson()', () => {
+    it('calls through to the codec', () => {
+      let gotJson = null;
+
+      class TestCodec extends Codec {
+        decodeJson(encoded) {
+          gotJson = encoded;
+          return super.decodeJson(encoded);
+        }
+      }
+
+      const codec   = new TestCodec();
+      const info    = new ContextInfo(codec);
+      const ctx     = new Context(info, new Logger('some-tag'));
+      const value   = ['what', 'is', 'the', 'meaning', 'of', 42];
+      const encoded = codec.encodeJson(value);
+      const got     = ctx.decodeJson(encoded);
+
+      assert.strictEqual(gotJson, encoded);
+      assert.deepEqual(got, value);
+    });
+  });
+
+  describe('encodeJson()', () => {
+    it('calls through to the codec', () => {
+      let gotValue = null;
+
+      class TestCodec extends Codec {
+        encodeJson(value) {
+          gotValue = value;
+          return super.encodeJson(value);
+        }
+      }
+
+      const codec   = new TestCodec();
+      const info    = new ContextInfo(codec);
+      const ctx     = new Context(info, new Logger('some-tag'));
+      const value   = { hello: 'there', what: 'is happening?' };
+      const encoded = codec.encodeJson(value);
+      const got     = ctx.encodeJson(value);
+
+      assert.strictEqual(gotValue, value);
+      assert.strictEqual(got, encoded);
+    });
+  });
+
+  describe('getRemoteFor()', () => {
     it('returns a `Remote` given a `ProxiedObject`', () => {
       const info   = new ContextInfo(new Codec());
       const ctx    = new Context(info, new Logger('some-tag'));

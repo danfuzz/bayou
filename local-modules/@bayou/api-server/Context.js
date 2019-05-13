@@ -103,6 +103,28 @@ export class Context extends CommonBase {
   }
 
   /**
+   * Decodes an object from JSON representation, using this instance's
+   * associated {@link Codec}.
+   *
+   * @param {string} encoded Encoded value.
+   * @returns {*} Decoded value.
+   */
+  decodeJson(encoded) {
+    return this.codec.decodeJson(encoded);
+  }
+
+  /**
+   * Encodes an object into JSON representation, using this instance's
+   * associated {@link Codec}.
+   *
+   * @param {*} value Value to encode.
+   * @returns {string} JSON-encoded form.
+   */
+  encodeJson(value) {
+    return this.codec.encodeJson(value);
+  }
+
+  /**
    * Gets an authorized target. This will find targets that were previously
    * added via {@link #addTarget} as well as those authorized by virtue of this
    * method being passed a valid authority-bearing token (in string form).
