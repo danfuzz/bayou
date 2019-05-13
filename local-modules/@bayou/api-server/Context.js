@@ -3,30 +3,29 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { Message, Remote } from '@bayou/api-common';
-import { BaseLogger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
+import { BaseConnection } from './BaseConnection';
 import { ContextInfo } from './ContextInfo';
 import { ProxiedObject } from './ProxiedObject';
 import { Target } from './Target';
 
 /**
- * Binding context for an API server or session therein. Instances of this class
- * are used to map from IDs to `Target` instances, including targets which are
- * ephemerally bound to the session as well as ones that are authorized via
- * bearer tokens. In addition, this class is used to hold the knowledge of which
- * {@link Codec} to use for a session.
+ * Binding context for an API server or session therein, with linkage back to
+ * a {@link BaseConnection}. Instances of this class are used to map from IDs to
+ * `Target` instances, including targets which are ephemerally bound to the
+ * session as well as ones that are authorized via bearer tokens.
  */
 export class Context extends CommonBase {
   /**
-   * Constructs an instance which is initially empty.
+   * Constructs an instance which is initially empty (has no bound targets).
    *
    * @param {ContextInfo} info The typically-fixed parameters used to construct
    *   instances.
-   * @param {BaseLogger} log Logger to use for this instance.
+   * @param {BaseConnection} connection The connection to be associated with.
    */
-  constructor(info, log) {
+  constructor(info, connection) {
     super();
 
     /**
@@ -35,8 +34,8 @@ export class Context extends CommonBase {
      */
     this._info = ContextInfo.check(info);
 
-    /** {BaseLogger} Logger for this instance. */
-    this._log = BaseLogger.check(log);
+    /** {BaseConnection} The connection this instance is associated with. */
+    this._connection = BaseConnection.check(connection);
 
     /** {Map<string, Target>} The underlying map from IDs to targets. */
     this._map = new Map();
@@ -58,7 +57,7 @@ export class Context extends CommonBase {
 
   /** {Logger} The logger used by this instance. */
   get log() {
-    return this._log;
+    return this._connection.log;
   }
 
   /** {BaseTokenAuthorizer|null} The token authorizer to use. */

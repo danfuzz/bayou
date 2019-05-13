@@ -6,9 +6,8 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
 import { BearerToken, Codecs, Message, Remote } from '@bayou/api-common';
-import { BaseTokenAuthorizer, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
+import { BaseConnection, BaseTokenAuthorizer, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
-import { Logger } from '@bayou/see-all';
 import { Functor } from '@bayou/util-common';
 
 /**
@@ -40,7 +39,8 @@ describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
     it('accepts valid arguments and produces a frozen instance', () => {
       const info   = new ContextInfo(new Codec(), new MockAuth());
-      const result = new Context(info, new Logger('some-tag'));
+      const conn   = new BaseConnection(info);
+      const result = new Context(info, conn);
 
       assert.isFrozen(result);
     });
@@ -49,26 +49,28 @@ describe('@bayou/api-server/Context', () => {
   describe('.codec', () => {
     it('is the `codec` from the `info` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const ctx  = new Context(info, new Logger('some-tag'));
+      const conn = new BaseConnection(info);
+      const ctx  = new Context(info, conn);
 
       assert.strictEqual(ctx.codec, info.codec);
     });
   });
 
   describe('.log', () => {
-    it('is the `log` passed in on construction', () => {
+    it('is the `log` of the connection passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const log  = new Logger('yowzers');
-      const ctx  = new Context(info, log);
+      const conn = new BaseConnection(info);
+      const ctx  = new Context(info, conn);
 
-      assert.strictEqual(ctx.log, log);
+      assert.strictEqual(ctx.log, conn.log);
     });
   });
 
   describe('.tokenAuthorizer', () => {
     it('is the `tokenAuthorizer` from the `info` passed in on construction', () => {
       const info = new ContextInfo(new Codec(), new MockAuth());
-      const ctx  = new Context(info, new Logger('some-tag'));
+      const conn = new BaseConnection(info);
+      const ctx  = new Context(info, conn);
 
       assert.strictEqual(ctx.tokenAuthorizer, info.tokenAuthorizer);
     });
@@ -87,7 +89,8 @@ describe('@bayou/api-server/Context', () => {
 
       const codec   = new TestCodec();
       const info    = new ContextInfo(codec);
-      const ctx     = new Context(info, new Logger('some-tag'));
+      const conn    = new BaseConnection(info);
+      const ctx     = new Context(info, conn);
       const value   = ['what', 'is', 'the', 'meaning', 'of', 42];
       const encoded = codec.encodeJson(value);
       const got     = ctx.decodeJson(encoded);
@@ -110,7 +113,8 @@ describe('@bayou/api-server/Context', () => {
 
       const codec   = new TestCodec();
       const info    = new ContextInfo(codec);
-      const ctx     = new Context(info, new Logger('some-tag'));
+      const conn    = new BaseConnection(info);
+      const ctx     = new Context(info, conn);
       const value   = { hello: 'there', what: 'is happening?' };
       const encoded = codec.encodeJson(value);
       const got     = ctx.encodeJson(value);
@@ -135,7 +139,8 @@ describe('@bayou/api-server/Context', () => {
       Codecs.registerCodecs(codec.registry);
 
       const info    = new ContextInfo(codec);
-      const ctx     = new Context(info, new Logger('some-tag'));
+      const conn    = new BaseConnection(info);
+      const ctx     = new Context(info, conn);
       const value   = new Message(1, 'florp', new Functor('xyz', 'pdq'));
       const encoded = codec.encodeJson(value);
       const got     = ctx.encodeMessage(value);
@@ -149,7 +154,8 @@ describe('@bayou/api-server/Context', () => {
       Codecs.registerCodecs(codec.registry);
 
       const info = new ContextInfo(codec);
-      const ctx  = new Context(info, new Logger('some-tag'));
+      const conn = new BaseConnection(info);
+      const ctx  = new Context(info, conn);
 
       function test(v) {
         assert.throws(() => ctx.encodeMessage(v), /badValue/);
@@ -166,7 +172,8 @@ describe('@bayou/api-server/Context', () => {
   describe('getRemoteFor()', () => {
     it('returns a `Remote` given a `ProxiedObject`', () => {
       const info   = new ContextInfo(new Codec());
-      const ctx    = new Context(info, new Logger('some-tag'));
+      const conn   = new BaseConnection(info);
+      const ctx    = new Context(info, conn);
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -176,7 +183,8 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns a `Remote` whose `id` maps back to the underlying object', async () => {
       const info   = new ContextInfo(new Codec());
-      const ctx    = new Context(info, new Logger('some-tag'));
+      const conn   = new BaseConnection(info);
+      const ctx    = new Context(info, conn);
       const obj    = { some: 'object' };
       const po     = new ProxiedObject(obj);
       const result = ctx.getRemoteFor(po);
@@ -190,7 +198,8 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns the same `Remote` when given the same `ProxiedObject`', () => {
       const info    = new ContextInfo(new Codec());
-      const ctx     = new Context(info, new Logger('some-tag'));
+      const conn    = new BaseConnection(info);
+      const ctx     = new Context(info, conn);
       const obj     = { some: 'object' };
       const po      = new ProxiedObject(obj);
       const result1 = ctx.getRemoteFor(po);
@@ -201,7 +210,8 @@ describe('@bayou/api-server/Context', () => {
 
     it('returns the same `Remote` when given two `ProxiedObject`s for the same underlying object', () => {
       const info    = new ContextInfo(new Codec());
-      const ctx     = new Context(info, new Logger('some-tag'));
+      const conn    = new BaseConnection(info);
+      const ctx     = new Context(info, conn);
       const obj     = { some: 'object' };
       const result1 = ctx.getRemoteFor(new ProxiedObject(obj));
       const result2 = ctx.getRemoteFor(new ProxiedObject(obj));

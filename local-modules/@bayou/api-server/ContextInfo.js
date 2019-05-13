@@ -58,7 +58,6 @@ export class ContextInfo extends CommonBase {
   makeContext(connection) {
     BaseConnection.check(connection);
 
-    // **TODO:** `Context` should take a connection and not a logger.
-    return new Context(this, connection.log);
+    return new Context(this, connection);
   }
 }
