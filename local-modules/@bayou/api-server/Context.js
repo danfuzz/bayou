@@ -136,7 +136,9 @@ export class Context extends CommonBase {
       // Determine its authorized target, and if authorized cache it in this
       // instance's target map.
 
-      const targetObject = await tokenAuth.getAuthorizedTarget(token);
+      // **TODO:** `null` below should actually be an object with all the right
+      // cookies, if any.
+      const targetObject = await tokenAuth.getAuthorizedTarget(token, null);
 
       if (targetObject === null) {
         // The `tokenAuth` told us that `token` didn't actually grant any

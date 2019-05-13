@@ -48,14 +48,13 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
   /**
    * @override
    * @param {BearerToken} token Token to look up.
+   * @param {object} cookies The cookies needed in order to authorize `token`.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async _impl_getAuthorizedTarget(token) {
-    // **TODO:** `null` below should actually be an object with all the right
-    // cookies, if any.
-    const authority = await Auth.getAuthority(token, null);
+  async _impl_getAuthorizedTarget(token, cookies) {
+    const authority = await Auth.getAuthority(token, cookies);
 
     switch (authority.type) {
       case Auth.TYPE_root: {

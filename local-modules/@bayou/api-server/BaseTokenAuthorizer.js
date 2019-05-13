@@ -57,11 +57,12 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
-   * Given a token in either object or string form, gets a corresponding
-   * "target" object which can be used to exercise the authority granted by the
-   * token. This method returns `null` if the token does not grant any
-   * authority. A non-`null` return value can be used as a target object,
-   * suitable for exposing (proxying) on an API connection.
+   * Given a token in either object or string form and (if needed) a set of
+   * cookies, gets a corresponding "target" object which can be used to exercise
+   * the authority granted by the token and cookies. This method returns `null`
+   * if the token does not grant any authority. A non-`null` return value can be
+   * used as a target object, suitable for exposing (proxying) on an API
+   * connection.
    *
    * **Note:** This is defined to be an `async` method, on the expectation that
    * in a production configuration, it might require network activity (e.g.
@@ -70,18 +71,32 @@ export class BaseTokenAuthorizer extends CommonBase {
    * @param {string|BearerToken} token Token to look up. If given a string, this
    *   method automatically converts it to a {@link BearerToken} via a call to
    *   {@link #tokenFromString}.
+   * @param {object|null} cookies The cookies needed in order to authorize
+   *   `token`, or `null` if no cookies are needed. This value should be based
+   *   on the result of an earlier call to {@link #cookieNamesForToken}.
+   *   Specifically, if that method returns something other than `[]`, then this
+   *   value should be a plain object whose keys are the indicated cookie names
+   *   and whose values are the related cookie values from the HTTP-ish request
+   *   in which `token` was presented.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async getAuthorizedTarget(token) {
+  async getAuthorizedTarget(token, cookies) {
     if (typeof token === 'string') {
       token = this.tokenFromString(token);
     } else {
       BearerToken.check(token);
     }
 
-    const result = await this._impl_getAuthorizedTarget(token);
+    if (cookies === null) {
+      cookies = {};
+    } else {
+      // **TODO:** Ensure string values.
+      TObject.plain(cookies);
+    }
+
+    const result = await this._impl_getAuthorizedTarget(token, cookies);
 
     return TObject.orNull(result);
   }
@@ -138,12 +153,15 @@ export class BaseTokenAuthorizer extends CommonBase {
    * @abstract
    * @param {BearerToken} token Token to look up. Guaranteed to be a valid
    *   {@link BearerToken} instance.
+   * @param {object} cookies The cookies needed in order to authorize `token`,
+   *   or `{}` if no cookies are needed. Guaranteed to be a plain object with
+   *   only string values.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async _impl_getAuthorizedTarget(token) {
-    return this._mustOverride(token);
+  async _impl_getAuthorizedTarget(token, cookies) {
+    return this._mustOverride(token, cookies);
   }
 
   /**

@@ -22,7 +22,7 @@ class MockAuth extends BaseTokenAuthorizer {
     return [];
   }
 
-  async _impl_getAuthorizedTarget(token_unused) {
+  async _impl_getAuthorizedTarget(token_unused, cookies_unused) {
     return { some: 'authority' };
   }
 

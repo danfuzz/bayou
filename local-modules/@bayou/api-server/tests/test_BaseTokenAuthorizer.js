@@ -67,23 +67,38 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
   });
 
   describe('getAuthorizedTarget()', () => {
-    it('calls through to the `_impl` given a `BearerToken`', async () => {
+    it('calls through to the `_impl` given a `BearerToken` and valid object `cookies`', async () => {
       class Authie extends BaseTokenAuthorizer {
-        async _impl_getAuthorizedTarget(value) {
-          return { got: value };
+        async _impl_getAuthorizedTarget(token, cookies) {
+          return { token, cookies };
+        }
+      }
+
+      const au      = new Authie();
+      const token   = new BearerToken('x', 'y');
+      const cookies = { flavor: 'chocolateChip', consistency: 'crunchy' };
+      const result  = await au.getAuthorizedTarget(token, cookies);
+
+      assert.deepEqual(result, { token, cookies });
+    });
+
+    it('calls through to the `_impl` given `cookies === null`, converting it to an empty object', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_getAuthorizedTarget(token, cookies) {
+          return { token, cookies };
         }
       }
 
       const au     = new Authie();
       const token  = new BearerToken('x', 'y');
-      const result = await au.getAuthorizedTarget(token);
+      const result = await au.getAuthorizedTarget(token, null);
 
-      assert.deepEqual(result, { got: token });
+      assert.deepEqual(result, { token, cookies: {} });
     });
 
     it('converts a string to a `BearerToken` then through to the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
-        async _impl_getAuthorizedTarget(value) {
+        async _impl_getAuthorizedTarget(value, cookies_unused) {
           return { got: value };
         }
 
@@ -97,43 +112,66 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       }
 
       const au     = new Authie();
-      const result = await au.getAuthorizedTarget('yes');
+      const result = await au.getAuthorizedTarget('yes', null);
 
       assert.deepEqual(result, { got: new BearerToken('yes', 'yes') });
     });
 
     it('rejects a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
-        _impl_getAuthorizedTarget(value_unused) {
+        _impl_getAuthorizedTarget(value_unused, cookies_unused) {
           throw new Error('Should not have been called.');
         }
       }
 
       const au = new Authie();
 
-      await assert.isRejected(au.getAuthorizedTarget(undefined), /badValue/);
-      await assert.isRejected(au.getAuthorizedTarget(null), /badValue/);
-      await assert.isRejected(au.getAuthorizedTarget(true), /badValue/);
-      await assert.isRejected(au.getAuthorizedTarget(914), /badValue/);
-      await assert.isRejected(au.getAuthorizedTarget(['foo']), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(undefined, null), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(null, null), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(true, null), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(914, null), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(['foo'], null), /badValue/);
+    });
+
+    it('rejects an improper `cookies` argument without calling through to the `_impl`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        _impl_getAuthorizedTarget(value_unused, cookies_unused) {
+          throw new Error('Should not have been called.');
+        }
+      }
+
+      const au    = new Authie();
+      const token = new BearerToken('x', 'y');
+
+      async function test(v) {
+        await assert.isRejected(au.getAuthorizedTarget(token, v), /badValue/);
+      }
+
+      await test(undefined);
+      await test('not-an-object');
+      await test(['not', 'a', 'plain', 'object']);
+      await test(new Map());
+
+      // **TODO:** Check values!
+      //await test({ nonString: ['value'] });
     });
 
     it('accepts `null` from the `_impl`', async () => {
       class Authie extends BaseTokenAuthorizer {
-        async _impl_getAuthorizedTarget(value_unused) {
+        async _impl_getAuthorizedTarget(value_unused, cookies_unused) {
           return null;
         }
       }
 
       const au     = new Authie();
-      const result = await au.getAuthorizedTarget(new BearerToken('x', 'y'));
+      const result = await au.getAuthorizedTarget(new BearerToken('x', 'y'), null);
 
       assert.isNull(result);
     });
 
     it('rejects a bad subclass implementation', () => {
       class Authie extends BaseTokenAuthorizer {
-        _impl_getAuthorizedTarget(value_unused) {
+        _impl_getAuthorizedTarget(value_unused, cookies_unused) {
           // Supposed to be an object or `null`.
           return 123;
         }
