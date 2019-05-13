@@ -151,9 +151,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       await test('not-an-object');
       await test(['not', 'a', 'plain', 'object']);
       await test(new Map());
-
-      // **TODO:** Check values!
-      //await test({ nonString: ['value'] });
+      await test({ nonString: ['value'] });
     });
 
     it('accepts `null` from the `_impl`', async () => {

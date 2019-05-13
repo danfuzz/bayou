@@ -92,8 +92,7 @@ export class BaseTokenAuthorizer extends CommonBase {
     if (cookies === null) {
       cookies = {};
     } else {
-      // **TODO:** Ensure string values.
-      TObject.plain(cookies);
+      TObject.plain(cookies, x => TString.check(x));
     }
 
     const result = await this._impl_getAuthorizedTarget(token, cookies);
