@@ -5,10 +5,11 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerToken, Remote } from '@bayou/api-common';
+import { BearerToken, Codecs, Message, Remote } from '@bayou/api-common';
 import { BaseTokenAuthorizer, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Logger } from '@bayou/see-all';
+import { Functor } from '@bayou/util-common';
 
 /**
  * Mock `BaseTokenAuthorizer` for testing.
@@ -116,6 +117,49 @@ describe('@bayou/api-server/Context', () => {
 
       assert.strictEqual(gotValue, value);
       assert.strictEqual(got, encoded);
+    });
+  });
+
+  describe('encodeMessage()', () => {
+    it('calls through to the codec when given a `Message`', () => {
+      let gotValue = null;
+
+      class TestCodec extends Codec {
+        encodeJson(value) {
+          gotValue = value;
+          return super.encodeJson(value);
+        }
+      }
+
+      const codec = new TestCodec();
+      Codecs.registerCodecs(codec.registry);
+
+      const info    = new ContextInfo(codec);
+      const ctx     = new Context(info, new Logger('some-tag'));
+      const value   = new Message(1, 'florp', new Functor('xyz', 'pdq'));
+      const encoded = codec.encodeJson(value);
+      const got     = ctx.encodeMessage(value);
+
+      assert.strictEqual(gotValue, value);
+      assert.strictEqual(got, encoded);
+    });
+
+    it('rejects non-`Message` arguments', () => {
+      const codec = new Codec();
+      Codecs.registerCodecs(codec.registry);
+
+      const info = new ContextInfo(codec);
+      const ctx  = new Context(info, new Logger('some-tag'));
+
+      function test(v) {
+        assert.throws(() => ctx.encodeMessage(v), /badValue/);
+      }
+
+      test(undefined);
+      test(null);
+      test('boo');
+      test([123]);
+      test({ x: '123' });
     });
   });
 

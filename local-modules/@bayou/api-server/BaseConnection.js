@@ -115,19 +115,6 @@ export class BaseConnection extends CommonBase {
   }
 
   /**
-   * Encodes a message suitable for sending to the other side of this
-   * connection.
-   *
-   * @param {Message} message Message to encode.
-   * @returns {string} Encoded form of `message`.
-   */
-  encodeMessage(message) {
-    Message.check(message);
-
-    return this._context.encodeJson(message);
-  }
-
-  /**
    * Gets the value for the indicated HTTP-ish cookie. This returns `null` if
    * there is no such cookie, including if this kind of connection doesn't
    * actually have cookies at all.

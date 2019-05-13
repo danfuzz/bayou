@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Remote } from '@bayou/api-common';
+import { Message, Remote } from '@bayou/api-common';
 import { BaseLogger } from '@bayou/see-all';
 import { TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
@@ -122,6 +122,19 @@ export class Context extends CommonBase {
    */
   encodeJson(value) {
     return this.codec.encodeJson(value);
+  }
+
+  /**
+   * Encodes a {@link Message} suitable for sending to the other side of the
+   * connection that this instance is used for.
+   *
+   * @param {Message} message Message to encode.
+   * @returns {string} JSON-encoded form of `message`.
+   */
+  encodeMessage(message) {
+    Message.check(message);
+
+    return this.encodeJson(message);
   }
 
   /**
