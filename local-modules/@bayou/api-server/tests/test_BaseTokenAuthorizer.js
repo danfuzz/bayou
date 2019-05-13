@@ -66,6 +66,85 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
     });
   });
 
+  describe('getAuthorizedTarget()', () => {
+    it('calls through to the `_impl` given a `BearerToken`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_getAuthorizedTarget(value) {
+          return { got: value };
+        }
+      }
+
+      const au     = new Authie();
+      const token  = new BearerToken('x', 'y');
+      const result = await au.getAuthorizedTarget(token);
+
+      assert.deepEqual(result, { got: token });
+    });
+
+    it('converts a string to a `BearerToken` then through to the `_impl`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_getAuthorizedTarget(value) {
+          return { got: value };
+        }
+
+        _impl_tokenFromString(value) {
+          return new BearerToken(value, value);
+        }
+
+        _impl_isToken(value_unused) {
+          return true;
+        }
+      }
+
+      const au     = new Authie();
+      const result = await au.getAuthorizedTarget('yes');
+
+      assert.deepEqual(result, { got: new BearerToken('yes', 'yes') });
+    });
+
+    it('rejects a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        _impl_getAuthorizedTarget(value_unused) {
+          throw new Error('Should not have been called.');
+        }
+      }
+
+      const au = new Authie();
+
+      await assert.isRejected(au.getAuthorizedTarget(undefined), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(null), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(true), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(914), /badValue/);
+      await assert.isRejected(au.getAuthorizedTarget(['foo']), /badValue/);
+    });
+
+    it('accepts `null` from the `_impl`', async () => {
+      class Authie extends BaseTokenAuthorizer {
+        async _impl_getAuthorizedTarget(value_unused) {
+          return null;
+        }
+      }
+
+      const au     = new Authie();
+      const result = await au.getAuthorizedTarget(new BearerToken('x', 'y'));
+
+      assert.isNull(result);
+    });
+
+    it('rejects a bad subclass implementation', () => {
+      class Authie extends BaseTokenAuthorizer {
+        _impl_getAuthorizedTarget(value_unused) {
+          // Supposed to be an object or `null`.
+          return 123;
+        }
+      }
+
+      const token = new BearerToken('x', 'y');
+
+      assert.isRejected(new Authie().getAuthorizedTarget(token), /badValue/);
+    });
+  });
+
   describe('isToken()', () => {
     it('calls through to the `_impl` given a string', () => {
       class Authie extends BaseTokenAuthorizer {
@@ -102,85 +181,6 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
       }
 
       assert.throws(() => new Authie().isToken('x'), /badValue/);
-    });
-  });
-
-  describe('targetFromToken()', () => {
-    it('calls through to the `_impl` given a `BearerToken`', async () => {
-      class Authie extends BaseTokenAuthorizer {
-        async _impl_targetFromToken(value) {
-          return { got: value };
-        }
-      }
-
-      const au     = new Authie();
-      const token  = new BearerToken('x', 'y');
-      const result = await au.targetFromToken(token);
-
-      assert.deepEqual(result, { got: token });
-    });
-
-    it('converts a string to a `BearerToken` then through to the `_impl`', async () => {
-      class Authie extends BaseTokenAuthorizer {
-        async _impl_targetFromToken(value) {
-          return { got: value };
-        }
-
-        _impl_tokenFromString(value) {
-          return new BearerToken(value, value);
-        }
-
-        _impl_isToken(value_unused) {
-          return true;
-        }
-      }
-
-      const au     = new Authie();
-      const result = await au.targetFromToken('yes');
-
-      assert.deepEqual(result, { got: new BearerToken('yes', 'yes') });
-    });
-
-    it('rejects a non-string non-`BearerToken` argument without calling through to the `_impl`', async () => {
-      class Authie extends BaseTokenAuthorizer {
-        _impl_targetFromToken(value_unused) {
-          throw new Error('Should not have been called.');
-        }
-      }
-
-      const au = new Authie();
-
-      await assert.isRejected(au.targetFromToken(undefined), /badValue/);
-      await assert.isRejected(au.targetFromToken(null), /badValue/);
-      await assert.isRejected(au.targetFromToken(true), /badValue/);
-      await assert.isRejected(au.targetFromToken(914), /badValue/);
-      await assert.isRejected(au.targetFromToken(['foo']), /badValue/);
-    });
-
-    it('accepts `null` from the `_impl`', async () => {
-      class Authie extends BaseTokenAuthorizer {
-        async _impl_targetFromToken(value_unused) {
-          return null;
-        }
-      }
-
-      const au     = new Authie();
-      const result = await au.targetFromToken(new BearerToken('x', 'y'));
-
-      assert.isNull(result);
-    });
-
-    it('rejects a bad subclass implementation', () => {
-      class Authie extends BaseTokenAuthorizer {
-        _impl_targetFromToken(value_unused) {
-          // Supposed to be an object or `null`.
-          return 123;
-        }
-      }
-
-      const token = new BearerToken('x', 'y');
-
-      assert.isRejected(new Authie().targetFromToken(token), /badValue/);
     });
   });
 

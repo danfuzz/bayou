@@ -74,14 +74,14 @@ export class BaseTokenAuthorizer extends CommonBase {
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async targetFromToken(token) {
+  async getAuthorizedTarget(token) {
     if (typeof token === 'string') {
       token = this.tokenFromString(token);
     } else {
       BearerToken.check(token);
     }
 
-    const result = await this._impl_targetFromToken(token);
+    const result = await this._impl_getAuthorizedTarget(token);
 
     return TObject.orNull(result);
   }
@@ -132,6 +132,21 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
+   * Subclass-specific implementation of {@link #getAuthorizedTarget}.
+   * Subclasses must override this method.
+   *
+   * @abstract
+   * @param {BearerToken} token Token to look up. Guaranteed to be a valid
+   *   {@link BearerToken} instance.
+   * @returns {object|null} If `token` grants any authority, an object which
+   *   exposes the so-authorized functionality, or `null` if no authority is
+   *   granted.
+   */
+  async _impl_getAuthorizedTarget(token) {
+    return this._mustOverride(token);
+  }
+
+  /**
    * Subclass-specific implementation of {@link #isToken}. Subclasses must
    * override this method.
    *
@@ -141,21 +156,6 @@ export class BaseTokenAuthorizer extends CommonBase {
    */
   _impl_isToken(tokenString) {
     return this._mustOverride(tokenString);
-  }
-
-  /**
-   * Subclass-specific implementation of {@link #targetFromToken}. Subclasses
-   * must override this method.
-   *
-   * @abstract
-   * @param {BearerToken} token Token to look up. Guaranteed to be a valid
-   *   {@link BearerToken} instance.
-   * @returns {object|null} If `token` grants any authority, an object which
-   *   exposes the so-authorized functionality, or `null` if no authority is
-   *   granted.
-   */
-  async _impl_targetFromToken(token) {
-    return this._mustOverride(token);
   }
 
   /**

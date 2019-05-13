@@ -47,21 +47,12 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
 
   /**
    * @override
-   * @param {string} tokenString The alleged token string.
-   * @returns {boolean} `true` iff `tokenString` has valid token syntax.
-   */
-  _impl_isToken(tokenString) {
-    return Auth.isToken(tokenString);
-  }
-
-  /**
-   * @override
    * @param {BearerToken} token Token to look up.
    * @returns {object|null} If `token` grants any authority, an object which
    *   exposes the so-authorized functionality, or `null` if no authority is
    *   granted.
    */
-  async _impl_targetFromToken(token) {
+  async _impl_getAuthorizedTarget(token) {
     // **TODO:** `null` below should actually be an object with all the right
     // cookies, if any.
     const authority = await Auth.getAuthority(token, null);
@@ -81,6 +72,15 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
         return null;
       }
     }
+  }
+
+  /**
+   * @override
+   * @param {string} tokenString The alleged token string.
+   * @returns {boolean} `true` iff `tokenString` has valid token syntax.
+   */
+  _impl_isToken(tokenString) {
+    return Auth.isToken(tokenString);
   }
 
   /**
