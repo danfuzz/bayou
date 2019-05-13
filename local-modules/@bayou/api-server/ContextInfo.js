@@ -5,6 +5,7 @@
 import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
+import { BaseConnection } from './BaseConnection';
 import { BaseTokenAuthorizer } from './BaseTokenAuthorizer';
 import { Context } from './Context';
 
@@ -48,13 +49,16 @@ export class ContextInfo extends CommonBase {
   }
 
   /**
-   * Makes a new instance of {@link Context}, with this instance as the `info`
-   * and with the given logger.
+   * Makes a new instance of {@link Context} hooked up to the given
+   * {@link BaseConnection}, and with this instance as its `info`.
    *
-   * @param {BaseLogger} log The logger to use.
+   * @param {BaseConnection} connection The connection to be associated with.
    * @returns {Context} An appropriately-constructed instance.
    */
-  makeContext(log) {
-    return new Context(this, log);
+  makeContext(connection) {
+    BaseConnection.check(connection);
+
+    // **TODO:** `Context` should take a connection and not a logger.
+    return new Context(this, connection.log);
   }
 }

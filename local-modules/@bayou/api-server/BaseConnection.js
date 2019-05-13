@@ -49,9 +49,6 @@ export class BaseConnection extends CommonBase {
      */
     this._log = log.withAddedContext(this._connectionId);
 
-    /** {Context} The binding context to provide access to. */
-    this._context = ContextInfo.check(contextInfo).makeContext(this._log);
-
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, Logging.shouldRedact());
 
@@ -63,6 +60,9 @@ export class BaseConnection extends CommonBase {
      * closed.
      */
     this._closedCondition = new Condition();
+
+    /** {Context} The binding context to provide access to. */
+    this._context = ContextInfo.check(contextInfo).makeContext(this);
 
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
