@@ -118,7 +118,8 @@ describe('@bayou/typecheck/TObject', () => {
 
       test({});
       test({ a: 10 });
-      test({ a: 10, b: 20 });
+      test({ a: 10, b: 'x' });
+      test({ a: 10, b: 'x', c: new Map() });
     });
 
     it('rejects non-plain objects', () => {
@@ -146,10 +147,28 @@ describe('@bayou/typecheck/TObject', () => {
       test('x');
       test(37);
     });
+
+    it('checks values when passed a value checker argument', () => {
+      function checker(v) {
+        if (typeof(v) !== 'string') {
+          throw new Error('nopeNopeNope');
+        }
+
+        return v;
+      }
+
+      const good = { x: 'yes', y: 'also-yes' };
+      assert.strictEqual(plainish(good, checker), good);
+
+      for (const badOne of [123, { not: 'a-string' }, false]) {
+        const bad = { x: 'blort', oops: badOne, florp: 'like' };
+        assert.throws(() => plainish(bad, checker), /nopeNopeNope/);
+      }
+    });
   }
 
   describe('plain()', () => {
-    plainishTests(x => TObject.plain(x));
+    plainishTests((v, c) => TObject.plain(v, c));
 
     it('rejects `null`', () => {
       assert.throws(() => { TObject.plain(null); });
@@ -157,7 +176,7 @@ describe('@bayou/typecheck/TObject', () => {
   });
 
   describe('plainOrNull()', () => {
-    plainishTests(x => TObject.plainOrNull(x));
+    plainishTests((v, c) => TObject.plainOrNull(v, c));
 
     it('accepts `null`', () => {
       assert.isNull(TObject.plainOrNull(null));
