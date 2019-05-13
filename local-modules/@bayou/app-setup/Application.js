@@ -80,6 +80,13 @@ export class Application extends CommonBase {
     this._varInfo = new VarInfo(this);
 
     /**
+     * {Int} The port this application is actually listening on, or `0` if not
+     * yet listening. This can be different from the configured `listenPort` in
+     * testing scenarios.
+     */
+    this._listenPort = 0;
+
+    /**
      * {Set<BaseConnection>} List of all currently active connections (or at
      * least active as of the most recent check for same).
      */
@@ -122,6 +129,15 @@ export class Application extends CommonBase {
   /** {Int} Count of connections that this server has ever had. */
   get connectionCountTotal() {
     return this._connectionCountTotal;
+  }
+
+  /**
+   * {Int} The port this application is actually listening on, or `0` if not
+   * yet listening. This can be different from the configured `listenPort` in
+   * testing scenarios.
+   */
+  get listenPort() {
+    return this._listenPort;
   }
 
   /** {Metrics} The associated metrics collector / reporter. */
@@ -175,11 +191,11 @@ export class Application extends CommonBase {
   async start(pickPort = false) {
     const server     = this._server;
     const port       = pickPort ? 0 : Network.listenPort;
-    const resultPort = await ServerUtil.listen(server, port);
 
-    log.event.applicationPort(resultPort);
+    this._listenPort = await ServerUtil.listen(server, port);
+    log.event.applicationPort(this._listenPort);
 
-    if ((port !== 0) && (port !== resultPort)) {
+    if ((port !== 0) && (port !== this._listenPort)) {
       log.warn(`Originally requested port: ${port}`);
     }
 
@@ -189,7 +205,7 @@ export class Application extends CommonBase {
     ServerUtil.handleSystemShutdown(server);
     this._handleSystemShutdown();
 
-    return resultPort;
+    return this._listenPort;
   }
 
   /**
@@ -197,7 +213,7 @@ export class Application extends CommonBase {
    */
   _addDevModeRoutes() {
     const app = this._app;
-    const debugTools = new DebugTools(this._rootAccess);
+    const debugTools = new DebugTools(this);
     app.use('/debug', debugTools.requestHandler);
   }
 

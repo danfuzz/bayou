@@ -7,12 +7,13 @@ import { camelCase } from 'lodash';
 import { inspect } from 'util';
 
 import { Codecs } from '@bayou/app-common';
-import { Auth, Storage } from '@bayou/config-server';
+import { Auth, Network, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Logger } from '@bayou/see-all';
 import { RecentSink } from '@bayou/see-all-server';
-import { CommonBase } from '@bayou/util-common';
+import { CommonBase, URL } from '@bayou/util-common';
 
+import { Application } from './Application';
 import { ServerUtil } from './ServerUtil';
 
 /** Logger for this module. */
@@ -29,13 +30,13 @@ export class DebugTools extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {RootAccess} rootAccess The root access manager.
+   * @param {Application} application The main application instance.
    */
-  constructor(rootAccess) {
+  constructor(application) {
     super();
 
-    /** {RootAccess} The root access manager. */
-    this._rootAccess = rootAccess;
+    /** {Application} The main application instance. */
+    this._application = Application.check(application);
 
     /** {RecentSink} A rolling log for the `/log` endpoint. */
     this._sink = new RecentSink(LOG_LENGTH_MSEC);
@@ -241,7 +242,7 @@ export class DebugTools extends CommonBase {
    */
   async _handle_change(req, res) {
     const revNum = req.params.revNum;
-    const body = this._getExistingBody(req);
+    const body   = this._getExistingBody(req);
     const change = (await body).getChange(revNum);
     const result = Codecs.modelCodec.encodeJson(await change, true);
 
@@ -258,6 +259,8 @@ export class DebugTools extends CommonBase {
   _handle_clientTest(req, res) {
     const testFilter = req.params.testFilter;
 
+    const scriptTag = this._scriptTagFromPath('/boot-for-test.js');
+
     // TODO: Probably want to use a real template.
     const filterSetup = testFilter
       ? `<script>\nBAYOU_TEST_FILTER = ${new RegExp(testFilter).toString()};\n</script>\n`
@@ -265,7 +268,7 @@ export class DebugTools extends CommonBase {
     const head =
       '<title>Client Tests</title>\n' +
       filterSetup +
-      '<script src="/boot-for-test.js"></script>\n';
+      scriptTag;
     const body =
       '<h1>Client Tests</h1>\n' +
       '<p>See console output for details.</p>';
@@ -286,6 +289,7 @@ export class DebugTools extends CommonBase {
     const authorId   = this._getAuthorIdParam(req);
     const infoObj    = await this._makeEncodedInfo(documentId, authorId);
     const info       = JSON.stringify(infoObj);
+    const scriptTag  = this._scriptTagFromPath('/boot-for-debug.js');
 
     // These are already strings (JSON-encoded even, in the case of `info`),
     // but we still have to JSON-encode _those_ strings, so as to make them
@@ -302,7 +306,7 @@ export class DebugTools extends CommonBase {
       `  DEBUG_AUTHOR_ID   = ${quotedAuthorId};\n` +
       `  DEBUG_DOCUMENT_ID = ${quotedDocumentId};\n` +
       '</script>\n' +
-      '<script src="/boot-for-debug.js"></script>\n';
+      scriptTag;
     const body =
       '<div id="debugEditor"><p>Loading&hellip;</p></div>\n';
 
@@ -368,7 +372,7 @@ export class DebugTools extends CommonBase {
     const authorId = req.params.authorId;
     const token    = req.params.token;
 
-    this._rootAccess.useToken(authorId, token);
+    this._application.rootAccess.useToken(authorId, token);
     ServerUtil.sendPlainTextResponse(res, 'Ok!');
   }
 
@@ -450,7 +454,42 @@ export class DebugTools extends CommonBase {
    *   JSON.
    */
   async _makeEncodedInfo(documentId, authorId) {
-    const info = await this._rootAccess.makeSessionInfo(authorId, documentId);
+    const info = await this._application.rootAccess.makeSessionInfo(authorId, documentId);
     return Codecs.fullCodec.encodeData(info);
+  }
+
+  /**
+   * Makes a `<script>` tag to refer to the given absolute path off of the
+   * `baseUrl` of the server.
+   *
+   * @param {string} urlPath Path to refer to.
+   * @returns {string} Corresponding `<script>` tag.
+   */
+  _scriptTagFromPath(urlPath) {
+    const url = this._urlFromPath(urlPath);
+
+    return `<script src="${url}"></script>\n`;
+  }
+
+  /**
+   * Makes a URL to refer to the given absolute path off of the `baseUrl` of the
+   * server.
+   *
+   * @param {string} urlPath Path to refer to.
+   * @returns {string} Absolute URL.
+   */
+  _urlFromPath(urlPath) {
+    // Start with the configured `baseUrl` except with whatever port we happen
+    // to actually be listening on.
+    const url = new URL(Network.baseUrl);
+    url.port = this._application.listenPort;
+
+    // Combine the base path with the given one, ensuring that there is exactly
+    // one slash between them.
+    const basePath = url.pathname.replace(/[/]+$/, '');
+    urlPath = urlPath.replace(/^[/]+/, '');
+    url.pathname = `${basePath}/${urlPath}`;
+
+    return url.href;
   }
 }
