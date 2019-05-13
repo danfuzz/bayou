@@ -10,7 +10,7 @@ import { TBoolean, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import { ApiLog } from './ApiLog';
-import { ContextInfo } from './ContextInfo';
+import { Context } from './Context';
 import { MetaHandler } from './MetaHandler';
 import { ProxiedObject } from './ProxiedObject';
 import { Target } from './Target';
@@ -62,7 +62,7 @@ export class BaseConnection extends CommonBase {
     this._closedCondition = new Condition();
 
     /** {Context} The binding context to provide access to. */
-    this._context = ContextInfo.check(contextInfo).makeContext(this);
+    this._context = new Context(contextInfo, this);
 
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.

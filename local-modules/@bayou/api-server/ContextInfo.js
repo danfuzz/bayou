@@ -47,17 +47,4 @@ export class ContextInfo extends CommonBase {
   get tokenAuthorizer() {
     return this._tokenAuthorizer;
   }
-
-  /**
-   * Makes a new instance of {@link Context} hooked up to the given
-   * {@link BaseConnection}, and with this instance as its `info`.
-   *
-   * @param {BaseConnection} connection The connection to be associated with.
-   * @returns {Context} An appropriately-constructed instance.
-   */
-  makeContext(connection) {
-    BaseConnection.check(connection);
-
-    return new Context(this, connection);
-  }
 }

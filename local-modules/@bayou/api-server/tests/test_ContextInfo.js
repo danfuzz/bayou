@@ -55,18 +55,4 @@ describe('@bayou/api-server/ContextInfo', () => {
       assert.isNull(ci.tokenAuthorizer);
     });
   });
-
-  describe('makeContext()', () => {
-    it('makes an instance of `Context` with this instance as the `info` attached to the given connection', () => {
-      const ci     = new ContextInfo(new Codec(), new BaseTokenAuthorizer());
-      const conn   = new BaseConnection(ci);
-      const result = ci.makeContext(conn);
-
-      assert.instanceOf(result, Context);
-      assert.strictEqual(result.codec, ci.codec);
-      assert.strictEqual(result.tokenAuthorizer, ci.tokenAuthorizer);
-
-      assert.strictEqual(result.log, conn.log);
-    });
-  });
 });
