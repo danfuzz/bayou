@@ -147,53 +147,21 @@ export class Context extends CommonBase {
    *   which authorizes access to a target.
    * @returns {Target} The so-identified or so-authorized target.
    * @throws {Error} Thrown if `idOrToken` does not correspond to an authorized
-   *   target.
+   *   target, or if there are other access / authorization problems.
    */
   async getAuthorizedTarget(idOrToken) {
     const tokenAuth = this.tokenAuthorizer;
 
     if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
-      const token   = tokenAuth.tokenFromString(idOrToken);
-      const already = this._getOrNull(token.id);
-
-      if (already !== null) {
-        // We've seen this token ID previously in this context / session.
-        if (token.sameToken(already.token)) {
-          // The corresponding secrets match. All's well!
-          // **TODO:** If there are cookie requirements, they still need to be
-          // checked here.
-          return already;
-        } else {
-          // The secrets don't match. This will happen, for example, when a
-          // malicious actor tries to probe for a token.
-          throw this._targetError(idOrToken);
-        }
-      }
-
-      // It's the first time this token has been encountered in this context.
-      // Determine its authorized target, and if authorized cache it in this
-      // instance's target map.
-
-      // **TODO:** `null` below should actually be an object with all the right
-      // cookies, if any.
-      const targetObject = await tokenAuth.getAuthorizedTarget(token, null);
-
-      if (targetObject === null) {
-        // The `tokenAuth` told us that `token` didn't actually grant any
-        // authority.
-        throw this._targetError(idOrToken);
-      }
-
-      const target = new Target(token, targetObject);
-
-      this.addTarget(target);
-      return target;
+      // `idOrToken` is syntactically a bearer token according to our associated
+      // token authorizer.
+      return this._getTargetFromToken(idOrToken);
+    } else {
+      // `idOrToken` is not a bearer token (or this instance doesn't deal with
+      // bearer tokens at all). The ID can only validly refer to an uncontrolled
+      // target.
+      return this._getTargetFromId(idOrToken);
     }
-
-    // It's not a bearer token (or this instance doesn't deal with bearer tokens
-    // at all). The ID can only validly refer to an uncontrolled target.
-
-    return this._getTargetFromId(idOrToken);
   }
 
   /**
@@ -274,6 +242,54 @@ export class Context extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Helper for {@link #getAuthorizedTarget}, which handles the token-auth case.
+   *
+   * @param {string} tokenString Token which identifies the target, in string
+   *   form.
+   * @returns {Target} The so-identified target.
+   * @throws {Error} Thrown if `token` does not correspond to a controlled
+   *   target, or if there are other access / authorization problems.
+   */
+  async _getTargetFromToken(tokenString) {
+    const tokenAuth = this.tokenAuthorizer;
+    const token     = tokenAuth.tokenFromString(tokenString);
+    const already   = this._getOrNull(token.id);
+
+    if (already !== null) {
+      // We've seen this token ID previously in this context / session.
+      if (token.sameToken(already.token)) {
+        // The corresponding secrets match. All's well!
+        // **TODO:** If there are cookie requirements, they still need to be
+        // checked here.
+        return already;
+      } else {
+        // The secrets don't match. This will happen, for example, when a
+        // malicious actor tries to probe for a token.
+        throw this._targetError(tokenString);
+      }
+    }
+
+    // It's the first time this token has been encountered in this context.
+    // Determine its authorized target, and if authorized cache it in this
+    // instance's target map.
+
+    // **TODO:** `null` below should actually be an object with all the right
+    // cookies, if any.
+    const targetObject = await tokenAuth.getAuthorizedTarget(token, null);
+
+    if (targetObject === null) {
+      // The `tokenAuth` told us that `token` didn't actually grant any
+      // authority.
+      throw this._targetError(tokenString);
+    }
+
+    const target = new Target(token, targetObject);
+
+    this.addTarget(target);
+    return target;
   }
 
   /**
