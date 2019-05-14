@@ -10,7 +10,7 @@ import { TBoolean, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import { ApiLog } from './ApiLog';
-import { ContextInfo } from './ContextInfo';
+import { Context } from './Context';
 import { MetaHandler } from './MetaHandler';
 import { ProxiedObject } from './ProxiedObject';
 import { Target } from './Target';
@@ -49,12 +49,6 @@ export class BaseConnection extends CommonBase {
      */
     this._log = log.withAddedContext(this._connectionId);
 
-    /** {Context} The binding context to provide access to. */
-    this._context = ContextInfo.check(contextInfo).makeContext(this._log);
-
-    /** {Codec} The codec to use. */
-    this._codec = this._context.codec;
-
     /** {ApiLog} The API logger to use. */
     this._apiLog = new ApiLog(this._log, Logging.shouldRedact());
 
@@ -66,6 +60,9 @@ export class BaseConnection extends CommonBase {
      * closed.
      */
     this._closedCondition = new Condition();
+
+    /** {Context} The binding context to provide access to. */
+    this._context = new Context(contextInfo, this);
 
     // Add a `meta` binding to the initial set of targets, which is specific to
     // this instance/connection.
@@ -115,19 +112,6 @@ export class BaseConnection extends CommonBase {
     this._closedCondition.value = true;
 
     this._log.event.closed();
-  }
-
-  /**
-   * Encodes a message suitable for sending to the other side of this
-   * connection.
-   *
-   * @param {Message} message Message to encode.
-   * @returns {string} Encoded form of `message`.
-   */
-  encodeMessage(message) {
-    Message.check(message);
-
-    return this._codec.encodeJson(message);
   }
 
   /**
@@ -345,7 +329,7 @@ export class BaseConnection extends CommonBase {
    */
   _decodeMessage(msg) {
     try {
-      msg = this._codec.decodeJson(msg);
+      msg = this._context.decodeJson(msg);
     } catch (error) {
       return ConnectionError.connectionNonsense(this._connectionId, error.message);
     }
@@ -378,14 +362,14 @@ export class BaseConnection extends CommonBase {
     let problemValue;
 
     try {
-      return this._codec.encodeJson(response);
+      return this._context.encodeJson(response);
     } catch (e) {
       if (response.isError()) {
         // There is probably some bit of structured data in the error which
         // can't get encoded. Stringify it, and try again.
         try {
           response = response.withConservativeError(response);
-          return this._codec.encodeJson(response);
+          return this._context.encodeJson(response);
         } catch (subError) {
           // Ignore this (inner) error, and fall through to report the original
           // problem.
@@ -402,7 +386,7 @@ export class BaseConnection extends CommonBase {
     // Last-ditch attempt to send a breadcrumb back to the caller.
     const newError    = ConnectionError.couldNotEncode(problemValue);
     const newResponse = new Response(response.id, null, newError).withConservativeError();
-    return this._codec.encodeJson(newResponse);
+    return this._context.encodeJson(newResponse);
   }
 
   /**

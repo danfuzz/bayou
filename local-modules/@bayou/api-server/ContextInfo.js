@@ -6,7 +6,6 @@ import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
 import { BaseTokenAuthorizer } from './BaseTokenAuthorizer';
-import { Context } from './Context';
 
 /**
  * All the info needed to construct instances of {@link Context}, except for
@@ -45,16 +44,5 @@ export class ContextInfo extends CommonBase {
   /** {BaseTokenAuthorizer|null} The token authorizer to use. */
   get tokenAuthorizer() {
     return this._tokenAuthorizer;
-  }
-
-  /**
-   * Makes a new instance of {@link Context}, with this instance as the `info`
-   * and with the given logger.
-   *
-   * @param {BaseLogger} log The logger to use.
-   * @returns {Context} An appropriately-constructed instance.
-   */
-  makeContext(log) {
-    return new Context(this, log);
   }
 }

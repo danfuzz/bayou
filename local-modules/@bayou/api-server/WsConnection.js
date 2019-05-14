@@ -78,7 +78,7 @@ export class WsConnection extends HttpConnection {
       // Send a message to the client telling them what's up. If they're nice,
       // they'll handle it promptly instead of, say, continuing to try to send
       // messages.
-      this._ws.send(this.encodeMessage(new Message(0, 'meta', new Functor('close'))));
+      this._ws.send(this.context.encodeMessage(new Message(0, 'meta', new Functor('close'))));
     } catch (e) {
       // Ignore exceptions. It's probably that the websocket is already closed
       // (common case when we end up here from the client proactively closing),

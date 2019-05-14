@@ -5,9 +5,8 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseTokenAuthorizer, Context, ContextInfo } from '@bayou/api-server';
+import { BaseTokenAuthorizer, ContextInfo } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
-import { Logger } from '@bayou/see-all';
 
 describe('@bayou/api-server/ContextInfo', () => {
   describe('constructor()', () => {
@@ -54,20 +53,6 @@ describe('@bayou/api-server/ContextInfo', () => {
       const ci = new ContextInfo(new Codec());
 
       assert.isNull(ci.tokenAuthorizer);
-    });
-  });
-
-  describe('makeContext()', () => {
-    it('makes an instance of `Context` with this instance as the `info` and with the given logger', () => {
-      const ci     = new ContextInfo(new Codec(), new BaseTokenAuthorizer());
-      const log    = new Logger('florp');
-      const result = ci.makeContext(log);
-
-      assert.instanceOf(result, Context);
-      assert.strictEqual(result.codec, ci.codec);
-      assert.strictEqual(result.tokenAuthorizer, ci.tokenAuthorizer);
-
-      assert.strictEqual(result.log, log);
     });
   });
 });
