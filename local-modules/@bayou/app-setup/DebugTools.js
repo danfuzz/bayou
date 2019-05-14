@@ -473,22 +473,23 @@ export class DebugTools extends CommonBase {
 
   /**
    * Makes a URL to refer to the given absolute path off of the `baseUrl` of the
-   * server.
+   * server. If the server is listening on a non-default port, this assumes that
+   * the only valid access is via the application's loopback URL.
    *
    * @param {string} urlPath Path to refer to.
    * @returns {string} Absolute URL.
    */
   _urlFromPath(urlPath) {
-    // Start with the configured `baseUrl` except with whatever port we happen
-    // to actually be listening on.
-    const url = new URL(Network.baseUrl);
-    url.port = this._application.listenPort;
+    const configuredLoopback  = Network.loopbackUrl;
+    const applicationLoopback = this._application.loopbackUrl;
+    const isTesting           = (configuredLoopback !== applicationLoopback);
 
-    // Combine the base path with the given one, ensuring that there is exactly
-    // one slash between them.
-    const basePath = url.pathname.replace(/[/]+$/, '');
-    urlPath = urlPath.replace(/^[/]+/, '');
-    url.pathname = `${basePath}/${urlPath}`;
+    const url = new URL(isTesting ? applicationLoopback : Network.baseUrl);
+
+    // Combine the base path with the given one, ensuring that there are no
+    // runs of more than one slash in a row.
+    const fullPath = `${url.pathname}/${urlPath}`.replace(/[/]+/g, '/');
+    url.pathname = fullPath;
 
     return url.href;
   }

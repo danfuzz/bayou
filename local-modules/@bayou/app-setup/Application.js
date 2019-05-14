@@ -140,6 +140,15 @@ export class Application extends CommonBase {
     return this._listenPort;
   }
 
+  /**
+   * {string} The loopback (local-access) base URL. This can have a different
+   * port than the default configured `listenPort` in testing scenarios. It will
+   * always match the {@link #listenPort} exposed by this instance.
+   */
+  get loopbackUrl() {
+    return `http://localhost:${this.listenPort}`;
+  }
+
   /** {Metrics} The associated metrics collector / reporter. */
   get metrics() {
     return this._metrics;
