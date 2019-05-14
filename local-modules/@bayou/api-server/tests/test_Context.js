@@ -5,40 +5,17 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BearerToken, Codecs, Message, Remote } from '@bayou/api-common';
-import { BaseConnection, BaseTokenAuthorizer, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
+import { Codecs, Message, Remote } from '@bayou/api-common';
+import { BaseConnection, Context, ContextInfo, ProxiedObject } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 import { Functor } from '@bayou/util-common';
 
-/**
- * Mock `BaseTokenAuthorizer` for testing.
- */
-class MockAuth extends BaseTokenAuthorizer {
-  get _impl_nonTokenPrefix() {
-    return 'nontoken-';
-  }
-
-  async _impl_cookieNamesForToken(value_unused) {
-    return [];
-  }
-
-  async _impl_getAuthorizedTarget(token_unused, cookies_unused) {
-    return { some: 'authority' };
-  }
-
-  _impl_isToken(tokenString_unused) {
-    return true;
-  }
-
-  _impl_tokenFromString(tokenString) {
-    return new BearerToken(tokenString, tokenString);
-  }
-}
+import { MockTokenAuthorizer } from '@bayou/api-server/mocks';
 
 describe('@bayou/api-server/Context', () => {
   describe('constructor()', () => {
     it('accepts valid arguments and produces a frozen instance', () => {
-      const info   = new ContextInfo(new Codec(), new MockAuth());
+      const info   = new ContextInfo(new Codec(), new MockTokenAuthorizer());
       const conn   = new BaseConnection(info);
       const result = new Context(info, conn);
 
@@ -48,7 +25,7 @@ describe('@bayou/api-server/Context', () => {
 
   describe('.codec', () => {
     it('is the `codec` from the `info` passed in on construction', () => {
-      const info = new ContextInfo(new Codec(), new MockAuth());
+      const info = new ContextInfo(new Codec(), new MockTokenAuthorizer());
       const conn = new BaseConnection(info);
       const ctx  = new Context(info, conn);
 
@@ -58,7 +35,7 @@ describe('@bayou/api-server/Context', () => {
 
   describe('.log', () => {
     it('is the `log` of the connection passed in on construction', () => {
-      const info = new ContextInfo(new Codec(), new MockAuth());
+      const info = new ContextInfo(new Codec(), new MockTokenAuthorizer());
       const conn = new BaseConnection(info);
       const ctx  = new Context(info, conn);
 
@@ -68,7 +45,7 @@ describe('@bayou/api-server/Context', () => {
 
   describe('.tokenAuthorizer', () => {
     it('is the `tokenAuthorizer` from the `info` passed in on construction', () => {
-      const info = new ContextInfo(new Codec(), new MockAuth());
+      const info = new ContextInfo(new Codec(), new MockTokenAuthorizer());
       const conn = new BaseConnection(info);
       const ctx  = new Context(info, conn);
 
