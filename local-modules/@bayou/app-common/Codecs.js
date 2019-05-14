@@ -9,7 +9,7 @@ import { Codecs as otCommon_Codecs } from '@bayou/ot-common';
 import { UtilityClass } from '@bayou/util-common';
 
 /**
- * Utilities for this module.
+ * Utilities for codec setup.
  */
 export class Codecs extends UtilityClass {
   /**
