@@ -5,9 +5,7 @@
 import { Codec } from '@bayou/codec';
 import { CommonBase } from '@bayou/util-common';
 
-import { BaseConnection } from './BaseConnection';
 import { BaseTokenAuthorizer } from './BaseTokenAuthorizer';
-import { Context } from './Context';
 
 /**
  * All the info needed to construct instances of {@link Context}, except for

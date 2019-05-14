@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
-import { BaseConnection, BaseTokenAuthorizer, Context, ContextInfo } from '@bayou/api-server';
+import { BaseTokenAuthorizer, ContextInfo } from '@bayou/api-server';
 import { Codec } from '@bayou/codec';
 
 describe('@bayou/api-server/ContextInfo', () => {
