@@ -7,8 +7,15 @@ Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 <html lang="en-US">
 
+<script>
+function redirect() {
+  var newPath = `${window.location.pathname}/debug/edit/some-id`;
+  window.location.pathname = newPath.replace(/[/]+/g, '/');
+}
+</script>
+
 <head>
-  <meta http-equiv="refresh" content="0; url=./debug/edit/some-id">
+  <title>Redirecting&hellip;</title>
 </head>
 
 <body>
