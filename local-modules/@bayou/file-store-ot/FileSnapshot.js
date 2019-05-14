@@ -6,7 +6,7 @@ import { BaseSnapshot } from '@bayou/ot-common';
 import { TInt } from '@bayou/typecheck';
 import { Errors } from '@bayou/util-common';
 
-import fileStoreOt_Errors from './Errors';
+import { Errors as fileStoreOt_Errors } from './Errors';
 import { FileChange } from './FileChange';
 import { FileDelta } from './FileDelta';
 import { FileOp } from './FileOp';
