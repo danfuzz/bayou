@@ -8,10 +8,10 @@ Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 <html lang="en-US">
 
 <script>
-window.onload = () => {
+window.addEventListener('load', = () => {
   var newPath = `${window.location.pathname}/debug/edit/some-id`;
   window.location.pathname = newPath.replace(/[/]+/g, '/');
-};
+});
 </script>
 
 <head>
