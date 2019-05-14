@@ -24,6 +24,8 @@ export class Context extends CommonBase {
    * @param {ContextInfo} info The typically-fixed parameters used to construct
    *   instances.
    * @param {BaseConnection} connection The connection to be associated with.
+   *   This is used for a couple of things, including accessing (HTTP-ish)
+   *   headers / cookies, as well as logging.
    */
   constructor(info, connection) {
     super();
