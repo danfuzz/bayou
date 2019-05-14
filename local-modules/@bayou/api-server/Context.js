@@ -43,11 +43,18 @@ export class Context extends CommonBase {
     this._targetMap = new Map();
 
     /**
-     * {Map<object, Remote>} Map from target objects (the things wrapped by
-     * instances of {@link Target}) to their corresponding {@link Remote}
+     * {Map<object, Remote>} Map from direct-target objects (the things wrapped
+     * by instances of {@link Target}) to their corresponding {@link Remote}
      * instances.
      */
     this._remoteMap = new Map();
+
+    /**
+     * {Map<Target, object>} Map from {@link Target} instances to the cookies
+     * that authorized them. This map only gets populated if the token
+     * authorizer actually makes demands for cookies.
+     */
+    this._cookieMap = new Map();
 
     Object.freeze(this);
   }
@@ -207,6 +214,46 @@ export class Context extends CommonBase {
   }
 
   /**
+   * Helper for {@link #_getTargetFromToken}, which confirms that the
+   * connection's current cookies are a match for the cookies that were used
+   * when the given token was originally authorized. This method is a no-op if
+   * no cookies were involved in the authorization of the token in question.
+   *
+   * **Context:** When the token was authorized, if there were associated
+   * cookies then we need to _now_ make sure sure those cookies are still active
+   * / present on the connection. (As of this writing, a given connection
+   * instance won't possibly lose cookies, but ultimately an API connection
+   * (that is, a connection from the perspective of this module) could (say)
+   * span multiple HTTP connections, and in that case we might be in a position
+   * here where the original authorization came on one HTTP connection with one
+   * set of cookies, and we're now getting an authorization request on a
+   * _different_ HTTP connection with a _different_ set of cookies. Fun times!
+   *
+   * @param {BearerToken} token The token being authorized.
+   * @returns {boolean} `true` if the connection's salient cookies are the same
+   *   as when `token` was originally authorized, or _false_ if not.
+   */
+  _cachedCookiesMatch(token) {
+    const cookies = this._cookieMap.get(token);
+
+    if (!cookies) {
+      // No cookies were previously required. So, there's no need for further
+      // checking.
+      return true;
+    }
+
+    for (const [name, origCookie] of Object.entries(cookies)) {
+      const nowCookie = this._connection.getCookie(name);
+      if (origCookie !== nowCookie) {
+        this.log.event.cookieMismatch(token, name);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist. This only checks this instance's
    * {@link #_targetMap}; it does _not_ try to do token authorization.
@@ -260,21 +307,25 @@ export class Context extends CommonBase {
 
     if (already !== null) {
       // We've seen this token ID previously in this context / session.
-      if (token.sameToken(already.token)) {
-        // The corresponding secrets match. All's well!
-        // **TODO:** If there are cookie requirements, they still need to be
-        // checked here.
+      if (token.sameToken(already.token) && this._cachedCookiesMatch(token)) {
+        // The corresponding secrets match, and if there are associated cookies
+        // they are the same as when the authorization was originally performed.
+        // That is, all's well!
         return already;
-      } else {
-        // The secrets don't match. This will happen, for example, when a
-        // malicious actor tries to probe for a token.
-        throw this._targetError(tokenString);
       }
+
+      // The secrets don't match, and/or associated cookies are wrong or
+      // missing. When this happens, the most likely case is that a malicious
+      // actor is trying to probe for a token. However, it's also possible that
+      // the token's secret or authorizing cookies were changed and this system
+      // hasn't previously encountered the new authorizing data. So, we just
+      // fall through and let the from-scratch auth process proceed.
     }
 
-    // It's the first time this token has been encountered in this context.
-    // Determine its authorized target, and if authorized cache it in this
-    // instance's target map.
+    // It's the first time this token has been encountered in this context (or,
+    // per above, we're re-authing from scratch). Determine its authorized
+    // target, check cookies if necessary, and if everything looks good, cache
+    // the target and associated data for lighterweight subsequent use.
 
     // **TODO:** `null` below should actually be an object with all the right
     // cookies, if any.
