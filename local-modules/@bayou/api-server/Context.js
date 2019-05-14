@@ -160,6 +160,8 @@ export class Context extends CommonBase {
         // We've seen this token ID previously in this context / session.
         if (token.sameToken(already.token)) {
           // The corresponding secrets match. All's well!
+          // **TODO:** If there are cookie requirements, they still need to be
+          // checked here.
           return already;
         } else {
           // The secrets don't match. This will happen, for example, when a
