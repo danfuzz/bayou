@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Urls } from '@bayou/app-common';
 import { Auth, Network, Storage } from '@bayou/config-server';
 import { SessionInfo } from '@bayou/doc-common';
 import { DocServer } from '@bayou/doc-server';
@@ -92,7 +93,7 @@ export class RootAccess extends CommonBase {
       }
     })();
 
-    const url         = `${Network.baseUrl}/api`;
+    const url         = Urls.apiUrlFromBaseUrl(Network.baseUrl);
     const authorToken = await this._getAuthorToken(authorId);
     const result      = new SessionInfo(url, authorToken, documentId);
 
