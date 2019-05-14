@@ -40,7 +40,7 @@ export class Context extends CommonBase {
     this._connection = BaseConnection.check(connection);
 
     /** {Map<string, Target>} The underlying map from IDs to targets. */
-    this._map = new Map();
+    this._targetMap = new Map();
 
     /**
      * {Map<object, Remote>} Map from target objects (the things wrapped by
@@ -97,7 +97,7 @@ export class Context extends CommonBase {
       throw this._targetError(id, 'Duplicate target object');
     }
 
-    this._map.set(id, target);
+    this._targetMap.set(id, target);
     this._remoteMap.set(obj, remote);
 
     return remote;
@@ -209,7 +209,7 @@ export class Context extends CommonBase {
   /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist. This only checks this instance's
-   * {@link #_map}; it does _not_ try to do token authorization.
+   * {@link #_targetMap}; it does _not_ try to do token authorization.
    *
    * @param {string} id The target ID.
    * @returns {Target|null} The so-identified target, or `null` if unbound.
@@ -217,7 +217,7 @@ export class Context extends CommonBase {
   _getOrNull(id) {
     TString.check(id);
 
-    const result = this._map.get(id);
+    const result = this._targetMap.get(id);
     return (result === undefined) ? null : result;
   }
 
