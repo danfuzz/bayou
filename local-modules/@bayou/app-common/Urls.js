@@ -24,11 +24,18 @@ export class Urls extends UtilityClass {
    * @returns {string} The corresponding API endpoint URL.
    */
   static apiUrlFromBaseUrl(baseUrl) {
+    TString.check(baseUrl);
+
+    // Accept a URL without any path, by appending a final `/` if not present.
+    // `urlAbsolute` demands that a path be present.
+    if (!baseUrl.endsWith('/')) {
+      baseUrl += '/';
+    }
+
     TString.urlAbsolute(baseUrl);
 
-    const maybeSlash = baseUrl.endsWith('/') ? '' : '/';
-
-    return `${baseUrl}${maybeSlash}${Urls.API_PATH}`;
+    // No `/` here, because we guaranteed `baseUrl` ends with one, above.
+    return `${baseUrl}${Urls.API_PATH}`;
   }
 
   /**

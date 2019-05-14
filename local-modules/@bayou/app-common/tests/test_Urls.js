@@ -27,11 +27,21 @@ describe('@bayou/app-common/Urls', () => {
 
   describe('apiUrlFromBaseUrl()', () => {
     it('appends the `API_PATH` after a slash', () => {
-      const base = 'https://foo.blort/zap';
-      const api  = `${base}/${Urls.API_PATH}`;
-      const got  = Urls.apiUrlFromBaseUrl(base);
+      function test(base) {
+        const api  = `${base}/${Urls.API_PATH}`;
+        const got  = Urls.apiUrlFromBaseUrl(base);
 
-      assert.strictEqual(got, api);
+        assert.strictEqual(got, api);
+      }
+
+      test('https://foo.blort/zap');
+      test('https://foo.blort/zap/zoop');
+      test('https://boo.eek:1234/zap');
+      test('https://boo.eek:1234/zip/zap/zop');
+
+      // Origin-only, no final slash.
+      test('https://example.com');
+      test('https://example.com:1234');
     });
 
     it('does not add an extra slash if the given `baseUrl` already ends with one', () => {
@@ -44,12 +54,14 @@ describe('@bayou/app-common/Urls', () => {
   });
 
   describe('apiUrlFromBaseUrl()', () => {
-    it('strips the `API_PATH` at the end', () => {
-      const base = 'https://milk.yummy/boop/beep';
-      const api  = `${base}/${Urls.API_PATH}`;
-      const got  = Urls.baseUrlFromApiUrl(api);
+    it('strips the `API_PATH` at the end, with or without a trailing slash', () => {
+      const base     = 'https://milk.yummy/boop/beep';
+      const api      = `${base}/${Urls.API_PATH}`;
+      const got      = Urls.baseUrlFromApiUrl(api);
+      const gotSlash = Urls.baseUrlFromApiUrl(`${api}/`);
 
       assert.strictEqual(got, base);
+      assert.strictEqual(gotSlash, base);
     });
   });
 });
