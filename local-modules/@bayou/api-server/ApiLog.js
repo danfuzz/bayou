@@ -63,7 +63,7 @@ export class ApiLog extends CommonBase {
     } else {
       // This is indicative of a bug in this module. The user of `ApiLog` should
       // have called `incomingMessage(msg)` but apparently didn't.
-      details = this._initialDetails(msg);
+      details = this._initialDetails(msg, target);
       this._log.event.orphanMessage(this._logInfoInitial(details));
     }
 
@@ -104,7 +104,7 @@ export class ApiLog extends CommonBase {
    * @param {Response} response Response which was sent.
    */
   nonMessageResponse(response) {
-    const details = this._initialDetails(null);
+    const details = this._initialDetails(null, null);
 
     this._logCompletedCall(details, response, null);
   }
