@@ -32,17 +32,17 @@
   // {@link @bayou/doc-common/SessionInfo}, the encoded form in particular, if
   // you want to understand what's going on.
   const info = JSON.parse(window.BAYOU_INFO);
-  let   serverUrl;
+  let   apiUrl;
 
   if (info.SessionInfo) {
-    serverUrl = info.SessionInfo[0];
+    apiUrl = info.SessionInfo[0];
   } else {
     throw new Error('Unrecognized format for `BAYOU_INFO`.');
   }
 
   // Get the base URL from the server URL by dropping the final `/api`. This is
   // brittle, in that it bakes in knowledge of the API endpoint.
-  const baseUrl = serverUrl.replace(/[/]api$/, '');
+  const baseUrl = apiUrl.replace(/[/]api$/, '');
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the boot process. You can find its main entrypoint in
