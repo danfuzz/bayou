@@ -28,17 +28,19 @@ export class ApiClient extends CommonBase {
    * messages will get enqueued and then replayed in order once the socket
    * becomes ready.
    *
-   * @param {string} serverUrl The server endpoint, as an `http` or `https` URL.
+   * @param {string} apiUrl The server endpoint, as an `http` or `https` URL.
+   *   This endpoint is expected to respond using the API protocol as defined
+   *   in this and the other `api-*` modules.
    * @param {Codec} codec Codec instance to use. In order to function properly,
    *   its registry must include all of the encodable classes defined in
    *   `@bayou/api-common` classes. See
    *   {@link @bayou/api-common.Codecs.registerCodecs}.
    */
-  constructor(serverUrl, codec) {
+  constructor(apiUrl, codec) {
     super();
 
     /** {string} The server endpoint, as an `http` or `https` URL. */
-    this._serverUrl = TString.urlAbsolute(serverUrl);
+    this._serverUrl = TString.urlAbsolute(apiUrl);
 
     /** {Codec} Codec instance to use. */
     this._codec = Codec.check(codec);
@@ -99,7 +101,7 @@ export class ApiClient extends CommonBase {
     // Initialize the active connection fields (described above).
     this._resetConnection();
 
-    this._log.event.constructed(serverUrl);
+    this._log.event.constructed(apiUrl);
 
     Object.seal(this);
   }
