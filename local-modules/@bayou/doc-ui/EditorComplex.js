@@ -86,7 +86,7 @@ export class EditorComplex extends CommonBase {
     (async () => {
       log.event.starting();
 
-      const apiUrl = info.serverUrl;
+      const apiUrl = info.apiUrl;
 
       // Do all of the DOM setup for the instance.
       const [headerNode_unused, titleNode, bodyNode, authorOverlayNode] =

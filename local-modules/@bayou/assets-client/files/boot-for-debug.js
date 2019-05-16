@@ -23,7 +23,7 @@ window.BAYOU_RECOVER = function BAYOU_RECOVER(info) {
 
   // Get the base URL from the server URL by dropping the final `/api`. This is
   // brittle, in that it bakes in knowledge of the API endpoint.
-  const baseUrl = info.serverUrl.replace(/[/]api$/, '');
+  const baseUrl = info.apiUrl.replace(/[/]api$/, '');
   const url     = `${baseUrl}/debug/access/${documentId}/${authorId}`;
 
   return new Promise((resolve) => {
