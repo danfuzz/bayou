@@ -22,10 +22,11 @@ const UNKNOWN_CONNECTION_ID = 'id_unknown';
 export class ApiClient extends CommonBase {
   /**
    * Constructs an instance. This instance will connect to a websocket at the
-   * same domain at the path `/api`. Once this constructor returns, it is safe
-   * to call any API methods on the instance's associated `target`. If the
-   * socket isn't yet ready for traffic, the messages will get enqueued and then
-   * replayed in order once the socket becomes ready.
+   * given URL (that is, it is expected to name the API endpoint). Once this
+   * constructor returns, it is safe to call any API methods on the instance's
+   * associated `target`. If the socket isn't yet ready for traffic, the
+   * messages will get enqueued and then replayed in order once the socket
+   * becomes ready.
    *
    * @param {string} serverUrl The server endpoint, as an `http` or `https` URL.
    * @param {Codec} codec Codec instance to use. In order to function properly,

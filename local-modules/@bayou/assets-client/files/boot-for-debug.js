@@ -52,8 +52,8 @@ function BAYOU_RECOVER(info) {
   })
 }
 
-// Once the rest of the page is loaded, find the `#editor` node and arrange for
-// the main boot script to load and run.
+// Once the rest of the page is loaded, find the DOM node for the editor, and
+// arrange for the main boot script to load and run.
 window.addEventListener('load', () => {
   // This is the node that is IDed specifically in `DebugTools._handle_edit`.
   var editorNode = document.querySelector('#debugEditor');
@@ -67,7 +67,14 @@ window.addEventListener('load', () => {
   window.BAYOU_NODE = editorNode;
 
   // Add the standard bootstrap code to the page.
+
+  // Get the base URL from the window's URL by dropping `/debug` and everything
+  // after (e.g. `/debug/edit/...`). This is brittle, in that it bakes in a bit
+  // of specific knowledge about the endpoint path.
+  var windowUrl = window.location.href;
+  var baseUrl   = windowUrl.replace(/[/]debug[/].*$/, '');
+
   var elem = document.createElement('script');
-  elem.src = '/boot-from-info.js';
+  elem.src = `${baseUrl}/boot-from-info.js`;
   document.head.appendChild(elem);
 })

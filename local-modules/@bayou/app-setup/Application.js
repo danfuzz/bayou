@@ -10,7 +10,7 @@ import path from 'path';
 import ws from 'ws';
 
 import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
-import { Codecs } from '@bayou/app-common';
+import { Codecs, Urls } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
 import { Dirs, ServerEnv } from '@bayou/env-server';
@@ -140,6 +140,15 @@ export class Application extends CommonBase {
     return this._listenPort;
   }
 
+  /**
+   * {string} The loopback (local-access) base URL. This can have a different
+   * port than the default configured `listenPort` in testing scenarios. It will
+   * always match the {@link #listenPort} exposed by this instance.
+   */
+  get loopbackUrl() {
+    return `http://localhost:${this.listenPort}`;
+  }
+
   /** {Metrics} The associated metrics collector / reporter. */
   get metrics() {
     return this._metrics;
@@ -237,8 +246,11 @@ export class Application extends CommonBase {
       next();
     });
 
-    // Use the `@bayou/api-server` module to handle POST requests at both `/api`
-    // and `/api/`.
+    // Use the `@bayou/api-server` module to handle POST requests at the API
+    // endpoint, both with and without a trailing slash.
+
+    const apiPath1 = `/${Urls.API_PATH}`;
+    const apiPath2 = `/${Urls.API_PATH}/`;
 
     const postHandler = (req, res) => {
       try {
@@ -250,19 +262,19 @@ export class Application extends CommonBase {
       }
     };
 
-    app.post('/api', postHandler);
-    app.post('/api/', postHandler);
+    app.post(apiPath1, postHandler);
+    app.post(apiPath2, postHandler);
 
-    // Likewise, handle `/api` and `/api/` for websocket requests. **Note:**
-    // The following (specifically, constructing `ws.Server` with the `server`
-    // option) causes the websocket server instance to handle a websocket
-    // request before Express has an opportunity to dispatch at all. This means
-    // that no Express router logic will ever be run on a connection that starts
-    // out with a websocket handshake.
+    // Likewise, handle the same API endpoint URLs for websocket requests.
+    // **Note:** The following (specifically, constructing `ws.Server` with the
+    // `server` option) causes the websocket server instance to handle a
+    // websocket request before Express has an opportunity to dispatch at all.
+    // This means that no Express router logic will ever be run on a connection
+    // that starts out with a websocket handshake.
 
     const wsVerify = (info, cb = null) => {
       const url = info.req.url;
-      const ok  = (url === '/api') || (url === '/api/');
+      const ok  = (url === apiPath1) || (url === apiPath2);
 
       // **Note:** The `ws` module docs indicate that it _sometimes_ calls the
       // verifier function with a `cb` argument. If it does, and if the main

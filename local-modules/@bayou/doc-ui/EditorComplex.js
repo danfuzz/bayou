@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Urls } from '@bayou/app-common';
 import { Editor } from '@bayou/config-client';
 import { BodyClient, DocSession } from '@bayou/doc-client';
 import { SessionInfo } from '@bayou/doc-common';
@@ -227,7 +228,7 @@ export class EditorComplex extends CommonBase {
    *   authorOverlayNode]`, for immediate consumption by the constructor.
    */
   async _domSetup(topNode, serverUrl) {
-    const baseUrl = new URL(serverUrl).origin;
+    const baseUrl = Urls.baseUrlFromApiUrl(serverUrl);
 
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
