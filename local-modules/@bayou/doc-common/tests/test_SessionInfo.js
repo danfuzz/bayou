@@ -61,6 +61,14 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
+  describe('.apiUrl', () => {
+    it('is the constructed value', () => {
+      const url    = 'https://milk.com:1234/florp';
+      const result = new SessionInfo(url, 'token', 'x');
+      assert.strictEqual(result.apiUrl, url);
+    });
+  });
+
   describe('.authorToken', () => {
     it('is the constructed value if constructed from a string', () => {
       const token  = 'florp';
@@ -84,7 +92,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.serverUrl', () => {
-    it('is the constructed value', () => {
+    it('is the constructed `apiUrl` value', () => {
       const url    = 'https://milk.com:1234/florp';
       const result = new SessionInfo(url, 'token', 'x');
       assert.strictEqual(result.serverUrl, url);
@@ -105,11 +113,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.logInfo', () => {
-    it('reflects the constructed `serverUrl`', () => {
+    it('reflects the constructed `apiUrl`', () => {
       const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
       const info = si.logInfo;
 
-      assert.strictEqual(info.serverUrl, si.serverUrl);
+      assert.strictEqual(info.apiUrl, si.apiUrl);
     });
 
     it('reflects the constructed `documentId`', () => {
@@ -187,11 +195,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
 
       function test(token) {
         const result1 = orig1.withAuthorToken(token);
-        const expect1 = new SessionInfo(orig1.serverUrl, token, orig1.documentId, orig1.caretId);
+        const expect1 = new SessionInfo(orig1.apiUrl, token, orig1.documentId, orig1.caretId);
         assert.deepEqual(result1, expect1);
 
         const result2 = orig2.withAuthorToken(token);
-        const expect2 = new SessionInfo(orig2.serverUrl, token, orig2.documentId, orig2.caretId);
+        const expect2 = new SessionInfo(orig2.apiUrl, token, orig2.documentId, orig2.caretId);
         assert.deepEqual(result2, expect2);
       }
 
@@ -205,11 +213,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
 
       function test(token) {
         const result1 = orig1.withAuthorToken(token);
-        const expect1 = new SessionInfo(orig1.serverUrl, token, orig1.documentId, orig1.caretId);
+        const expect1 = new SessionInfo(orig1.apiUrl, token, orig1.documentId, orig1.caretId);
         assert.deepEqual(result1, expect1);
 
         const result2 = orig2.withAuthorToken(token);
-        const expect2 = new SessionInfo(orig2.serverUrl, token, orig2.documentId, orig2.caretId);
+        const expect2 = new SessionInfo(orig2.apiUrl, token, orig2.documentId, orig2.caretId);
         assert.deepEqual(result2, expect2);
       }
 
@@ -238,11 +246,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
 
       function test(c) {
         const result1 = orig1.withCaretId(c);
-        const expect1 = new SessionInfo(orig1.serverUrl, orig1.authorToken, orig1.documentId, c);
+        const expect1 = new SessionInfo(orig1.apiUrl, orig1.authorToken, orig1.documentId, c);
         assert.deepEqual(result1, expect1);
 
         const result2 = orig2.withCaretId(c);
-        const expect2 = new SessionInfo(orig2.serverUrl, orig2.authorToken, orig2.documentId, c);
+        const expect2 = new SessionInfo(orig2.apiUrl, orig2.authorToken, orig2.documentId, c);
         assert.deepEqual(result2, expect2);
       }
 
@@ -268,7 +276,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
     it('returns a new instance with `caretId === null`', () => {
       function test(orig) {
         const result = orig.withoutCaretId();
-        const expect = new SessionInfo(orig.serverUrl, orig.authorToken, orig.documentId);
+        const expect = new SessionInfo(orig.apiUrl, orig.authorToken, orig.documentId);
 
         assert.isNull(result.caretId);
         assert.deepEqual(result, expect);

@@ -11,7 +11,7 @@ import { FileOp } from './FileOp';
 import { FileSnapshot } from './FileSnapshot';
 
 /**
- * Utilities for this module.
+ * Codec setup for this module.
  */
 export class Codecs extends UtilityClass {
   /**

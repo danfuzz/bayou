@@ -11,7 +11,7 @@ import { MockOp } from './MockOp';
 import { MockSnapshot } from './MockSnapshot';
 
 /**
- * Utilities for this module.
+ * Codec setup for this module.
  */
 export class Codecs extends UtilityClass {
   /**

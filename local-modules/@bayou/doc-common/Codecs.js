@@ -22,7 +22,7 @@ import { PropertySnapshot } from './PropertySnapshot';
 import { SessionInfo } from './SessionInfo';
 
 /**
- * Utilities for this module.
+ * Codec setup for this module.
  */
 export class Codecs extends UtilityClass {
   /**

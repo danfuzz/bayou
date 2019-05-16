@@ -35,12 +35,14 @@ export class Editor extends UtilityClass {
    *
    * @param {object} window Window which will ultimately contain one or more
    *   editors.
-   * @param {string} serverUrl URL at which to contact the server.
+   * @param {string} apiUrl URL at which to contact the server. This endpoint is
+   *   expected to respond using the API protocol as defined in the `api-*`
+   *   modules.
    * @returns {Promise|undefined} A promise whose resolution indicates the end
    *   of hook activity, or `undefined` if there is nothing to wait for.
    */
-  static aboutToRun(window, serverUrl) {
-    return use.Editor.aboutToRun(window, serverUrl);
+  static aboutToRun(window, apiUrl) {
+    return use.Editor.aboutToRun(window, apiUrl);
   }
 
   /**

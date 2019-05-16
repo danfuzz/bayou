@@ -8,7 +8,7 @@ import { UtilityClass } from '@bayou/util-common';
 import { Timestamp } from './Timestamp';
 
 /**
- * Utilities for this module.
+ * Codec setup for this module.
  */
 export class Codecs extends UtilityClass {
   /**

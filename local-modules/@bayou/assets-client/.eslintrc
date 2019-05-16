@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "files": ["files/**/*.js"],
+      "parserOptions": {
+        "sourceType": "script",
+        "ecmaVersion": "2017"
+      },
+      "globals": {
+        "document": "readonly",
+        "window": "readonly",
+        "XMLHttpRequest": "readonly"
+      }
+    }
+  ]
+}

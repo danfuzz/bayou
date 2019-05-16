@@ -11,7 +11,7 @@ import { Response } from './Response';
 import { Remote } from './Remote';
 
 /**
- * Utilities for this module.
+ * Codec setup for this module.
  */
 export class Codecs extends UtilityClass {
   /**

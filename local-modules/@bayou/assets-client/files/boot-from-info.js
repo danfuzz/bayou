@@ -16,10 +16,6 @@
 // See {@link @bayou/top-client/TopControl} for more details about these
 // parameters.
 
-// Disable Eslint, because this file is delivered as-is and has to be fairly
-// conservative.
-/* eslint-disable */
-
 // We wrap everything in an immediately-executed function so as to avoid
 // polluting the global namespace.
 (function () {
@@ -35,23 +31,23 @@
   // parsing needed to get the URL and then head on our merry way. See
   // {@link @bayou/doc-common/SessionInfo}, the encoded form in particular, if
   // you want to understand what's going on.
-  var info = JSON.parse(window.BAYOU_INFO);
-  var serverUrl;
+  const info = JSON.parse(window.BAYOU_INFO);
+  let   apiUrl;
 
   if (info.SessionInfo) {
-    serverUrl = info.SessionInfo[0];
+    apiUrl = info.SessionInfo[0];
   } else {
     throw new Error('Unrecognized format for `BAYOU_INFO`.');
   }
 
   // Get the base URL from the server URL by dropping the final `/api`. This is
   // brittle, in that it bakes in knowledge of the API endpoint.
-  var baseUrl = serverUrl.replace(/[/]api$/, '');
+  const baseUrl = apiUrl.replace(/[/]api$/, '');
 
   // Add the main JavaScript bundle to the page. Once loaded, this continues
   // the boot process. You can find its main entrypoint in
   // {@link @bayou/main-client} listed as the `main` in that module's manifest.
-  var elem = document.createElement('script');
+  const elem = document.createElement('script');
   elem.src = `${baseUrl}/static/js/main.bundle.js`;
   document.head.appendChild(elem);
 }());

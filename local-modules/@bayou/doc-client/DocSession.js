@@ -278,7 +278,7 @@ export class DocSession extends CommonBase {
       return this._apiClient;
     }
 
-    const url = this._sessionInfo.serverUrl;
+    const url = this._sessionInfo.apiUrl;
 
     this._eventSource.emit.opening();
     this._log.event.apiAboutToOpen(url);

@@ -77,8 +77,8 @@ export class TopControl extends CommonBase {
   async start() {
     // Let the outer app do its setup.
 
-    const serverUrl = this._sessionInfo.serverUrl;
-    await Editor.aboutToRun(this._window, serverUrl);
+    const apiUrl = this._sessionInfo.apiUrl;
+    await Editor.aboutToRun(this._window, apiUrl);
 
     // Arrange for the rest of initialization to happen once the initial page
     // contents are ready (from the browser's perspective).
