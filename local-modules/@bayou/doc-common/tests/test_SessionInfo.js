@@ -105,11 +105,11 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.logInfo', () => {
-    it('reflects the constructed `serverUrl`', () => {
+    it('reflects the constructed `apiUrl`', () => {
       const si   = new SessionInfo(SERVER_URL, 'token', 'doc');
       const info = si.logInfo;
 
-      assert.strictEqual(info.serverUrl, si.serverUrl);
+      assert.strictEqual(info.apiUrl, si.apiUrl);
     });
 
     it('reflects the constructed `documentId`', () => {
