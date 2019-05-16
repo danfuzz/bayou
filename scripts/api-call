@@ -29,7 +29,7 @@ init-prog
 argError=0
 
 # URL to contact.
-serverUrl='http://localhost:8080/api'
+apiUrl='http://localhost:8080/api'
 
 # Need help?
 showHelp=0
@@ -41,7 +41,7 @@ while true; do
             break
             ;;
         --url=?*)
-            serverUrl="${1#*=}"
+            apiUrl="${1#*=}"
             ;;
         --) # End of all options.
             shift
@@ -110,7 +110,7 @@ response="$(curl \
     --silent \
     --header 'Content-Type: application/json; charset=utf-8' \
     --data-raw "${payload}" \
-    "${serverUrl}"
+    "${apiUrl}"
 )"
 
 if [[ $? != 0 ]]; then
