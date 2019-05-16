@@ -86,11 +86,11 @@ export class EditorComplex extends CommonBase {
     (async () => {
       log.event.starting();
 
-      const serverUrl = info.serverUrl;
+      const apiUrl = info.serverUrl;
 
       // Do all of the DOM setup for the instance.
       const [headerNode_unused, titleNode, bodyNode, authorOverlayNode] =
-        await this._domSetup(topNode, serverUrl);
+        await this._domSetup(topNode, apiUrl);
 
       // Construct the `QuillProm` instances.
       const [titleQuill, bodyQuill] = this._quillSetup(titleNode, bodyNode);
@@ -223,12 +223,12 @@ export class EditorComplex extends CommonBase {
    * ready to have Quill and the author overlay attached to it.
    *
    * @param {Element} topNode The top DOM node for the complex.
-   * @param {string} serverUrl URL used to contact the server.
+   * @param {string} apiUrl URL used to contact the server.
    * @returns {array<Element>} Array of `[headerNode, titleNode, bodyNode,
    *   authorOverlayNode]`, for immediate consumption by the constructor.
    */
-  async _domSetup(topNode, serverUrl) {
-    const baseUrl = Urls.baseUrlFromApiUrl(serverUrl);
+  async _domSetup(topNode, apiUrl) {
+    const baseUrl = Urls.baseUrlFromApiUrl(apiUrl);
 
     // Validate the top node, and give it the right CSS style.
     if (topNode.nodeName !== 'DIV') {
