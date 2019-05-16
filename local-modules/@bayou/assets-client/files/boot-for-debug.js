@@ -7,21 +7,19 @@
 // and most likely because the developer restarted their local server). Beyond
 // that, it _also_ kicks off loading of the regular bootstrap code.
 
-// Inform ESLint about the special globals used by this file.
-/* global DEBUG_AUTHOR_ID DEBUG_DOCUMENT_ID */
-
 /**
  * This global function is what ultimately gets called to attempt recovery. In
  * this case, we rely on the `/access/*` debugging endpoints to generate new
  * access info. If that's successful, we report it back up through the layers.
  *
- * @param {object} info Information about how to connect to the session.
- * @returns {Promise<object>} Replacement session info, to use when next
- *   attempting to connect.
+ * @param {SessionInfo} info Information about how to connect to the session.
+ * @returns {Promise<object>} Promise for replacement session info, in the form
+ *   of a codec-encoded `SessionInfo` object, to use when next attempting to
+ *   connect.
  */
 window.BAYOU_RECOVER = function BAYOU_RECOVER(info) {
-  const documentId = DEBUG_DOCUMENT_ID;
-  const authorId   = DEBUG_AUTHOR_ID;
+  const documentId = window.DEBUG_DOCUMENT_ID;
+  const authorId   = window.DEBUG_AUTHOR_ID;
 
   // Get the base URL from the server URL by dropping the final `/api`. This is
   // brittle, in that it bakes in knowledge of the API endpoint.
