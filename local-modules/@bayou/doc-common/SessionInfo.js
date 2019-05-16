@@ -15,8 +15,9 @@ export class SessionInfo extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {string} serverUrl URL of the server to connect to in order to use
-   *   the session.
+   * @param {string} apiUrl URL of the server to connect to in order to use
+   *   the session. This endpoint is expected to respond using the API protocol
+   *   as defined in the `api-*` modules.
    * @param {string|BearerToken} authorToken Token which identifies the author
    *   (user) under whose authority the session is to be run.
    * @param {string} documentId ID of the document to be edited in the session.
@@ -24,7 +25,7 @@ export class SessionInfo extends CommonBase {
    *   with the session. If `null`, a new caret will ultimately be created for
    *   the session.
    */
-  constructor(serverUrl, authorToken, documentId, caretId = null) {
+  constructor(apiUrl, authorToken, documentId, caretId = null) {
     super();
 
     // **TODO:** Consider performing more validation of the arguments. If
@@ -32,7 +33,7 @@ export class SessionInfo extends CommonBase {
     // but arguably it's better to know sooner.
 
     /** {string} URL of the server to connect to in order to use the session. */
-    this._serverUrl = TString.urlAbsolute(serverUrl);
+    this._apiUrl = TString.urlAbsolute(apiUrl);
 
     /**
      * {string} Token which identifies the author (user) under whose authority
@@ -50,6 +51,15 @@ export class SessionInfo extends CommonBase {
     this._caretId = TString.orNull(caretId);
 
     Object.freeze(this);
+  }
+
+  /**
+   * {string} URL of the server to connect to in order to use the session. This
+   * endpoint is expected to respond using the API protocol as defined in the
+   * `api-*` modules.
+   */
+  get apiUrl() {
+    return this._apiUrl;
   }
 
   /**
@@ -74,11 +84,14 @@ export class SessionInfo extends CommonBase {
   }
 
   /**
-   * {string} Origin-only URL of the server to connect to in order to use the
-   * session.
+   * {string} URL of the server to connect to in order to use the session.
+   * **TODO:** Remove this property, once we are sure there are no more deployed
+   * references to it.
+   *
+   * @deprecated Replaced by {@link #apiUrl}.
    */
   get serverUrl() {
-    return this._serverUrl;
+    return this._apiUrl;
   }
 
   /**
@@ -94,7 +107,7 @@ export class SessionInfo extends CommonBase {
       : BearerToken.redactString(token);
 
     const result = {
-      serverUrl:   this._serverUrl,
+      apiUrl:      this._apiUrl,
       authorToken: redactedToken,
       documentId:  this._documentId
     };
@@ -128,7 +141,7 @@ export class SessionInfo extends CommonBase {
     const authorToken = (origToken instanceof BearerToken) ? origToken.secretToken : origToken;
     const maybeCaret  = (this._caretId === null) ? [] : [this._caretId];
 
-    return [this._serverUrl, authorToken, this._documentId, ...maybeCaret];
+    return [this._apiUrl, authorToken, this._documentId, ...maybeCaret];
   }
 
   /**
@@ -139,7 +152,7 @@ export class SessionInfo extends CommonBase {
    * @returns {SessionInfo} An appropriately-constructed instance.
    */
   withAuthorToken(authorToken) {
-    return new SessionInfo(this._serverUrl, authorToken, this._documentId, this._caretId);
+    return new SessionInfo(this._apiUrl, authorToken, this._documentId, this._caretId);
   }
 
   /**
@@ -152,7 +165,7 @@ export class SessionInfo extends CommonBase {
    */
   withCaretId(caretId) {
     TString.check(caretId);
-    return new SessionInfo(this._serverUrl, this._authorToken, this._documentId, caretId);
+    return new SessionInfo(this._apiUrl, this._authorToken, this._documentId, caretId);
   }
 
   /**
@@ -161,6 +174,6 @@ export class SessionInfo extends CommonBase {
    * @returns {SessionInfo} An appropriately-constructed instance.
    */
   withoutCaretId() {
-    return new SessionInfo(this._serverUrl, this._authorToken, this._documentId);
+    return new SessionInfo(this._apiUrl, this._authorToken, this._documentId);
   }
 }
