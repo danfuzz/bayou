@@ -61,6 +61,14 @@ describe('@bayou/doc-common/SessionInfo', () => {
     });
   });
 
+  describe('.apiUrl', () => {
+    it('is the constructed value', () => {
+      const url    = 'https://milk.com:1234/florp';
+      const result = new SessionInfo(url, 'token', 'x');
+      assert.strictEqual(result.apiUrl, url);
+    });
+  });
+
   describe('.authorToken', () => {
     it('is the constructed value if constructed from a string', () => {
       const token  = 'florp';
@@ -84,7 +92,7 @@ describe('@bayou/doc-common/SessionInfo', () => {
   });
 
   describe('.serverUrl', () => {
-    it('is the constructed value', () => {
+    it('is the constructed `apiUrl` value', () => {
       const url    = 'https://milk.com:1234/florp';
       const result = new SessionInfo(url, 'token', 'x');
       assert.strictEqual(result.serverUrl, url);

@@ -86,7 +86,10 @@ export class SessionInfo extends CommonBase {
   /**
    * {string} URL of the server to connect to in order to use the session.
    * **TODO:** Remove this property, once we are sure there are no more deployed
-   * references to it.
+   * references to it. More specifically, this can only be removed after a
+   * version bump and module republish. (That is, as of this writing, the next
+   * module republish needs to have this property, but the one after _that_ does
+   * not.)
    *
    * @deprecated Replaced by {@link #apiUrl}.
    */
