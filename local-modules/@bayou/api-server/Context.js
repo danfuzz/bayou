@@ -2,8 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { Message, Remote } from '@bayou/api-common';
-import { TString } from '@bayou/typecheck';
+import { BearerToken, Message, Remote } from '@bayou/api-common';
+import { TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Random } from '@bayou/util-common';
 
 import { BaseConnection } from './BaseConnection';
@@ -214,6 +214,21 @@ export class Context extends CommonBase {
   }
 
   /**
+   * Helper for {@link #_getTargetFromToken}, which caches the cookies that were
+   * recently used to validate the given token.
+   *
+   * @param {BearerToken} token The token in question.
+   * @param {object} cookies The cookies that were required (`{}` if no cookies
+   *   were required).
+   */
+  _cacheCookies(token, cookies) {
+    BearerToken.check(token);
+    TObject.plain(cookies);
+
+    this._cookieMap.set(token, cookies);
+  }
+
+  /**
    * Helper for {@link #_getTargetFromToken}, which confirms that the
    * connection's current cookies are a match for the cookies that were used
    * when the given token was originally authorized. This method is a no-op if
@@ -236,10 +251,11 @@ export class Context extends CommonBase {
   _cachedCookiesMatch(token) {
     const cookies = this._cookieMap.get(token);
 
-    if (!cookies) {
-      // No cookies were previously required. So, there's no need for further
-      // checking.
-      return true;
+    if (cookies === undefined) {
+      // No record of the token. This is indicative of a bug, but rather than
+      // just let it slide -- which could cascade into a security issue -- throw
+      // an error.
+      throw Errors.badUse(`Expected but did not find cookie record for token \`${token.safeString}\`.`);
     }
 
     for (const [name, origCookie] of Object.entries(cookies)) {
@@ -327,9 +343,13 @@ export class Context extends CommonBase {
     // target, check cookies if necessary, and if everything looks good, cache
     // the target and associated data for lighterweight subsequent use.
 
-    // **TODO:** `null` below should actually be an object with all the right
-    // cookies, if any.
-    const targetObject = await tokenAuth.getAuthorizedTarget(token, null);
+    const cookies = await this._getCookiesForToken(token);
+
+    if (cookies === null) {
+      throw this._targetError(tokenString);
+    }
+
+    const targetObject = await tokenAuth.getAuthorizedTarget(token, cookies);
 
     if (targetObject === null) {
       // The `tokenAuth` told us that `token` didn't actually grant any
@@ -340,7 +360,48 @@ export class Context extends CommonBase {
     const target = new Target(token, targetObject);
 
     this.addTarget(target);
+    this._cacheCookies(token, cookies);
+
     return target;
+  }
+
+  /**
+   * Helper for {@link #_getTargetFromToken} which figures out what cookies are
+   * required for the given token, and fetches them from the connection.
+   *
+   * @param {BearerToken} token Token whose cookies are to be retrieved.
+   * @returns {object|null} Plain object with all the required cookies, or
+   *   `null` if one or more cookies were unavailable.
+   */
+  async _getCookiesForToken(token) {
+    const tokenAuth   = this.tokenAuthorizer;
+    const cookieNames = await tokenAuth.cookieNamesForToken(token);
+    const cookies     = {};
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.needCookies(token.safeString, cookieNames);
+    }
+
+    for (const name of cookieNames) {
+      const value = this._connection.getCookie(name);
+
+      if (value === null) {
+        this.log.event.missingCookie(token.safeString, name);
+        return null;
+      }
+
+      cookies[name] = value;
+    }
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.gotCookies(token.safeString);
+    }
+
+    return Object.freeze(cookies);
   }
 
   /**
