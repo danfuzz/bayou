@@ -327,9 +327,33 @@ export class Context extends CommonBase {
     // target, check cookies if necessary, and if everything looks good, cache
     // the target and associated data for lighterweight subsequent use.
 
-    // **TODO:** `null` below should actually be an object with all the right
-    // cookies, if any.
-    const targetObject = await tokenAuth.getAuthorizedTarget(token, null);
+    const cookieNames = tokenAuth.cookieNamesForToken(token);
+    const cookies     = {};
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.needCookies(token.safeString, cookieNames);
+    }
+
+    for (const name of cookieNames) {
+      const value = this._connection.getCookie(name);
+
+      if (value === null) {
+        this.log.event.missingCookie(token.safeString, name);
+        throw this._targetError(tokenString);
+      }
+
+      cookies[name] = value;
+    }
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.gotCookies(token.safeString);
+    }
+
+    const targetObject = await tokenAuth.getAuthorizedTarget(token, cookies);
 
     if (targetObject === null) {
       // The `tokenAuth` told us that `token` didn't actually grant any
