@@ -45,7 +45,7 @@ const BROWSER_VERSIONS = [
  */
 const BABEL_PRESET_ENV = require.resolve('babel-preset-env');
 
-/** {object<string,object>} Map from configuration names to Babel configs. */
+/** {object<string, object>} Map from configuration names to Babel configs. */
 const BABEL_CONFIGS = {
   'client': Object.freeze({
     sourceMaps: 'inline',

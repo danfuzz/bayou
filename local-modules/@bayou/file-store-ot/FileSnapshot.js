@@ -182,7 +182,7 @@ export class FileSnapshot extends BaseSnapshot {
    * including the prefix itself if it is bound.
    *
    * @param {string} prefix Storage path prefix.
-   * @returns {Map<string,FrozenBuffer>} Map from full storage paths to their
+   * @returns {Map<string, FrozenBuffer>} Map from full storage paths to their
    *   respective stored values, for all paths at or under the indicated
    *   `prefix` which are bound.
    */
@@ -216,7 +216,7 @@ export class FileSnapshot extends BaseSnapshot {
    * @param {Int} startInclusive Start of the numeric range. Must be `>= 0`.
    * @param {Int} endExclusive End of the numeric range. Must be
    *   `> startInclusive`.
-   * @returns {Map<string,FrozenBuffer>} Map from full storage paths to their
+   * @returns {Map<string, FrozenBuffer>} Map from full storage paths to their
    *   respective stored values, for all paths in the indicated range that are
    *   bound.
    */

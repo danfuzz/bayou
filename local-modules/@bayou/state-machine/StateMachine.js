@@ -121,7 +121,7 @@ export class StateMachine extends CommonBase {
     this._eventValidators = this._makeValidatorMap();
 
     /**
-     * {object<string,object<string, function>>} Two-level map from (state,
+     * {object<string, object<string, function>>} Two-level map from (state,
      * event) pairs to their respective handler methods.
      */
     this._handlers = this._makeHandlerMap();
@@ -337,7 +337,7 @@ export class StateMachine extends CommonBase {
    * Constructs a two-level map from each state-event pair to the method which
    * handles that pair.
    *
-   * @returns {object<string,object<string,function>>} The handler map.
+   * @returns {object<string, object<string, function>>} The handler map.
    */
   _makeHandlerMap() {
     const result       = {}; // Built-up result.

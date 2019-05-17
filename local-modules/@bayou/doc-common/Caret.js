@@ -135,7 +135,7 @@ export class Caret extends CommonBase {
     /** {string} The caret ID. */
     this._id = id;
 
-    /** {Map<string,*>} Map of all of the caret fields, from name to value. */
+    /** {Map<string, *>} Map of all of the caret fields, from name to value. */
     this._fields = newFields;
 
     for (const [k, v] of Object.entries(fields)) {

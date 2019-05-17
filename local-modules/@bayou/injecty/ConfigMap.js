@@ -15,7 +15,7 @@ export class ConfigMap extends CommonBase {
   constructor() {
     super();
 
-    /** {Map<string,*>} All injected configurations. */
+    /** {Map<string, *>} All injected configurations. */
     this._items = new Map();
 
     Object.freeze(this);

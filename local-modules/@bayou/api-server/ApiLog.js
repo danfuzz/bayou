@@ -31,7 +31,7 @@ export class ApiLog extends CommonBase {
     this._shouldRedact = TBoolean.check(shouldRedact);
 
     /**
-     * {Map<Message,object>} Map from messages that haven't yet been completely
+     * {Map<Message, object>} Map from messages that haven't yet been completely
      * processed to the initial details of those messages, each in the form of
      * an ad-hoc plain object.
      */
