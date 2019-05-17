@@ -71,10 +71,10 @@ export class ApiClient extends CommonBase {
     this._nextId = 0;
 
     /**
-     * {object<Int,{message, resolve, reject}>} Map from message IDs to response
-     * callbacks and original message info (the latter for debugging). Each
-     * element is an object that maps `resolve` and `reject` to functions that
-     * obey the usual promise contract for functions of those names, and
+     * {object<Int, {message, resolve, reject}>} Map from message IDs to
+     * response callbacks and original message info (the latter for debugging).
+     * Each element is an object that maps `resolve` and `reject` to functions
+     * that obey the usual promise contract for functions of those names, and
      * `message` to the originally-sent {@link Message}. Initialized and reset
      * in {@link #_resetConnection}.
      */

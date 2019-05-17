@@ -117,7 +117,9 @@ export class StateMachine extends CommonBase {
     /** {Int} Count of events handled. Used for logging. */
     this._eventCount = 0;
 
-    /** {Map<string,function>} Map of event names to their validator methods. */
+    /**
+     * {Map<string, function>} Map of event names to their validator methods.
+     */
     this._eventValidators = this._makeValidatorMap();
 
     /**

@@ -34,8 +34,8 @@ export class RootAccess extends CommonBase {
     super();
 
     /**
-     * {Map<string,BearerToken>} Map from author IDs to corresponding tokens, as
-     * registered by {@link #useToken}.
+     * {Map<string, BearerToken>} Map from author IDs to corresponding tokens,
+     * as registered by {@link #useToken}.
      */
     this._tokenMap = new Map();
 
