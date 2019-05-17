@@ -327,7 +327,7 @@ export class Context extends CommonBase {
     // target, check cookies if necessary, and if everything looks good, cache
     // the target and associated data for lighterweight subsequent use.
 
-    const cookieNames = tokenAuth.cookieNamesForToken(token);
+    const cookieNames = await tokenAuth.cookieNamesForToken(token);
     const cookies     = {};
 
     // **TODO:** Remove this log spew once we're satisfied that cookie-ish
