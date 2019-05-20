@@ -61,7 +61,7 @@ export class RequestLogger extends CommonBase {
       throw Errors.badUse(`Already aggregated: ${path}`);
     }
 
-    this._pathAggregateMap.set(path, new RequestAggregateData(this._log));
+    this._pathAggregateMap.set(path, new RequestAggregateData(path, this._log));
   }
 
   /**

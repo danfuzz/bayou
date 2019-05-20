@@ -19,10 +19,14 @@ export class RequestAggregateData extends CommonBase {
   /**
    * Constructs an instance.
    *
+   * @param {string} path Path which this instance is all about.
    * @param {Logger} log Logger to use.
    */
-  constructor(log) {
+  constructor(path, log) {
     super();
+
+    /** {String} path Path which this instance is all about. */
+    this._path = TString.nonEmpty(path);
 
     /** {Logger} Logger to use. */
     this._log = Logger.check(log);
@@ -68,7 +72,7 @@ export class RequestAggregateData extends CommonBase {
     }
 
     const ips = RequestAggregateData._ipsForLogging(allIps);
-    this._log.event.httpAggregate({ totalRequests, statusCounts, ips });
+    this._log.event.httpAggregate(this._path, { totalRequests, statusCounts, ips });
 
     this._ipMap.clear();
   }
