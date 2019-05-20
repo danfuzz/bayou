@@ -72,6 +72,7 @@ export class Monitor extends CommonBase {
    */
   _addRoutes() {
     const app             = this._app;
+    const requestLogger   = this._requestLogger;
     const mainApplication = this._mainApplication;
 
     // Logging.
@@ -91,6 +92,7 @@ export class Monitor extends CommonBase {
 
       ServerUtil.sendPlainTextResponse(res, text, status);
     });
+    requestLogger.aggregate('/health');
 
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {
@@ -104,6 +106,7 @@ export class Monitor extends CommonBase {
     app.get('/metrics', async (req_unused, res) => {
       ServerUtil.sendTextResponse(res, register.metrics(), register.contentType, 200);
     });
+    requestLogger.aggregate('/metrics');
 
     const varInfo = mainApplication.varInfo;
     app.get('/var', async (req_unused, res) => {
