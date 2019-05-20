@@ -270,6 +270,45 @@ export class Context extends CommonBase {
   }
 
   /**
+   * Helper for {@link #_getTargetFromToken} which figures out what cookies are
+   * required for the given token, and fetches them from the connection.
+   *
+   * @param {BearerToken} token Token whose cookies are to be retrieved.
+   * @returns {object|null} Plain object with all the required cookies, or
+   *   `null` if one or more cookies were unavailable.
+   */
+  async _getCookiesForToken(token) {
+    const tokenAuth   = this.tokenAuthorizer;
+    const cookieNames = await tokenAuth.cookieNamesForToken(token);
+    const cookies     = {};
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.needCookies(token.safeString, cookieNames);
+    }
+
+    for (const name of cookieNames) {
+      const value = this._connection.getCookie(name);
+
+      if (value === null) {
+        this.log.event.missingCookie(token.safeString, name);
+        return null;
+      }
+
+      cookies[name] = value;
+    }
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.gotCookies(token.safeString);
+    }
+
+    return Object.freeze(cookies);
+  }
+
+  /**
    * Gets the target associated with the indicated ID, or `null` if the
    * so-identified target does not exist. This only checks this instance's
    * {@link #_targetMap}; it does _not_ try to do token authorization.
@@ -363,45 +402,6 @@ export class Context extends CommonBase {
     this._cacheCookies(token, cookies);
 
     return target;
-  }
-
-  /**
-   * Helper for {@link #_getTargetFromToken} which figures out what cookies are
-   * required for the given token, and fetches them from the connection.
-   *
-   * @param {BearerToken} token Token whose cookies are to be retrieved.
-   * @returns {object|null} Plain object with all the required cookies, or
-   *   `null` if one or more cookies were unavailable.
-   */
-  async _getCookiesForToken(token) {
-    const tokenAuth   = this.tokenAuthorizer;
-    const cookieNames = await tokenAuth.cookieNamesForToken(token);
-    const cookies     = {};
-
-    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
-    // things are working properly.
-    if (cookieNames.length !== 0) {
-      this.log.event.needCookies(token.safeString, cookieNames);
-    }
-
-    for (const name of cookieNames) {
-      const value = this._connection.getCookie(name);
-
-      if (value === null) {
-        this.log.event.missingCookie(token.safeString, name);
-        return null;
-      }
-
-      cookies[name] = value;
-    }
-
-    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
-    // things are working properly.
-    if (cookieNames.length !== 0) {
-      this.log.event.gotCookies(token.safeString);
-    }
-
-    return Object.freeze(cookies);
   }
 
   /**
