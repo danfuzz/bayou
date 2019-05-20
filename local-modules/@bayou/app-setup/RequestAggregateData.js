@@ -17,7 +17,7 @@ const MAX_UNIQUE_IPS_PER_LOG = 20;
  * {Int} Aggregation interval, in msec. The system will only log an event for
  * any given aggregated path this often.
  */
-const AGGREGATION_INTERVAL_MSEC = 10000; //60 * 1000; // Once per minute.
+const AGGREGATION_INTERVAL_MSEC = 60 * 1000; // Once per minute.
 
 /**
  * Mutable holder for aggregated log data for requests to a particular path.
