@@ -6,7 +6,10 @@ import { fromPairs } from 'lodash';
 import { URL } from 'url';
 
 import { Logger, RedactUtil } from '@bayou/see-all';
-import { CommonBase, Random } from '@bayou/util-common';
+import { TString } from '@bayou/typecheck';
+import { CommonBase, Errors, Random } from '@bayou/util-common';
+
+import { RequestAggregateData } from './RequestAggregateData';
 
 /**
  * HTTP request logging functions. This includes logging to an HTTP `access.log`
@@ -27,6 +30,13 @@ export class RequestLogger extends CommonBase {
     /** {Logger} Logger to use. */
     this._log = Logger.check(log);
 
+    /**
+     * {Map<string, RequestAggregateData>} Map from request paths the
+     * corresponding aggregate data for the path. Keys are bound by
+     * {@link #aggregate}.
+     */
+    this._pathAggregateMap = new Map();
+
     Object.freeze(this);
   }
 
@@ -36,6 +46,22 @@ export class RequestLogger extends CommonBase {
    */
   get expressMiddleware() {
     return this._logExpressRequest.bind(this);
+  }
+
+  /**
+   * Adds a path to the set which are reported only in aggregate (instead of
+   * per request).
+   *
+   * @param {string} path Path to aggregate.
+   */
+  aggregate(path) {
+    TString.nonEmpty(path);
+
+    if (this._pathAggregateMap.has(path)) {
+      throw Errors.badUse(`Already aggregated: ${path}`);
+    }
+
+    this._pathAggregateMap.set(path, new RequestAggregateData(this._log));
   }
 
   /**
