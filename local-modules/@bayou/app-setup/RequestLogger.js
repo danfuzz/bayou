@@ -94,6 +94,34 @@ export class RequestLogger extends CommonBase {
   }
 
   /**
+   * Logs a request as part of an aggregate, if it is in fact supposed to be
+   * aggregated.
+   *
+   * @param {object} req The HTTP request.
+   * @param {object} res The HTTP response.
+   * @returns {boolean} Whether (`true`) or not (`false`) `req` was handled as
+   *   an aggregate.
+   */
+  _logAggregateIfAppropriate(req, res) {
+    const path      = req.originalUrl || req.url;
+    const aggregate = this._pathAggregateMap.get(path);
+
+    if (aggregate === undefined) {
+      return false;
+    }
+
+    // We are aggregating the path of this request. Tell the aggregate what's
+    // what after the response is issued (because we need to know the status
+    // code).
+
+    res.on('finish', () => {
+      aggregate.requestMade(req.socket.remoteAddress, res.statusCode);
+    });
+
+    return true;
+  }
+
+  /**
    * Standard Express middleware implementation, underlying the property
    * {@link #expressMiddleware}.
    *
@@ -103,16 +131,18 @@ export class RequestLogger extends CommonBase {
    *   dispatch.
    */
   _logExpressRequest(req, res, next) {
-    const id = Random.shortLabel('req');
+    if (!this._logAggregateIfAppropriate(req, res)) {
+      const id = Random.shortLabel('req');
 
-    this._logRequest(id, req, 'http');
+      this._logRequest(id, req, 'http');
 
-    res.on('finish', () => {
-      // Make the headers a plain object, so it gets logged in a clean
-      // fashion.
-      const responseHeaders = Object.assign({}, res.getHeaders());
-      this._log.event.httpResponse(id, res.statusCode, responseHeaders);
-    });
+      res.on('finish', () => {
+        // Make the headers a plain object, so it gets logged in a clean
+        // fashion.
+        const responseHeaders = Object.assign({}, res.getHeaders());
+        this._log.event.httpResponse(id, res.statusCode, responseHeaders);
+      });
+    }
 
     next();
   }
