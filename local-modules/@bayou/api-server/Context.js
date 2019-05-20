@@ -225,7 +225,7 @@ export class Context extends CommonBase {
     BearerToken.check(token);
     TObject.plain(cookies);
 
-    this._cookieMap.set(token, cookies);
+    this._cookieMap.set(token.secretToken, cookies);
   }
 
   /**
@@ -249,7 +249,7 @@ export class Context extends CommonBase {
    *   as when `token` was originally authorized, or _false_ if not.
    */
   _cachedCookiesMatch(token) {
-    const cookies = this._cookieMap.get(token);
+    const cookies = this._cookieMap.get(token.secretToken);
 
     if (cookies === undefined) {
       // No record of the token. This is indicative of a bug, but rather than
@@ -267,6 +267,45 @@ export class Context extends CommonBase {
     }
 
     return true;
+  }
+
+  /**
+   * Helper for {@link #_getTargetFromToken} which figures out what cookies are
+   * required for the given token, and fetches them from the connection.
+   *
+   * @param {BearerToken} token Token whose cookies are to be retrieved.
+   * @returns {object|null} Plain object with all the required cookies, or
+   *   `null` if one or more cookies were unavailable.
+   */
+  async _getCookiesForToken(token) {
+    const tokenAuth   = this.tokenAuthorizer;
+    const cookieNames = await tokenAuth.cookieNamesForToken(token);
+    const cookies     = {};
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.needCookies(token.safeString, cookieNames);
+    }
+
+    for (const name of cookieNames) {
+      const value = this._connection.getCookie(name);
+
+      if (value === null) {
+        this.log.event.missingCookie(token.safeString, name);
+        return null;
+      }
+
+      cookies[name] = value;
+    }
+
+    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
+    // things are working properly.
+    if (cookieNames.length !== 0) {
+      this.log.event.gotCookies(token.safeString);
+    }
+
+    return Object.freeze(cookies);
   }
 
   /**
@@ -363,45 +402,6 @@ export class Context extends CommonBase {
     this._cacheCookies(token, cookies);
 
     return target;
-  }
-
-  /**
-   * Helper for {@link #_getTargetFromToken} which figures out what cookies are
-   * required for the given token, and fetches them from the connection.
-   *
-   * @param {BearerToken} token Token whose cookies are to be retrieved.
-   * @returns {object|null} Plain object with all the required cookies, or
-   *   `null` if one or more cookies were unavailable.
-   */
-  async _getCookiesForToken(token) {
-    const tokenAuth   = this.tokenAuthorizer;
-    const cookieNames = await tokenAuth.cookieNamesForToken(token);
-    const cookies     = {};
-
-    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
-    // things are working properly.
-    if (cookieNames.length !== 0) {
-      this.log.event.needCookies(token.safeString, cookieNames);
-    }
-
-    for (const name of cookieNames) {
-      const value = this._connection.getCookie(name);
-
-      if (value === null) {
-        this.log.event.missingCookie(token.safeString, name);
-        return null;
-      }
-
-      cookies[name] = value;
-    }
-
-    // **TODO:** Remove this log spew once we're satisfied that cookie-ish
-    // things are working properly.
-    if (cookieNames.length !== 0) {
-      this.log.event.gotCookies(token.safeString);
-    }
-
-    return Object.freeze(cookies);
   }
 
   /**
