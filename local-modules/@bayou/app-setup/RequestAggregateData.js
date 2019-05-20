@@ -2,6 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { TInt, TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
@@ -11,6 +12,12 @@ import { CommonBase } from '@bayou/util-common';
  * (More than that will just get reported as a number.)
  */
 const MAX_UNIQUE_IPS_PER_LOG = 20;
+
+/**
+ * {Int} Aggregation interval, in msec. The system will only log an event for
+ * any given aggregated path this often.
+ */
+const AGGREGATION_INTERVAL_MSEC = 60 * 1000; // Once per minute.
 
 /**
  * Mutable holder for aggregated log data for requests to a particular path.
@@ -37,7 +44,10 @@ export class RequestAggregateData extends CommonBase {
      */
     this._ipMap = new Map();
 
-    Object.freeze(this);
+    /** {boolean} Whether there is an aggregation timer currently running. */
+    this._timerRunning = false;
+
+    Object.seal(this);
   }
 
   /**
@@ -52,29 +62,17 @@ export class RequestAggregateData extends CommonBase {
 
     const statusCounts = this._getStatusArray(sourceIp);
     statusCounts[status]++;
-  }
 
-  /**
-   * Writes out all the aggregated information held by this instance, and resets
-   * the instance for further aggregation.
-   */
-  logAndReset() {
-    let   totalRequests = 0;
-    const statusCounts  = {};
-    const allIps        = new Set();
-
-    for (const [ip, counts] of this._ipMap) {
-      allIps.add(ip);
-      for (const [status, count] of Object.entries(counts)) {
-        totalRequests += count;
-        statusCounts[status] += count;
-      }
+    if (!this._timerRunning) {
+      // There's no aggregation timer already running. Set it up, so that we
+      // will issue an event log after the appropriate interval.
+      this._timerRunning = true;
+      (async () => {
+        await Delay.resolve(AGGREGATION_INTERVAL_MSEC);
+        this._timerRunning = false;
+        this._logAndReset();
+      })();
     }
-
-    const ips = RequestAggregateData._ipsForLogging(allIps);
-    this._log.event.httpAggregate(this._path, { totalRequests, statusCounts, ips });
-
-    this._ipMap.clear();
   }
 
   /**
@@ -96,6 +94,29 @@ export class RequestAggregateData extends CommonBase {
 
     this._ipMap.set(sourceIp, result);
     return result;
+  }
+
+  /**
+   * Writes out all the aggregated information held by this instance, and resets
+   * the instance for further aggregation.
+   */
+  _logAndReset() {
+    let   totalRequests = 0;
+    const statusCounts  = {};
+    const allIps        = new Set();
+
+    for (const [ip, counts] of this._ipMap) {
+      allIps.add(ip);
+      for (const [status, count] of Object.entries(counts)) {
+        totalRequests += count;
+        statusCounts[status] += count;
+      }
+    }
+
+    const ips = RequestAggregateData._ipsForLogging(allIps);
+    this._log.event.httpAggregate(this._path, { totalRequests, statusCounts, ips });
+
+    this._ipMap.clear();
   }
 
   /**
