@@ -17,7 +17,7 @@ const MAX_UNIQUE_IPS_PER_LOG = 20;
  * {Int} Aggregation interval, in msec. The system will only log an event for
  * any given aggregated path this often.
  */
-const AGGREGATION_INTERVAL_MSEC = 60 * 1000; // Once per minute.
+const AGGREGATION_INTERVAL_MSEC = 10000; //60 * 1000; // Once per minute.
 
 /**
  * Mutable holder for aggregated log data for requests to a particular path.
@@ -61,7 +61,7 @@ export class RequestAggregateData extends CommonBase {
     TInt.nonNegative(status);
 
     const statusCounts = this._getStatusArray(sourceIp);
-    statusCounts[status]++;
+    statusCounts[status] = (statusCounts[status] || 0) + 1;
 
     if (!this._timerRunning) {
       // There's no aggregation timer already running. Set it up, so that we
@@ -109,7 +109,7 @@ export class RequestAggregateData extends CommonBase {
       allIps.add(ip);
       for (const [status, count] of Object.entries(counts)) {
         totalRequests += count;
-        statusCounts[status] += count;
+        statusCounts[status] = (statusCounts[status] || 0) + count;
       }
     }
 
