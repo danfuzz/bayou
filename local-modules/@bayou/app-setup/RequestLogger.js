@@ -6,7 +6,10 @@ import { fromPairs } from 'lodash';
 import { URL } from 'url';
 
 import { Logger, RedactUtil } from '@bayou/see-all';
-import { CommonBase, Random } from '@bayou/util-common';
+import { TString } from '@bayou/typecheck';
+import { CommonBase, Errors, Random } from '@bayou/util-common';
+
+import { RequestAggregateData } from './RequestAggregateData';
 
 /**
  * HTTP request logging functions. This includes logging to an HTTP `access.log`
@@ -27,6 +30,13 @@ export class RequestLogger extends CommonBase {
     /** {Logger} Logger to use. */
     this._log = Logger.check(log);
 
+    /**
+     * {Map<string, RequestAggregateData>} Map from request paths the
+     * corresponding aggregate data for the path. Keys are bound by
+     * {@link #aggregate}.
+     */
+    this._pathAggregateMap = new Map();
+
     Object.freeze(this);
   }
 
@@ -36,6 +46,22 @@ export class RequestLogger extends CommonBase {
    */
   get expressMiddleware() {
     return this._logExpressRequest.bind(this);
+  }
+
+  /**
+   * Adds a path to the set which are reported only in aggregate (instead of
+   * per request).
+   *
+   * @param {string} path Path to aggregate.
+   */
+  aggregate(path) {
+    TString.nonEmpty(path);
+
+    if (this._pathAggregateMap.has(path)) {
+      throw Errors.badUse(`Already aggregated: ${path}`);
+    }
+
+    this._pathAggregateMap.set(path, new RequestAggregateData(path, this._log));
   }
 
   /**
@@ -68,6 +94,34 @@ export class RequestLogger extends CommonBase {
   }
 
   /**
+   * Logs a request as part of an aggregate, if it is in fact supposed to be
+   * aggregated.
+   *
+   * @param {object} req The HTTP request.
+   * @param {object} res The HTTP response.
+   * @returns {boolean} Whether (`true`) or not (`false`) `req` was handled as
+   *   an aggregate.
+   */
+  _logAggregateIfAppropriate(req, res) {
+    const path      = req.originalUrl || req.url;
+    const aggregate = this._pathAggregateMap.get(path);
+
+    if (aggregate === undefined) {
+      return false;
+    }
+
+    // We are aggregating the path of this request. Tell the aggregate what's
+    // what after the response is issued (because we need to know the status
+    // code).
+
+    res.on('finish', () => {
+      aggregate.requestMade(req.socket.remoteAddress, res.statusCode);
+    });
+
+    return true;
+  }
+
+  /**
    * Standard Express middleware implementation, underlying the property
    * {@link #expressMiddleware}.
    *
@@ -77,16 +131,18 @@ export class RequestLogger extends CommonBase {
    *   dispatch.
    */
   _logExpressRequest(req, res, next) {
-    const id = Random.shortLabel('req');
+    if (!this._logAggregateIfAppropriate(req, res)) {
+      const id = Random.shortLabel('req');
 
-    this._logRequest(id, req, 'http');
+      this._logRequest(id, req, 'http');
 
-    res.on('finish', () => {
-      // Make the headers a plain object, so it gets logged in a clean
-      // fashion.
-      const responseHeaders = Object.assign({}, res.getHeaders());
-      this._log.event.httpResponse(id, res.statusCode, responseHeaders);
-    });
+      res.on('finish', () => {
+        // Make the headers a plain object, so it gets logged in a clean
+        // fashion.
+        const responseHeaders = Object.assign({}, res.getHeaders());
+        this._log.event.httpResponse(id, res.statusCode, responseHeaders);
+      });
+    }
 
     next();
   }
