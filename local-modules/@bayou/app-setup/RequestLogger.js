@@ -121,13 +121,14 @@ export class RequestLogger extends CommonBase {
     const ipAddress = req.socket.remoteAddress || '<unknown>';
 
     res.on('finish', () => {
+      const statusCode = res.statusCode || 0;
       const ipInFinish = req.socket.remoteAddress || '<unknown>';
 
       if (ipAddress !== ipInFinish) {
         this._log.event.ipMismatch(ipAddress, ipInFinish);
       }
 
-      aggregate.requestMade(ipAddress, res.statusCode);
+      aggregate.requestMade(ipAddress, statusCode);
     });
 
     return true;
