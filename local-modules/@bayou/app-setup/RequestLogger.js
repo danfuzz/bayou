@@ -114,19 +114,19 @@ export class RequestLogger extends CommonBase {
     // what after the response is issued (because we need to know the status
     // code).
 
-    // **TODO:** We have seen the `remoteAddress` be `undefined` when fetched
-    // in the `finish` block. The code here is now a bit baroque in order to get
-    // a little visibility about what's happening. Once we know what's up, we
-    // should simplify it and remove the extra logging spew.
+    // Grab the IP address during the initial handling of the request (that is,
+    // don't wait for the response to `finish`). We have seen some evidence that
+    // the `remoteAddress` can end up being `undefined` when fetched in the
+    // `finish` handler.
     const ipAddress = req.socket.remoteAddress || '<unknown>';
+
+    if (ipAddress === '<unknown>') {
+      // **TODO:** Maybe this doesn't happen anymore?
+      this._log.event.ipUnknown(path);
+    }
 
     res.on('finish', () => {
       const statusCode = res.statusCode || 0;
-      const ipInFinish = req.socket.remoteAddress || '<unknown>';
-
-      if (ipAddress !== ipInFinish) {
-        this._log.event.ipMismatch(ipAddress, ipInFinish);
-      }
 
       aggregate.requestMade(ipAddress, statusCode);
     });
