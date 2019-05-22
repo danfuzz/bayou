@@ -80,27 +80,7 @@ export class ErrorUtil extends UtilityClass {
   static stackLines(error, indent = '') {
     TObject.check(error, Error);
 
-    let stack = error.stack;
-
-    if (typeof stack !== 'string') {
-      return [];
-    }
-
-    // Sometimes (on some platforms, notably V8/Chrome/Node), the `stack` starts
-    // with a header "line" consisting of the error name and message. ("Line" is
-    // in scare quotes because it can end up containing embedded newlines.) If
-    // it does, then strip it off before doing further processing.
-    const messagePrefix = (error.message === '')
-      ? `${error.name}\n`
-      : `${error.name}: ${error.message}\n`;
-    if (stack.startsWith(messagePrefix)) {
-      stack = stack.slice(messagePrefix.length);
-    }
-
-    // Get an array of all non-empty lines. Each should represent a stack frame
-    // (but we act conservatively because there's no hard guarantee, and code
-    // that we don't directly control can end up doing surprising things).
-    const lines = stack.replace(/(^\n+)|(\n+$)/g, '').split(/\n+/);
+    const lines = ErrorUtil._rawStackLines(error);
 
     // Transform lines that are in a recognized format into our preferred form.
     for (let i = 0; i < lines.length; i++) {
@@ -212,5 +192,51 @@ export class ErrorUtil extends UtilityClass {
         ...extraLines
       ]
     };
+  }
+
+  /**
+   * Helper for {@link #stackLines} which produces the "raw" stack lines for
+   * further processing. This method _just_ attempts to strip off the
+   * non-stack-line header on the error message, if present, and drop any empty
+   * lines.
+   *
+   * @param {Error} error Error to process.
+   * @returns {array<string>} Unprocessed array of actual-stack-related lines.
+   */
+  static _rawStackLines(error) {
+    const name    = error.name;
+    const message = error.message;
+    let   stack   = error.stack;
+
+    if (typeof stack !== 'string') {
+      return [];
+    }
+
+    if (stack.startsWith(name)) {
+      // The first line of the `stack` seems to be a header "line" (scare quotes
+      // because it can contain newlines). This header is only on present on
+      // some platforms (notably V8/Chrome/Node). The header can be expected to
+      // consist of the error `name` and `message`. At this point, we've seen
+      // the `stack` start with the error `name`, and now we do our best to
+      // strip off the entire header before doing further processing.
+
+      const fullPrefix = `${name}: ${message || ''}\n`;
+      if (stack.startsWith(fullPrefix)) {
+        // The `stack` has the full expected header. Drop it!
+        stack = stack.slice(fullPrefix.length);
+      } else {
+        // The message is not present in the header. But we still have at least
+        // one line that looks header-y, so slice it away. **Note:** We have
+        // seen this case in Node when `message === ''`, but it is inconsistent
+        // even within a single Node process.
+        stack = stack.replace(/^[^\n]\n/, '');
+      }
+    }
+
+    // Remove newlines at the start and end of the stack.
+    stack = stack.replace(/(^\n+)|(\n+$)/g, '');
+
+    // Split into lines, using a run of one or more newlines as the delimiter.
+    return stack.split(/\n+/);
   }
 }
