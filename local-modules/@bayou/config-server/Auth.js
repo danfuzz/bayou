@@ -12,7 +12,7 @@ import { BaseAuth } from './BaseAuth';
 export class Auth extends BaseAuth {
   /**
    * {string} Prefix which when prepended to an arbitrary ID string is
-   * guaranteed to result in string for which {@link #isToken} is `false`.
+   * guaranteed to result in string for which {@link #isTokenString} is `false`.
    */
   static get nonTokenPrefix() {
     return use.Auth.nonTokenPrefix;
@@ -109,8 +109,8 @@ export class Auth extends BaseAuth {
    * @param {string} tokenString The alleged token.
    * @returns {boolean} `true` iff `tokenString` is syntactically valid.
    */
-  static isToken(tokenString) {
-    return use.Auth.isToken(tokenString);
+  static isTokenString(tokenString) {
+    return use.Auth.isTokenString(tokenString);
   }
 
   /**
@@ -119,7 +119,7 @@ export class Auth extends BaseAuth {
    * any authority / authorization.
    *
    * @param {string} tokenString The token. It is only valid to pass a value for
-   *   which {@link #isToken} returns `true`.
+   *   which {@link #isTokenString} returns `true`.
    * @returns {BearerToken} An appropriately-constructed instance.
    */
   static tokenFromString(tokenString) {
@@ -131,7 +131,7 @@ export class Auth extends BaseAuth {
    * for the purposes of lookup, logging, etc.
    *
    * @param {string} tokenString The token. It is only valid to pass a value for
-   *   which {@link #isToken} returns `true`.
+   *   which {@link #isTokenString} returns `true`.
    * @returns {string} The ID portion.
    */
   static tokenId(tokenString) {

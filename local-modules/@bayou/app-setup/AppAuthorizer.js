@@ -79,7 +79,7 @@ export class AppAuthorizer extends BaseTokenAuthorizer {
    * @returns {boolean} `true` iff `tokenString` has valid token syntax.
    */
   _impl_isToken(tokenString) {
-    return Auth.isToken(tokenString);
+    return Auth.isTokenString(tokenString);
   }
 
   /**

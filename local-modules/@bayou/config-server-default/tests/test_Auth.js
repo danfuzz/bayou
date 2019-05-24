@@ -72,10 +72,10 @@ describe('@bayou/config-server-default/Auth', () => {
       assert.isFalse(t1.sameToken(t2));
     });
 
-    it('returns a token whose full string conforms to `isToken()`', async () => {
+    it('returns a token whose full string conforms to `isTokenString()`', async () => {
       const t = await Auth.getAuthorToken('some-author');
 
-      assert.isTrue(Auth.isToken(t.secretToken));
+      assert.isTrue(Auth.isTokenString(t.secretToken));
     });
 
     it('returns a token which elicits a correct response from `getAuthority()`', async () => {
@@ -151,28 +151,28 @@ describe('@bayou/config-server-default/Auth', () => {
     });
   });
 
-  describe('isToken()', () => {
+  describe('isTokenString()', () => {
     it('accepts token syntax', () => {
-      assert.isTrue(Auth.isToken(ROOT_TOKEN));
+      assert.isTrue(Auth.isTokenString(ROOT_TOKEN));
 
       for (const t of EXAMPLE_TOKENS) {
-        assert.isTrue(Auth.isToken(t), t);
+        assert.isTrue(Auth.isTokenString(t), t);
       }
     });
 
     it('rejects non-token syntax', () => {
-      assert.isFalse(Auth.isToken('00000000-11234def0'));
-      assert.isFalse(Auth.isToken('-0000000-11234def'));
-      assert.isFalse(Auth.isToken('z-0000000-1123cdef'));
-      assert.isFalse(Auth.isToken('zz-0000000-1123cdef'));
-      assert.isFalse(Auth.isToken('zzz-0000000-1123cdef'));
-      assert.isFalse(Auth.isToken('zzzz-0000000-1123cdef'));
-      assert.isFalse(Auth.isToken('root-0000000-112bcdef-'));
-      assert.isFalse(Auth.isToken('root-0000000-11234def-1'));
-      assert.isFalse(Auth.isToken('root-z0000000-112bcdef'));
-      assert.isFalse(Auth.isToken('root-00000000-11abcdef1'));
-      assert.isFalse(Auth.isToken('root-000000001123cdef'));
-      assert.isFalse(Auth.isToken('root-1-2'));
+      assert.isFalse(Auth.isTokenString('00000000-11234def0'));
+      assert.isFalse(Auth.isTokenString('-0000000-11234def'));
+      assert.isFalse(Auth.isTokenString('z-0000000-1123cdef'));
+      assert.isFalse(Auth.isTokenString('zz-0000000-1123cdef'));
+      assert.isFalse(Auth.isTokenString('zzz-0000000-1123cdef'));
+      assert.isFalse(Auth.isTokenString('zzzz-0000000-1123cdef'));
+      assert.isFalse(Auth.isTokenString('root-0000000-112bcdef-'));
+      assert.isFalse(Auth.isTokenString('root-0000000-11234def-1'));
+      assert.isFalse(Auth.isTokenString('root-z0000000-112bcdef'));
+      assert.isFalse(Auth.isTokenString('root-00000000-11abcdef1'));
+      assert.isFalse(Auth.isTokenString('root-000000001123cdef'));
+      assert.isFalse(Auth.isTokenString('root-1-2'));
     });
   });
 
