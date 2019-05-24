@@ -159,7 +159,7 @@ export class Context extends CommonBase {
   async getAuthorizedTarget(idOrToken) {
     const tokenAuth = this.tokenAuthorizer;
 
-    if ((tokenAuth !== null) && tokenAuth.isToken(idOrToken)) {
+    if ((tokenAuth !== null) && tokenAuth.isTokenString(idOrToken)) {
       // `idOrToken` is syntactically a bearer token according to our associated
       // token authorizer.
       return this._getTargetFromToken(idOrToken);
@@ -440,7 +440,7 @@ export class Context extends CommonBase {
    */
   _targetError(idOrToken, msg = 'Unknown target') {
     const tokenAuth = this.tokenAuthorizer;
-    const idToReport = ((tokenAuth !== null) && tokenAuth.isToken(idOrToken))
+    const idToReport = ((tokenAuth !== null) && tokenAuth.isTokenString(idOrToken))
       ? tokenAuth.tokenFromString(idOrToken).safeString
       : idOrToken;
 

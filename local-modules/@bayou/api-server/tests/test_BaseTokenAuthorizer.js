@@ -181,7 +181,7 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
     });
   });
 
-  describe('isToken()', () => {
+  describe('isTokenString()', () => {
     it('calls through to the `_impl` given a string', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value) {
@@ -191,8 +191,8 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
 
       const au = new Authie();
 
-      assert.isTrue(au.isToken('token-yes'));
-      assert.isFalse(au.isToken('not-a-token'));
+      assert.isTrue(au.isTokenString('token-yes'));
+      assert.isFalse(au.isTokenString('not-a-token'));
     });
 
     it('rejects a non-string without calling through to the `_impl`', () => {
@@ -204,9 +204,9 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
 
       const au = new Authie();
 
-      assert.throws(() => au.isToken(null), /badValue/);
-      assert.throws(() => au.isToken(123), /badValue/);
-      assert.throws(() => au.isToken(['x']), /badValue/);
+      assert.throws(() => au.isTokenString(null), /badValue/);
+      assert.throws(() => au.isTokenString(123), /badValue/);
+      assert.throws(() => au.isTokenString(['x']), /badValue/);
     });
 
     it('rejects a bad subclass implementation', () => {
@@ -216,12 +216,12 @@ describe('@bayou/api-server/BaseTokenAuthorizer', () => {
         }
       }
 
-      assert.throws(() => new Authie().isToken('x'), /badValue/);
+      assert.throws(() => new Authie().isTokenString('x'), /badValue/);
     });
   });
 
   describe('tokenFromString()', () => {
-    it('validates via `isToken()` given a string, and calls through to the `_impl`', () => {
+    it('validates via `isTokenString()` given a string, and calls through to the `_impl`', () => {
       class Authie extends BaseTokenAuthorizer {
         _impl_isToken(value) {
           return value.startsWith('token-');

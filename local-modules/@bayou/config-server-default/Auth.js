@@ -38,7 +38,7 @@ const tokenMint = new TokenMint('autr');
 tokenMint.registerToken(THE_ROOT_TOKEN, Object.freeze({ type: BaseAuth.TYPE_root }));
 
 /**
- * Utility functionality regarding the network configuration of a server.
+ * Authorization-related functionality.
  */
 export class Auth extends BaseAuth {
   /**
@@ -126,7 +126,7 @@ export class Auth extends BaseAuth {
    * @param {string} tokenString The alleged token.
    * @returns {boolean} `true` iff `tokenString` is valid token syntax.
    */
-  static isToken(tokenString) {
+  static isTokenString(tokenString) {
     TString.check(tokenString);
     return TOKEN_REGEX.test(tokenString);
   }
@@ -135,7 +135,7 @@ export class Auth extends BaseAuth {
    * Implementation of standard configuration point.
    *
    * @param {string} tokenString The token. It is only valid to pass a value for
-   *   which {@link #isToken} returns `true`.
+   *   which {@link #isTokenString} returns `true`.
    * @returns {BearerToken} An appropriately-constructed instance.
    */
   static tokenFromString(tokenString) {

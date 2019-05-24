@@ -206,7 +206,7 @@ export class DebugTools extends CommonBase {
    */
   _check_token(req_unused, value) {
     try {
-      if (Auth.isToken(value)) {
+      if (Auth.isTokenString(value)) {
         return;
       }
       Storage.docStore.checkAuthorIdSyntax(value);

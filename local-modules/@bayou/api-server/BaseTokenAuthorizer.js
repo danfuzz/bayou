@@ -13,8 +13,8 @@ import { CommonBase, Errors } from '@bayou/util-common';
 export class BaseTokenAuthorizer extends CommonBase {
   /**
    * {string} Prefix which when prepended to an arbitrary ID string is
-   * guaranteed to result in string for which {@link #isToken} is `false`. This
-   * is used by {@link Context} when generating non-token IDs.
+   * guaranteed to result in string for which {@link #isTokenString} is `false`.
+   * This is used by {@link Context} when generating non-token IDs.
    */
   get nonTokenPrefix() {
     return TString.check(this._impl_nonTokenPrefix);
@@ -50,7 +50,7 @@ export class BaseTokenAuthorizer extends CommonBase {
    * @param {string} tokenString The alleged token string.
    * @returns {boolean} `true` iff `tokenString` has valid token syntax.
    */
-  isToken(tokenString) {
+  isTokenString(tokenString) {
     TString.check(tokenString);
 
     return TBoolean.check(this._impl_isToken(tokenString));
@@ -106,11 +106,11 @@ export class BaseTokenAuthorizer extends CommonBase {
    * any authority / authorization.
    *
    * @param {string} tokenString The token string. It is only valid to pass a
-   *   value for which {@link #isToken} returns `true`.
+   *   value for which {@link #isTokenString} returns `true`.
    * @returns {BearerToken} An appropriately-constructed instance.
    */
   tokenFromString(tokenString) {
-    if (!this.isToken(tokenString)) {
+    if (!this.isTokenString(tokenString)) {
       // Redact the token string in the error to avoid leaking
       // security-sensitive information.
       throw Errors.badValue(BearerToken.redactString(tokenString), 'bearer token');
@@ -164,7 +164,7 @@ export class BaseTokenAuthorizer extends CommonBase {
   }
 
   /**
-   * Subclass-specific implementation of {@link #isToken}. Subclasses must
+   * Subclass-specific implementation of {@link #isTokenString}. Subclasses must
    * override this method.
    *
    * @abstract
@@ -181,7 +181,7 @@ export class BaseTokenAuthorizer extends CommonBase {
    *
    * @abstract
    * @param {string} tokenString The alleged token string. It is guaranteed that
-   *   this is a string for which {@link #isToken} returned `true`.
+   *   this is a string for which {@link #isTokenString} returned `true`.
    * @returns {BearerToken} An appropriately-constructed instance.
    */
   _impl_tokenFromString(tokenString) {
