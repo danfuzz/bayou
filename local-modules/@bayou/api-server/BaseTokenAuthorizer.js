@@ -13,8 +13,8 @@ import { CommonBase, Errors } from '@bayou/util-common';
 export class BaseTokenAuthorizer extends CommonBase {
   /**
    * {string} Prefix which when prepended to an arbitrary ID string is
-   * guaranteed to result in string for which {@link #isTokenString} is `false`. This
-   * is used by {@link Context} when generating non-token IDs.
+   * guaranteed to result in string for which {@link #isTokenString} is `false`.
+   * This is used by {@link Context} when generating non-token IDs.
    */
   get nonTokenPrefix() {
     return TString.check(this._impl_nonTokenPrefix);
