@@ -38,7 +38,7 @@ const tokenMint = new TokenMint('autr');
 tokenMint.registerToken(THE_ROOT_TOKEN, Object.freeze({ type: BaseAuth.TYPE_root }));
 
 /**
- * Utility functionality regarding the network configuration of a server.
+ * Authorization-related functionality.
  */
 export class Auth extends BaseAuth {
   /**
