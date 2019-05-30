@@ -217,11 +217,19 @@ export class BaseControl extends BaseDataManager {
     const snapshot   = await file.getSnapshot(null, timeoutMsec);
     const fileChange = new FileChange(snapshot.revNum + 1, fileOps);
 
+    let appendResult;
+
     try {
       // Run prerequisites on snapshot
       snapshot.checkPathIs(revisionPath, codec.encodeJsonBuffer(baseRevNum));
       snapshot.checkPathAbsent(changePath);
-      await file.appendChange(fileChange, clampedTimeoutMsec);
+      appendResult = await file.appendChange(fileChange, clampedTimeoutMsec);
+
+      // Log for debugging purposes
+      if (appendResult === false) {
+        this.log.info(`Failed to append file change with revNum ${fileChange.revNum}.`);
+      }
+
     } catch (e) {
       if (fileStoreOt_Errors.is_pathNotAbsent(e) || fileStoreOt_Errors.is_pathHashMismatch(e)) {
         const errorName = fileStoreOt_Errors.is_pathNotAbsent(e) ? 'pathNotAbsent' : 'pathHashMismatch';
@@ -251,7 +259,7 @@ export class BaseControl extends BaseDataManager {
     // to be triggered here.
     this._maybeWriteStoredSnapshot(change.revNum);
 
-    return true;
+    return appendResult;
   }
 
   /**
