@@ -1138,6 +1138,7 @@ export class BaseControl extends BaseDataManager {
     const snapshot        = await file.getSnapshot(null, timeoutMsec);
     const prefix          = this.constructor.changePathPrefix;
     const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
+    const missingChanges  = [];
 
     for (let i = startInclusive; i < endExclusive; i++) {
       const path = clazz.pathForChange(i);
@@ -1150,9 +1151,14 @@ export class BaseControl extends BaseDataManager {
         result.push(change);
         allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
-        const docId = this.fileAccess.documentId;
-        throw Errors.badUse(`Missing change in requested range: r${i}, for r${startInclusive}..r${endExclusive - 1} in doc ${docId}`);
+        // Build up the list of missing changes, to be reported after the loop
+        // completes.
+        missingChanges.push(i);
       }
+    }
+
+    if (missingChanges.length !== 0) {
+      throw BaseControl._missingChangeError(this.fileAccess.documentId, startInclusive, endExclusive, missingChanges);
     }
 
     this.log.event.gotChangeRange(startInclusive, endExclusive);
@@ -1266,5 +1272,37 @@ export class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
+  }
+
+  /**
+   * Helper for {@link #_getChangeRange}, which produces an informative error to
+   * indicate that one or more changes are missing.
+   *
+   * **Note:** This method mostly exists (outside of its one call site) so as
+   * to be unit-testable.
+   *
+   * @param {string} documentId ID of the document that the error is about.
+   * @param {Int} startInclusive Value as passed into {@link #_getChangeRange}.
+   * @param {Int} endExclusive Value as passed into {@link #_getChangeRange}.
+   * @param {array<Int>} missingChanges All of the revision numbers of missing
+   *   changes. Expected to be in order, ascending.
+   */
+  static _missingChangeError(documentId, startInclusive, endExclusive, missingChanges) {
+    const rangeStr    = `for r${startInclusive}..r${endExclusive - 1}`;
+    const docStr      = `in doc ${documentId}`;
+    let   revStr;
+
+    if (missingChanges.length === 1) {
+      revStr = `r${missingChanges[0]}`;
+    } else if (missingChanges.length < 5) {
+      revStr = `[r${missingChanges.join(', r')}]`;
+    } else {
+      const len   = missingChanges.length;
+      const first = `r${missingChanges[0]}`;
+      const last  = `r${missingChanges[len - 1]}`;
+      revStr = `[${first}, ... ${len - 2} more ..., ${last}]`;
+    }
+
+    throw Errors.badUse(`Missing change in requested range: ${revStr}, ${rangeStr}, ${docStr}`);
   }
 }
