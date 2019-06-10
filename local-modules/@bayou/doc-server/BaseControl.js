@@ -1286,6 +1286,7 @@ export class BaseControl extends BaseDataManager {
    * @param {Int} endExclusive Value as passed into {@link #_getChangeRange}.
    * @param {array<Int>} missingChanges All of the revision numbers of missing
    *   changes. Expected to be in order, ascending.
+   * @returns {Error} An appropriately-constructed error.
    */
   static _missingChangeError(documentId, startInclusive, endExclusive, missingChanges) {
     const rangeStr    = `for r${startInclusive}..r${endExclusive - 1}`;
@@ -1303,6 +1304,6 @@ export class BaseControl extends BaseDataManager {
       revStr = `[${first}, ... ${len - 2} more ..., ${last}]`;
     }
 
-    throw Errors.badUse(`Missing change in requested range: ${revStr}, ${rangeStr}, ${docStr}`);
+    return Errors.badUse(`Missing change in requested range: ${revStr}, ${rangeStr}, ${docStr}`);
   }
 }
