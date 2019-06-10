@@ -272,10 +272,6 @@ export class BaseControl extends BaseDataManager {
    * such, even when used promptly, it should not be treated as "definitely
    * current" but more like "probably current but possibly just a lower bound."
    *
-   * **Note:** Currently, this function is practically synchronous,
-   * but has been kept `async` and takes an (unused) timeout in anticipation
-   * of a future state where it will deal with data that it has to page in.
-   *
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
@@ -1134,14 +1130,15 @@ export class BaseControl extends BaseDataManager {
       throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
+    this.log.event.gettingChangeRange(startInclusive, endExclusive);
+
     const clazz           = this.constructor;
     const result          = [];
     const { file, codec } = this.fileCodec;
     const snapshot        = await file.getSnapshot(null, timeoutMsec);
     const prefix          = this.constructor.changePathPrefix;
     const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
-
-    this.log.event.gettingChangeRange(startInclusive, endExclusive);
+    const missingChanges  = [];
 
     for (let i = startInclusive; i < endExclusive; i++) {
       const path = clazz.pathForChange(i);
@@ -1154,9 +1151,14 @@ export class BaseControl extends BaseDataManager {
         result.push(change);
         allowMissing = false; // Only allow missing changes at the _start_ of the range.
       } else if (!allowMissing) {
-        const docId = this.fileAccess.documentId;
-        throw Errors.badUse(`Missing change in requested range: r${i}, for r${startInclusive}..r${endExclusive - 1} in doc ${docId}`);
+        // Build up the list of missing changes, to be reported after the loop
+        // completes.
+        missingChanges.push(i);
       }
+    }
+
+    if (missingChanges.length !== 0) {
+      throw BaseControl._missingChangeError(this.fileAccess.documentId, startInclusive, endExclusive, missingChanges);
     }
 
     this.log.event.gotChangeRange(startInclusive, endExclusive);
@@ -1270,5 +1272,38 @@ export class BaseControl extends BaseDataManager {
    */
   static get _impl_snapshotClass() {
     return this._mustOverride();
+  }
+
+  /**
+   * Helper for {@link #_getChangeRange}, which produces an informative error to
+   * indicate that one or more changes are missing.
+   *
+   * **Note:** This method mostly exists (outside of its one call site) so as
+   * to be unit-testable.
+   *
+   * @param {string} documentId ID of the document that the error is about.
+   * @param {Int} startInclusive Value as passed into {@link #_getChangeRange}.
+   * @param {Int} endExclusive Value as passed into {@link #_getChangeRange}.
+   * @param {array<Int>} missingChanges All of the revision numbers of missing
+   *   changes. Expected to be in order, ascending.
+   * @returns {Error} An appropriately-constructed error.
+   */
+  static _missingChangeError(documentId, startInclusive, endExclusive, missingChanges) {
+    const rangeStr    = `for r${startInclusive}..r${endExclusive - 1}`;
+    const docStr      = `in doc ${documentId}`;
+    let   revStr;
+
+    if (missingChanges.length === 1) {
+      revStr = `r${missingChanges[0]}`;
+    } else if (missingChanges.length < 5) {
+      revStr = `[r${missingChanges.join(', r')}]`;
+    } else {
+      const len   = missingChanges.length;
+      const first = `r${missingChanges[0]}`;
+      const last  = `r${missingChanges[len - 1]}`;
+      revStr = `[${first}, ... ${len - 2} more ..., ${last}]`;
+    }
+
+    return Errors.badUse(`Missing change in requested range: ${revStr}, ${rangeStr}, ${docStr}`);
   }
 }

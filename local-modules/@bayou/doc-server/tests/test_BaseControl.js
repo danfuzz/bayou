@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { Codecs as appCommon_Codecs } from '@bayou/app-common';
 import { Timeouts } from '@bayou/doc-common';
 import { MockChange, MockDelta, MockOp, MockSnapshot } from '@bayou/ot-common/mocks';
-import { DurableControl, FileAccess } from '@bayou/doc-server';
+import { BaseControl, DurableControl, FileAccess } from '@bayou/doc-server';
 import { MockControl } from '@bayou/doc-server/mocks';
 import { MockFile } from '@bayou/file-store/mocks';
 import { Errors as fileStoreOt_Errors, FileChange, FileSnapshot, FileOp } from '@bayou/file-store-ot';
@@ -963,5 +963,109 @@ describe('@bayou/doc-server/BaseControl', () => {
 
     // **TODO:** Need a test that demonstrates this method waiting until the
     // revision is written.
+  });
+
+  describe('_missingChangeError()', () => {
+    // Makes the call to the method, expecting an error. Returns the error
+    // message (or fails the assertion).
+    function messageFromCall(...args) {
+      const result = BaseControl._missingChangeError(...args);
+      assert.instanceOf(result, Error);
+      return result.message;
+    }
+
+    // Common cases for all numbers of missing changes.
+    function commonCases(missingChanges) {
+      it('includes the document ID', () => {
+        function test(docId) {
+          const result = messageFromCall(docId, 10, 20, missingChanges);
+          assert.isTrue(result.indexOf(docId) !== -1);
+        }
+
+        test('florp');
+        test('bip-bop-boop');
+      });
+
+      it('includes the inclusive request range', () => {
+        function test(startInc, endExc) {
+          const result = messageFromCall('x', startInc, endExc, missingChanges);
+          const expect = `r${startInc}..r${endExc - 1}`;
+          assert.isTrue(result.indexOf(expect) !== -1);
+        }
+
+        test(0, 5);
+        test(1, 123);
+      });
+    }
+
+    describe('missing one change', () => {
+      const missingChanges = [914];
+
+      commonCases(missingChanges);
+
+      it('includes the missing change', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': r914') !== -1);
+      });
+    });
+
+    describe('missing two changes', () => {
+      const missingChanges = [12, 34];
+
+      commonCases(missingChanges);
+
+      it('includes the missing changes', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': [r12, r34]') !== -1);
+      });
+    });
+
+    describe('missing three changes', () => {
+      const missingChanges = [23, 187, 242];
+
+      commonCases(missingChanges);
+
+      it('includes the missing changes', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': [r23, r187, r242]') !== -1);
+      });
+    });
+
+    describe('missing four changes', () => {
+      const missingChanges = [7, 9, 10, 11];
+
+      commonCases(missingChanges);
+
+      it('includes the missing changes', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': [r7, r9, r10, r11]') !== -1);
+      });
+    });
+
+    describe('missing five changes', () => {
+      const missingChanges = [123, 456, 789, 1011, 1213];
+
+      commonCases(missingChanges);
+
+      it('includes a summary of the missing changes', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': [r123, ... 3 more ..., r1213]') !== -1);
+      });
+    });
+
+    describe('missing fifty changes', () => {
+      const missingChanges = [];
+
+      for (let i = 0; i < 50; i++) {
+        missingChanges.push(i + 1000);
+      }
+
+      commonCases(missingChanges);
+
+      it('includes a summary of the missing changes', () => {
+        const result = messageFromCall('x', 1, 2, missingChanges);
+        assert.isTrue(result.indexOf(': [r1000, ... 48 more ..., r1049]') !== -1);
+      });
+    });
   });
 });
