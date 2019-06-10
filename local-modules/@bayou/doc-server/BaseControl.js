@@ -272,10 +272,6 @@ export class BaseControl extends BaseDataManager {
    * such, even when used promptly, it should not be treated as "definitely
    * current" but more like "probably current but possibly just a lower bound."
    *
-   * **Note:** Currently, this function is practically synchronous,
-   * but has been kept `async` and takes an (unused) timeout in anticipation
-   * of a future state where it will deal with data that it has to page in.
-   *
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
    *   range as defined by {@link Timeouts}. `null` is treated as the maximum
@@ -1134,14 +1130,14 @@ export class BaseControl extends BaseDataManager {
       throw Errors.badUse(`Too many changes requested at once: ${endExclusive - startInclusive}`);
     }
 
+    this.log.event.gettingChangeRange(startInclusive, endExclusive);
+
     const clazz           = this.constructor;
     const result          = [];
     const { file, codec } = this.fileCodec;
     const snapshot        = await file.getSnapshot(null, timeoutMsec);
     const prefix          = this.constructor.changePathPrefix;
     const data            = snapshot.getPathRange(prefix, startInclusive, endExclusive);
-
-    this.log.event.gettingChangeRange(startInclusive, endExclusive);
 
     for (let i = startInclusive; i < endExclusive; i++) {
       const path = clazz.pathForChange(i);
