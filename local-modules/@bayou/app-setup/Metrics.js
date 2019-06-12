@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { collectDefaultMetrics, register, Counter } from 'prom-client';
+import { collectDefaultMetrics, register, Counter, Gauge } from 'prom-client';
 
 import { ServerEnv } from '@bayou/env-server';
 import { CommonBase } from '@bayou/util-common';
@@ -19,18 +19,50 @@ export class Metrics extends CommonBase {
   constructor() {
     super();
 
+    const buildInfo = ServerEnv.theOne.buildInfo;
+
     // **Note:** OpenMetrics seems to prefer `lower_camel_case` names.
-    const prefix = `${ServerEnv.theOne.buildInfo.name}_`;
+    const prefix = `${buildInfo.name}_`;
 
     /** {string} Prefix to use for metrics names. */
     this._prefix = prefix;
 
-    /** {Counter} Counter for total HTTP requests. */
+    /**
+     * {Counter} Counter for total HTTP requests which elicited regular HTTP
+     * responses. (This won't capture websocket requests.)
+     */
     this._requestsTotal = new Counter({
       name:       `${prefix}requests_total`,
       help:       'Counter of HTTP requests, with method and status code labels',
       labelNames: ['method', 'code'],
     });
+
+    /** {Counter} Counter for total number of initiated API connections. */
+    this._connectionCountTotal = new Counter({
+      name: `${prefix}api_connections_total`,
+      help: 'Counter of API connection initiations'
+    });
+
+    /** {Gauge} Gauge of number of currently-active API connections. */
+    this._connectionCountNow = new Gauge({
+      name: `${prefix}api_connections_now`,
+      help: 'Gauge of currently-active API connections'
+    });
+
+    /**
+     * {Gauge} Pseudo-gauge whose labels identify the currently-running build.
+     */
+    this._buildInfo = new Gauge({
+      name:       `${prefix}build_info`,
+      help:       'What build is running',
+      labelNames: ['buildDate', 'buildId', 'buildNumber'],
+    });
+    const buildInfoLabels = {
+      buildDate:   buildInfo.buildDate,
+      buildId:     buildInfo.buildId,
+      buildNumber: buildInfo.buildNumber
+    };
+    this._buildInfo.set(buildInfoLabels, 1);
 
     collectDefaultMetrics({ prefix });
 
@@ -38,13 +70,37 @@ export class Metrics extends CommonBase {
   }
 
   /**
-   * {function} Express middleware which hooks up the {@link #_requestsTotal}
-   * counter.
+   * Updates the API-connection-related metrics.
+   *
+   * @param {Int} connectionCountNow How many active API connections there are
+   *   right now.
+   * @param {Int} connectionCountTotal How many API connections this server has
+   *   ever handled.
+   */
+  apiMetrics(connectionCountNow, connectionCountTotal) {
+    this._connectionCountNow.set(connectionCountNow);
+
+    // There's no `set()` method on `Counter`; the best we can do is sniff the
+    // value and `inc()` it to what we want.
+
+    const lastTotal = this._connectionCountTotal.get().values[0].value || 0;
+    const diff      = connectionCountTotal - lastTotal;
+
+    if (diff > 0) {
+      this._connectionCountTotal.inc(diff);
+    }
+  }
+
+  /**
+   * {function} Express middleware which hooks up the HTTP-request-related
+   * metrics.
    */
   get httpRequestMiddleware() {
     return (req, res, next) => {
+      res.on('finish', () => {
+        this._requestsTotal.labels(req.method, res.statusCode).inc();
+      });
       next();
-      this._requestsTotal.labels(req.method, res.statusCode).inc();
     };
   }
 
