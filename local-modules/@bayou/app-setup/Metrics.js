@@ -19,8 +19,10 @@ export class Metrics extends CommonBase {
   constructor() {
     super();
 
+    const buildInfo = ServerEnv.theOne.buildInfo;
+
     // **Note:** OpenMetrics seems to prefer `lower_camel_case` names.
-    const prefix = `${ServerEnv.theOne.buildInfo.name}_`;
+    const prefix = `${buildInfo.name}_`;
 
     /** {string} Prefix to use for metrics names. */
     this._prefix = prefix;
@@ -37,15 +39,30 @@ export class Metrics extends CommonBase {
 
     /** {Counter} Counter for total number of initiated API connections. */
     this._connectionCountTotal = new Counter({
-      name:       `${prefix}api_connections_total`,
-      help:       'Counter of API connection initiations'
+      name: `${prefix}api_connections_total`,
+      help: 'Counter of API connection initiations'
     });
 
     /** {Gauge} Gauge of number of currently-active API connections. */
     this._connectionCountNow = new Gauge({
-      name:       `${prefix}api_connections_now`,
-      help:       'Gauge of currently-active API connections'
+      name: `${prefix}api_connections_now`,
+      help: 'Gauge of currently-active API connections'
     });
+
+    /**
+     * {Gauge} Pseudo-gauge whose labels identify the currently-running build.
+     */
+    this._buildInfo = new Gauge({
+      name:       `${prefix}build_info`,
+      help:       'What build is running',
+      labelNames: ['buildDate', 'buildId', 'buildNumber'],
+    });
+    const buildInfoLabels = {
+      buildDate:   buildInfo.buildDate,
+      buildId:     buildInfo.buildId,
+      buildNumber: buildInfo.buildNumber
+    };
+    this._buildInfo.set(buildInfoLabels, 1);
 
     collectDefaultMetrics({ prefix });
 
