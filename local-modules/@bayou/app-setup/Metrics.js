@@ -25,7 +25,10 @@ export class Metrics extends CommonBase {
     /** {string} Prefix to use for metrics names. */
     this._prefix = prefix;
 
-    /** {Counter} Counter for total HTTP requests. */
+    /**
+     * {Counter} Counter for total HTTP requests which elicited regular HTTP
+     * responses. (This won't capture websocket requests.)
+     */
     this._requestsTotal = new Counter({
       name:       `${prefix}requests_total`,
       help:       'Counter of HTTP requests, with method and status code labels',
@@ -43,8 +46,10 @@ export class Metrics extends CommonBase {
    */
   get httpRequestMiddleware() {
     return (req, res, next) => {
+      res.on('finish', () => {
+        this._requestsTotal.labels(req.method, res.statusCode).inc();
+      });
       next();
-      this._requestsTotal.labels(req.method, res.statusCode).inc();
     };
   }
 
