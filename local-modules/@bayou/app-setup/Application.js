@@ -442,7 +442,8 @@ export class Application extends CommonBase {
         }
       }
 
-      log.metric.activeConnections(connections.size);
+      log.metric.activeConnections(this.connectionCountNow);
+      this._metrics.apiMetrics(this.connectionCountNow, this.connectionCountTotal);
     }
   }
 }

@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { collectDefaultMetrics, register, Counter } from 'prom-client';
+import { collectDefaultMetrics, register, Counter, Gauge } from 'prom-client';
 
 import { ServerEnv } from '@bayou/env-server';
 import { CommonBase } from '@bayou/util-common';
@@ -35,14 +35,48 @@ export class Metrics extends CommonBase {
       labelNames: ['method', 'code'],
     });
 
+    /** {Counter} Counter for total number of initiated API connections. */
+    this._connectionCountTotal = new Counter({
+      name:       `${prefix}api_connections_total`,
+      help:       'Counter of API connection initiations'
+    });
+
+    /** {Gauge} Gauge of number of currently-active API connections. */
+    this._connectionCountNow = new Gauge({
+      name:       `${prefix}api_connections_now`,
+      help:       'Gauge of currently-active API connections'
+    });
+
     collectDefaultMetrics({ prefix });
 
     Object.freeze(this);
   }
 
   /**
-   * {function} Express middleware which hooks up the {@link #_requestsTotal}
-   * counter.
+   * Updates the API-connection-related metrics.
+   *
+   * @param {Int} connectionCountNow How many active API connections there are
+   *   right now.
+   * @param {Int} connectionCountTotal How many API connections this server has
+   *   ever handled.
+   */
+  apiMetrics(connectionCountNow, connectionCountTotal) {
+    this._connectionCountNow.set(connectionCountNow);
+
+    // There's no `set()` method on `Counter`; the best we can do is sniff the
+    // value and `inc()` it to what we want.
+
+    const lastTotal = this._connectionCountTotal.get().values[0].value || 0;
+    const diff      = connectionCountTotal - lastTotal;
+
+    if (diff > 0) {
+      this._connectionCountTotal.inc(diff);
+    }
+  }
+
+  /**
+   * {function} Express middleware which hooks up the HTTP-request-related
+   * metrics.
    */
   get httpRequestMiddleware() {
     return (req, res, next) => {
