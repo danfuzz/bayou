@@ -18,12 +18,15 @@ export class BodyDeltaHtml extends UtilityClass {
    *   converter to account for custom op types.
    * @param {Config} [config = null] The custom configuration to pass to the
    *   QuillDeltaToHtmlConverter library.
+   * @param {CustomPreConverter} [customPreConverter = null] Optional custom
+   *   pre converter to run on the quill ops before converting to html.
    *
    * @returns {string} An HTML representation of the contents of given delta.
    */
-  static toHtmlForm(bodyDelta, customConverter = null, config = {}) {
+  static toHtmlForm(bodyDelta, customConverter = null, config = {}, customPreConverter = null) {
     const quillOps = bodyDelta.toQuillForm().ops;
-    const converter = new QuillDeltaToHtmlConverter(quillOps, config);
+    const quillOpsToConvert = customPreConverter === null ? quillOps : customPreConverter(quillOps);
+    const converter = new QuillDeltaToHtmlConverter(quillOpsToConvert, config);
 
     if (customConverter !== null) {
       converter.renderCustomWith(customConverter);
