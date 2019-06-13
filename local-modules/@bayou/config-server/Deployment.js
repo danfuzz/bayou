@@ -84,6 +84,17 @@ export class Deployment extends UtilityClass {
   }
 
   /**
+   * Gets a short server-identifying string, which is expected to be unique
+   * per machine (or machine-like-thing). This is specifically used to produce
+   * a hash per machine, which can be used for bucketing and the like.
+   *
+   * @returns {string} Server ID string.
+   */
+  static serverId() {
+    return use.Deployment.serverId();
+  }
+
+  /**
    * Gets arbitrary server-identifying information, which gets returned to
    * clients via {@link MetaHandler#serverInfo}.
    *
