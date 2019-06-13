@@ -32,8 +32,8 @@ export class Metrics extends CommonBase {
      * responses. (This won't capture websocket requests.)
      */
     this._requestsTotal = new Counter({
-      name:       `${prefix}requests_total`,
-      help:       'Counter of HTTP requests, with method and status code labels',
+      name:       `${prefix}http_requests_total`,
+      help:       'Counter of normal HTTP requests, with method and status code labels',
       labelNames: ['method', 'code'],
     });
 
