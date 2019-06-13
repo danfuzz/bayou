@@ -44,7 +44,7 @@ export class ArtificialFailureInfo extends CommonBase {
     /** {string} Type of failure to induce. */
     this._failType = failType;
 
-    Object.freeze(this);
+    Object.seal(this);
 
     if (this._failPercent !== 0) {
       log.event.artificialFailure(this._failPercent, this._failType);
@@ -64,6 +64,18 @@ export class ArtificialFailureInfo extends CommonBase {
   /** {string} Type of failure to induce. */
   get failType() {
     return this._failType;
+  }
+
+  /**
+   * Change this instance to indicate that failure should not occur. This is
+   * meant to be used at startup time as a final backstop around intentional
+   * failure. For example, it can be used in unit test code paths to prevent
+   * artificial failures from becoming unit test failures, and it can prevent
+   * production configurations from veering into unsafe territory.
+   */
+  doNotFail() {
+    this._failPercent = 0;
+    this._failType    = ArtificialFailureInfo.TYPE_none;
   }
 
   /**
