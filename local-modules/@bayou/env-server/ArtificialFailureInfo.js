@@ -38,6 +38,12 @@ export class ArtificialFailureInfo extends CommonBase {
 
     const [failPercent, failType] = ArtificialFailureInfo._parseInfo(buildInfo);
 
+    /**
+     * {boolean} Whether failure is actually allowed. If `false`, then this
+     * instance reports that failure shouldn't actually happen.
+     */
+    this._allowFailure = false;
+
     /** {Int} Percentage of servers which should experience a failure. */
     this._failPercent = failPercent;
 
@@ -47,7 +53,7 @@ export class ArtificialFailureInfo extends CommonBase {
     Object.seal(this);
 
     if (this._failPercent !== 0) {
-      log.event.artificialFailure(this._failPercent, this._failType);
+      log.event.artificialFailureParameters(this._failPercent, this._failType);
       log.info('#####');
       log.info('#####');
       log.info('##### NOTE: This build is configured with artificial failure!');
@@ -58,24 +64,41 @@ export class ArtificialFailureInfo extends CommonBase {
 
   /** {Int} Percentage of servers which should experience a failure. */
   get failPercent() {
-    return this._failPercent;
+    return this._allowFailure ? this._failPercent : 0;
   }
 
   /** {string} Type of failure to induce. */
   get failType() {
-    return this._failType;
+    return this._allowFailure ? this._failType : ArtificialFailureInfo.TYPE_none;
   }
 
   /**
-   * Change this instance to indicate that failure should not occur. This is
-   * meant to be used at startup time as a final backstop around intentional
-   * failure. For example, it can be used in unit test code paths to prevent
-   * artificial failures from becoming unit test failures, and it can prevent
-   * production configurations from veering into unsafe territory.
+   * {Int} _Nascent_ failure percentage. This is what {@link #failPercent} would
+   * report if {@link #allowFailure} were called. This can be used to help
+   * clients of this class decide whether or not to "pull the trigger" on
+   * failure.
    */
-  doNotFail() {
-    this._failPercent = 0;
-    this._failType    = ArtificialFailureInfo.TYPE_none;
+  get nascentFailPercent() {
+    return this._failPercent;
+  }
+
+  /**
+   * Indicate that failure is actually allowed. If this call is never made, then
+   * it is as if the build was not configured with any failures.
+   */
+  allowFailure() {
+    if (this._allowFailure || (this._failPercent === 0)) {
+      return;
+    }
+
+    log.event.artificialFailureEnabled();
+    log.info('#####');
+    log.info('#####');
+    log.info('##### NOTE: Artificial failure is now enabled!');
+    log.info('#####');
+    log.info('#####');
+
+    this._allowFailure = true;
   }
 
   /**
