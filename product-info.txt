@@ -1,3 +1,22 @@
 # Metainformation about this product.
 name = bayou
 version = 1.4.3
+
+#
+# Artificial Failure
+#
+# Change the following lines in order to induce artificial failures, e.g. for
+# testing and for deployment/rollback drills.
+#
+
+# The proportion of servers which should experience the failure. Recommendation:
+# If actually deploying into production, it is probably not a good idea to set
+# this higher than 50.
+artificial_failure_percent = 0
+
+# What sort of failure to experience. To induce failure, comment out the line
+# immediately below, and uncomment the line with the desired failure type.
+artificial_failure_type = none
+
+# No actual failure, but log stuff as if things are going wrong.
+# artificial_failure_type = just_logging
