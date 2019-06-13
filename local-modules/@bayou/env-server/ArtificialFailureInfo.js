@@ -2,9 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import crypto from 'crypto';
 import { camelCase } from 'lodash';
 
+import { Deployment } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
+import { TString } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import { BuildInfo } from './BuildInfo';
@@ -99,6 +102,56 @@ export class ArtificialFailureInfo extends CommonBase {
     log.info('#####');
 
     this._allowFailure = true;
+  }
+
+  /**
+   * Indicates whether this server should actually be failing with the indicated
+   * type of failure. This will be `true` _if and only if_ all of:
+   *
+   * * {@link #allowFailure} was called.
+   * * {@link #failType} is the one passed here.
+   * * This server's hash causes it to be in the failing cohort per the
+   *   {@link #failPercent}.
+   *
+   * @param {string} failType Type of failure in question. Must be one of the
+   *   `TYPE_*` constants defined by this class.
+   * @returns {boolean} `true` if this server should be failing in the indicated
+   *   manner, or `false` if not.
+   */
+  shouldFail(failType) {
+    TString.check(failType);
+
+    // This will be `0` if `allowFailure()` wasn't called.
+    const percent = this.failPercent;
+
+    if ((percent === 0) || (failType !== this.failType)) {
+      return false;
+    }
+
+    // Hash the server ID and convert it into a value in the range 0..99.
+    const serverNum = ArtificialFailureInfo.stringPercentHash(Deployment.serverId);
+
+    return serverNum < percent;
+  }
+
+  /**
+   * Gets an integer value in the range `[0..99]` as the hash of a given string.
+   *
+   * @param {string} s The string to hash.
+   * @returns {Int} The hashed value.
+   */
+  _stringPercentHash(s) {
+    TString.check(s);
+
+    const hash = crypto.createHash('sha256');
+
+    hash.update(s);
+
+    const digest = hash.digest();
+    const value  = digest.readUInt32LE(); // Grab first 32 bits as the base hash.
+    const frac   = value / 0x100000000;
+
+    return Math.floor(frac * 100);
   }
 
   /**
