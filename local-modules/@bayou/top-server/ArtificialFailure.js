@@ -42,13 +42,18 @@ export class ArtificialFailure extends UtilityClass {
    * Start behaving badly per the `justLogging` failure mode.
    */
   static fail_justLogging() {
+    const bootInfo = ServerEnv.theOne.bootInfo;
+
     (async () => {
       let count = 0;
 
       for (;;) {
+        // One spate of logging every ten seconds.
+        await Delay.resolve(10 * 1000);
+
         count++;
         log.event.artificialFailure(count);
-        await Delay.resolve(1000);
+        bootInfo.logArtificialFailure(count);
       }
     })();
   }
