@@ -137,26 +137,6 @@ export class ArtificialFailureInfo extends CommonBase {
   }
 
   /**
-   * Gets an integer value in the range `[0..99]` as the hash of a given string.
-   *
-   * @param {string} s The string to hash.
-   * @returns {Int} The hashed value.
-   */
-  static _percentFromString(s) {
-    TString.check(s);
-
-    const hash = crypto.createHash('sha256');
-
-    hash.update(s);
-
-    const digest = hash.digest();
-    const value  = digest.readUInt32LE(); // Grab first 32 bits as the base hash.
-    const frac   = value / 0x100000000;
-
-    return Math.floor(frac * 100);
-  }
-
-  /**
    * Parses the failure info out of a boot info object.
    *
    * @param {BootInfo} buildInfo The boot info.
@@ -179,5 +159,25 @@ export class ArtificialFailureInfo extends CommonBase {
     }
 
     return [percentNum, typeConst];
+  }
+
+  /**
+   * Gets an integer value in the range `[0..99]` as the hash of a given string.
+   *
+   * @param {string} s The string to hash.
+   * @returns {Int} The hashed value.
+   */
+  static _percentFromString(s) {
+    TString.check(s);
+
+    const hash = crypto.createHash('sha256');
+
+    hash.update(s);
+
+    const digest = hash.digest();
+    const value  = digest.readUInt32LE(); // Grab first 32 bits as the base hash.
+    const frac   = value / 0x100000000;
+
+    return Math.floor(frac * 100);
   }
 }
