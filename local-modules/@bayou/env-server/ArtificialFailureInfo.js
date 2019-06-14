@@ -105,26 +105,28 @@ export class ArtificialFailureInfo extends CommonBase {
   }
 
   /**
-   * Indicates whether this server should actually be failing with the indicated
-   * type of failure. This will be `true` _if and only if_ all of:
+   * Indicates whether this server should actually be failing at all, or failing
+   * specifically with the indicated type of failure. This will be `true` _if
+   * and only if_ all of:
    *
    * * {@link #allowFailure} was called.
-   * * {@link #failType} is the one passed here.
+   * * {@link #failType} is the one passed here or is `null`.
    * * This server's hash causes it to be in the failing cohort per the
    *   {@link #failPercent}.
    *
-   * @param {string} failType Type of failure in question. Must be one of the
-   *   `TYPE_*` constants defined by this class.
+   * @param {string|null} [failType = null] Type of failure in question, or
+   *   `null` to just ask if this server should be faily in general. If
+   *   non-`null`, must be one of the `TYPE_*` constants defined by this class.
    * @returns {boolean} `true` if this server should be failing in the indicated
    *   manner, or `false` if not.
    */
-  shouldFail(failType) {
-    TString.check(failType);
+  shouldFail(failType = null) {
+    TString.orNull(failType);
 
-    // This will be `0` if `allowFailure()` wasn't called.
-    const percent = this.failPercent;
+    const percent     = this.failPercent; // This will be `0` if `allowFailure()` wasn't called.
+    const typeMatches = (failType === null) || (failType === this.failType);
 
-    if ((percent === 0) || (failType !== this.failType)) {
+    if ((percent === 0) || !typeMatches) {
       return false;
     }
 
