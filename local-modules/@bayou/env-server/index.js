@@ -2,7 +2,8 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { ArtificialFailureInfo } from './ArtificialFailureInfo';
 import { Dirs } from './Dirs';
 import { ServerEnv } from './ServerEnv';
 
-export { Dirs, ServerEnv };
+export { ArtificialFailureInfo, Dirs, ServerEnv };

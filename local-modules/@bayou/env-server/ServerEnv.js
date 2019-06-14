@@ -10,6 +10,7 @@ import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { Errors, Singleton } from '@bayou/util-common';
 
+import { ArtificialFailureInfo } from './ArtificialFailureInfo';
 import { BootInfo } from './BootInfo';
 import { Dirs } from './Dirs';
 import { PidFile } from './PidFile';
@@ -45,10 +46,21 @@ export class ServerEnv extends Singleton {
     /** {PidFile} The PID file manager. */
     this._pidFile = new PidFile();
 
+    /** {ArtificialFailureInfo} Info about how to intentionally fail. */
+    this._artificialFailureInfo = new ArtificialFailureInfo(this._buildInfo);
+
     /** {ShutdownManager} The shutdown manager. */
     this._shutdownManager = new ShutdownManager(this._bootInfo);
 
     Object.freeze(this);
+  }
+
+  /**
+   * {ArtificialFailureInfo} Info about "artificial failure," that is, an object
+   * with details about how this server should intentionally misbehave.
+   */
+  get artificialFailureInfo() {
+    return this._artificialFailureInfo;
   }
 
   /**

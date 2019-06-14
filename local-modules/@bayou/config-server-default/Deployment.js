@@ -74,6 +74,18 @@ export class Deployment extends UtilityClass {
   /**
    * Implementation of standard configuration point.
    *
+   * This implementation always returns the same string, which is obviously
+   * _not_ appropriate for a multi-machine / multi-server production deployment.
+   *
+   * @returns {string} Server ID string.
+   */
+  static serverId() {
+    return 'the-machine';
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
    * @returns {object} Ad-hoc information about the server.
    */
   static serverInfo() {
