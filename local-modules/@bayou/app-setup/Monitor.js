@@ -96,7 +96,7 @@ export class Monitor extends CommonBase {
 
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {
-        boot:    ServerEnv.theOne.bootInfo,
+        boot:    ServerEnv.theOne.bootInfo.info,
         build:   ServerEnv.theOne.buildInfo,
         runtime: ServerEnv.theOne.runtimeInfo
       });

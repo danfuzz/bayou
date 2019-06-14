@@ -3,7 +3,8 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import { ArtificialFailureInfo } from './ArtificialFailureInfo';
+import { BootInfo } from './BootInfo';
 import { Dirs } from './Dirs';
 import { ServerEnv } from './ServerEnv';
 
-export { ArtificialFailureInfo, Dirs, ServerEnv };
+export { ArtificialFailureInfo, BootInfo, Dirs, ServerEnv };

@@ -262,7 +262,7 @@ export class Action extends CommonBase {
 
     log.event.buildInfo(ServerEnv.theOne.buildInfo);
     log.event.runtimeInfo(ServerEnv.theOne.runtimeInfo);
-    log.event.bootInfo(ServerEnv.theOne.bootInfo);
+    log.event.bootInfo(ServerEnv.theOne.bootInfo.info);
 
     /** {Application} The main app server. */
     const theApp = new Application(devRoutes);
