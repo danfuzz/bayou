@@ -142,7 +142,7 @@ export class ArtificialFailureInfo extends CommonBase {
    * @param {string} s The string to hash.
    * @returns {Int} The hashed value.
    */
-  _stringPercentHash(s) {
+  static _stringPercentHash(s) {
     TString.check(s);
 
     const hash = crypto.createHash('sha256');
