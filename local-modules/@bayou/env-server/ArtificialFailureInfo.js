@@ -131,7 +131,7 @@ export class ArtificialFailureInfo extends CommonBase {
     }
 
     // Hash the server ID and convert it into a value in the range 0..99.
-    const serverNum = ArtificialFailureInfo.stringPercentHash(Deployment.serverId);
+    const serverNum = ArtificialFailureInfo.stringPercentHash(Deployment.serverId());
 
     return serverNum < percent;
   }

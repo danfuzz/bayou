@@ -16,6 +16,7 @@ import { HumanSink, FileSink } from '@bayou/see-all-server';
 import { ClientTests, ServerTests } from '@bayou/testing-server';
 import { CommonBase } from '@bayou/util-common';
 
+import { ArtificialFailure } from './ArtificialFailure';
 import { Options } from './Options';
 
 /** {Logger} Logger for this file. */
@@ -281,6 +282,10 @@ export class Action extends CommonBase {
         }
       }
     }
+
+    // If configured for artificial failure _and_ the top-level handler for same
+    // knows how to do it, this will kick off the failure in question.
+    ArtificialFailure.startFailingIfAppropriate();
 
     return result;
   }

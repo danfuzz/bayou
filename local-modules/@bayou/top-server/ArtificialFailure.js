@@ -2,7 +2,7 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
-import { ArtificialFailureInfo, ServerEnv } from '@bayou/env-server';
+import { ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
 import { UtilityClass } from '@bayou/util-common';
@@ -25,7 +25,7 @@ export class ArtificialFailure extends UtilityClass {
    * action, no error); this is done so that it's possible to call this method
    * unconditionally during system startup.
    */
-  static startFailingAsAppropriate() {
+  static startFailingIfAppropriate() {
     const failInfo = ServerEnv.theOne.artificialFailureInfo;
 
     if (failInfo.shouldFail()) {
