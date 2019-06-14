@@ -152,7 +152,7 @@ export class ArtificialFailureInfo extends CommonBase {
     const typeConst  = ArtificialFailureInfo[`TYPE_${camelType}`];
 
     if (   isNaN(percentNum) || (percentNum < 0) || (percentNum > 100)
-        || (typeConst !== artificialFailureType)) {
+        || (typeConst !== camelType)) {
       // Fail-safe: If the build info properties aren't set up right, treat it
       // as a no-failure situation.
       return [0, ArtificialFailureInfo.TYPE_none];
