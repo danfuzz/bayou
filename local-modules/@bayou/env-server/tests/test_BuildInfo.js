@@ -17,13 +17,15 @@ describe('@bayou/env-server/BuildInfo', () => {
     });
 
     it('contains the expected product info', () => {
-      const info = new BuildInfo().info;
       const requiredKeys = [
         'buildDate', 'buildId', 'buildNumber', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
       const optionalKeys = [
         'artificialFailurePercent', 'artificialFailureType'
       ];
+
+      // Get the property and clone it, so we can modify it below.
+      const info = Object.assign({}, new BuildInfo().info);
 
       for (const k of optionalKeys) {
         if (info[k] !== undefined) {
