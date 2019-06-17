@@ -90,6 +90,21 @@ export class BootInfo extends CommonBase {
   }
 
   /**
+   * Logs a boot metric, specifically for the purpose of an artificial failure
+   * scenario.
+   *
+   * @param {Int} errorCount How many errors to indicate in the logged record.
+   */
+  logArtificialFailure(errorCount) {
+    const payload = this._bootMetricPayload();
+
+    payload.bootCount          += errorCount;
+    payload.errorShutdownCount += errorCount;
+
+    log.metric.boot(payload);
+  }
+
+  /**
    * Records an error which caused server shutdown, for inclusion in the
    * instance of this class upon the _next_ server start.
    *
@@ -126,11 +141,21 @@ export class BootInfo extends CommonBase {
   }
 
   /**
+   * Gets the payload to use for the `boot` metric.
+   *
+   * @returns {object} The boot metric payload.
+   */
+  _bootMetricPayload() {
+    const { bootCount, buildId, cleanShutdownCount, errorShutdownCount } = this._info;
+
+    return { bootCount, buildId, cleanShutdownCount, errorShutdownCount };
+  }
+
+  /**
    * Logs the `boot` metric.
    */
   _logBoot() {
-    const { bootCount, buildId, cleanShutdownCount, errorShutdownCount } = this._info;
-    log.metric.boot({ buildId, bootCount, cleanShutdownCount, errorShutdownCount });
+    log.metric.boot(this._bootMetricPayload());
   }
 
   /**

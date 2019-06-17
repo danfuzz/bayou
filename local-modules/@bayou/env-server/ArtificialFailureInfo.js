@@ -105,53 +105,35 @@ export class ArtificialFailureInfo extends CommonBase {
   }
 
   /**
-   * Indicates whether this server should actually be failing with the indicated
-   * type of failure. This will be `true` _if and only if_ all of:
+   * Indicates whether this server should actually be failing at all, or failing
+   * specifically with the indicated type of failure. This will be `true` _if
+   * and only if_ all of:
    *
    * * {@link #allowFailure} was called.
-   * * {@link #failType} is the one passed here.
+   * * {@link #failType} is the one passed here or is `null`.
    * * This server's hash causes it to be in the failing cohort per the
    *   {@link #failPercent}.
    *
-   * @param {string} failType Type of failure in question. Must be one of the
-   *   `TYPE_*` constants defined by this class.
+   * @param {string|null} [failType = null] Type of failure in question, or
+   *   `null` to just ask if this server should be faily in general. If
+   *   non-`null`, must be one of the `TYPE_*` constants defined by this class.
    * @returns {boolean} `true` if this server should be failing in the indicated
    *   manner, or `false` if not.
    */
-  shouldFail(failType) {
-    TString.check(failType);
+  shouldFail(failType = null) {
+    TString.orNull(failType);
 
-    // This will be `0` if `allowFailure()` wasn't called.
-    const percent = this.failPercent;
+    const percent     = this.failPercent; // This will be `0` if `allowFailure()` wasn't called.
+    const typeMatches = (failType === null) || (failType === this.failType);
 
-    if ((percent === 0) || (failType !== this.failType)) {
+    if ((percent === 0) || !typeMatches) {
       return false;
     }
 
     // Hash the server ID and convert it into a value in the range 0..99.
-    const serverNum = ArtificialFailureInfo.stringPercentHash(Deployment.serverId);
+    const serverNum = ArtificialFailureInfo._percentFromString(Deployment.serverId());
 
     return serverNum < percent;
-  }
-
-  /**
-   * Gets an integer value in the range `[0..99]` as the hash of a given string.
-   *
-   * @param {string} s The string to hash.
-   * @returns {Int} The hashed value.
-   */
-  _stringPercentHash(s) {
-    TString.check(s);
-
-    const hash = crypto.createHash('sha256');
-
-    hash.update(s);
-
-    const digest = hash.digest();
-    const value  = digest.readUInt32LE(); // Grab first 32 bits as the base hash.
-    const frac   = value / 0x100000000;
-
-    return Math.floor(frac * 100);
   }
 
   /**
@@ -170,12 +152,32 @@ export class ArtificialFailureInfo extends CommonBase {
     const typeConst  = ArtificialFailureInfo[`TYPE_${camelType}`];
 
     if (   isNaN(percentNum) || (percentNum < 0) || (percentNum > 100)
-        || (typeConst !== artificialFailureType)) {
+        || (typeConst !== camelType)) {
       // Fail-safe: If the build info properties aren't set up right, treat it
       // as a no-failure situation.
       return [0, ArtificialFailureInfo.TYPE_none];
     }
 
     return [percentNum, typeConst];
+  }
+
+  /**
+   * Gets an integer value in the range `[0..99]` as the hash of a given string.
+   *
+   * @param {string} s The string to hash.
+   * @returns {Int} The hashed value.
+   */
+  static _percentFromString(s) {
+    TString.check(s);
+
+    const hash = crypto.createHash('sha256');
+
+    hash.update(s);
+
+    const digest = hash.digest();
+    const value  = digest.readUInt32LE(); // Grab first 32 bits as the base hash.
+    const frac   = value / 0x100000000;
+
+    return Math.floor(frac * 100);
   }
 }

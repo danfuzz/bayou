@@ -20,8 +20,18 @@ describe('@bayou/env-server/BuildInfo', () => {
       const requiredKeys = [
         'buildDate', 'buildId', 'buildNumber', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
+      const optionalKeys = [
+        'artificialFailurePercent', 'artificialFailureType'
+      ];
 
       assert.isObject(info);
+
+      for (const k of optionalKeys) {
+        if (info[k] !== undefined) {
+          delete info[k];
+        }
+      }
+
       assert.hasAllKeys(info, requiredKeys);
     });
   });
