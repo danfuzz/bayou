@@ -9,19 +9,30 @@ import { BuildInfo } from '@bayou/env-server/BuildInfo';
 
 describe('@bayou/env-server/BuildInfo', () => {
   describe('.info', () => {
-    it('is a frozen value', () => {
+    it('is a frozen object', () => {
       const info = new BuildInfo().info;
 
+      assert.isObject(info);
       assert.isFrozen(info);
     });
 
-    it('is an object full of the expected product info', () => {
-      const info = new BuildInfo().info;
+    it('contains the expected product info', () => {
       const requiredKeys = [
         'buildDate', 'buildId', 'buildNumber', 'commitId', 'commitDate', 'name', 'nodeVersion', 'version'
       ];
+      const optionalKeys = [
+        'artificialFailurePercent', 'artificialFailureType'
+      ];
 
-      assert.isObject(info);
+      // Get the property and clone it, so we can modify it below.
+      const info = Object.assign({}, new BuildInfo().info);
+
+      for (const k of optionalKeys) {
+        if (info[k] !== undefined) {
+          delete info[k];
+        }
+      }
+
       assert.hasAllKeys(info, requiredKeys);
     });
   });

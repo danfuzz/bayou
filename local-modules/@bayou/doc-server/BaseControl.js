@@ -1191,19 +1191,13 @@ export class BaseControl extends BaseDataManager {
     }
 
     try {
-      this.log.event.writingStoredSnapshot(revNum);
-
       const snapshot = await this.getSnapshot(revNum);
 
       await this._writeStoredSnapshot(snapshot);
-      this.log.event.wroteStoredSnapshot(revNum);
     } catch (e) {
-      // Though unfortunate, this isn't tragic: Stored snapshots are created on
-      // a best-effort basis. To the extent that they're required, it's only for
-      // "ephemeral" document parts that don't keep full history, and such parts
-      // only ever arrange for earlier changes to be erased after a later
-      // snapshot is _known_ to be written.
-      this.log.event.failedToWriteStoredSnapshot(revNum, e);
+      // Though unfortunate, this isn't tragic. See longer comment below in
+      // `_writeStoredSnapshot()` for more detai.
+      this.log.event.writeStoredSnapshotFailed(revNum, e);
     }
   }
 
@@ -1242,14 +1236,28 @@ export class BaseControl extends BaseDataManager {
       fileOps.push(FileOp.op_deletePathRange(this.constructor.changePathPrefix, 0, deleteBefore));
     }
 
+    const logInfo = (deleteBefore === 0)
+      ? [snapshot.revNum]
+      : [snapshot.revNum, `delete r0..r${deleteBefore}`];
+    this.log.event.writingStoredSnapshot(...logInfo);
+
     const fileRevNum = await file.currentRevNum(timeoutMsec);
     const fileChange = new FileChange(fileRevNum + 1, fileOps);
     const success    = await file.appendChange(fileChange, timeoutMsec);
 
-    // `success === false` indicates a lost append race. Turn it into an
-    // exception here, so that our caller can react appropriately.
-    if (!success) {
-      throw Errors.revisionNotAvailable(fileChange.revNum);
+    // **Note:** `success === false` indicates a lost append race. It's okay to
+    // ignore this condition (beyond the logging below) because snapshot storage
+    // is -- and can safely be -- on a best-effort basis. That is, though
+    // unfortunate, this isn't tragic: To the extent that snapshots are
+    // required, it's only for "ephemeral" document parts (which don't keep full
+    // change history), and such parts only ever have earlier changes erased
+    // after a later snapshot is _known_ to be written (per the code immediately
+    // above in this very method).
+
+    if (success) {
+      this.log.event.wroteStoredSnapshot(...logInfo);
+    } else {
+      this.log.event.writeStoredSnapshotLostAppendRace(...logInfo);
     }
   }
 

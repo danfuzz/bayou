@@ -64,14 +64,11 @@ export class ServerEnv extends Singleton {
   }
 
   /**
-   * {object} Ad-hoc object with generally-useful info about the booting of this
-   * server, intended for logging / debugging.
-   *
-   * **Note:** This isn't all-caps `*_INFO` because it's not necessarily
-   * expected to be a constant value.
+   * {BootInfo} Info about the booting of this server, intended for logging /
+   * debugging.
    */
   get bootInfo() {
-    return this._bootInfo.info;
+    return this._bootInfo;
   }
 
   /**

@@ -42,7 +42,7 @@ export class BuildInfo extends CommonBase {
 
   /**
    * {object} The info object, as parsed from the build / product
-   * metainformation file.
+   * metainformation file. This is a frozen object.
    */
   get info() {
     return this._info;
