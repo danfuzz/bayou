@@ -28,7 +28,7 @@ export class BaseSession extends CommonBase {
     super();
 
     /** {DocComplex} File complex that this instance is part of. */
-    this._fileComplex = DocComplex.check(fileComplex);
+    this._docComplex = DocComplex.check(fileComplex);
 
     /** {string} Author ID. */
     this._authorId = Storage.docStore.checkAuthorIdSyntax(authorId);
@@ -49,7 +49,7 @@ export class BaseSession extends CommonBase {
     this._propertyControl = fileComplex.propertyControl;
 
     /** {Logger} Logger to use to relay events coming from the client. */
-    this._clientLog = this._fileComplex.fileAccess.log.withAddedContext('client');
+    this._clientLog = this._docComplex.fileAccess.log.withAddedContext('client');
   }
 
   /**
@@ -151,7 +151,7 @@ export class BaseSession extends CommonBase {
    * @returns {string} The document ID.
    */
   getDocumentId() {
-    return this._fileComplex.fileAccess.documentId;
+    return this._docComplex.fileAccess.documentId;
   }
 
   /**
@@ -160,7 +160,7 @@ export class BaseSession extends CommonBase {
    * @returns {string} The file ID.
    */
   getFileId() {
-    return this._fileComplex.fileAccess.file.id;
+    return this._docComplex.fileAccess.file.id;
   }
 
   /**
