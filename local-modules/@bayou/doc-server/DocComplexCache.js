@@ -36,8 +36,8 @@ export class DocComplexCache extends BaseCache {
   }
 
   /** @override */
-  _impl_idFromObject(fileComplex) {
-    return fileComplex.fileAccess.documentId;
+  _impl_idFromObject(docComplex) {
+    return docComplex.fileAccess.documentId;
   }
 
   /** @override */

@@ -17,13 +17,13 @@ export class EditSession extends ViewSession {
   /**
    * Constructs an instance.
    *
-   * @param {DocComplex} fileComplex File complex representing the underlying
-   *   file for this instance to use.
+   * @param {DocComplex} docComplex Document complex representing the underlying
+   *   document for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
    */
-  constructor(fileComplex, authorId, caretId) {
-    super(fileComplex, authorId, caretId);
+  constructor(docComplex, authorId, caretId) {
+    super(docComplex, authorId, caretId);
 
     Object.freeze(this);
   }
