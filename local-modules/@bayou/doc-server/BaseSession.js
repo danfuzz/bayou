@@ -27,7 +27,7 @@ export class BaseSession extends CommonBase {
   constructor(docComplex, authorId, caretId) {
     super();
 
-    /** {DocComplex} File complex that this instance is part of. */
+    /** {DocComplex} Document complex that this instance is part of. */
     this._docComplex = DocComplex.check(docComplex);
 
     /** {string} Author ID. */
