@@ -28,7 +28,7 @@ const MAKE_SESSION_TIMEOUT_MSEC = 10 * 1000; // Ten seconds.
  * how many active editors there are on that document. (This guarantee is
  * provided by `DocServer`.)
  */
-export class FileComplex extends BaseComplexMember {
+export class DocComplex extends BaseComplexMember {
   /**
    * Constructs an instance.
    *

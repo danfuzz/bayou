@@ -8,8 +8,8 @@ import { CommonBase } from '@bayou/util-common';
 import { FileAccess } from './FileAccess';
 
 /**
- * Base class for things that hook up to a {@link FileComplex} and for
- * `FileComplex` itself.
+ * Base class for things that hook up to a {@link DocComplex} and for
+ * `DocComplex` itself.
  */
 export class BaseComplexMember extends CommonBase {
   /**

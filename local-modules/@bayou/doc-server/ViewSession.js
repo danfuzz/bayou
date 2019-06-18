@@ -21,7 +21,7 @@ export class ViewSession extends BaseSession {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex representing the underlying
+   * @param {DocComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.

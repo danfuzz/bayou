@@ -7,7 +7,7 @@ import { Storage } from '@bayou/config-server';
 import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';
 
-import { FileComplex } from './FileComplex';
+import { DocComplex } from './DocComplex';
 import { DocComplexCache } from './DocComplexCache';
 
 /** {Logger} Logger for this module. */
@@ -33,7 +33,7 @@ export class DocServer extends Singleton {
     this._codec = Codecs.fullCodec;
 
     /**
-     * {DocComplexCache} Cache of {@link FileComplex} instances, mapped from
+     * {DocComplexCache} Cache of {@link DocComplex} instances, mapped from
      * document IDs.
      */
     this._complexes = new DocComplexCache(log);
@@ -42,11 +42,11 @@ export class DocServer extends Singleton {
   }
 
   /**
-   * Gets the `FileComplex` for the document with the given ID. It is okay (not
+   * Gets the `DocComplex` for the document with the given ID. It is okay (not
    * an error) if the underlying file doesn't happen to exist.
    *
    * @param {string} documentId The document ID.
-   * @returns {FileComplex} The corresponding `FileComplex`.
+   * @returns {DocComplex} The corresponding `DocComplex`.
    */
   async getFileComplex(documentId) {
     // **Note:** We don't make an `async` back-end call to check the full
@@ -66,7 +66,7 @@ export class DocServer extends Singleton {
         const fileId  = docInfo.fileId;
 
         const file   = await Storage.fileStore.getFile(fileId);
-        const result = new FileComplex(this._codec, documentId, file);
+        const result = new DocComplex(this._codec, documentId, file);
 
         result.log.event.makingComplex(...((fileId === documentId) ? [] : [fileId]));
 

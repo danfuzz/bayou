@@ -7,7 +7,7 @@ import { CaretId } from '@bayou/doc-common';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import { FileComplex } from './FileComplex';
+import { DocComplex } from './DocComplex';
 
 /**
  * Base class for the server-side representative of an access session for a
@@ -19,7 +19,7 @@ export class BaseSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex representing the underlying
+   * @param {DocComplex} fileComplex File complex representing the underlying
    *   file for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
@@ -27,8 +27,8 @@ export class BaseSession extends CommonBase {
   constructor(fileComplex, authorId, caretId) {
     super();
 
-    /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = FileComplex.check(fileComplex);
+    /** {DocComplex} File complex that this instance is part of. */
+    this._fileComplex = DocComplex.check(fileComplex);
 
     /** {string} Author ID. */
     this._authorId = Storage.docStore.checkAuthorIdSyntax(authorId);

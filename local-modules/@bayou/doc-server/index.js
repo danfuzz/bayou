@@ -8,12 +8,12 @@ import { BaseDataManager } from './BaseDataManager';
 import { BodyControl } from './BodyControl';
 import { BodyDeltaHtml } from './BodyDeltaHtml';
 import { CaretControl } from './CaretControl';
+import { DocComplex } from './DocComplex';
 import { DocServer } from './DocServer';
 import { EditSession } from './EditSession';
 import { DurableControl } from './DurableControl';
 import { EphemeralControl } from './EphemeralControl';
 import { FileAccess } from './FileAccess';
-import { FileComplex } from './FileComplex';
 import { PropertyControl } from './PropertyControl';
 import { SchemaHandler } from './SchemaHandler';
 import { ValidationStatus } from './ValidationStatus';
@@ -25,12 +25,12 @@ export {
   BodyControl,
   BodyDeltaHtml,
   CaretControl,
+  DocComplex,
   DocServer,
   EditSession,
   DurableControl,
   EphemeralControl,
   FileAccess,
-  FileComplex,
   PropertyControl,
   SchemaHandler,
   ValidationStatus
