@@ -8,7 +8,7 @@ import { Logger } from '@bayou/see-all';
 import { Singleton } from '@bayou/util-common';
 
 import { FileComplex } from './FileComplex';
-import { FileComplexCache } from './FileComplexCache';
+import { DocComplexCache } from './DocComplexCache';
 
 /** {Logger} Logger for this module. */
 const log = new Logger('doc-server');
@@ -33,10 +33,10 @@ export class DocServer extends Singleton {
     this._codec = Codecs.fullCodec;
 
     /**
-     * {FileComplexCache} Cache of {@link FileComplex} instances, mapped from
+     * {DocComplexCache} Cache of {@link FileComplex} instances, mapped from
      * document IDs.
      */
-    this._complexes = new FileComplexCache(log);
+    this._complexes = new DocComplexCache(log);
 
     Object.freeze(this);
   }

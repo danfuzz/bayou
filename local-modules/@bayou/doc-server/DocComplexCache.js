@@ -10,7 +10,7 @@ import { FileComplex } from './FileComplex';
 /**
  * Cache of active instances of {@link FileComplex}.
  */
-export class FileComplexCache extends BaseCache {
+export class DocComplexCache extends BaseCache {
   /**
    * Constructs an instance.
    *
