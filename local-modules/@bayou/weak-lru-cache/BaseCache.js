@@ -64,6 +64,17 @@ export class BaseCache extends CommonBase {
   }
 
   /**
+   * {Int} An upper bound on the size (count of cached items) of this instance.
+   *
+   * **Note:** This value can be _larger_ than the actual number of items in the
+   * cache, because it is possible that there are entries in the cache whose
+   * cached values have been GC'ed.
+   */
+  get size() {
+    return this._weakCache.size;
+  }
+
+  /**
    * Adds the given instance to the cache, both as a weak reference and strongly
    * at the head of the LRU cache (that is, as the _most_ recently referenced
    * object). It is an error to add an instance with an ID that is already
