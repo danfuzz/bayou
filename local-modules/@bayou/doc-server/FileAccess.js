@@ -16,7 +16,7 @@ const log = new Logger('doc');
  * {@link Logger} instance for use with a file complex. This class mainly exists
  * exists so as to make it easier to test {@link BaseControl} and its subclasses
  * in isolation, since otherwise they would all have mutual dependencies via
- * {@link FileComplex}.
+ * {@link DocComplex}.
  */
 export class FileAccess extends CommonBase {
   /**

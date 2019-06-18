@@ -7,7 +7,7 @@ import { CaretId } from '@bayou/doc-common';
 import { TBoolean } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
-import { FileComplex } from './FileComplex';
+import { DocComplex } from './DocComplex';
 
 /**
  * Base class for the server-side representative of an access session for a
@@ -19,16 +19,16 @@ export class BaseSession extends CommonBase {
   /**
    * Constructs an instance.
    *
-   * @param {FileComplex} fileComplex File complex representing the underlying
-   *   file for this instance to use.
+   * @param {DocComplex} docComplex Document complex representing the underlying
+   *   document for this instance to use.
    * @param {string} authorId The author this instance acts on behalf of.
    * @param {string} caretId Caret ID for this instance.
    */
-  constructor(fileComplex, authorId, caretId) {
+  constructor(docComplex, authorId, caretId) {
     super();
 
-    /** {FileComplex} File complex that this instance is part of. */
-    this._fileComplex = FileComplex.check(fileComplex);
+    /** {DocComplex} Document complex that this instance is part of. */
+    this._docComplex = DocComplex.check(docComplex);
 
     /** {string} Author ID. */
     this._authorId = Storage.docStore.checkAuthorIdSyntax(authorId);
@@ -40,16 +40,16 @@ export class BaseSession extends CommonBase {
     this._canEdit = TBoolean.check(this._impl_canEdit());
 
     /** {BodyControl} The underlying body content controller. */
-    this._bodyControl = fileComplex.bodyControl;
+    this._bodyControl = docComplex.bodyControl;
 
     /** {CaretControl} The underlying caret info controller. */
-    this._caretControl = fileComplex.caretControl;
+    this._caretControl = docComplex.caretControl;
 
     /** {PropertyControl} The underlying property (metadata) controller. */
-    this._propertyControl = fileComplex.propertyControl;
+    this._propertyControl = docComplex.propertyControl;
 
     /** {Logger} Logger to use to relay events coming from the client. */
-    this._clientLog = this._fileComplex.fileAccess.log.withAddedContext('client');
+    this._clientLog = this._docComplex.fileAccess.log.withAddedContext('client');
   }
 
   /**
@@ -151,7 +151,7 @@ export class BaseSession extends CommonBase {
    * @returns {string} The document ID.
    */
   getDocumentId() {
-    return this._fileComplex.fileAccess.documentId;
+    return this._docComplex.fileAccess.documentId;
   }
 
   /**
@@ -160,7 +160,7 @@ export class BaseSession extends CommonBase {
    * @returns {string} The file ID.
    */
   getFileId() {
-    return this._fileComplex.fileAccess.file.id;
+    return this._docComplex.fileAccess.file.id;
   }
 
   /**

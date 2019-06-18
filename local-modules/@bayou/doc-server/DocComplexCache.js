@@ -5,12 +5,12 @@
 import { Storage } from '@bayou/config-server';
 import { BaseCache } from '@bayou/weak-lru-cache';
 
-import { FileComplex } from './FileComplex';
+import { DocComplex } from './DocComplex';
 
 /**
- * Cache of active instances of {@link FileComplex}.
+ * Cache of active instances of {@link DocComplex}.
  */
-export class FileComplexCache extends BaseCache {
+export class DocComplexCache extends BaseCache {
   /**
    * Constructs an instance.
    *
@@ -22,7 +22,7 @@ export class FileComplexCache extends BaseCache {
 
   /** @override */
   get _impl_cachedClass() {
-    return FileComplex;
+    return DocComplex;
   }
 
   /** @override */
@@ -36,8 +36,8 @@ export class FileComplexCache extends BaseCache {
   }
 
   /** @override */
-  _impl_idFromObject(fileComplex) {
-    return fileComplex.fileAccess.documentId;
+  _impl_idFromObject(docComplex) {
+    return docComplex.fileAccess.documentId;
   }
 
   /** @override */

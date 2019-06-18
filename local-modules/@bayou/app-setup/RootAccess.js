@@ -13,7 +13,7 @@ import { CommonBase, Errors } from '@bayou/util-common';
 
 /**
  * {Int} How long to wait (in msec) in {@link #makeSessionInfo} while holding
- * a {@link FileComplex}, as a tactic to avoid overly-eager GC. See long comment
+ * a {@link DocComplex}, as a tactic to avoid overly-eager GC. See long comment
  * in that method for details.
  */
 const COMPLEX_HOLD_TIME_MSEC = 10 * 1000; // One second.

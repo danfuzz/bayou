@@ -45,7 +45,7 @@ const CHANGES_PER_STORED_SNAPSHOT = 1000;
 /**
  * Base class for document part controllers. There is one instance of each
  * concrete subclass of this class for each actively-edited document. They are
- * all managed and hooked up via {@link FileComplex}.
+ * all managed and hooked up via {@link DocComplex}.
  *
  * This class has two direct subclasses, which are both abstract,
  * {@link DurableControl} and {@link EphemeralControl}. The only difference

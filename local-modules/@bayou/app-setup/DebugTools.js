@@ -420,9 +420,9 @@ export class DebugTools extends CommonBase {
    * @returns {BodyControl} Promise for the requested document.
    */
   async _getExistingBody(req) {
-    const documentId  = req.params.documentId;
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const exists      = await fileComplex.file.exists();
+    const documentId = req.params.documentId;
+    const docComplex = await DocServer.theOne.getFileComplex(documentId);
+    const exists     = await docComplex.file.exists();
 
     if (!exists) {
       const error = new Error();
@@ -430,7 +430,7 @@ export class DebugTools extends CommonBase {
       throw error;
     }
 
-    return fileComplex.bodyControl;
+    return docComplex.bodyControl;
   }
 
   /**

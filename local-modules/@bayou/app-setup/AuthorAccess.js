@@ -66,11 +66,11 @@ export class AuthorAccess extends CommonBase {
 
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
+    const docComplex  = await DocServer.theOne.getFileComplex(documentId);
 
     let session;
     try {
-      session = await fileComplex.findExistingSession(authorId, caretId, canEdit);
+      session = await docComplex.findExistingSession(authorId, caretId, canEdit);
     } catch (e) {
       if (Errors.is_badId(e)) {
         // Per method header doc, this isn't considered a throwable offense.
@@ -108,8 +108,8 @@ export class AuthorAccess extends CommonBase {
 
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
-    const fileComplex = await DocServer.theOne.getFileComplex(documentId);
-    const session     = await fileComplex.makeNewSession(authorId, canEdit);
+    const docComplex  = await DocServer.theOne.getFileComplex(documentId);
+    const session     = await docComplex.makeNewSession(authorId, canEdit);
     const caretId     = session.getCaretId();
 
     log.event.madeSession({ authorId, documentId, caretId, canEdit });
