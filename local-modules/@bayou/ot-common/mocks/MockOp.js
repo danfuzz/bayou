@@ -26,6 +26,10 @@ export class MockOp extends BaseOp {
     return this.payload.args[0];
   }
 
+  get _impl_roughSize() {
+    return this.payload.name.length + 1000;
+  }
+
   static _impl_isValidPayload() {
     return true;
   }

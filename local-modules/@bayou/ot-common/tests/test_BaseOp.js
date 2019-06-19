@@ -96,6 +96,33 @@ describe('@bayou/ot-common/BaseOp', () => {
     });
   });
 
+  describe('.roughSize', () => {
+    it('calls through to the `impl`', () => {
+      const op = new MockOp('snap');
+
+      assert.strictEqual(op.roughSize, 1004); // name + 1000 per `MockOp` definition.
+    });
+
+    it('rejects a bogus subclass `impl`', () => {
+      function test(v) {
+        class BadOp extends MockOp {
+          _impl_roughSize() {
+            return v;
+          }
+        }
+
+        const op = new BadOp('x');
+        assert.throws(() => op.roughSize, /badValue/);
+      }
+
+      test(0);
+      test(-1);
+      test(123.123);
+      test(null);
+      test('x');
+    });
+  });
+
   describe('deconstruct()', () => {
     it('returns an array data value', () => {
       const op     = new MockOp('x', ['florp', 'like'], { timeline: 'sideways' });

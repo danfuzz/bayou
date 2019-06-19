@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { TBoolean, TString } from '@bayou/typecheck';
+import { TBoolean, TInt, TString } from '@bayou/typecheck';
 import { CommonBase, Errors, Functor } from '@bayou/util-common';
 
 /**
@@ -121,6 +121,17 @@ export class BaseOp extends CommonBase {
   }
 
   /**
+   * {Int} The "rough size" of the op, in terms of storage requirements in
+   * working memory or stable storage. This is _not_ a guaranteed size, nor does
+   * it have a defined unit. It is merely meant for apples-to-apples comparisons
+   * (and mostly for doing so in the aggregate). This value is always a positive
+   * integer.
+   */
+  get roughSize() {
+    return TInt.min(this._impl_roughSize, 1);
+  }
+
+  /**
    * Gets reconstruction arguments for this instance.
    *
    * @returns {array<*>} Reconstruction arguments.
@@ -149,6 +160,16 @@ export class BaseOp extends CommonBase {
 
     return (this.constructor === other.constructor)
       && this._payload.equals(other._payload);
+  }
+
+  /**
+   * {Int} Main implementation of {@link #roughSize}. Subclasses must fill this
+   * in.
+   *
+   * @abstract
+   */
+  get _impl_roughSize() {
+    return this._mustOverride();
   }
 
   /**
