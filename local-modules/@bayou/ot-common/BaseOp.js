@@ -121,11 +121,11 @@ export class BaseOp extends CommonBase {
   }
 
   /**
-   * {Int} The "rough size" of the op, in terms of storage requirements in
-   * working memory or stable storage. This is _not_ a guaranteed size, nor does
-   * it have a defined unit. It is merely meant for apples-to-apples comparisons
-   * (and mostly for doing so in the aggregate). This value is always a positive
-   * integer.
+   * {Int} The "rough size" of this instance, in terms of storage requirements
+   * in working memory or stable storage, as positive integer of an ill-defined
+   * unit. This is _not_ a guaranteed size (such as of bytes); it is merely
+   * meant for apples-to-apples comparisons amongst instances of the same class
+   * (and mostly for doing so in the aggregate).
    */
   get roughSize() {
     return TInt.min(this._impl_roughSize, 1);
