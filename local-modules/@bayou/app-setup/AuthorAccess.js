@@ -78,8 +78,8 @@ export class AuthorAccess extends CommonBase {
       }
     }
 
-
     log.event.foundSession({ authorId, documentId, caretId, canEdit });
+    this._logResourceConsumption(docComplex);
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
@@ -113,6 +113,7 @@ export class AuthorAccess extends CommonBase {
     const caretId     = session.getCaretId();
 
     log.event.madeSession({ authorId, documentId, caretId, canEdit });
+    this._logResourceConsumption(docComplex);
 
     // The `ProxiedObject` wrapper tells the API to return this to the far side
     // of the connection as a reference, instead of by encoding its contents.
@@ -159,5 +160,25 @@ export class AuthorAccess extends CommonBase {
     }
 
     return result;
+  }
+
+  /**
+   * Logs the stats about the resource consumption of the given
+   * {@link DocComplex} on a best-effort basis.
+   *
+   * @param {DocComplex} docComplex The complex in question.
+   */
+  async _logResourceConsumption(docComplex) {
+    try {
+      const documentId = docComplex.fileAccess.documentId;
+      const stats      = await docComplex.currentResourceConsumption();
+
+      log.event.documentResourceUsage(documentId, stats);
+    } catch (e) {
+      // We don't want a failure here to escape and either derail a more useful
+      // operation or (worse) turn into an uncaught rejection and hald the
+      // system.
+      log.event.failedToDetermineResourceConsumption(e);
+    }
   }
 }

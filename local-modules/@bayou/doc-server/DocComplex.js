@@ -30,6 +30,15 @@ const MAKE_SESSION_TIMEOUT_MSEC = 10 * 1000; // Ten seconds.
  */
 export class DocComplex extends BaseComplexMember {
   /**
+   * {Int} Benchmark size which can be considered representative of a "huge
+   * document," if reported as the value for `roughSize` from
+   * {@link #currentResourceConsumption}.
+   */
+  static get ROUGH_SIZE_HUGE() {
+    return 1000000;
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {Codec} codec Codec instance to use.
