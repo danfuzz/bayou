@@ -299,21 +299,22 @@ export class BodyOp extends BaseOp {
     const props = this.props;
     let   total = props.opName.length + 10;
 
-    if (props.text !== undefined) {
+    if (typeof props.text === 'string') {
       total += props.text.length;
     }
 
     if (props.value !== undefined) {
-      // **TODO:** This is an arbitrary value, so we can't do anything too
-      // specific with it, but maybe we should do better than just adding an
-      // arbitrary constant.
+      // **TODO:** `props.value` is a value of arbitrary type, so we can't do
+      // anything too specific with it, but maybe we should do better than just
+      // adding an arbitrary constant.
       total += 50;
     }
 
-    if (props.attributes !== undefined) {
+    const attribs = props.attributes;
+    if ((attribs !== null) && (typeof attribs === 'object')) {
       // **TODO:** Similar to `.value`, we might want to do more than just add
       // a constant per attribute binding.
-      total += Object.keys(props.attributes) * 20;
+      total += Object.keys(attribs).length * 20;
     }
 
     return total;
