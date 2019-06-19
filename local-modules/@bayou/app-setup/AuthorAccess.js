@@ -66,7 +66,7 @@ export class AuthorAccess extends CommonBase {
 
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
-    const docComplex  = await DocServer.theOne.getFileComplex(documentId);
+    const docComplex  = await DocServer.theOne.getDocComplex(documentId);
 
     let session;
     try {
@@ -108,7 +108,7 @@ export class AuthorAccess extends CommonBase {
 
     const authorId    = this._authorId;
     const { canEdit } = await this._checkIdsAndGetPermissions(documentId);
-    const docComplex  = await DocServer.theOne.getFileComplex(documentId);
+    const docComplex  = await DocServer.theOne.getDocComplex(documentId);
     const session     = await docComplex.makeNewSession(authorId, canEdit);
     const caretId     = session.getCaretId();
 

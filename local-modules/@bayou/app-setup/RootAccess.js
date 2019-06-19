@@ -72,7 +72,7 @@ export class RootAccess extends CommonBase {
     // might as well warm it up. But also, this ensures that the complex is in
     // at least a semblance of a valid state before we return the info to the
     // caller.
-    const complex = await DocServer.theOne.getFileComplex(documentId);
+    const complex = await DocServer.theOne.getDocComplex(documentId);
 
     // This is a little bit of a hack: Immediately after the above call to get
     // the file complex returns, the complex _would_ be GC-able because there

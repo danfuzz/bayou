@@ -48,7 +48,7 @@ export class DocServer extends Singleton {
    * @param {string} documentId The document ID.
    * @returns {DocComplex} The corresponding `DocComplex`.
    */
-  async getFileComplex(documentId) {
+  async getDocComplex(documentId) {
     // **Note:** We don't make an `async` back-end call to check the full
     // validity of `documentId` here, because that would be a waste if it turns
     // out we've already cached a valid result. Once we determine that we need
