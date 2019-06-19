@@ -297,7 +297,7 @@ export class BodyOp extends BaseOp {
    */
   get _impl_roughSize() {
     const props = this.props;
-    let   total = 10;
+    let   total = props.opName.length + 10;
 
     if (props.text !== undefined) {
       total += props.text.length;
