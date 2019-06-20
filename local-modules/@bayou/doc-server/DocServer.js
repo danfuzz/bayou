@@ -83,4 +83,56 @@ export class DocServer extends Singleton {
       }
     });
   }
+
+  /**
+   * Gets stats about the resource consumption managed by this instance, in the
+   * form of an ad-hoc plain object. This information is used as part of the
+   * high-level "load factor" metric calculation.
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range for {@link BaseFile}. `null` is treated as the maximum allowed
+   *   value.
+   * @returns {object} Ad-hoc plain object with resource consumption stats.
+   */
+  async currentResourceConsumption(timeoutMsec = null) {
+    let totalDocuments   = 0;
+    let totalBodyChanges = 0;
+    let totalFileChanges = 0;
+    let totalRoughSize   = 0;
+    let totalSessions    = 0;
+
+    // Helper for the loop below: Process a `DocComplex`.
+    async function processDocComplex(complex) {
+      const stats = await complex.currentResourceConsumption(timeoutMsec);
+
+      totalDocuments++;
+      totalBodyChanges += stats.bodyChangeCount;
+      totalFileChanges += stats.fileChangeCount;
+      totalRoughSize   += stats.roughSize;
+      totalSessions    += stats.sessionCount;
+    }
+
+    for (const value of this._complexes.values()) {
+      try {
+        if (value.object) {
+          await processDocComplex(value.object);
+        } else {
+          await processDocComplex(await value.promise);
+        }
+      } catch (e) {
+        // Ignore the exception (other than logging): Resource consumption
+        // calculation is best-effort only.
+        log.event.errorDuringResourceConsumption(e);
+      }
+    }
+
+    return {
+      totalDocuments,
+      totalBodyChanges,
+      totalFileChanges,
+      totalRoughSize,
+      totalSessions
+    };
+  }
 }
