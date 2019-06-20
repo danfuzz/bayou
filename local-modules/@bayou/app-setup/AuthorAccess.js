@@ -177,8 +177,8 @@ export class AuthorAccess extends CommonBase {
     } catch (e) {
       // We don't want a failure here to escape and either derail a more useful
       // operation or (worse) turn into an uncaught rejection and hald the
-      // system.
-      log.event.failedToDetermineResourceConsumption(e);
+      // system. That is, this method is run on a best-effort basis.
+      log.event.errorDuringResourceConsumptionCalculation(e);
     }
   }
 }

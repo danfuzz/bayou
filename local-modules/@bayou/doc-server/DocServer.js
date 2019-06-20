@@ -123,7 +123,7 @@ export class DocServer extends Singleton {
       } catch (e) {
         // Ignore the exception (other than logging): Resource consumption
         // calculation is best-effort only.
-        log.event.errorDuringResourceConsumption(e);
+        log.event.errorDuringResourceConsumptionCalculation(e);
       }
     }
 
