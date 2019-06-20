@@ -33,10 +33,10 @@ import { VarInfo } from './VarInfo';
 const CLOSE_CONNECTION_LOOP_DELAY_MSEC = 250; // 1/4 sec.
 
 /**
- * {Int} How long to wait (in msec) between {@link #_connections} update
- * iterations.
+ * {Int} How long to wait (in msec) between iterations in
+ * {@link #_pollingUpdateLoop}.
  */
-const CONNECTIONS_UPDATE_DELAY_MSEC = 60 * 1000; // One minute.
+const POLLING_UPDATE_DELAY_MSEC = 60 * 1000; // One minute.
 
 /** {Logger} Logger for this class. */
 const log = new Logger('app');
@@ -116,7 +116,7 @@ export class Application extends CommonBase {
       log.event.addedDebugEndpoints();
     }
 
-    this._connectionsUpdateLoop(); // This (async) method runs forever.
+    this._pollingUpdateLoop(); // This (async) method runs forever.
 
     Object.seal(this);
   }
@@ -427,23 +427,39 @@ export class Application extends CommonBase {
   }
 
   /**
-   * Updates {@link #_connections} to reflect the currently-open state, running
+   * Performs occasional polling of various bits of state, providing updates via
+   * instance variables and metric call-outs. This method runs forever.
+   Updates {@link #_connections} to reflect the currently-open state, running
    * forever and waiting a reasonable amount of time between updates.
    */
-  async _connectionsUpdateLoop() {
+  async _pollingUpdateLoop() {
+    for (;;) {
+      await Delay.resolve(POLLING_UPDATE_DELAY_MSEC);
+
+      try {
+        this._updateConnections();
+      } catch (e) {
+        // Ignore the error (other than logging). We don't want trouble here to
+        // turn into a catastrophic failure.
+        log.event.errorInPollingUpdate(e);
+      }
+    }
+  }
+
+  /**
+   * Helper for {@link #_pollingUpdateLoop}, which updates {@link #_connections}
+   * and makes related metrics out-calls.
+   */
+  _updateConnections() {
     const connections = this._connections;
 
-    for (;;) {
-      await Delay.resolve(CONNECTIONS_UPDATE_DELAY_MSEC);
-
-      for (const c of connections) {
-        if (!c.isOpen()) {
-          connections.delete(c);
-        }
+    for (const c of connections) {
+      if (!c.isOpen()) {
+        connections.delete(c);
       }
-
-      log.metric.activeConnections(this.connectionCountNow);
-      this._metrics.apiMetrics(this.connectionCountNow, this.connectionCountTotal);
     }
+
+    log.metric.activeConnections(this.connectionCountNow);
+    this._metrics.apiMetrics(this.connectionCountNow, this.connectionCountTotal);
   }
 }
