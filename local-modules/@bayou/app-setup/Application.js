@@ -13,6 +13,7 @@ import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { Codecs, Urls } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
 import { Deployment, Network } from '@bayou/config-server';
+import { DocServer } from '@bayou/doc-server';
 import { Dirs, ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
 import { Logger } from '@bayou/see-all';
@@ -392,6 +393,16 @@ export class Application extends CommonBase {
   }
 
   /**
+   * Helper for {@link #_pollingUpdateLoop}, which logs resource consumption
+   * stats.
+   */
+  async _logResourceConsumption() {
+    const stats = await DocServer.theOne.currentResourceConsumption();
+
+    log.metric.totalResourceConsumption(stats);
+  }
+
+  /**
    * Makes and returns the root access object, that is, the thing that gets
    * called to answer API calls on the root token(s).
    *
@@ -438,6 +449,7 @@ export class Application extends CommonBase {
 
       try {
         this._updateConnections();
+        await this._logResourceConsumption();
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
