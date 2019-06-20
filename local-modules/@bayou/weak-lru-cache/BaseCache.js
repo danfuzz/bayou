@@ -205,6 +205,42 @@ export class BaseCache extends CommonBase {
   }
 
   /**
+   * Gets a generator which yields the active values held in cache by this
+   * instance. For the purposes of this method, and "active" value is one which
+   * is _either_ fully initialized (and has yet to be collected by the GC) _or_
+   * which is in the process of being initialized in which it is represented as
+   * a promise (which might ultimitely get either resolved or rejected). The
+   * actual yielded values from this generator are all in the form of a
+   * single-binding plain object, which binds either `object` or `promise`, per
+   * the two above-described options.
+   *
+   * **Note:** Merely using this method does _not_ prevent cached values from
+   * being collected. It is only as each value is yielded from the generator
+   * that it becomes strongly referenced. Assuming the caller of this method
+   * drops its references promptly, the cached values will once again be subject
+   * to collection as one would hope and expect.
+   *
+   * @generator
+   * @yields {object} Currently-cached value, as a plain object of the form
+   *   `{ object: <liveObject> }` _or_ `{ promise: <promiseForObject> }`.
+   */
+  *values() {
+    for (const entry of this._weakCache.values()) {
+      const object = entry.object;
+
+      if (object !== null) {
+        yield { object };
+      } else {
+        const promise = entry.promise;
+
+        if (promise !== null) {
+          yield { promise };
+        }
+      }
+    }
+  }
+
+  /**
    * {class} Class (constructor function) for objects to be stored in instances
    * of this class.
    *
