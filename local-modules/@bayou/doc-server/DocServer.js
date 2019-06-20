@@ -96,21 +96,21 @@ export class DocServer extends Singleton {
    * @returns {object} Ad-hoc plain object with resource consumption stats.
    */
   async currentResourceConsumption(timeoutMsec = null) {
-    let totalDocuments   = 0;
-    let totalBodyChanges = 0;
-    let totalFileChanges = 0;
-    let totalRoughSize   = 0;
-    let totalSessions    = 0;
+    let bodyChangeCount = 0;
+    let documentCount   = 0;
+    let fileChangeCount = 0;
+    let roughSize       = 0;
+    let sessionCount    = 0;
 
     // Helper for the loop below: Process a `DocComplex`.
     async function processDocComplex(complex) {
       const stats = await complex.currentResourceConsumption(timeoutMsec);
 
-      totalDocuments++;
-      totalBodyChanges += stats.bodyChangeCount;
-      totalFileChanges += stats.fileChangeCount;
-      totalRoughSize   += stats.roughSize;
-      totalSessions    += stats.sessionCount;
+      documentCount++;
+      bodyChangeCount += stats.bodyChangeCount;
+      fileChangeCount += stats.fileChangeCount;
+      roughSize       += stats.roughSize;
+      sessionCount    += stats.sessionCount;
     }
 
     for (const value of this._complexes.values()) {
@@ -128,11 +128,11 @@ export class DocServer extends Singleton {
     }
 
     return {
-      totalDocuments,
-      totalBodyChanges,
-      totalFileChanges,
-      totalRoughSize,
-      totalSessions
+      bodyChangeCount,
+      documentCount,
+      fileChangeCount,
+      roughSize,
+      sessionCount
     };
   }
 }
