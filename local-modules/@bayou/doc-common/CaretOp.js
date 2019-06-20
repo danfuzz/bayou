@@ -100,6 +100,14 @@ export class CaretOp extends BaseOp {
   }
 
   /**
+   * {Int} Subclass-specific implementation of {@link #roughSize}.
+   */
+  get _impl_roughSize() {
+    // **TODO:** Consider higher-fidelity implementation.
+    return 1;
+  }
+
+  /**
    * Subclass-specific implementation of {@link #isValidPayload}.
    *
    * @param {Functor} payload_unused The would-be payload for an instance.

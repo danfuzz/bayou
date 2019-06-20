@@ -293,6 +293,34 @@ export class BodyOp extends BaseOp {
   }
 
   /**
+   * {Int} Subclass-specific implementation of {@link #roughSize}.
+   */
+  get _impl_roughSize() {
+    const props = this.props;
+    let   total = props.opName.length + 10;
+
+    if (typeof props.text === 'string') {
+      total += props.text.length;
+    }
+
+    if (props.value !== undefined) {
+      // **TODO:** `props.value` is a value of arbitrary type, so we can't do
+      // anything too specific with it, but maybe we should do better than just
+      // adding an arbitrary constant.
+      total += 50;
+    }
+
+    const attribs = props.attributes;
+    if ((attribs !== null) && (typeof attribs === 'object')) {
+      // **TODO:** Similar to `.value`, we might want to do more than just add
+      // a constant per attribute binding.
+      total += Object.keys(attribs).length * 20;
+    }
+
+    return total;
+  }
+
+  /**
    * Converts an `attributes` argument value into an array (of zero or one
    * element), suitable for passing to the payload constructor call, including
    * deep freezing a non-`null` value (if not already deep-frozen). Throws an

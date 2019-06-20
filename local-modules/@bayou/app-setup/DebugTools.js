@@ -421,7 +421,7 @@ export class DebugTools extends CommonBase {
    */
   async _getExistingBody(req) {
     const documentId = req.params.documentId;
-    const docComplex = await DocServer.theOne.getFileComplex(documentId);
+    const docComplex = await DocServer.theOne.getDocComplex(documentId);
     const exists     = await docComplex.file.exists();
 
     if (!exists) {

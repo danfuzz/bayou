@@ -102,6 +102,19 @@ export class BaseSnapshot extends CommonBase {
   }
 
   /**
+   * {Int} The "rough size" of this instance, in terms of storage requirements
+   * in working memory or stable storage, as positive integer of an ill-defined
+   * unit. This is _not_ a guaranteed size (such as of bytes); it is merely
+   * meant for apples-to-apples comparisons amongst instances of the same class.
+   *
+   * More specifically, on this class, the rough size is the same as the rough
+   * size of the {@link BaseDelta} it contains.
+   */
+  get roughSize() {
+    return this.contents.roughSize;
+  }
+
+  /**
    * Composes a change on top of this instance, to produce a new instance. If
    * the given `change` has an empty `delta` and has a `revNum` which is the
    * same as this instance, then this method returns `this`. Otherwise, this

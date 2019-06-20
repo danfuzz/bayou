@@ -30,6 +30,15 @@ const MAKE_SESSION_TIMEOUT_MSEC = 10 * 1000; // Ten seconds.
  */
 export class DocComplex extends BaseComplexMember {
   /**
+   * {Int} Benchmark size which can be considered representative of a "huge
+   * document," if reported as the value for `roughSize` from
+   * {@link #currentResourceConsumption}.
+   */
+  static get ROUGH_SIZE_HUGE() {
+    return 10000000;
+  }
+
+  /**
    * Constructs an instance.
    *
    * @param {Codec} codec Codec instance to use.
@@ -65,6 +74,39 @@ export class DocComplex extends BaseComplexMember {
   /** {PropertyControl} The property controller to use with this instance. */
   get propertyControl() {
     return this._bootstrap.propertyControl;
+  }
+
+  /**
+   * Gets stats about the resource consumption managed by this instance, in the
+   * form of an ad-hoc plain object. This information is used as part of the
+   * high-level "load factor" metric calculation.
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range for {@link BaseFile}. `null` is treated as the maximum allowed
+   *   value.
+   * @returns {object} Ad-hoc plain object with resource consumption stats.
+   */
+  async currentResourceConsumption(timeoutMsec = null) {
+    const sessionCount = this._sessions.size;
+
+    const [fileRevNum, fileSnapshot, bodyRevNum, bodySnapshot] = await Promise.all([
+      this.file.currentRevNum(timeoutMsec),
+      this.file.getSnapshot(null, timeoutMsec),
+      this.bodyControl.currentRevNum(timeoutMsec),
+      this.bodyControl.getSnapshot(null, timeoutMsec)
+    ]);
+
+    // The following is a very ad-hoc heuristic to get a sense of the
+    // "largeness" of a file. See docs for any of the `.roughSize` properties
+    // for a little more color.
+    const roughSize =
+        (fileRevNum * 15)
+      + (fileSnapshot.roughSize * 2)
+      + (bodyRevNum * 25)
+      + (bodySnapshot.roughSize * 4);
+
+    return { roughSize, sessionCount };
   }
 
   /**

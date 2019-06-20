@@ -210,6 +210,28 @@ export class FileOp extends BaseOp {
   }
 
   /**
+   * {Int} Subclass-specific implementation of {@link #roughSize}.
+   */
+  get _impl_roughSize() {
+    const props = this.props;
+    let   total = props.opName.length + 10;
+
+    if (props.path !== undefined) {
+      total += props.path.length;
+    }
+
+    if (props.hash !== undefined) {
+      total += props.hash.length;
+    }
+
+    if (props.blob !== undefined) {
+      total += props.blob.length;
+    }
+
+    return total;
+  }
+
+  /**
    * Implementation as required by the superclass.
    *
    * @override

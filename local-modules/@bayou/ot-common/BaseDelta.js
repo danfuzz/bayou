@@ -111,6 +111,26 @@ export class BaseDelta extends CommonBase {
   }
 
   /**
+   * {Int} The "rough size" of this instance, in terms of storage requirements
+   * in working memory or stable storage, as positive integer of an ill-defined
+   * unit. This is _not_ a guaranteed size (such as of bytes); it is merely
+   * meant for apples-to-apples comparisons amongst instances of the same class.
+   *
+   * More specifically, on this class, the rough size is the sum of the rough
+   * sizes of all ops, plus an arbitrary small constant factor per op.
+   */
+  get roughSize() {
+    const ops   = this._ops;
+    let   total = ops.length * 8;
+
+    for (const op of ops) {
+      total += op.roughSize;
+    }
+
+    return total;
+  }
+
+  /**
    * Composes another instance on top of this one, to produce a new instance.
    * This operation works equally whether or not `this` is a document delta.
    * If `other` is an empty delta, this method still typically returns a new
