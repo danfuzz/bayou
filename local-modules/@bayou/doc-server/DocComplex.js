@@ -106,7 +106,16 @@ export class DocComplex extends BaseComplexMember {
       + (bodyRevNum * 25)
       + (bodySnapshot.roughSize * 4);
 
-    return { roughSize, sessionCount };
+    // Because we don't (yet) do file GC, the number of file changes is the same
+    // as `revNum + 1`, but that (hopefully) won't be true forever. **TODO:**
+    // Revisit this when file GC happens.
+    const fileChangeCount = fileRevNum + 1;
+
+    // No similar caveat (to the one above) required here, because body changes
+    // aren't designed to be GCed.
+    const bodyChangeCount = bodyRevNum + 1;
+
+    return { bodyChangeCount, fileChangeCount, roughSize, sessionCount };
   }
 
   /**

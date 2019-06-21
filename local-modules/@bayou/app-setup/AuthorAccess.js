@@ -173,12 +173,12 @@ export class AuthorAccess extends CommonBase {
       const documentId = docComplex.fileAccess.documentId;
       const stats      = await docComplex.currentResourceConsumption();
 
-      log.event.documentResourceUsage(documentId, stats);
+      log.event.documentResourceConsumption(documentId, stats);
     } catch (e) {
       // We don't want a failure here to escape and either derail a more useful
       // operation or (worse) turn into an uncaught rejection and hald the
-      // system.
-      log.event.failedToDetermineResourceConsumption(e);
+      // system. That is, this method is run on a best-effort basis.
+      log.event.errorDuringResourceConsumptionCalculation(e);
     }
   }
 }
