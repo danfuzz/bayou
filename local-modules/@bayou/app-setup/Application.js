@@ -444,6 +444,12 @@ export class Application extends CommonBase {
       try {
         this._updateConnections();
         await this._updateResourceConsumption();
+
+        // **Note:** Both of the above have to be done before pushing out a load
+        // factor update.
+        const loadFactor = this._loadFactor.value;
+        log.metric.loadFactor(loadFactor);
+        this._metrics.loadFactor(loadFactor);
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
