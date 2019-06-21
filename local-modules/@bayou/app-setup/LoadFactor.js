@@ -7,10 +7,16 @@ import { TInt, TObject } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /**
+ * {Int} The number of active connections (websockets) which should be
+ * considered to constitute a "heavy load."
+ */
+const HEAVY_CONNECTION_COUNT = 200;
+
+/**
  * {Int} The number of document sessions which should be considered to
  * constitute a "heavy load."
  */
-const HEAVY_SESSION_COUNT = 100;
+const HEAVY_SESSION_COUNT = 500;
 
 /**
  * Synthesizer of the high-level "load factor" based on various stats on what
@@ -34,6 +40,9 @@ export class LoadFactor extends CommonBase {
     /** {Int} Current (latest calculated) load factor. */
     this._value = 0;
 
+    /** {Int} Active connection count. */
+    this._connectionCount = 0;
+
     /** {Int} {@link DocServer} resource consumption stat. */
     this._roughSize = 0;
 
@@ -49,7 +58,20 @@ export class LoadFactor extends CommonBase {
   }
 
   /**
-   * Update this instance based on the given resource consumption stats, which
+   * Updates this instance with respect to the number of active websocket
+   * connections.
+   *
+   * @param {Int} count Current number of active websocket connections.
+   */
+  activeConnections(count) {
+    TInt.nonNegative(count);
+
+    this._activeConnections = count;
+    this._recalc();
+  }
+
+  /**
+   * Updates this instance based on the given resource consumption stats, which
    * are expected to be in the form reported by
    * {@link DocServer#currentResourceConsumption}.
    *
@@ -59,11 +81,11 @@ export class LoadFactor extends CommonBase {
     TObject.check(stats);
 
     if (stats.roughSize !== undefined) {
-      this._roughSize = TInt.check(stats.roughSize);
+      this._roughSize = TInt.nonNegative(stats.roughSize);
     }
 
     if (stats.sessionCount !== undefined) {
-      this._sessionCount = TInt.check(stats.sessionCount);
+      this._sessionCount = TInt.nonNegative(stats.sessionCount);
     }
 
     this._recalc();
@@ -82,11 +104,12 @@ export class LoadFactor extends CommonBase {
   _recalc() {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
-    const roughSize    = this._roughSize    / DocComplex.ROUGH_SIZE_HUGE;
-    const sessionCount = this._sessionCount / HEAVY_SESSION_COUNT;
+    const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
+    const roughSize       = this._roughSize       / DocComplex.ROUGH_SIZE_HUGE;
+    const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
     // Total load.
-    const total = roughSize + sessionCount;
+    const total = connectionCount + roughSize + sessionCount;
 
     // Total load, scaled so that heavy load is at the documented
     // `HEAVY_LOAD_VALUE`, and rounded to an int.
