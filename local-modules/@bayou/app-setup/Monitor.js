@@ -11,6 +11,7 @@ import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import { Application } from './Application';
+import { LoadFactor } from './LoadFactor';
 import { RequestLogger } from './RequestLogger';
 import { ServerUtil } from './ServerUtil';
 
@@ -103,6 +104,14 @@ export class Monitor extends CommonBase {
         runtime: ServerEnv.theOne.runtimeInfo
       });
     });
+
+    app.get('/load-factor', async (req_unused, res) => {
+      const value = mainApplication.loadFactor;
+      const heavy = LoadFactor.HEAVY_LOAD_VALUE;
+
+      ServerUtil.sendJsonResponse(res, { heavy, value });
+    });
+    requestLogger.aggregate('/load-factor');
 
     const register = mainApplication.metrics.register;
     app.get('/metrics', async (req_unused, res) => {
