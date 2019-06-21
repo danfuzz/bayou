@@ -145,6 +145,11 @@ export class Application extends CommonBase {
     return this._listenPort;
   }
 
+  /** {Int} The current load factor. */
+  get loadFactor() {
+    return this._loadFactor.value;
+  }
+
   /**
    * {string} The loopback (local-access) base URL. This can have a different
    * port than the default configured `listenPort` in testing scenarios. It will
