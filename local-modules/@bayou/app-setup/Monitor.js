@@ -11,6 +11,7 @@ import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 import { Application } from './Application';
+import { LoadFactor } from './LoadFactor';
 import { RequestLogger } from './RequestLogger';
 import { ServerUtil } from './ServerUtil';
 
@@ -96,6 +97,28 @@ export class Monitor extends CommonBase {
     });
     requestLogger.aggregate('/health');
 
+    app.get('/info', async (req_unused, res) => {
+      ServerUtil.sendJsonResponse(res, {
+        boot:    ServerEnv.theOne.bootInfo.info,
+        build:   ServerEnv.theOne.buildInfo,
+        runtime: ServerEnv.theOne.runtimeInfo
+      });
+    });
+
+    app.get('/load-factor', async (req_unused, res) => {
+      const value = mainApplication.loadFactor;
+      const heavy = LoadFactor.HEAVY_LOAD_VALUE;
+
+      ServerUtil.sendJsonResponse(res, { heavy, value });
+    });
+    requestLogger.aggregate('/load-factor');
+
+    const register = mainApplication.metrics.register;
+    app.get('/metrics', async (req_unused, res) => {
+      ServerUtil.sendTextResponse(res, register.metrics(), register.contentType, 200);
+    });
+    requestLogger.aggregate('/metrics');
+
     // This endpoint is meant to be used by a router / load balancer / reverse
     // proxy to determine whether or not it is okay to route traffic to this
     // server. If this endpoint says "no" then that _just_ means that this
@@ -111,20 +134,6 @@ export class Monitor extends CommonBase {
       ServerUtil.sendPlainTextResponse(res, text, status);
     });
     requestLogger.aggregate('/traffic-signal');
-
-    app.get('/info', async (req_unused, res) => {
-      ServerUtil.sendJsonResponse(res, {
-        boot:    ServerEnv.theOne.bootInfo.info,
-        build:   ServerEnv.theOne.buildInfo,
-        runtime: ServerEnv.theOne.runtimeInfo
-      });
-    });
-
-    const register = mainApplication.metrics.register;
-    app.get('/metrics', async (req_unused, res) => {
-      ServerUtil.sendTextResponse(res, register.metrics(), register.contentType, 200);
-    });
-    requestLogger.aggregate('/metrics');
 
     const varInfo = mainApplication.varInfo;
     app.get('/var', async (req_unused, res) => {

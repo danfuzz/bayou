@@ -21,6 +21,7 @@ import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import { AppAuthorizer } from './AppAuthorizer';
 import { DebugTools } from './DebugTools';
+import { LoadFactor } from './LoadFactor';
 import { Metrics } from './Metrics';
 import { RequestLogger } from './RequestLogger';
 import { RootAccess } from './RootAccess';
@@ -67,6 +68,9 @@ export class Application extends CommonBase {
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = this._makeRootAccess();
+
+    /** {LoadFactor} Load factor calculator. */
+    this._loadFactor = new LoadFactor();
 
     /**
      * {Metrics} Metrics collector / reporter. This is what's responsible for
@@ -139,6 +143,11 @@ export class Application extends CommonBase {
    */
   get listenPort() {
     return this._listenPort;
+  }
+
+  /** {Int} The current load factor. */
+  get loadFactor() {
+    return this._loadFactor.value;
   }
 
   /**
@@ -393,16 +402,6 @@ export class Application extends CommonBase {
   }
 
   /**
-   * Helper for {@link #_pollingUpdateLoop}, which logs resource consumption
-   * stats.
-   */
-  async _logResourceConsumption() {
-    const stats = await DocServer.theOne.currentResourceConsumption();
-
-    log.metric.totalResourceConsumption(stats);
-  }
-
-  /**
    * Makes and returns the root access object, that is, the thing that gets
    * called to answer API calls on the root token(s).
    *
@@ -449,7 +448,13 @@ export class Application extends CommonBase {
 
       try {
         this._updateConnections();
-        await this._logResourceConsumption();
+        await this._updateResourceConsumption();
+
+        // **Note:** Both of the above have to be done before pushing out a load
+        // factor update.
+        const loadFactor = this._loadFactor.value;
+        log.metric.loadFactor(loadFactor);
+        this._metrics.loadFactor(loadFactor);
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
@@ -473,5 +478,16 @@ export class Application extends CommonBase {
 
     log.metric.activeConnections(this.connectionCountNow);
     this._metrics.apiMetrics(this.connectionCountNow, this.connectionCountTotal);
+  }
+
+  /**
+   * Helper for {@link #_pollingUpdateLoop}, which logs resource consumption
+   * stats and uses them to update the load factor.
+   */
+  async _updateResourceConsumption() {
+    const stats = await DocServer.theOne.currentResourceConsumption();
+
+    this._loadFactor.docServerStats(stats);
+    log.metric.totalResourceConsumption(stats);
   }
 }

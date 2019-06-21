@@ -5,6 +5,7 @@
 import { collectDefaultMetrics, register, Counter, Gauge } from 'prom-client';
 
 import { ServerEnv } from '@bayou/env-server';
+import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /**
@@ -49,6 +50,12 @@ export class Metrics extends CommonBase {
       help: 'Gauge of currently-active API connections'
     });
 
+    /** {Gauge} Gauge of the current load factor. */
+    this._loadFactor = new Gauge({
+      name: `${prefix}load_factor`,
+      help: 'Gauge of current load factor'
+    });
+
     /**
      * {Gauge} Pseudo-gauge whose labels identify the currently-running build.
      */
@@ -78,6 +85,9 @@ export class Metrics extends CommonBase {
    *   ever handled.
    */
   apiMetrics(connectionCountNow, connectionCountTotal) {
+    TInt.check(connectionCountNow);
+    TInt.check(connectionCountTotal);
+
     this._connectionCountNow.set(connectionCountNow);
 
     // There's no `set()` method on `Counter`; the best we can do is sniff the
@@ -89,6 +99,15 @@ export class Metrics extends CommonBase {
     if (diff > 0) {
       this._connectionCountTotal.inc(diff);
     }
+  }
+
+  /**
+   * Updates the load factor metric.
+   *
+   * @param {Int} loadFactor Current load factor.
+   */
+  LoadFactor(loadFactor) {
+    TInt.check(loadFactor);
   }
 
   /**
