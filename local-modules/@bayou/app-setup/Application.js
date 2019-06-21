@@ -21,6 +21,7 @@ import { CommonBase, Errors, PropertyIterable } from '@bayou/util-common';
 
 import { AppAuthorizer } from './AppAuthorizer';
 import { DebugTools } from './DebugTools';
+import { LoadFactor } from './LoadFactor';
 import { Metrics } from './Metrics';
 import { RequestLogger } from './RequestLogger';
 import { RootAccess } from './RootAccess';
@@ -67,6 +68,9 @@ export class Application extends CommonBase {
      * bearing {@link Auth#TYPE_root} authority grant access to.
      */
     this._rootAccess = this._makeRootAccess();
+
+    /** {LoadFactor} Load factor calculator. */
+    this._loadFactor = new LoadFactor();
 
     /**
      * {Metrics} Metrics collector / reporter. This is what's responsible for
@@ -472,6 +476,7 @@ export class Application extends CommonBase {
   async _updateResourceConsumption() {
     const stats = await DocServer.theOne.currentResourceConsumption();
 
+    this._loadFactor.docServerStats(stats);
     log.metric.totalResourceConsumption(stats);
   }
 }
