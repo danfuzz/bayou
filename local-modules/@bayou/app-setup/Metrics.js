@@ -85,6 +85,9 @@ export class Metrics extends CommonBase {
    *   ever handled.
    */
   apiMetrics(connectionCountNow, connectionCountTotal) {
+    TInt.check(connectionCountNow);
+    TInt.check(connectionCountTotal);
+
     this._connectionCountNow.set(connectionCountNow);
 
     // There's no `set()` method on `Counter`; the best we can do is sniff the
