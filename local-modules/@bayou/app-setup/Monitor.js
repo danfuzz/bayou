@@ -85,6 +85,8 @@ export class Monitor extends CommonBase {
       next();
     });
 
+    // This endpoint is meant to be used by a system health monitor to determine
+    // whether or not the server thinks it is operating properly.
     app.get('/health', async (req_unused, res) => {
       const [status, text] = await mainApplication.isHealthy()
         ? [200, '🍑 Everything\'s peachy! 🍑\n']
@@ -93,6 +95,22 @@ export class Monitor extends CommonBase {
       ServerUtil.sendPlainTextResponse(res, text, status);
     });
     requestLogger.aggregate('/health');
+
+    // This endpoint is meant to be used by a router / load balancer / reverse
+    // proxy to determine whether or not it is okay to route traffic to this
+    // server. If this endpoint says "no" then that _just_ means that this
+    // server doesn't want new traffic; existing connections are still okay and
+    // shouldn't be dropped (or similar).
+    app.get('/traffic-signal', async (req_unused, res) => {
+      // **TODO:** Base this on the high-level load factor, once that
+      // calculation is available.
+      const [status, text] = await mainApplication.isHealthy()
+        ? [200, '🚦 💚 Green Light! Send traffic my way! 💚 🚦\n']
+        : [503, '🚦 🛑 Red Light! Please do not route to me! 🛑 🚦\n'];
+
+      ServerUtil.sendPlainTextResponse(res, text, status);
+    });
+    requestLogger.aggregate('/traffic-signal');
 
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {
