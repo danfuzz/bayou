@@ -393,16 +393,6 @@ export class Application extends CommonBase {
   }
 
   /**
-   * Helper for {@link #_pollingUpdateLoop}, which logs resource consumption
-   * stats.
-   */
-  async _logResourceConsumption() {
-    const stats = await DocServer.theOne.currentResourceConsumption();
-
-    log.metric.totalResourceConsumption(stats);
-  }
-
-  /**
    * Makes and returns the root access object, that is, the thing that gets
    * called to answer API calls on the root token(s).
    *
@@ -449,7 +439,7 @@ export class Application extends CommonBase {
 
       try {
         this._updateConnections();
-        await this._logResourceConsumption();
+        await this._updateResourceConsumption();
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
@@ -473,5 +463,15 @@ export class Application extends CommonBase {
 
     log.metric.activeConnections(this.connectionCountNow);
     this._metrics.apiMetrics(this.connectionCountNow, this.connectionCountTotal);
+  }
+
+  /**
+   * Helper for {@link #_pollingUpdateLoop}, which logs resource consumption
+   * stats and uses them to update the load factor.
+   */
+  async _updateResourceConsumption() {
+    const stats = await DocServer.theOne.currentResourceConsumption();
+
+    log.metric.totalResourceConsumption(stats);
   }
 }
