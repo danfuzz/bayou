@@ -106,10 +106,8 @@ export class Metrics extends CommonBase {
    *
    * @param {Int} loadFactor Current load factor.
    */
-  LoadFactor(loadFactor) {
+  loadFactor(loadFactor) {
     TInt.check(loadFactor);
-
-    this._loadFactor.set(loadFactor);
   }
 
   /**
