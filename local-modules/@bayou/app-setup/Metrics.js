@@ -108,6 +108,8 @@ export class Metrics extends CommonBase {
    */
   loadFactor(loadFactor) {
     TInt.check(loadFactor);
+
+    this._loadFactor.set(loadFactor);
   }
 
   /**
