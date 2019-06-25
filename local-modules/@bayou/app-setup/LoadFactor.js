@@ -10,19 +10,19 @@ import { CommonBase } from '@bayou/util-common';
  * {Int} The number of active connections (websockets) which should be
  * considered to constitute a "heavy load."
  */
-const HEAVY_CONNECTION_COUNT = 200;
+const HEAVY_CONNECTION_COUNT = 500;
 
 /**
  * {Int} The number of active documents which should be considered to constitute
  * a "heavy load."
  */
-const HEAVY_DOCUMENT_COUNT = 500;
+const HEAVY_DOCUMENT_COUNT = 4000;
 
 /**
  * {Int} The number of document sessions which should be considered to
  * constitute a "heavy load."
  */
-const HEAVY_SESSION_COUNT = 500;
+const HEAVY_SESSION_COUNT = 1000;
 
 /**
  * {Int} The total rough size (across all documents) which should be considered
@@ -141,8 +141,9 @@ export class LoadFactor extends CommonBase {
     const total = connectionCount + documentCount + roughSize + sessionCount;
 
     // Total load, scaled so that heavy load is at the documented
-    // `HEAVY_LOAD_VALUE`, and rounded to an int.
-    const loadFactor = Math.round(total * LoadFactor.HEAVY_LOAD_VALUE);
+    // `HEAVY_LOAD_VALUE`, and rounded to an int. `ceil()` so that a tiny but
+    // non-zero load will show up as `1` and not `0`.
+    const loadFactor = Math.ceil(total * LoadFactor.HEAVY_LOAD_VALUE);
 
     this._value = loadFactor;
   }
