@@ -120,6 +120,14 @@ export class LoadFactor extends CommonBase {
    * simply summed. This means that (a) all stats always contribute to the final
    * load factor value, and (b) each stat can _independently_ cause the final
    * load factor to be in the "heavy load" zone.
+   *
+   * **TODO:** This calculation definitely needs adjustment, and it's
+   * specifically worth considering whether each factor should be scaled
+   * (independently), instead of sorta-kinda building a scale factor into the
+   * base `HEAVY_*` constants.
+   *
+   * **TODO:** Consider whether we want to have a way to factor in the "machine
+   * size," and if so how best to do that.
    */
   _recalc() {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
