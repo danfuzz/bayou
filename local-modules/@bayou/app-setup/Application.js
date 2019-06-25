@@ -259,8 +259,9 @@ export class Application extends CommonBase {
     // Use the `@bayou/api-server` module to handle POST requests at the API
     // endpoint, both with and without a trailing slash.
 
-    const apiPath1 = `/${Urls.API_PATH}`;  // Absolute exact path.
-    const apiPath2 = `/${Urls.API_PATH}/`; // Treated as a prefix.
+    const apiPathBase  = `/${Urls.API_PATH}`;                  // Base path.
+    const apiPathRoute = `${apiPathBase}/:rest*`;              // Express route to handle subpaths.
+    const apiPathRegex = new RegExp(`${apiPathBase}(?:/.*)?`); // Regexp to match base or subpaths.
 
     const postHandler = (req, res) => {
       try {
@@ -272,8 +273,8 @@ export class Application extends CommonBase {
       }
     };
 
-    app.post(apiPath1, postHandler);
-    app.post(`${apiPath2}:rest*`, postHandler);
+    app.post(apiPathBase,  postHandler);
+    app.post(apiPathRoute, postHandler);
 
     // Likewise, handle the same API endpoint URLs for websocket requests.
     // **Note:** The following (specifically, constructing `ws.Server` with the
@@ -284,7 +285,7 @@ export class Application extends CommonBase {
 
     const wsVerify = (info, cb = null) => {
       const url = info.req.url;
-      const ok  = (url === apiPath1) || url.startsWith(apiPath2);
+      const ok  = apiPathRegex.test(url);
 
       // **Note:** The `ws` module docs indicate that it _sometimes_ calls the
       // verifier function with a `cb` argument. If it does, and if the main
