@@ -282,7 +282,16 @@ export class DocSession extends CommonBase {
 
     this._eventSource.emit.opening();
     this._log.event.apiAboutToOpen(url);
-    this._apiClient = new ApiClient(url, Codecs.fullCodec);
+
+    try {
+      this._apiClient = new ApiClient(url, Codecs.fullCodec);
+    } catch (e) {
+      // Log and rethrow, to help unambiguously identify when this constructor
+      // is having trouble. (Why needed? Because in some contexts we don't have
+      // a high-fidelity stack trace, but we _do_ have logs.)
+      this._log.event.troubleConstructingApiClient(e);
+      throw e;
+    }
 
     try {
       this._log.event.apiOpening();
