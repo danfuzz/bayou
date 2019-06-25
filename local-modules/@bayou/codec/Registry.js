@@ -82,7 +82,7 @@ export class Registry extends CommonBase {
    */
   registerCodec(codec) {
     if (this._frozen) {
-      throw Errors.bad_use('Frozen.');
+      throw Errors.badUse('Frozen.');
     }
 
     ItemCodec.check(codec);
