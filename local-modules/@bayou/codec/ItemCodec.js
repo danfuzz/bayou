@@ -149,6 +149,16 @@ export class ItemCodec extends CommonBase {
 
     const tag = clazz.CODEC_TAG || clazz.name;
 
+    if ((typeof tag !== 'string') || (tag === '')) {
+      // This situation has been observed to show up. It might be a
+      // code-mangling issue, or it might be a string-security-configuration
+      // (CSP) type issue. Jury's still out, but in any case, should we find
+      // ourselves looking at a class with no name, there's nothing we can do to
+      // rectify the situation.
+      log.event.namelessClass(clazz, clazz.name, clazz.CODEC_TAG);
+      throw Errors.badUse('Cannot create codec from nameless-and-tagless class');
+    }
+
     const encode = (value, subEncode) => {
       const payload = TArray.check(value.deconstruct());
       return payload.map(subEncode);
