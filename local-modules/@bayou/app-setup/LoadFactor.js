@@ -25,6 +25,13 @@ const HEAVY_DOCUMENT_COUNT = 500;
 const HEAVY_SESSION_COUNT = 500;
 
 /**
+ * {Int} The total rough size (across all documents) which should be considered
+ * to constitute a "heavy load." This is defined as a multiple of the
+ * per-document "huge rough size."
+ */
+const HEAVY_ROUGH_SIZE = DocComplex.ROUGH_SIZE_HUGE * 25;
+
+/**
  * Synthesizer of the high-level "load factor" based on various stats on what
  * this server is up to.
  */
@@ -119,7 +126,7 @@ export class LoadFactor extends CommonBase {
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
     const documentCount   = this._connectionCount / HEAVY_DOCUMENT_COUNT;
-    const roughSize       = this._roughSize       / DocComplex.ROUGH_SIZE_HUGE;
+    const roughSize       = this._roughSize       / HEAVY_ROUGH_SIZE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
     // Total load.
