@@ -13,6 +13,12 @@ import { CommonBase } from '@bayou/util-common';
 const HEAVY_CONNECTION_COUNT = 200;
 
 /**
+ * {Int} The number of active documents which should be considered to constitute
+ * a "heavy load."
+ */
+const HEAVY_DOCUMENT_COUNT = 500;
+
+/**
  * {Int} The number of document sessions which should be considered to
  * constitute a "heavy load."
  */
@@ -42,6 +48,9 @@ export class LoadFactor extends CommonBase {
 
     /** {Int} Active connection count. */
     this._connectionCount = 0;
+
+    /** {Int} {@link DocServer} resource consumption stat. */
+    this._documentCount = 0;
 
     /** {Int} {@link DocServer} resource consumption stat. */
     this._roughSize = 0;
@@ -80,6 +89,10 @@ export class LoadFactor extends CommonBase {
   docServerStats(stats) {
     TObject.check(stats);
 
+    if (stats.documentCount !== undefined) {
+      this._documentCount = TInt.nonNegative(stats.documentCount);
+    }
+
     if (stats.roughSize !== undefined) {
       this._roughSize = TInt.nonNegative(stats.roughSize);
     }
@@ -105,11 +118,12 @@ export class LoadFactor extends CommonBase {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
+    const documentCount   = this._connectionCount / HEAVY_DOCUMENT_COUNT;
     const roughSize       = this._roughSize       / DocComplex.ROUGH_SIZE_HUGE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
     // Total load.
-    const total = connectionCount + roughSize + sessionCount;
+    const total = connectionCount + documentCount + roughSize + sessionCount;
 
     // Total load, scaled so that heavy load is at the documented
     // `HEAVY_LOAD_VALUE`, and rounded to an int.
