@@ -47,7 +47,7 @@ export class ApiClient extends CommonBase {
 
     /**
      * {string|null} Connection ID conveyed to us by the server. Reset in
-     * `_resetConnection()`.
+     * {@link #_resetConnection}.
      */
     this._connectionId = null;
 
@@ -59,8 +59,8 @@ export class ApiClient extends CommonBase {
     this._log = log;
 
     /**
-     * {WebSocket} Actual websocket instance. Set by `open()`. Reset in
-     * `_resetConnection()`.
+     * {WebSocket} Actual websocket instance. Set by {@link #open}. Reset in
+     * {@link #_resetConnection}.
      */
     this._ws = null;
 
@@ -83,7 +83,7 @@ export class ApiClient extends CommonBase {
     /**
      * {array<string>} List of pending messages (to be sent to the far side of
      * the connection). Only used when connection is in the middle of being
-     * established. Initialized and reset in `_resetConnection()`.
+     * established. Initialized and reset in {@link #_resetConnection}.
      */
     this._pendingMessages = null;
 
