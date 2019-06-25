@@ -10,13 +10,26 @@ import { CommonBase } from '@bayou/util-common';
  * {Int} The number of active connections (websockets) which should be
  * considered to constitute a "heavy load."
  */
-const HEAVY_CONNECTION_COUNT = 200;
+const HEAVY_CONNECTION_COUNT = 500;
+
+/**
+ * {Int} The number of active documents which should be considered to constitute
+ * a "heavy load."
+ */
+const HEAVY_DOCUMENT_COUNT = 4000;
 
 /**
  * {Int} The number of document sessions which should be considered to
  * constitute a "heavy load."
  */
-const HEAVY_SESSION_COUNT = 500;
+const HEAVY_SESSION_COUNT = 1000;
+
+/**
+ * {Int} The total rough size (across all documents) which should be considered
+ * to constitute a "heavy load." This is defined as a multiple of the
+ * per-document "huge rough size."
+ */
+const HEAVY_ROUGH_SIZE = DocComplex.ROUGH_SIZE_HUGE * 25;
 
 /**
  * Synthesizer of the high-level "load factor" based on various stats on what
@@ -42,6 +55,9 @@ export class LoadFactor extends CommonBase {
 
     /** {Int} Active connection count. */
     this._connectionCount = 0;
+
+    /** {Int} {@link DocServer} resource consumption stat. */
+    this._documentCount = 0;
 
     /** {Int} {@link DocServer} resource consumption stat. */
     this._roughSize = 0;
@@ -80,6 +96,10 @@ export class LoadFactor extends CommonBase {
   docServerStats(stats) {
     TObject.check(stats);
 
+    if (stats.documentCount !== undefined) {
+      this._documentCount = TInt.nonNegative(stats.documentCount);
+    }
+
     if (stats.roughSize !== undefined) {
       this._roughSize = TInt.nonNegative(stats.roughSize);
     }
@@ -100,20 +120,30 @@ export class LoadFactor extends CommonBase {
    * simply summed. This means that (a) all stats always contribute to the final
    * load factor value, and (b) each stat can _independently_ cause the final
    * load factor to be in the "heavy load" zone.
+   *
+   * **TODO:** This calculation definitely needs adjustment, and it's
+   * specifically worth considering whether each factor should be scaled
+   * (independently), instead of sorta-kinda building a scale factor into the
+   * base `HEAVY_*` constants.
+   *
+   * **TODO:** Consider whether we want to have a way to factor in the "machine
+   * size," and if so how best to do that.
    */
   _recalc() {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
-    const roughSize       = this._roughSize       / DocComplex.ROUGH_SIZE_HUGE;
+    const documentCount   = this._connectionCount / HEAVY_DOCUMENT_COUNT;
+    const roughSize       = this._roughSize       / HEAVY_ROUGH_SIZE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
     // Total load.
-    const total = connectionCount + roughSize + sessionCount;
+    const total = connectionCount + documentCount + roughSize + sessionCount;
 
     // Total load, scaled so that heavy load is at the documented
-    // `HEAVY_LOAD_VALUE`, and rounded to an int.
-    const loadFactor = Math.round(total * LoadFactor.HEAVY_LOAD_VALUE);
+    // `HEAVY_LOAD_VALUE`, and rounded to an int. `ceil()` so that a tiny but
+    // non-zero load will show up as `1` and not `0`.
+    const loadFactor = Math.ceil(total * LoadFactor.HEAVY_LOAD_VALUE);
 
     this._value = loadFactor;
   }
