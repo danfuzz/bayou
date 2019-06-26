@@ -183,8 +183,13 @@ export class TrafficSignal extends CommonBase {
         this._allowTraffic          = true;
         this._forceTrafficUntilMsec = this._currentTimeMsec + MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
         this._reason                = 'forced uptime';
-        return;
       }
+
+      // The signal was `false` at the start of this call, and there is nothing
+      // more to do. Either we're still holding the signal `false`, or we _just_
+      // decided that it should be `true` (and held `true` for the appropriate
+      // minimum time).
+      return;
     }
 
     // **TODO:** Depend on the load factor. Set `_allowTraffic` to `false` and
