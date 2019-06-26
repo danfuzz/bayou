@@ -10,7 +10,7 @@ import { CommonBase } from '@bayou/util-common';
  * {Int} The number of active connections (websockets) which should be
  * considered to constitute a "heavy load."
  */
-const HEAVY_CONNECTION_COUNT = 500;
+const HEAVY_CONNECTION_COUNT = 400;
 
 /**
  * {Int} The number of active documents which should be considered to constitute
