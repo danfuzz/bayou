@@ -16,20 +16,20 @@ const HEAVY_CONNECTION_COUNT = 500;
  * {Int} The number of active documents which should be considered to constitute
  * a "heavy load."
  */
-const HEAVY_DOCUMENT_COUNT = 4000;
+const HEAVY_DOCUMENT_COUNT = 10000;
 
 /**
  * {Int} The number of document sessions which should be considered to
  * constitute a "heavy load."
  */
-const HEAVY_SESSION_COUNT = 1000;
+const HEAVY_SESSION_COUNT = 5000;
 
 /**
  * {Int} The total rough size (across all documents) which should be considered
  * to constitute a "heavy load." This is defined as a multiple of the
  * per-document "huge rough size."
  */
-const HEAVY_ROUGH_SIZE = DocComplex.ROUGH_SIZE_HUGE * 25;
+const HEAVY_ROUGH_SIZE = DocComplex.ROUGH_SIZE_HUGE * 100;
 
 /**
  * Synthesizer of the high-level "load factor" based on various stats on what
