@@ -125,9 +125,7 @@ export class Monitor extends CommonBase {
     // server doesn't want new traffic; existing connections are still okay and
     // shouldn't be dropped (or similar).
     app.get('/traffic-signal', async (req_unused, res) => {
-      // **TODO:** Base this on the high-level load factor, once that
-      // calculation is available.
-      const [status, text] = await mainApplication.isHealthy()
+      const [status, text] = await mainApplication.shouldAllowTraffic()
         ? [200, '🚦 💚 Green Light! Send traffic my way! 💚 🚦\n']
         : [503, '🚦 🛑 Red Light! Please do not route to me! 🛑 🚦\n'];
 
