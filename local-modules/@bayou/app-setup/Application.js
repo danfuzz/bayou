@@ -26,6 +26,7 @@ import { Metrics } from './Metrics';
 import { RequestLogger } from './RequestLogger';
 import { RootAccess } from './RootAccess';
 import { ServerUtil } from './ServerUtil';
+import { TrafficSignal } from './TrafficSignal';
 import { VarInfo } from './VarInfo';
 
 /**
@@ -71,6 +72,9 @@ export class Application extends CommonBase {
 
     /** {LoadFactor} Load factor calculator. */
     this._loadFactor = new LoadFactor();
+
+    /** {TrafficSignal} Traffic signal calculator. */
+    this._trafficSignal = new TrafficSignal();
 
     /**
      * {Metrics} Metrics collector / reporter. This is what's responsible for
@@ -197,6 +201,21 @@ export class Application extends CommonBase {
    */
   isListening() {
     return this._server.listening;
+  }
+
+  /**
+   * Gets the instantaneous-current traffic signal.
+   *
+   * @returns {boolean} Indication of whether (`true`) or not (`false`) traffic
+   *   should currently be allowed.
+   */
+  async shouldAllowTraffic() {
+    const signal  = this._trafficSignal;
+    const healthy = await this.isHealthy();
+    const now     = Date.now();
+
+    signal.healthy(healthy);
+    return signal.allowTrafficAt(now);
   }
 
   /**
