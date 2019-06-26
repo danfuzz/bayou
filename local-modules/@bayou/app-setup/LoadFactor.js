@@ -82,7 +82,7 @@ export class LoadFactor extends CommonBase {
   activeConnections(count) {
     TInt.nonNegative(count);
 
-    this._activeConnections = count;
+    this._connectionCount = count;
     this._recalc();
   }
 
@@ -133,7 +133,7 @@ export class LoadFactor extends CommonBase {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
-    const documentCount   = this._connectionCount / HEAVY_DOCUMENT_COUNT;
+    const documentCount   = this._documentCount   / HEAVY_DOCUMENT_COUNT;
     const roughSize       = this._roughSize       / HEAVY_ROUGH_SIZE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
