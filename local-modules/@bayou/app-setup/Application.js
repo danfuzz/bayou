@@ -215,6 +215,7 @@ export class Application extends CommonBase {
     const now     = Date.now();
 
     signal.healthy(healthy);
+    signal.loadFactor(this._loadFactor.value);
     return signal.shouldAllowTrafficAt(now);
   }
 
