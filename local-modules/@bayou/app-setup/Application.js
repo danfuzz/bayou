@@ -216,7 +216,12 @@ export class Application extends CommonBase {
 
     signal.health(healthy);
     signal.loadFactor(this._loadFactor.value);
-    return signal.shouldAllowTrafficAt(now);
+
+    const allow = signal.shouldAllowTrafficAt(now);
+
+    this._metrics.trafficSignal(allow);
+
+    return allow;
   }
 
   /**
@@ -474,10 +479,12 @@ export class Application extends CommonBase {
         await this._updateResourceConsumption();
 
         // **Note:** Both of the above have to be done before pushing out a load
-        // factor update.
+        // factor update, and the traffic signal depends on the load factor.
         const loadFactor = this._loadFactor.value;
         log.metric.loadFactor(loadFactor);
         this._metrics.loadFactor(loadFactor);
+
+        await this.shouldAllowTraffic();
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
