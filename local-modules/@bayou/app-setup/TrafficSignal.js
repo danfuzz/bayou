@@ -2,8 +2,12 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { Logger } from '@bayou/see-all';
 import { TBoolean, TInt } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
+
+/** {Logger} Logger for this class. */
+const log = new Logger('traffic');
 
 /**
  * {Int} Minimum amount of time (in msec) that the traffic signal must be `true`
@@ -65,6 +69,12 @@ export class TrafficSignal extends CommonBase {
     this._forceTrafficUntilMsec = 0;
 
     /**
+     * {string} Brief "reason" for the current traffic situation. Used when
+     * logging.
+     */
+    this._reason = 'initial state';
+
+    /**
      * {boolean} Whether (`true`) or not (`false`) the system is currently
      * shutting down.
      */
@@ -118,9 +128,16 @@ export class TrafficSignal extends CommonBase {
     }
 
     this._currentTimeMsec = timeMsec;
-    this._recalc();
 
-    return this._allowTraffic;
+    const oldValue = this._allowTraffic;
+    this._recalc();
+    const newValue = this._allowTraffic;
+
+    if (oldValue !== newValue) {
+      log.event.trafficSignal(newValue, this._reason);
+    }
+
+    return newValue;
   }
 
   /**
@@ -148,6 +165,7 @@ export class TrafficSignal extends CommonBase {
     if (this._shuttingDown || !this._healthy) {
       this._allowTraffic       = false;
       this._allowTrafficAtMsec = Number.MAX_SAFE_INTEGER; // ...which is to say, "never."
+      this._reason = this._shuttingDown ? 'shutting down' : 'unhealthy';
       return;
     }
 
@@ -162,8 +180,9 @@ export class TrafficSignal extends CommonBase {
         // `true`, it must be allowed to stay `true` for a minimum-specified
         // period of time." See class header comment for the rationale for this
         // behavior.
-        this._allowTraffic = true;
+        this._allowTraffic          = true;
         this._forceTrafficUntilMsec = this._currentTimeMsec + MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
+        this._reason                = 'forced uptime';
         return;
       }
     }
@@ -173,5 +192,6 @@ export class TrafficSignal extends CommonBase {
     // out to be too high.
 
     this._allowTraffic = true;
+    this._reason       = 'normal flow';
   }
 }
