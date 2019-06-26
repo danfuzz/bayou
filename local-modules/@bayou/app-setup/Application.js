@@ -423,7 +423,10 @@ export class Application extends CommonBase {
     // This `await` returns soon after the system decides it is to shut down.
     await shutdownManager.whenShuttingDown();
 
+    // Inform the traffic signal, and pump it with the call to
+    // `shouldAllowTraffic()`, so that it'll get logged.
     this._trafficSignal.shuttingDown();
+    await this.shouldAllowTraffic();
 
     const allClosed = this._closeConnections();
     shutdownManager.waitFor(allClosed);
