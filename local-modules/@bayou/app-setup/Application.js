@@ -415,6 +415,7 @@ export class Application extends CommonBase {
   async _handleSystemShutdown() {
     const shutdownManager = ServerEnv.theOne.shutdownManager;
 
+    this._trafficSignal.shuttingDown();
     await shutdownManager.whenShuttingDown();
 
     const allClosed = this._closeConnections();
