@@ -16,7 +16,7 @@ const HEAVY_CONNECTION_COUNT = 400;
  * {Int} The number of active documents which should be considered to constitute
  * a "heavy load."
  */
-const HEAVY_DOCUMENT_COUNT = 10000;
+const HEAVY_DOCUMENT_COUNT = 4000;
 
 /**
  * {Int} The number of document sessions which should be considered to
