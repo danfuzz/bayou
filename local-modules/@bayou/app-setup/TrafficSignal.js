@@ -89,6 +89,16 @@ export class TrafficSignal extends CommonBase {
   }
 
   /**
+   * Indicates to this instance the current self-assessed health of this server.
+   *
+   * @param {boolean} healthy `true` if this server considers itself "healthy"
+   *   or `false` if not.
+   */
+  health(healthy) {
+    this._healthy = TBoolean.check(healthy);
+  }
+
+  /**
    * Indicates the current wall time, and gets back an indicator of whether or
    * not to allow traffic at the moment in question.
    *
@@ -100,7 +110,7 @@ export class TrafficSignal extends CommonBase {
    * @returns {boolean} Indication of whether (`true`) or not (`false`) traffic
    *   should be allowed as of `timeMsec`.
    */
-  allowTrafficAt(timeMsec) {
+  shouldAllowTrafficAt(timeMsec) {
     TInt.nonNegative(timeMsec);
 
     if (timeMsec < this._currentTimeMsec) {
@@ -111,16 +121,6 @@ export class TrafficSignal extends CommonBase {
     this._recalc();
 
     return this._allowTraffic;
-  }
-
-  /**
-   * Indicates to this instance the current self-assessed health of this server.
-   *
-   * @param {boolean} healthy `true` if this server considers itself "healthy"
-   *   or `false` if not.
-   */
-  health(healthy) {
-    this._healthy = TBoolean.check(healthy);
   }
 
   /**
