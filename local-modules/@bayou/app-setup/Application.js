@@ -487,6 +487,7 @@ export class Application extends CommonBase {
         log.metric.loadFactor(loadFactor);
         this._metrics.loadFactor(loadFactor);
 
+        // This updates the exported metric, as necessary.
         await this.shouldAllowTraffic();
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
