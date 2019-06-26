@@ -10,13 +10,13 @@ import { CommonBase } from '@bayou/util-common';
  * {Int} The number of active connections (websockets) which should be
  * considered to constitute a "heavy load."
  */
-const HEAVY_CONNECTION_COUNT = 500;
+const HEAVY_CONNECTION_COUNT = 400;
 
 /**
  * {Int} The number of active documents which should be considered to constitute
  * a "heavy load."
  */
-const HEAVY_DOCUMENT_COUNT = 10000;
+const HEAVY_DOCUMENT_COUNT = 4000;
 
 /**
  * {Int} The number of document sessions which should be considered to
@@ -82,7 +82,7 @@ export class LoadFactor extends CommonBase {
   activeConnections(count) {
     TInt.nonNegative(count);
 
-    this._activeConnections = count;
+    this._connectionCount = count;
     this._recalc();
   }
 
@@ -133,7 +133,7 @@ export class LoadFactor extends CommonBase {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
-    const documentCount   = this._connectionCount / HEAVY_DOCUMENT_COUNT;
+    const documentCount   = this._documentCount   / HEAVY_DOCUMENT_COUNT;
     const roughSize       = this._roughSize       / HEAVY_ROUGH_SIZE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
