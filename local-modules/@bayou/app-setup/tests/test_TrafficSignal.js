@@ -8,7 +8,7 @@ import { describe, it } from 'mocha';
 import { TrafficSignal } from '../TrafficSignal';
 
 describe('@bayou/app-setup/TrafficSignal', () => {
-  // **Note:** This file builds in assumptions about the values of the various
+  // **Note:** This test builds in assumptions about the values of the various
   // constants. If we find ourselves tweaking the constants a lot, we might want
   // to make the test more parametric.
   describe('_offTimeMsecFromLoadFactor()', () => {
