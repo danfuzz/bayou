@@ -176,6 +176,11 @@ export class Application extends CommonBase {
     return this._rootAccess;
   }
 
+  /** {string} The current traffic signal "reason." */
+  get trafficSignalReason() {
+    return this._trafficSignal.reason;
+  }
+
   /** {VarInfo} The "variable info" handler. */
   get varInfo() {
     return this._varInfo;

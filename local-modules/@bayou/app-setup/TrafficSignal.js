@@ -22,6 +22,27 @@ const NEVER_TIME_MSEC = Number.MAX_SAFE_INTEGER;
  */
 const MINIMUM_TRAFFIC_ALLOW_TIME_MSEC = 60 * 1000; // One minute.
 
+/** {Int} Load factor above which duty-cycling begins. */
+const MIN_LOAD_FACTOR_FOR_DUTY_CYCLE = 80;
+
+/**
+ * {Int} Load factor at-or-above which duty-cycling should have the maximum
+ * allowed "off" time.
+ */
+const MAX_LOAD_FACTOR_FOR_DUTY_CYCLE = 150;
+
+/**
+ * {number} Fraction of time to prevent traffic, when doing minimal (but
+ * active) duty cycling.
+ */
+const MIN_DUTY_CYCLE_OFF_TIME_FRAC = 0.1; // 10% of the time.
+
+/**
+ * {number} Fraction of time to prevent traffic, when doing maximal duty
+ * cycling.
+ */
+const MAX_DUTY_CYCLE_OFF_TIME_FRAC = 0.5; // 50% of the time.
+
 /**
  * Synthesizer of the high-level "traffic signal" based on various stats on what
  * this server is up to. A little more detail:
@@ -76,7 +97,7 @@ export class TrafficSignal extends CommonBase {
 
     /**
      * {string} Brief "reason" for the current traffic situation. Used when
-     * logging.
+     * logging and also exposed as {@link #reason}.
      */
     this._reason = 'initial state';
 
@@ -102,6 +123,11 @@ export class TrafficSignal extends CommonBase {
     this._currentTimeMsec = 0;
 
     Object.seal(this);
+  }
+
+  /** {string} The glib "reason" for the current traffic signal. */
+  get reason() {
+    return this._reason;
   }
 
   /**
@@ -192,7 +218,7 @@ export class TrafficSignal extends CommonBase {
         // behavior.
         this._allowTraffic          = true;
         this._forceTrafficUntilMsec = this._currentTimeMsec + MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
-        this._reason                = 'forced uptime';
+        this._reason                = `forced uptime until ${this._forceTrafficUntilMsec}`;
       }
 
       // The signal was `false` at the start of this call, and there is nothing
@@ -202,11 +228,65 @@ export class TrafficSignal extends CommonBase {
       return;
     }
 
-    // **TODO:** Depend on the load factor. Set `_allowTraffic` to `false` and
-    // set up an appropriate `_allowTrafficAtMsec`, should the load factor turn
-    // out to be too high.
+    if (this._loadFactor < MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) {
+      // Not enough load to have to cycle off. That is, it's all good!
+      this._allowTraffic = true;
+      this._reason       = 'normal flow';
+      return;
+    }
 
-    this._allowTraffic = true;
-    this._reason       = 'normal flow';
+    // The load factor is high enough to start duty-cycling, and we are
+    // currently allowing traffic, but we are now going to stop (for a while).
+
+    const offTimeMsec = TrafficSignal._offTimeMsecFromLoadFactor(this._loadFactor);
+
+    this._allowTraffic       = false;
+    this._allowTrafficAtMsec = this._currentTimeMsec + offTimeMsec;
+    this._reason             = `avoiding load until ${this._allowTrafficAtMsec}`;
+  }
+
+  /**
+   * Given a load factor at or above the minimum value required for
+   * duty-cycling, returns the amount of time that should be spent in the "off"
+   * state.
+   *
+   * @param {Int} loadFactor The load factor.
+   * @returns {Int} The amount of time (in msec) which the traffic signal should
+   *   be "off" before going back on again.
+   */
+  static _offTimeMsecFromLoadFactor(loadFactor) {
+    if (loadFactor < MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) {
+      return 0;
+    }
+
+    // Scale the load factor to a range of `[0..1]`, where `0` is the minimum
+    // value for duty cycling and `1` is the max.
+    const LOAD_FACTOR_RANGE = MAX_LOAD_FACTOR_FOR_DUTY_CYCLE - MIN_LOAD_FACTOR_FOR_DUTY_CYCLE;
+    const scaledLoad =
+      Math.min(1, (loadFactor - MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) / LOAD_FACTOR_RANGE);
+
+    // Take the scaled load factor, and multiply it out, and adjust it, so that
+    // it is in the desired range of "off" cycle fractions. E.g. if `offFrac` is
+    // `0.25` then the duty cycle should be such that the off-time is 0.25 of
+    // the minimum on-time.
+    const FRAC_RANGE        = MAX_DUTY_CYCLE_OFF_TIME_FRAC - MIN_DUTY_CYCLE_OFF_TIME_FRAC;
+    const offFrac = (scaledLoad * FRAC_RANGE) + MIN_DUTY_CYCLE_OFF_TIME_FRAC;
+
+    // Take the off-fraction (F) and the minimum on-time (T), and solve for the
+    // actual amount of time in msec to be off (N), as follows. The first line
+    // in the derivation states fairly directly, "The ratio of off-time to
+    // total time is F."
+    //
+    //   (N / (N + T)) = F
+    //   N             = F * (N + T)
+    //   N             = F*N + F*T
+    //   N - F*N       = F * T
+    //   1*N - F*N     = F * T
+    //   (1 - F) * N   = F * T
+    //   N             = (F * T) / (1 - F)
+    const ON_MSEC     = MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
+    const offTimeMsec = Math.round((offFrac * ON_MSEC) / (1 - offFrac));
+
+    return offTimeMsec;
   }
 }

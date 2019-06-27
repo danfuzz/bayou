@@ -125,11 +125,16 @@ export class Monitor extends CommonBase {
     // server doesn't want new traffic; existing connections are still okay and
     // shouldn't be dropped (or similar).
     app.get('/traffic-signal', async (req_unused, res) => {
-      const [status, text] = await mainApplication.shouldAllowTraffic()
-        ? [200, '🚦 💚 Green Light! Send traffic my way! 💚 🚦\n']
-        : [503, '🚦 🛑 Red Light! Please do not route to me! 🛑 🚦\n'];
+      const allow  = await mainApplication.shouldAllowTraffic();
+      const reason = mainApplication.trafficSignalReason;
 
-      ServerUtil.sendPlainTextResponse(res, text, status);
+      const [status, emoji, text] = allow
+        ? [200, '💚', 'Green Light! Send traffic my way!']
+        : [503, '🛑', 'Red Light! Please do not route to me!'];
+
+      const fullText = `🚦 ${emoji} ${text} ${emoji} 🚦\n\n(${reason})\n`;
+
+      ServerUtil.sendPlainTextResponse(res, fullText, status);
     });
     requestLogger.aggregate('/traffic-signal');
 
