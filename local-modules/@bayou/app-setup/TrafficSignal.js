@@ -10,6 +10,12 @@ import { CommonBase, Errors } from '@bayou/util-common';
 const log = new Logger('traffic');
 
 /**
+ * {Int} Time value which means "never," used to indicate when to allow traffic
+ * if the system is "unhealthy" or shutting down.
+ */
+const NEVER_TIME_MSEC = Number.MAX_SAFE_INTEGER;
+
+/**
  * {Int} Minimum amount of time (in msec) that the traffic signal must be `true`
  * for after transitioning from `false`, assuming that the server isn't either
  * unhealthy or in the process of shutting down.
@@ -164,9 +170,13 @@ export class TrafficSignal extends CommonBase {
   _recalc() {
     if (this._shuttingDown || !this._healthy) {
       this._allowTraffic       = false;
-      this._allowTrafficAtMsec = Number.MAX_SAFE_INTEGER; // ...which is to say, "never."
+      this._allowTrafficAtMsec = NEVER_TIME_MSEC;
       this._reason = this._shuttingDown ? 'shutting down' : 'unhealthy';
       return;
+    } else if (this._allowTrafficAtMsec === NEVER_TIME_MSEC) {
+      // Neither shutting down nor unhealthy, so don't squelch traffic forever,
+      // anymore.
+      this._allowTrafficAtMsec = this._currentTimeMsec;
     }
 
     if (this._allowTraffic) {
