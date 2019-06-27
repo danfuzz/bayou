@@ -258,7 +258,7 @@ export class TrafficSignal extends CommonBase {
     // value for duty cycling and `1` is the max.
     const LOAD_FACTOR_RANGE = MAX_LOAD_FACTOR_FOR_DUTY_CYCLE - MIN_LOAD_FACTOR_FOR_DUTY_CYCLE;
     const scaledLoad =
-      Math.min(1, (this._loadFactor - MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) / LOAD_FACTOR_RANGE);
+      Math.min(1, (loadFactor - MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) / LOAD_FACTOR_RANGE);
 
     // Take the scaled load factor, and multiply it out, and adjust it, so that
     // it is in the desired range of "off" cycle fractions. E.g. if `offFrac` is
