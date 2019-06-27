@@ -35,7 +35,7 @@ export class DocComplex extends BaseComplexMember {
    * {@link #currentResourceConsumption}.
    */
   static get ROUGH_SIZE_HUGE() {
-    return 10000000;
+    return 25000000;
   }
 
   /**
