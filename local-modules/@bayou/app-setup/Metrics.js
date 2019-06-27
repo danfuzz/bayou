@@ -5,7 +5,7 @@
 import { collectDefaultMetrics, register, Counter, Gauge } from 'prom-client';
 
 import { ServerEnv } from '@bayou/env-server';
-import { TInt } from '@bayou/typecheck';
+import { TBoolean, TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
 
 /**
@@ -53,7 +53,13 @@ export class Metrics extends CommonBase {
     /** {Gauge} Gauge of the current load factor. */
     this._loadFactor = new Gauge({
       name: `${prefix}load_factor`,
-      help: 'Gauge of current load factor'
+      help: 'Gauge of the current load factor'
+    });
+
+    /** {Gauge} Gauge of the current traffic signal. */
+    this._trafficSignal = new Gauge({
+      name: `${prefix}traffic_signal`,
+      help: 'Gauge of the current traffic signal'
     });
 
     /**
@@ -110,6 +116,17 @@ export class Metrics extends CommonBase {
     TInt.check(loadFactor);
 
     this._loadFactor.set(loadFactor);
+  }
+
+  /**
+   * Updates the traffic signal metric.
+   *
+   * @param {boolean} trafficSignal Current traffic signal.
+   */
+  trafficSignal(trafficSignal) {
+    TBoolean.check(trafficSignal);
+
+    this._trafficSignal.set(trafficSignal ? 1 : 0);
   }
 
   /**

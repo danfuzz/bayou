@@ -26,6 +26,7 @@ import { Metrics } from './Metrics';
 import { RequestLogger } from './RequestLogger';
 import { RootAccess } from './RootAccess';
 import { ServerUtil } from './ServerUtil';
+import { TrafficSignal } from './TrafficSignal';
 import { VarInfo } from './VarInfo';
 
 /**
@@ -71,6 +72,9 @@ export class Application extends CommonBase {
 
     /** {LoadFactor} Load factor calculator. */
     this._loadFactor = new LoadFactor();
+
+    /** {TrafficSignal} Traffic signal calculator. */
+    this._trafficSignal = new TrafficSignal();
 
     /**
      * {Metrics} Metrics collector / reporter. This is what's responsible for
@@ -197,6 +201,27 @@ export class Application extends CommonBase {
    */
   isListening() {
     return this._server.listening;
+  }
+
+  /**
+   * Gets the instantaneous-current traffic signal.
+   *
+   * @returns {boolean} Indication of whether (`true`) or not (`false`) traffic
+   *   should currently be allowed.
+   */
+  async shouldAllowTraffic() {
+    const signal  = this._trafficSignal;
+    const healthy = await this.isHealthy();
+    const now     = Date.now();
+
+    signal.health(healthy);
+    signal.loadFactor(this._loadFactor.value);
+
+    const allow = signal.shouldAllowTrafficAt(now);
+
+    this._metrics.trafficSignal(allow);
+
+    return allow;
   }
 
   /**
@@ -395,10 +420,15 @@ export class Application extends CommonBase {
   async _handleSystemShutdown() {
     const shutdownManager = ServerEnv.theOne.shutdownManager;
 
+    // This `await` returns soon after the system decides it is to shut down.
     await shutdownManager.whenShuttingDown();
 
-    const allClosed = this._closeConnections();
+    // Inform the traffic signal, and pump it with the call to
+    // `shouldAllowTraffic()`, so that it'll get logged.
+    this._trafficSignal.shuttingDown();
+    await this.shouldAllowTraffic();
 
+    const allClosed = this._closeConnections();
     shutdownManager.waitFor(allClosed);
   }
 
@@ -452,10 +482,13 @@ export class Application extends CommonBase {
         await this._updateResourceConsumption();
 
         // **Note:** Both of the above have to be done before pushing out a load
-        // factor update.
+        // factor update, and the traffic signal depends on the load factor.
         const loadFactor = this._loadFactor.value;
         log.metric.loadFactor(loadFactor);
         this._metrics.loadFactor(loadFactor);
+
+        // This updates the exported metric, as necessary.
+        await this.shouldAllowTraffic();
       } catch (e) {
         // Ignore the error (other than logging). We don't want trouble here to
         // turn into a catastrophic failure.
