@@ -21,9 +21,15 @@ describe('@bayou/app-setup/TrafficSignal', () => {
     });
 
     it('returns the minimum off-time when at the low-end of the duty-cycle range', () => {
-      const got = TrafficSignal._offTimeMsecFromLoadFactor(75);
+      const got = TrafficSignal._offTimeMsecFromLoadFactor(80);
 
       assert.strictEqual(got, 6667);
+    });
+
+    it('returns the middle off-time when at the middle of the duty-cycle range', () => {
+      const got = TrafficSignal._offTimeMsecFromLoadFactor(115);
+
+      assert.strictEqual(got, 25714);
     });
 
     it('returns the maximum off-time when at the high-end of the duty-cycle range', () => {

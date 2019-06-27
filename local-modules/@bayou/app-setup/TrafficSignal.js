@@ -23,7 +23,7 @@ const NEVER_TIME_MSEC = Number.MAX_SAFE_INTEGER;
 const MINIMUM_TRAFFIC_ALLOW_TIME_MSEC = 60 * 1000; // One minute.
 
 /** {Int} Load factor above which duty-cycling begins. */
-const MIN_LOAD_FACTOR_FOR_DUTY_CYCLE = 75;
+const MIN_LOAD_FACTOR_FOR_DUTY_CYCLE = 80;
 
 /**
  * {Int} Load factor at-or-above which duty-cycling should have the maximum
