@@ -272,8 +272,8 @@ export class TrafficSignal extends CommonBase {
     const FRAC_RANGE        = MAX_DUTY_CYCLE_OFF_TIME_FRAC - MIN_DUTY_CYCLE_OFF_TIME_FRAC;
     const offFrac = (scaledLoad * FRAC_RANGE) + MIN_DUTY_CYCLE_OFF_TIME_FRAC;
 
-    // That the off-fraction (F) and the minimum on-time (T), and solve for N
-    // (actual amount of time in msec to be off), as follows. The first line
+    // Take the off-fraction (F) and the minimum on-time (T), and solve for the
+    // actual amount of time in msec to be off (N), as follows. The first line
     // in the derivation states fairly directly, "The ratio of off-time to
     // total time is F."
     //
