@@ -97,7 +97,7 @@ export class TrafficSignal extends CommonBase {
 
     /**
      * {string} Brief "reason" for the current traffic situation. Used when
-     * logging.
+     * logging and also exposed as {@link #reason}.
      */
     this._reason = 'initial state';
 
@@ -123,6 +123,11 @@ export class TrafficSignal extends CommonBase {
     this._currentTimeMsec = 0;
 
     Object.seal(this);
+  }
+
+  /** {string} The glib "reason" for the current traffic signal. */
+  get reason() {
+    return this._reason;
   }
 
   /**
@@ -213,7 +218,7 @@ export class TrafficSignal extends CommonBase {
         // behavior.
         this._allowTraffic          = true;
         this._forceTrafficUntilMsec = this._currentTimeMsec + MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
-        this._reason                = 'forced uptime';
+        this._reason                = `forced uptime until ${this._forceTrafficUntilMsec}`;
       }
 
       // The signal was `false` at the start of this call, and there is nothing
@@ -237,7 +242,7 @@ export class TrafficSignal extends CommonBase {
 
     this._allowTraffic       = false;
     this._allowTrafficAtMsec = this._currentTimeMsec + offTimeMsec;
-    this._reason             = 'avoiding load';
+    this._reason             = `avoiding load until ${this._allowTrafficAtMsec}`;
   }
 
   /**
