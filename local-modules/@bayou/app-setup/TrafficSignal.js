@@ -228,7 +228,7 @@ export class TrafficSignal extends CommonBase {
       return;
     }
 
-    if (this._loadFactor <= MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) {
+    if (this._loadFactor < MIN_LOAD_FACTOR_FOR_DUTY_CYCLE) {
       // Not enough load to have to cycle off. That is, it's all good!
       this._allowTraffic = true;
       this._reason       = 'normal flow';
