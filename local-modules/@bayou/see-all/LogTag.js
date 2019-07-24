@@ -51,7 +51,7 @@ export class LogTag extends CommonBase {
    * @returns {string} `value`, if it is valid.
    */
   static checkContextString(value) {
-    return TString.maxLen(value, 25);
+    return TString.maxLen(value, 30);
   }
 
   /**
@@ -59,7 +59,7 @@ export class LogTag extends CommonBase {
    *
    * @param {string} main Main tag. Must be a "label" string.
    * @param {...string} context Context strings. Each must be no longer
-   *   than 25 characters.
+   *   than 30 characters.
    */
   constructor(main, ...context) {
     super();

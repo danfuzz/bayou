@@ -20,6 +20,7 @@ describe('@bayou/see-all/LogTag', () => {
       test('abc');
       test('blort foo!');
       test('1234567890123456789012345');
+      test('12345678901234567890123456789');
     });
 
     it('rejects invalid values', () => {
@@ -27,7 +28,7 @@ describe('@bayou/see-all/LogTag', () => {
         assert.throws(() => { LogTag.checkContextString(level); });
       }
 
-      test('12345678901234567890123456'); // Too long.
+      test('1234567890123456789012345678910'); // Too long.
       test(null);
       test(undefined);
       test(123);
