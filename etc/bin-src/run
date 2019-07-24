@@ -116,4 +116,4 @@ check-environment-dependencies
 check-node-versions
 
 cd "${baseDir}/server"
-exec node node_modules/.bin/bayou-server --prog-name="${progName}" "$@"
+exec node --max-old-space-size=4096 node_modules/.bin/bayou-server --prog-name="${progName}" "$@"
