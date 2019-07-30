@@ -107,8 +107,7 @@ export class Monitor extends CommonBase {
           const msg = `Trouble with dump:\n${error.toString()}\n`;
           ServerUtil.sendPlainTextResponse(res, msg, 200);
         } else {
-          const msg = `Wrote snapshot to file:\n\n  ${filename}\n`;
-          ServerUtil.sendPlainTextResponse(res, msg, 200);
+          ServerUtil.sendFileResponse(res, filename, 'application/octet-stream');
         }
       });
     });
