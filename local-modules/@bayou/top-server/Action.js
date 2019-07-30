@@ -255,6 +255,10 @@ export class Action extends CommonBase {
    * @returns {Int} The port being listened on, once listening has started.
    */
   static async _startServer(pickPort, doMonitor, devRoutes) {
+    // Hook up the heap dumper (which listens for SIGUSR2). **TODO:** Remove
+    // this once we've resolved the known memory leaks.
+    require('heapdump');
+
     // Set up the server environment bits (including, e.g. the PID file).
     await ServerEnv.theOne.init();
 
