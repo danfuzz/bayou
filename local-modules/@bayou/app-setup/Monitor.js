@@ -101,13 +101,13 @@ export class Monitor extends CommonBase {
 
     // **TODO:** Remove or disable this once known memory leaks are fixed.
     app.get('/heapdump', async (req_unused, res) => {
-      const dumpFile = path.join(Dirs.VAR_DIR, 'node.heapsnapshot');
+      const dumpFile = path.join(Dirs.theOne.VAR_DIR, 'node.heapsnapshot');
       heapdump.writeSnapshot(dumpFile, (error, filename) => {
         if (error) {
-          const msg = `Trouble with dump:\n${error.toString()}`;
+          const msg = `Trouble with dump:\n${error.toString()}\n`;
           ServerUtil.sendPlainTextResponse(res, msg, 200);
         } else {
-          const msg = `Wrote snapshot to file: ${filename}`;
+          const msg = `Wrote snapshot to file:\n\n  ${filename}\n`;
           ServerUtil.sendPlainTextResponse(res, msg, 200);
         }
       });
