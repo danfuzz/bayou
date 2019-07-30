@@ -3,9 +3,11 @@
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
 import express from 'express';
+import heapdump from 'heapdump';
 import http from 'http';
+import path from 'path';
 
-import { ServerEnv } from '@bayou/env-server';
+import { Dirs, ServerEnv } from '@bayou/env-server';
 import { Logger } from '@bayou/see-all';
 import { TInt } from '@bayou/typecheck';
 import { CommonBase } from '@bayou/util-common';
@@ -96,6 +98,20 @@ export class Monitor extends CommonBase {
       ServerUtil.sendPlainTextResponse(res, text, status);
     });
     requestLogger.aggregate('/health');
+
+    // **TODO:** Consider disabling (or fully removing) this when there are no
+    // known memory leaks (or similar) being investigated.
+    app.get('/heapdump', async (req_unused, res) => {
+      const dumpFile = path.join(Dirs.theOne.VAR_DIR, 'node.heapsnapshot');
+      heapdump.writeSnapshot(dumpFile, (error, filename) => {
+        if (error) {
+          const msg = `Trouble with dump:\n${error.toString()}\n`;
+          ServerUtil.sendPlainTextResponse(res, msg, 200);
+        } else {
+          ServerUtil.sendFileResponse(res, filename, 'application/octet-stream');
+        }
+      });
+    });
 
     app.get('/info', async (req_unused, res) => {
       ServerUtil.sendJsonResponse(res, {

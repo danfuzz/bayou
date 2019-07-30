@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "heapdump": "^0.3.14",
+
     "@bayou/api-common": "local",
     "@bayou/api-server": "local",
     "@bayou/app-common": "local",

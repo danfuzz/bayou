@@ -92,6 +92,23 @@ export class ServerUtil extends UtilityClass {
   }
 
   /**
+   * Sends the contents of a file as a response.
+   *
+   * @param {http.ServerResponse} res The response object representing the
+   *   connection to send to.
+   * @param {string} filePath Path to the file to send.
+   * @param {string} contentType The content type,
+   * @param {Int} [statusCode = 200] The response status code.
+   */
+  static sendFileResponse(res, filePath, contentType, statusCode = 200) {
+    res
+      .status(statusCode)
+      .type(contentType)
+      .set('Cache-Control', 'no-cache, no-store, no-transform')
+      .sendFile(filePath);
+  }
+
+  /**
    * Responds with a `text/html` result.
    *
    * @param {object} res The response object representing the connection to send
