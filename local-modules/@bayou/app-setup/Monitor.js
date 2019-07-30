@@ -99,7 +99,8 @@ export class Monitor extends CommonBase {
     });
     requestLogger.aggregate('/health');
 
-    // **TODO:** Remove or disable this once known memory leaks are fixed.
+    // **TODO:** Consider disabling (or fully removing) this when there are no
+    // known memory leaks (or similar) being investigated.
     app.get('/heapdump', async (req_unused, res) => {
       const dumpFile = path.join(Dirs.theOne.VAR_DIR, 'node.heapsnapshot');
       heapdump.writeSnapshot(dumpFile, (error, filename) => {
