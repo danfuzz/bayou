@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "heapdump": "^0.3.14",
-
     "@bayou/app-setup": "local",
     "@bayou/client-bundle": "local",
     "@bayou/config-server": "local",
