@@ -37,6 +37,9 @@ outFile=''
 # Monitor server port.
 monitorPort=8888
 
+# Use an ssh tunnel?
+sshTunnel=0
+
 while true; do
     case $1 in
         -h|--help)
@@ -48,6 +51,9 @@ while true; do
             ;;
         --port=?*)
             monitorPort="${1#*=}"
+            ;;
+        --ssh)
+            sshTunnel=1
             ;;
         --) # End of all options
             shift
@@ -77,9 +83,7 @@ if (( ${showHelp} || ${argError} )); then
     echo ''
     echo "${progName} [<opt> ...] <hostname>"
     echo '  Induces a heap dump on a given server and grabs it into a file on'
-    echo '  the local machine. This is achieved by `ssh`ing to the host (and'
-    echo '  not, e.g., `curl`ing to it), on the assumption that the monitor'
-    echo '  port is often not exposed to an external network interface.'
+    echo '  the local machine.'
     echo ''
     echo '  --out=<file>'
     echo '    Where to store the heap dump. If this is not specified, it'
@@ -89,6 +93,10 @@ if (( ${showHelp} || ${argError} )); then
     echo '    recognizes heap dumps with that suffix as such.'
     echo '  --port=<port-num>'
     echo '    What port to use as the application monitor port.'
+    echo '  --ssh'
+    echo '    Use a port-forward via `ssh` instead of directly accessing the'
+    echo '    monitor port. This is useful when the monitor port is not exposed'
+    echo '    to an external network interface (but `ssh` is).'
     echo ''
     echo "${progName} [--help | -h]"
     echo '  Display this message.'
@@ -108,6 +116,33 @@ function kill-ssh {
     exit
 }
 
+# Initiates an `ssh`-based port forwarding tunnel, and arranges for cleanup
+# thereof upon process termination. This also sets `baseUrl` appropriately for
+# tunnel usage.
+function do-ssh-tunnel {
+    # We use an arbitrary port number on the local side, just because being
+    # dynamic is more trouble than it's worth.
+
+    localPort=58888
+    set +m
+    ssh -N -L "localhost:${localPort}:localhost:${monitorPort}" "${hostname}" &
+    if (( $? )); then
+        exit $?
+    fi
+    set -m
+    sshPid="$!"
+
+    # Wait a moment, and exit if the `ssh` command seems to have failed.
+    sleep 5
+    if ! ps -p "${sshPid}" >/dev/null 2>&1; then
+        exit 1
+    fi
+
+    baseUrl="http://localhost:${localPort}"
+
+    trap kill-ssh SIGINT SIGTERM EXIT
+}
+
 
 #
 # Main script
@@ -123,27 +158,10 @@ fi
 
 echo "Grabbing heap snapshot from ${hostname} into ${outFile}..."
 
-# What's going on: This sets up a ssh-based port forward from the local machine
-# to the application monitor port on the server. We use an arbitrary port number
-# on the local side, just because being dynamic is more trouble than it's worth.
-
-localPort=58888
-set +m
-ssh -N -L "localhost:${localPort}:localhost:${monitorPort}" "${hostname}" &
-if (( $? )); then
-    exit $?
-fi
-set -m
-sshPid="$!"
-
-# Wait a moment, and exit if the `ssh` command seems to have failed.
-sleep 5
-if ! ps -p "${sshPid}" >/dev/null 2>&1; then
-    exit 1
+if (( ${sshTunnel} )); then
+    do-ssh-tunnel
+else
+    baseUrl="http://${hostname}:${monitorPort}"
 fi
 
-trap kill-ssh SIGINT SIGTERM EXIT
-
-# Actually do the dump!
-
-curl -o "${outFile}" "http://localhost:${localPort}/heapdump"
+curl -o "${outFile}" "${baseUrl}/heapdump"
