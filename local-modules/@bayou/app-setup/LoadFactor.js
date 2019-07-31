@@ -59,7 +59,12 @@ export class LoadFactor extends CommonBase {
     /** {Int} {@link DocServer} resource consumption stat. */
     this._documentCount = 0;
 
-    /** {Int} {@link DocServer} resource consumption stat. */
+    /** {Int} {@link BaseFile} resource consumption stat. */
+    this._fileCount = 0;
+
+    /**
+     * {Int} {@link DocServer} and {@link BaseFile} resource consumption stat.
+     */
     this._roughSize = 0;
 
     /** {Int} {@link DocServer} resource consumption stat. */
@@ -87,26 +92,41 @@ export class LoadFactor extends CommonBase {
   }
 
   /**
-   * Updates this instance based on the given resource consumption stats, which
-   * are expected to be in the form reported by
-   * {@link DocServer#currentResourceConsumption}.
+   * Updates this instance based on the given resource consumption stats.
    *
    * @param {object} docServerStats Stats, per the contract of {@link
-   *   DocServer}.
+   *   DocServer#currentResourceConsumption}.
+   * @param {object} fileStoreStats Stats, per the contract of {@link
+   *   BaseFileStore#currentResourceConsumption}.
    */
-  resourceConsumption(docServerStats) {
+  resourceConsumption(docServerStats, fileStoreStats) {
     TObject.check(docServerStats);
+    TObject.check(fileStoreStats);
+
+    let roughSize = 0;
 
     if (docServerStats.documentCount !== undefined) {
       this._documentCount = TInt.nonNegative(docServerStats.documentCount);
     }
 
     if (docServerStats.roughSize !== undefined) {
-      this._roughSize = TInt.nonNegative(docServerStats.roughSize);
+      roughSize = TInt.nonNegative(docServerStats.roughSize);
     }
 
     if (docServerStats.sessionCount !== undefined) {
       this._sessionCount = TInt.nonNegative(docServerStats.sessionCount);
+    }
+
+    if (fileStoreStats.fileCount !== undefined) {
+      this._fileCount = TInt.nonNegative(fileStoreStats.fileCount);
+    }
+
+    if (fileStoreStats.roughSize !== undefined) {
+      roughSize += TInt.nonNegative(fileStoreStats.roughSize);
+    }
+
+    if (roughSize !== 0) {
+      this._roughSize = roughSize;
     }
 
     this._recalc();
