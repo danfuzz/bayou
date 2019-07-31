@@ -79,7 +79,8 @@ export class DocComplex extends BaseComplexMember {
   /**
    * Gets stats about the resource consumption managed by this instance, in the
    * form of an ad-hoc plain object. This information is used as part of the
-   * high-level "load factor" metric calculation.
+   * high-level "load factor" metric calculation, as well as logged and exposed
+   * on the monitoring port.
    *
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
