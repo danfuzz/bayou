@@ -99,7 +99,6 @@ export class DocServer extends Singleton {
   async currentResourceConsumption(timeoutMsec = null) {
     let bodyChangeCount = 0;
     let documentCount   = 0;
-    let fileChangeCount = 0;
     let roughSize       = 0;
     let sessionCount    = 0;
 
@@ -109,7 +108,6 @@ export class DocServer extends Singleton {
 
       documentCount++;
       bodyChangeCount += stats.bodyChangeCount;
-      fileChangeCount += stats.fileChangeCount;
       roughSize       += stats.roughSize;
       sessionCount    += stats.sessionCount;
     }
@@ -131,7 +129,6 @@ export class DocServer extends Singleton {
     return {
       bodyChangeCount,
       documentCount,
-      fileChangeCount,
       roughSize,
       sessionCount
     };
