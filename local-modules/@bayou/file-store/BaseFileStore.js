@@ -2,18 +2,40 @@
 // Licensed AS IS and WITHOUT WARRANTY under the Apache License,
 // Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
 
+import { BaseLogger } from '@bayou/see-all';
 import { TBoolean, TObject, TString } from '@bayou/typecheck';
 import { CommonBase, Errors } from '@bayou/util-common';
 
 import { BaseFile } from './BaseFile';
+import { FileCache } from './FileCache';
 
 /**
  * Base class for file storage access. This is, essentially, the filesystem
  * interface when dealing with the high-level "files" of this system. Subclasses
  * must override several methods defined by this class, as indicated in the
  * documentation. Methods to override are all named with the prefix `_impl_`.
+ *
+ * Notably, this class provides an instance cache, such that subclasses
+ * shouldn't ever end up getting asked to create a file object for one that's
+ * already around due to a previous request for same.
+ *
  */
 export class BaseFileStore extends CommonBase {
+  /**
+   * Constructs an instance.
+   *
+   * @param {BaseLogger} log Logger to use.
+   */
+  constructor(log) {
+    super();
+
+    /** {BaseLogger} Logger to use. */
+    this._log = BaseLogger.check(log);
+
+    /** {FileCache} Cache of {@link BaseFile} instances. */
+    this._cache = new FileCache(this._log);
+  }
+
   /**
    * Checks a file ID for full validity, beyond simply checking the syntax of
    * the ID. Returns the given ID if all is well, or throws an error if the ID
@@ -63,7 +85,11 @@ export class BaseFileStore extends CommonBase {
   async getFile(fileId) {
     this.checkFileIdSyntax(fileId);
     await this.checkFileId(fileId);
-    return BaseFile.check(await this._impl_getFile(fileId));
+
+    return this._cache.resolveOrAdd(fileId, async () => {
+      const result = await this._impl_getFile(fileId);
+      return BaseFile.check(result);
+    });
   }
 
   /**
@@ -138,7 +164,8 @@ export class BaseFileStore extends CommonBase {
 
   /**
    * Main implementation of {@link #isFileId}. Only ever called with a string
-   * argument.
+   * argument with valid syntax, and furthermore for a file which is not already
+   * in the instance's cache of same.
    *
    * @abstract
    * @param {string} fileId The alleged file ID.
