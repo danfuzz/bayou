@@ -156,12 +156,19 @@ if [[ ! ${outFile} =~ '.heapsnapshot'$ ]]; then
     outFile+='.heapsnapshot'
 fi
 
-echo "Grabbing heap snapshot from ${hostname} into ${outFile}..."
+echo 'Grabbing heap snapshot...'
+echo "  from host: ${hostname}"
+echo "  into file: ${outFile}"
 
 if (( ${sshTunnel} )); then
+    echo '  via ssh tunnel'
     do-ssh-tunnel
 else
     baseUrl="http://${hostname}:${monitorPort}"
 fi
 
+echo ''
 curl -o "${outFile}" "${baseUrl}/heapdump"
+
+echo ''
+echo 'Done!'
