@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# Copyright 2016-2019 the Bayou Authors (Dan Bornstein et alia).
+# Licensed AS IS and WITHOUT WARRANTY under the Apache License,
+# Version 2.0. Details: <http://www.apache.org/licenses/LICENSE-2.0>
+#
+
+# Set `progName` to the program name, `progDir` to its directory, and `baseDir`
+# to `progDir`'s directory. Follows symlinks.
+function init-prog {
+    local newp p="$0"
+
+    while newp="$(readlink "$p")"; do
+        [[ ${newp} =~ ^/ ]] && p="${newp}" || p="$(dirname "$p")/${newp}"
+    done
+
+    progName="${p##*/}"
+    progDir="$(cd "$(dirname "$p")"; /bin/pwd -P)"
+    baseDir="$(cd "${progDir}/.."; /bin/pwd -P)"
+}
+init-prog
+
+
+#
+# Argument parsing
+#
+
+# Error during argument processing?
+argError=0
+
+# Need help?
+showHelp=0
+
+# Output file.
+outFile=''
+
+while true; do
+    case $1 in
+        -h|--help)
+            showHelp=1
+            break
+            ;;
+        --out=?*)
+            outFile="${1#*=}"
+            ;;
+        --) # End of all options
+            shift
+            break
+            ;;
+        -?*)
+            echo "Unknown option: $1" 1>&2
+            argError=1
+            break
+            ;;
+        *)  # Default case: No more options, break out of the loop.
+            break
+    esac
+
+    shift
+done
+
+hostname="$1"
+
+if [[ ${hostname} == '' ]]; then
+    echo 'Missing hostname argument.' 1>&2
+    argError=1
+fi
+
+if (( ${showHelp} || ${argError} )); then
+    echo 'Usage:'
+    echo ''
+    echo "${progName} [<opt> ...] <hostname>"
+    echo '  Induces a heap dump on a given server and grabs it into a file on'
+    echo '  the local machine.'
+    echo ''
+    echo '  --out=<file>'
+    echo '    Where to store the heap dump. If this is not specified, it'
+    echo '    defaults to a timestamp-IDed name in the current directory. If'
+    echo '    specified and does not end with `.heapsnapshot` then that suffix'
+    echo '    will get automatically appended, since Chrome Devtools only'
+    echo '    recognizes heap dumps with that suffix as such.'
+    echo ''
+    echo "${progName} [--help | -h]"
+    echo '  Display this message.'
+    exit ${argError}
+fi
+
+#
+# Main script
+#
+
+if [[ ${outFile} == '' ]]; then
+    outFile="node-$(date '+%Y%m%d-%H%M%S')"
+fi
+
+if [[ ! ${outFile} =~ '.heapsnapshot'$ ]]; then
+    outFile+='.heapsnapshot'
+fi
+
+echo "Grabbing heap snapshot into ${outFile}..."
+# TODO: Finish this.
