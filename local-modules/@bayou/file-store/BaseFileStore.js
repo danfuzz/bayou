@@ -74,6 +74,53 @@ export class BaseFileStore extends CommonBase {
   }
 
   /**
+   * Gets stats about the resource consumption managed by this instance, in the
+   * form of an ad-hoc plain object. This information is used as part of the
+   * high-level "load factor" metric calculation, as well as logged and
+   * exposed on the monitoring port.
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range for {@link BaseFile}. `null` is treated as the maximum allowed
+   *   value.
+   * @returns {object} Ad-hoc plain object with resource consumption stats.
+   */
+  async currentResourceConsumption(timeoutMsec = null) {
+    let fileCount   = 0;
+    let changeCount = 0;
+    let roughSize   = 0;
+
+    // Helper for the loop below: Process a `BaseFile` instance.
+    async function processFile(file) {
+      const stats = await file.currentResourceConsumption(timeoutMsec);
+
+      fileCount++;
+      changeCount += stats.changeCount;
+      roughSize   += stats.roughSize;
+    }
+
+    for (const value of this._cache.values()) {
+      try {
+        if (value.object) {
+          await processFile(value.object);
+        } else {
+          await processFile(await value.promise);
+        }
+      } catch (e) {
+        // Ignore the exception (other than logging): Resource consumption
+        // calculation is best-effort only.
+        this._log.event.errorDuringResourceConsumptionCalculation(e);
+      }
+    }
+
+    return {
+      fileCount,
+      changeCount,
+      roughSize
+    };
+  }
+
+  /**
    * Gets the accessor for the file with the given ID. The file need not exist
    * prior to calling this method, but it must be considered "valid" (having the
    * potential to exist).
