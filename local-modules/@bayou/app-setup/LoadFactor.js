@@ -91,21 +91,22 @@ export class LoadFactor extends CommonBase {
    * are expected to be in the form reported by
    * {@link DocServer#currentResourceConsumption}.
    *
-   * @param {object} stats Stats, per the contract of {@link DocServer}.
+   * @param {object} docServerStats Stats, per the contract of {@link
+   *   DocServer}.
    */
-  docServerStats(stats) {
-    TObject.check(stats);
+  resourceConsumption(docServerStats) {
+    TObject.check(docServerStats);
 
-    if (stats.documentCount !== undefined) {
-      this._documentCount = TInt.nonNegative(stats.documentCount);
+    if (docServerStats.documentCount !== undefined) {
+      this._documentCount = TInt.nonNegative(docServerStats.documentCount);
     }
 
-    if (stats.roughSize !== undefined) {
-      this._roughSize = TInt.nonNegative(stats.roughSize);
+    if (docServerStats.roughSize !== undefined) {
+      this._roughSize = TInt.nonNegative(docServerStats.roughSize);
     }
 
-    if (stats.sessionCount !== undefined) {
-      this._sessionCount = TInt.nonNegative(stats.sessionCount);
+    if (docServerStats.sessionCount !== undefined) {
+      this._sessionCount = TInt.nonNegative(docServerStats.sessionCount);
     }
 
     this._recalc();

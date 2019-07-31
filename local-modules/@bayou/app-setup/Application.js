@@ -528,9 +528,9 @@ export class Application extends CommonBase {
    * stats and uses them to update the load factor.
    */
   async _updateResourceConsumption() {
-    const stats = await DocServer.theOne.currentResourceConsumption();
+    const docServerStats = await DocServer.theOne.currentResourceConsumption();
 
-    this._loadFactor.docServerStats(stats);
-    log.metric.totalResourceConsumption(stats);
+    this._loadFactor.resourceConsumption(docServerStats);
+    log.metric.totalResourceConsumption(docServerStats);
   }
 }
