@@ -109,6 +109,39 @@ export class BaseFile extends CommonBase {
   }
 
   /**
+   * Gets stats about the resource consumption managed by this instance, in the
+   * form of an ad-hoc plain object. This information is used as part of the
+   * high-level "load factor" metric calculation, as well as logged and exposed
+   * on the monitoring port.
+   *
+   * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
+   *   this call, in msec. This value will be silently clamped to the allowable
+   *   range for {@link BaseFile}. `null` is treated as the maximum allowed
+   *   value.
+   * @returns {object} Ad-hoc plain object with resource consumption stats.
+   */
+  async currentResourceConsumption(timeoutMsec = null) {
+    const [revNum, snapshot] = await Promise.all([
+      this.currentRevNum(timeoutMsec),
+      this.getSnapshot(null, timeoutMsec)
+    ]);
+
+    // The following is a very ad-hoc heuristic to get a sense of the
+    // "largeness" of a file. See docs for any of the `.roughSize` properties
+    // for a little more color.
+    const roughSize =
+        (revNum * 15)
+      + (snapshot.roughSize * 2);
+
+    // Because we don't (yet) do file GC, the number of file changes is the same
+    // as `revNum + 1`, but that (hopefully) won't be true forever. **TODO:**
+    // Revisit this when file GC happens.
+    const changeCount = revNum + 1;
+
+    return { changeCount, roughSize };
+  }
+
+  /**
    * Gets the instantaneously-current revision number of the file controlled by
    * this instance. It is an error to call this on a file that does not exist
    * (in the sense of {@link #exists}).

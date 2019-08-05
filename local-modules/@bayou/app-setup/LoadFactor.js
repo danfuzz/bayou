@@ -13,10 +13,10 @@ import { CommonBase } from '@bayou/util-common';
 const HEAVY_CONNECTION_COUNT = 400;
 
 /**
- * {Int} The number of active documents which should be considered to constitute
- * a "heavy load."
+ * {Int} The number of active files or documents ("major items") which should be
+ * considered to constitute a "heavy load."
  */
-const HEAVY_DOCUMENT_COUNT = 4000;
+const HEAVY_MAJOR_ITEM_COUNT = 4000;
 
 /**
  * {Int} The number of document sessions which should be considered to
@@ -59,7 +59,12 @@ export class LoadFactor extends CommonBase {
     /** {Int} {@link DocServer} resource consumption stat. */
     this._documentCount = 0;
 
-    /** {Int} {@link DocServer} resource consumption stat. */
+    /** {Int} {@link BaseFile} resource consumption stat. */
+    this._fileCount = 0;
+
+    /**
+     * {Int} {@link DocServer} and {@link BaseFile} resource consumption stat.
+     */
     this._roughSize = 0;
 
     /** {Int} {@link DocServer} resource consumption stat. */
@@ -87,25 +92,41 @@ export class LoadFactor extends CommonBase {
   }
 
   /**
-   * Updates this instance based on the given resource consumption stats, which
-   * are expected to be in the form reported by
-   * {@link DocServer#currentResourceConsumption}.
+   * Updates this instance based on the given resource consumption stats.
    *
-   * @param {object} stats Stats, per the contract of {@link DocServer}.
+   * @param {object} docServerStats Stats, per the contract of {@link
+   *   DocServer#currentResourceConsumption}.
+   * @param {object} fileStoreStats Stats, per the contract of {@link
+   *   BaseFileStore#currentResourceConsumption}.
    */
-  docServerStats(stats) {
-    TObject.check(stats);
+  resourceConsumption(docServerStats, fileStoreStats) {
+    TObject.check(docServerStats);
+    TObject.check(fileStoreStats);
 
-    if (stats.documentCount !== undefined) {
-      this._documentCount = TInt.nonNegative(stats.documentCount);
+    let roughSize = 0;
+
+    if (docServerStats.documentCount !== undefined) {
+      this._documentCount = TInt.nonNegative(docServerStats.documentCount);
     }
 
-    if (stats.roughSize !== undefined) {
-      this._roughSize = TInt.nonNegative(stats.roughSize);
+    if (docServerStats.roughSize !== undefined) {
+      roughSize = TInt.nonNegative(docServerStats.roughSize);
     }
 
-    if (stats.sessionCount !== undefined) {
-      this._sessionCount = TInt.nonNegative(stats.sessionCount);
+    if (docServerStats.sessionCount !== undefined) {
+      this._sessionCount = TInt.nonNegative(docServerStats.sessionCount);
+    }
+
+    if (fileStoreStats.fileCount !== undefined) {
+      this._fileCount = TInt.nonNegative(fileStoreStats.fileCount);
+    }
+
+    if (fileStoreStats.roughSize !== undefined) {
+      roughSize += TInt.nonNegative(fileStoreStats.roughSize);
+    }
+
+    if (roughSize !== 0) {
+      this._roughSize = roughSize;
     }
 
     this._recalc();
@@ -133,12 +154,17 @@ export class LoadFactor extends CommonBase {
     // Get each of these as a fraction where `0` is "unloaded" and `1` is heavy
     // load.
     const connectionCount = this._connectionCount / HEAVY_CONNECTION_COUNT;
-    const documentCount   = this._documentCount   / HEAVY_DOCUMENT_COUNT;
     const roughSize       = this._roughSize       / HEAVY_ROUGH_SIZE;
     const sessionCount    = this._sessionCount    / HEAVY_SESSION_COUNT;
 
+    // Because the document and file counts really ought to pretty much track
+    // each other (that is, be very nearly the same value almost all the time),
+    // just take a max of the two and treat it as a single stat.
+    const majorItemCount =
+      Math.max(this._documentCount, this._fileCount) / HEAVY_MAJOR_ITEM_COUNT;
+
     // Total load.
-    const total = connectionCount + documentCount + roughSize + sessionCount;
+    const total = connectionCount + majorItemCount + roughSize + sessionCount;
 
     // Total load, scaled so that heavy load is at the documented
     // `HEAVY_LOAD_VALUE`, and rounded to an int. `ceil()` so that a tiny but

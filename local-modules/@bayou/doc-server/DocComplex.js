@@ -79,7 +79,8 @@ export class DocComplex extends BaseComplexMember {
   /**
    * Gets stats about the resource consumption managed by this instance, in the
    * form of an ad-hoc plain object. This information is used as part of the
-   * high-level "load factor" metric calculation.
+   * high-level "load factor" metric calculation, as well as logged and exposed
+   * on the monitoring port.
    *
    * @param {Int|null} [timeoutMsec = null] Maximum amount of time to allow in
    *   this call, in msec. This value will be silently clamped to the allowable
@@ -90,32 +91,21 @@ export class DocComplex extends BaseComplexMember {
   async currentResourceConsumption(timeoutMsec = null) {
     const sessionCount = this._sessions.size;
 
-    const [fileRevNum, fileSnapshot, bodyRevNum, bodySnapshot] = await Promise.all([
-      this.file.currentRevNum(timeoutMsec),
-      this.file.getSnapshot(null, timeoutMsec),
+    const [bodyRevNum, bodySnapshot] = await Promise.all([
       this.bodyControl.currentRevNum(timeoutMsec),
       this.bodyControl.getSnapshot(null, timeoutMsec)
     ]);
 
     // The following is a very ad-hoc heuristic to get a sense of the
-    // "largeness" of a file. See docs for any of the `.roughSize` properties
-    // for a little more color.
+    // "largeness" of a document. See docs for any of the `.roughSize`
+    // properties for a little more color.
     const roughSize =
-        (fileRevNum * 15)
-      + (fileSnapshot.roughSize * 2)
       + (bodyRevNum * 25)
       + (bodySnapshot.roughSize * 4);
 
-    // Because we don't (yet) do file GC, the number of file changes is the same
-    // as `revNum + 1`, but that (hopefully) won't be true forever. **TODO:**
-    // Revisit this when file GC happens.
-    const fileChangeCount = fileRevNum + 1;
-
-    // No similar caveat (to the one above) required here, because body changes
-    // aren't designed to be GCed.
     const bodyChangeCount = bodyRevNum + 1;
 
-    return { bodyChangeCount, fileChangeCount, roughSize, sessionCount };
+    return { bodyChangeCount, roughSize, sessionCount };
   }
 
   /**

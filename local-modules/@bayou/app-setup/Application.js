@@ -12,7 +12,7 @@ import ws from 'ws';
 import { ContextInfo, PostConnection, WsConnection } from '@bayou/api-server';
 import { Codecs, Urls } from '@bayou/app-common';
 import { ClientBundle } from '@bayou/client-bundle';
-import { Deployment, Network } from '@bayou/config-server';
+import { Deployment, Network, Storage } from '@bayou/config-server';
 import { DocServer } from '@bayou/doc-server';
 import { Dirs, ServerEnv } from '@bayou/env-server';
 import { Delay } from '@bayou/promise-util';
@@ -528,9 +528,17 @@ export class Application extends CommonBase {
    * stats and uses them to update the load factor.
    */
   async _updateResourceConsumption() {
-    const stats = await DocServer.theOne.currentResourceConsumption();
+    const docServerStats = await DocServer.theOne.currentResourceConsumption();
+    const fileStoreStats = await Storage.fileStore.currentResourceConsumption();
 
-    this._loadFactor.docServerStats(stats);
-    log.metric.totalResourceConsumption(stats);
+    this._loadFactor.resourceConsumption(docServerStats, fileStoreStats);
+
+    const allStats = {
+      docServer: docServerStats,
+      fileStore: fileStoreStats,
+      roughSize: docServerStats.roughSize + fileStoreStats.roughSize
+    };
+
+    log.metric.totalResourceConsumption(allStats);
   }
 }

@@ -7,7 +7,7 @@ import path from 'path';
 
 import { Codec } from '@bayou/codec';
 import { Dirs } from '@bayou/env-server';
-import { BaseFileStore, FileCache } from '@bayou/file-store';
+import { BaseFileStore } from '@bayou/file-store';
 import { Codecs } from '@bayou/file-store-ot';
 import { DefaultIdSyntax } from '@bayou/doc-id-default';
 import { Logger } from '@bayou/see-all';
@@ -26,14 +26,11 @@ export class LocalFileStore extends BaseFileStore {
    * Constructs an instance. This is not meant to be used publicly.
    */
   constructor() {
-    super();
+    super(log);
 
     /** {Codec} Codec to use when reading and writing file OT objects. */
     this._codec = new Codec();
     Codecs.registerCodecs(this._codec.registry);
-
-    /** {FileCache} Cache of {@link LocalFile} instances. */
-    this._cache = new FileCache(log);
 
     /** {string} The directory for file storage. */
     this._dir = path.resolve(Dirs.theOne.VAR_DIR, 'files');
@@ -56,16 +53,7 @@ export class LocalFileStore extends BaseFileStore {
   async _impl_getFile(fileId) {
     await this._ensureFileStorageDirectory();
 
-    const already = this._cache.getOrNull(fileId);
-
-    if (already) {
-      return already;
-    }
-
-    const result = new LocalFile(fileId, this._filePath(fileId), this._codec);
-
-    this._cache.add(result);
-    return result;
+    return new LocalFile(fileId, this._filePath(fileId), this._codec);
   }
 
   /**
