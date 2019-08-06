@@ -90,7 +90,7 @@ export class Monitor extends CommonBase {
 
     // **TODO:** Consider disabling (or fully removing) this when there are no
     // known memory leaks (or similar) being investigated.
-    app.get('/heapdump', async (req_unused, res) => {
+    app.get('/dump-heap', async (req_unused, res) => {
       const dumpFile = path.join(Dirs.theOne.VAR_DIR, 'node.heapsnapshot');
       heapdump.writeSnapshot(dumpFile, (error, filename) => {
         if (error) {
