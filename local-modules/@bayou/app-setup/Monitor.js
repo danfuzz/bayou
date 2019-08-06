@@ -52,7 +52,7 @@ export class Monitor extends CommonBase {
     /** {RequestLogger} HTTP request / response logger. */
     this._requestLogger = new RequestLogger(log);
 
-    this._addRoutes();
+    this._addAllRoutes();
   }
 
   /**
@@ -71,9 +71,9 @@ export class Monitor extends CommonBase {
   }
 
   /**
-   * Sets up the webserver routes.
+   * Sets up all of the webserver routes.
    */
-  _addRoutes() {
+  _addAllRoutes() {
     const app             = this._app;
     const requestLogger   = this._requestLogger;
     const mainApplication = this._mainApplication;
