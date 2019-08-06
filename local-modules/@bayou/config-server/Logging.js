@@ -11,7 +11,9 @@ import { UtilityClass } from '@bayou/util-common';
 export class Logging extends UtilityClass {
   /**
    * Performs redaction on a cookie value (such as might be present in an HTTP
-   * header).
+   * header). The idea is that, in many deployment environments, cookie values
+   * will be security-sensitive and will not be appropriate to fully log; this
+   * hook provides an opportunity to filter such things when and as appropriate.
    *
    * @param {string} name The name of the cookie.
    * @param {string} value The value of the cookie.
