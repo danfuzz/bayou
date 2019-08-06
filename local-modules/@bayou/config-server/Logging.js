@@ -10,6 +10,19 @@ import { UtilityClass } from '@bayou/util-common';
  */
 export class Logging extends UtilityClass {
   /**
+   * Performs redaction on a cookie value (such as might be present in an HTTP
+   * header).
+   *
+   * @param {string} name The name of the cookie.
+   * @param {string} value The value of the cookie.
+   * @returns {string} Redacted replacement value, or `value` as given if no
+   *   redaction is necessary.
+   */
+  static redactCookie(name, value) {
+    return use.Logging.redactCookie(name, value);
+  }
+
+  /**
    * Performs redaction on an event log payload.
    *
    * @param {Functor} payload Original event payload.

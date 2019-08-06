@@ -16,6 +16,19 @@ export class Logging extends UtilityClass {
    *
    * This implementation is a no-op, always returning its argument unchanged.
    *
+   * @param {string} name_unused The name of the cookie.
+   * @param {string} value The value of the cookie.
+   * @returns {string} `value` as given.
+   */
+  static redactCookie(name_unused, value) {
+    return value;
+  }
+
+  /**
+   * Implementation of standard configuration point.
+   *
+   * This implementation is a no-op, always returning its argument unchanged.
+   *
    * @param {Functor} payload Original event payload.
    * @returns {Functor} `payload` as given.
    */
