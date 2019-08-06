@@ -52,7 +52,7 @@ export class Monitor extends CommonBase {
     /** {RequestLogger} HTTP request / response logger. */
     this._requestLogger = new RequestLogger(log);
 
-    this._addRoutes();
+    this._addAllRoutes();
   }
 
   /**
@@ -71,22 +71,45 @@ export class Monitor extends CommonBase {
   }
 
   /**
-   * Sets up the webserver routes.
+   * Sets up all of the webserver routes, including middleware that handles
+   * (aspects of) all routes.
    */
-  _addRoutes() {
+  _addAllRoutes() {
+    this._addMiddleware();
+    this._addCommandRoutes();
+    this._addInfoRoutes();
+  }
+
+  /**
+   * Sets up all of the command routes, that is, routes which cause active
+   * action of some sort, as opposed to the "info" routes which merely return
+   * information.
+   */
+  _addCommandRoutes() {
+    const app             = this._app;
+
+    // **TODO:** Consider disabling (or fully removing) this when there are no
+    // known memory leaks (or similar) being investigated.
+    app.get('/cmd/dump-heap', async (req_unused, res) => {
+      const dumpFile = path.join(Dirs.theOne.VAR_DIR, 'node.heapsnapshot');
+      heapdump.writeSnapshot(dumpFile, (error, filename) => {
+        if (error) {
+          const msg = `Trouble with dump:\n${error.toString()}\n`;
+          ServerUtil.sendPlainTextResponse(res, msg, 200);
+        } else {
+          ServerUtil.sendFileResponse(res, filename, 'application/octet-stream');
+        }
+      });
+    });
+  }
+
+  /**
+   * Sets up all of the info-only routes.
+   */
+  _addInfoRoutes() {
     const app             = this._app;
     const requestLogger   = this._requestLogger;
     const mainApplication = this._mainApplication;
-
-    // Logging.
-    app.use(this._requestLogger.expressMiddleware);
-
-    // Thwack the `X-Powered-By` header that Express provides by default,
-    // replacing it with something that identifies this product.
-    app.use((req_unused, res, next) => {
-      res.setHeader('X-Powered-By', ServerEnv.theOne.buildInfo.buildId);
-      next();
-    });
 
     // This endpoint is meant to be used by a system health monitor to determine
     // whether or not the server thinks it is operating properly.
@@ -159,6 +182,23 @@ export class Monitor extends CommonBase {
       const info = await varInfo.get();
 
       ServerUtil.sendJsonResponse(res, info);
+    });
+  }
+
+  /**
+   * Sets up the middleware that gets invoked for all routes.
+   */
+  _addMiddleware() {
+    const app = this._app;
+
+    // Logging.
+    app.use(this._requestLogger.expressMiddleware);
+
+    // Thwack the `X-Powered-By` header that Express provides by default,
+    // replacing it with something that identifies this product.
+    app.use((req_unused, res, next) => {
+      res.setHeader('X-Powered-By', ServerEnv.theOne.buildInfo.buildId);
+      next();
     });
   }
 }

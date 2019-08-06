@@ -169,7 +169,7 @@ else
 fi
 
 echo ''
-curl -o "${outFile}" "${baseUrl}/heapdump"
+curl -o "${outFile}" "${baseUrl}/cmd/dump-heap"
 
 echo ''
 echo 'Done!'

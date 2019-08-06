@@ -274,16 +274,16 @@ export class TrafficSignal extends CommonBase {
 
     // Take the off-fraction (F) and the minimum on-time (T), and solve for the
     // actual amount of time in msec to be off (N), as follows. The first line
-    // in the derivation states fairly directly, "The ratio of off-time to
-    // total time is F."
+    // in the derivation states fairly directly, "The ratio of off-time to total
+    // time is F."
     //
-    //   (N / (N + T)) = F
-    //   N             = F * (N + T)
-    //   N             = F*N + F*T
-    //   N - F*N       = F * T
-    //   1*N - F*N     = F * T
-    //   (1 - F) * N   = F * T
-    //   N             = (F * T) / (1 - F)
+    //   N / (N + T) = F
+    //   N           = F * (N + T)
+    //   N           = F*N + F*T
+    //   N - F*N     = F * T
+    //   1*N - F*N   = F * T
+    //   (1 - F) * N = F * T
+    //   N           = (F * T) / (1 - F)
     const ON_MSEC     = MINIMUM_TRAFFIC_ALLOW_TIME_MSEC;
     const offTimeMsec = Math.round((offFrac * ON_MSEC) / (1 - offFrac));
 
